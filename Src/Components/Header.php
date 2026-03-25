@@ -74,7 +74,7 @@
               </a>
             </li>
             <li>
-              <a class="dropdown-item <?= $CurrentPage === 'Programs' ? 'nav-active' : '' ?>" href="javascript:void(0)">
+              <a class="dropdown-item <?= $CurrentPage === 'Programs' ? 'nav-active' : '' ?>" href="../Admin/Programs">
                 <div class="hstack">
                   <i class="bi bi-building me-2"></i>
                   <div class="vstack">
