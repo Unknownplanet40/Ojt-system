@@ -15,6 +15,25 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
 
 ---
 
+## 📝 Recent Updates
+
+> _Last updated: March 2026_
+
+- ✅ Added **Programs Management module** for admins:
+   - `Src/Pages/Admin/Programs.php`
+   - `Assets/Script/AdminScripts/ProgramsScripts.js`
+   - `Assets/api/program_functions.php`
+- ✅ Implemented full program lifecycle actions:
+   - Create program
+   - Edit program details
+   - Disable/enable program status
+   - Fetch all programs for UI rendering
+- ✅ Added program-level required OJT hours support (`getProgramHours()`), allowing overrides from batch default hours
+- ✅ Added audit trail entries for program actions (`program_create`, `program_update`, `program_toggle`)
+- ✅ Updated README feature/backend notes to reflect current repository state
+
+---
+
 ### BREAKING CHANGE: initial system setup with auth, user management, and academic modules
 
 ### Database & Schema
@@ -66,6 +85,11 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
    - Create/edit batch forms with school-year validation hints and activate toggle
    - Activate confirmation modal (with active-batch close warning)
    - Close confirmation modal (with `CLOSE` typed safety check)
+- Programs module UI is implemented in `Src/Pages/Admin/Programs.php` with:
+   - Program listing cards showing code, name, department, required hours, and status
+   - Create/edit program modals with validation for required OJT hours
+   - Safe disable flow with randomized confirmation keyword
+   - One-click re-enable flow for inactive programs
 
 ### Backend Functions (MySQLi)
 
@@ -81,6 +105,9 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
    - `createBatch()`, `updateBatch()`, `activateBatch()`, `closeBatch()`
    - `getAllBatches()`, `getActiveBatch()`
    - `generateUuid()` for UUID generation in MariaDB-compatible flow
+- Program API (`Assets/api/program_functions.php`):
+   - `createProgram()`, `editProgram()`, `toggleProgram()`
+   - `getAllPrograms()`, `getProgramHours()`
 - Logging helpers (`Assets/api/logs.php`):
    - `auditLog()`
    - `loginAudit()`
@@ -89,7 +116,10 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
 
 - UUIDs are generated in PHP before INSERT operations where needed (`generateUuid()` in `batch_functions.php`)
 - Single active batch behavior is enforced at application layer through `activateBatch()`
-- Program management functions/pages (`createProgram`, `editProgram`, `toggleProgram`, `getAllPrograms`) are **not yet present** in this repository state
+- Program management is now available in:
+   - `Src/Pages/Admin/Programs.php`
+   - `Assets/api/program_functions.php`
+   - `Assets/Script/AdminScripts/ProgramsScripts.js`
 - Some company/MOA-related alert logic is still placeholder-level in `getNeedsAttention()` until those modules/tables are added
 
 ---
@@ -222,6 +252,30 @@ When a user visits the site, `index.html` acts as a **pre-flight gate** before a
 - **Any check fails** → the page displays a clear status indicator showing which service is down, preventing the app from loading in a broken state
 
 This ensures users and developers always know the server environment is healthy before the application runs.
+
+---
+
+## 🖼️ Screenshots / GIFs (Placeholders)
+
+Use these placeholders for documentation previews. Replace files in `Assets/Images/Previews/` with real captures.
+
+### Login Flow
+![Login Page Placeholder](Assets/Images/Previews/Login.png)
+
+### Admin Dashboard
+![Admin Dashboard Placeholder](Assets/Images/Previews/admindash.png)
+
+### Batches Management
+![Batches Module Placeholder](Assets/Images/Previews/Batch.png)
+
+### Programs Management
+![Programs Module Placeholder](Assets/Images/Previews/Programs.png)
+
+### Program Disable Confirmation (GIF)
+![Program Disable Flow Placeholder](Assets/Images/Previews/program-disable-flow-placeholder.gif)
+
+### Batch Activate / Close Flow (GIF)
+![Batch Lifecycle Flow Placeholder](Assets/Images/Previews/batch-lifecycle-flow-placeholder.gif)
 
 ---
 
