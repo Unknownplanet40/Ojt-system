@@ -1,150 +1,199 @@
-# On The Job Training (OJT) Coordinator System
-## Description
-This is a web application that will help the OJT Coordinator to manage the OJT Applications, Evaluation Forms, Trainee Documents, and Events and Announcements. This application will also help the Trainee to upload their documents, view their application status, and view their evaluation results.
+# 🚀 Project Template
 
-## Installation
-1. Download the project as a zip file.
-2. Extract the zip file to httdocs folder of your XAMPP installation.
-```
-C:\xampp\htdocs
-```
-3. Open the XAMPP Control Panel and start the Apache and MySQL modules.
+A lightweight starter template designed to accelerate web development with pre-configured libraries, a clean directory structure, and essential boilerplate — so you can skip setup and start building.
 
-4. Go to database folder and import the database file to your MySQL server.
-```
-C:\xampp\htdocs\OJT-Coordinator\database\OJT_CS_Database.sql
-```
-5. Open your browser and go to the following URL.
-```
-localhost/OJT-Coordinator
-```
-6. Login using the following credentials.
-```
-Administrator
-username: ryanjames
-password: @Capadocia123
+---
 
-Moderator
-username: jamesveloria
-password: @Veloria123
+## ✨ Features
 
-User/Trainee
-username: lorenzoasis
-password: Lorenzo.asis2023
+- **Server Status Checker** — `index.html` automatically checks if Apache, MySQL, and your database connection are live before loading the app
+- **Pre-bundled Libraries** — all dependencies are included locally in `/libs`, no package manager required
+- **Clean Directory Structure** — organized folders for assets, source pages, and libraries
+- **Apache Ready** — includes a pre-configured `.htaccess` for URL rewriting and access control
+
+---
+
+## 🧰 Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| **PHP** | Server-side scripting & database connectivity |
+| **HTML5** | Page structure & markup |
+| **JavaScript** | Client-side logic |
+| **jQuery** | DOM manipulation & AJAX |
+| **Bootstrap** | Responsive UI components & grid layout |
+| **Anime.js** | Smooth JavaScript animations |
+| **AOS** (Animate On Scroll) | Scroll-triggered animations |
+| **Driver.js** | Interactive user onboarding / guided tours |
+| **SweetAlert2** | Beautiful, customizable alert dialogs |
+
+---
+
+## 📁 Directory Structure
 
 ```
-> **Note:** You can change the credentials in the database. or you can create a new account in the application.
-
-if you incoutered an error like this:
+Project-Template/
+├── Assets/
+│   └── database/
+│       └── dbconfig    # Database connection configuration
+├── Src/
+│   └── Pages/          # PHP/HTML page files
+├── libs/               # All bundled front-end libraries (offline-ready)
+│   └── composer/       # Optional: PHPMailer & Ratchet (via Composer)
+├── index.html          # Entry point with server status checking
+├── .htaccess           # Apache configuration (URL rewriting, access rules)
+├── InstallDependencies.md  # Guide for setting up server dependencies
+└── LICENSE             # MIT License
 ```
-TCPDF ERROR:TCPDF requires the Imagick or GD extension to handle PNG images with alpha channel.
+
+---
+
+## ⚙️ Requirements
+
+- **Apache** web server (with `mod_rewrite` enabled)
+- **MySQL** / MariaDB
+- **PHP** 7.4 or higher
+- A local dev environment such as [XAMPP](https://www.apachefriends.org/), [WAMP](https://www.wampserver.com/), [LAMP](https://ubuntu.com/server/docs/lamp-applications), or [Laragon](https://laragon.org/)
+
+---
+
+## 🔁 Enabling mod_rewrite
+
+`mod_rewrite` is required for the `.htaccess` URL rewriting rules to work. Here's how to enable it on common setups:
+
+### XAMPP (Windows)
+1. Open `C:/xampp/apache/conf/httpd.conf`
+2. Find and uncomment this line (remove the `#`):
+   ```
+   #LoadModule rewrite_module modules/mod_rewrite.so
+   ```
+3. Find `AllowOverride None` under your `<Directory>` block and change it to:
+   ```
+   AllowOverride All
+   ```
+4. Save the file and restart Apache from the XAMPP Control Panel
+
+### WAMP (Windows)
+1. Left-click the WAMP tray icon → **Apache** → **Apache Modules**
+2. Find and click **rewrite_module** to enable it (a checkmark will appear)
+3. WAMP will restart Apache automatically
+
+### Linux / LAMP (Ubuntu)
+Run the following commands in your terminal:
+```bash
+sudo a2enmod rewrite
+sudo systemctl restart apache2
 ```
-you can fix it by following this steps:
-1. open your xampp control panel
-2. click the config button of the apache module
-3. click the `php.ini`
-4. search for the `extension=gd` or `extension=imagick`
-5. remove the semicolon (;) in the beginning of the line
-6. save the file
-7. restart the apache module
+Then make sure your site config (usually `/etc/apache2/sites-available/000-default.conf`) has:
+```
+AllowOverride All
+```
 
-## Screenshots
-see the [Screenshots](./ScreenShots) folder for more screenshots.
-### Admin / Moderator(Coordinator)
-![Admin](./ScreenShots/New%20Version/Admin%20Dashboard.png)
-### Trainee
-![Trainee](./ScreenShots/New%20Version/Trainee%20Dashboard.png)
+### Laragon (Windows)
+`mod_rewrite` is enabled by default in Laragon — no extra steps needed.
 
-## Information
-This project was created by the following students of the Cavite State University - Imus Campus (CvSU) in compliance to DCIT 60A - Integrated Programming and Technologies 1
+---
 
-| **DATE** |        |        |
-| :---  |  :---: |  :---: |
-| <small>2nd Semester</small> | May 21 to Jul 12, 2023 |1 Month and 3 Weeks|
-| <small>Mid Year - Summer Sem</small> | Aug 6 to Sep 3, 2023 |4 Weeks|
+## 🛠️ Getting Started
 
-### Developers and Contributors
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Unknownplanet40/Project-Template.git
+cd Project-Template
+```
+
+### 2. Place in Your Web Server Root
+
+Copy the project folder into your server's document root:
+
+- **XAMPP:** `C:/xampp/htdocs/`
+- **WAMP:** `C:/wamp64/www/`
+- **Linux/LAMP:** `/var/www/html/`
+
+### 3. Configure Your Database
+
+Update the database connection settings in:
+
+```
+Assets/database/dbconfig
+```
+
+Set your database host, name, username, and password here before running the project.
+
+### 4. Start Your Server
+
+Make sure **Apache** and **MySQL** are running, then navigate to:
+
+```
+http://localhost/Project-Template/
+```
+
+### 5. How It Works — Server Check & Redirect
+
 <div align="center">
-
-<p>2nd Semester</p>
-
-| Name | Role | Year | Course |
-| :--- | :--- | :---: | :---: |
-| [**Ryan James V. Capadocia**](https://github.com/Unknownplanet40) | Head Developer | 2nd Year | BSIT |
-| [**James Matthew R. Veloria**](https://github.com/JamesVeloria16) | Full-Stack Developer | 2nd Year | BSIT |
-| [**Jeric C. Dayandante**](https://github.com/kuya-G) | Full-Stack Developer | 2nd Year | BSIT 
-| [**Brandon Logon**](#developers-and-contributors) | Back-End Developer | 2nd Year | BSIT |
-| [**Lorenzo Asis**](#developers-and-contributors) | Quality Assurance | 2nd Year | BSIT |
-
-<p>Mid Year - Summer Sem</p>
-
-| Name | Role | Year | Course |
-| :--- | :--- | :---: | :---: |
-| [**Ryan James V. Capadocia**](https://github.com/Unknownplanet40) | Head Developer | 2nd Year | BSIT |
-| [**James Matthew R. Veloria**](https://github.com/JamesVeloria16) | Full-Stack Developer | 2nd Year | BSIT |
-| [**Lorenzo Asis**](#developers-and-contributors) | Quality Assurance | 2nd Year | BSIT |
-| [**Pia Nicole Agustin**<sup> Group 6</sup>](#developers-and-contributors) | Quality Assurance | 2nd Year | BSIT |
-
+  <img src="https://assets.grok.com/users/2e437696-c849-40e3-a1cc-7c15721185f1/generated/fefb7b66-fe31-4146-acaa-059c59b9a510/image.jpg" width="256" />
 </div>
 
-### Instructors <sup>(2nd Semester)</sup>
+When a user visits the site, `index.html` acts as a **pre-flight gate** before anything else loads:
 
-| Name | Subject |
-| :---: | :--- |
-|[**[...]**](#instructor) | **DCIT 60A** - INTEGRATED PROGRAMMING AND TECHNOLOGIES 1 |
-|[**[...]**](#instructor) | **DCIT 55A** - ADVANCE DATABASE MANAGEMENT SYSTEM |
-| [**[...]**](#instructor) | **ITEC 65A** - OPEN SOURCE TECHNOLOGY |
+- **All checks pass** → the user is automatically redirected to your main page or web app
+- **Any check fails** → the page displays a clear status indicator showing which service is down, preventing the app from loading in a broken state
 
-### Instructor <sup>(Mid Year - Summer Sem)</sup>
-| Name | Subject |
-| :---: | :--- |
-|[**[...]**](#instructor) | **ITEC 75A** - SYSTEM INTEGRATION AND ARCHITECTURE 1 |
+This ensures users and developers always know the server environment is healthy before the application runs.
 
-## License
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+---
 
+## 🔧 Optional Add-ons
 
-## Acknowledgments & Technologies Used
+These are not required to run the template but are available if your project needs them. Both are set up via Composer and their packages are located in `libs/composer/`.
+
+### 📧 PHPMailer — Email Support
+
+Adds the ability to send emails from your PHP application (contact forms, notifications, password resets, etc.).
+
+> 📖 See [`InstallDependencies.md`](InstallDependencies.md) for full installation instructions.
+
+**Folder:** `libs/composer/`
+
+---
+
+### 🔌 Ratchet — WebSocket Support
+
+Adds real-time, two-way communication between the server and clients using WebSockets. Great for live chat, notifications, or any feature that needs a persistent connection.
+
+> 📖 See [`InstallDependencies.md`](InstallDependencies.md) for full installation instructions.
+
+**Folder:** `libs/composer/`
+
+---
+
+## 📦 Included Libraries (in `/libs`)
+
+All libraries are bundled locally — no CDN or internet connection required:
+
 - [Bootstrap](https://getbootstrap.com/)
 - [jQuery](https://jquery.com/)
-- [Chart.js](https://www.chartjs.org/)
-- [sweetalert2](https://sweetalert2.github.io/)
-- [Google Fonts](https://fonts.google.com/)
-- [Google Icons](https://fonts.google.com/icons)
-- [XAMPP](https://www.apachefriends.org/download.html)
-- [Visual Studio Code](https://code.visualstudio.com/download)
-- [Git](https://git-scm.com/downloads)
-- [PHP](https://www.php.net/downloads)
-- [MySQL](https://www.mysql.com/downloads/)
-- [HTML](https://html.com/)
-- [CSS](https://www.w3.org/Style/CSS/Overview.en.html)
-- [JavaScript](https://www.javascript.com/)
+- [Anime.js](https://animejs.com/)
+- [AOS – Animate On Scroll](https://michalsnik.github.io/aos/)
+- [Driver.js](https://driverjs.com/)
+- [SweetAlert2](https://sweetalert2.github.io/)
+- [Quill 2.0](https://quilljs.com/)
 
+---
 
-## Resources
-> Credits to the following for the images, Design, Color Scheme, Tutorials, and other resources used in the project:
+## 📄 License
 
-- [Freepik](https://www.freepik.com/)
-- [SVG Icons](https://www.svgrepo.com/collection/iconsax-duotone-filled-icons)
-- [Color Pallette](https://www.color-hex.com/color-palette/77108)
-- [Free Frontend](https://freefrontend.com/)
-- [Stack Overflow](https://stackoverflow.com/)
-- [ChatGPT](https://chat.openai.com/)
-- [Chart](https://www.chartjs.org/)
-- [Figma](https://www.figma.com/)
-- [GitHub](https://github.com/Unknownplanet40)
-- [Google Bard](https://bard.google.com/)
-- [TCPDF](https://tcpdf.org/)
-- [Heikei](https://app.haikei.app/)
-- [lordicon](https://lordicon.com/icons)
-- [BGjar](https://bgjar.com/)
+This project is licensed under the [MIT License](LICENSE).
 
+---
 
-> **Note:** <br> 
-> This project is currently in development and fully offline, so some features may not function as expected. Please keep in mind that it is intended solely for educational purposes.
+## 🤝 Contributing
 
+Pull requests are welcome! If you'd like to suggest improvements or add features, feel free to fork the repo and open a PR.
 
+---
 
+## 🔗 Live Demo
 
-
-
+[unknownplanet40.github.io/Project-Template](https://unknownplanet40.github.io/Project-Template/)

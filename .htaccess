@@ -1,0 +1,28 @@
+RewriteEngine On
+
+RewriteCond %{THE_REQUEST} \s/([^.]+)\.php[?\s] [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([a-zA-Z0-9_/]+)$ $1.php [L]
+
+# SPA routing (Single Page Application)
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Prevent directory listing
+Options -Indexes
+
+# Custom error pages
+ErrorDocument 403 /templatesNew/Src/Pages/Errorpage.php?error=403
+ErrorDocument 404 /templatesNew/Src/Pages/Errorpage.php?error=404
+
+
+# Set the default index file
+DirectoryIndex index.php index.html
+
+# Force HTTPS (uncomment if you want to enforce HTTPS)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

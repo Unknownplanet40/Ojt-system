@@ -1,0 +1,137 @@
+name: Semantic Version Manifest Update
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  semantic-bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Determine version bump from commits
+        id: bump
+        run: |
+          set -euo pipefail
+
+          LAST_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)
+
+          if [ -z "$LAST_TAG" ]; then
+            echo "No previous release tag → assuming 0.0.0"
+            RANGE=""
+          else
+            RANGE="${LAST_TAG}..HEAD"
+          fi
+
+          LOG=$(git log ${RANGE:+"$RANGE"} --pretty=format:%s || echo "")
+
+          echo "DEBUG: Commit subjects since last tag:"
+          echo "$LOG" | sed 's/^/  - /; s/^$/  (empty line)/'
+
+          BUMP_TYPE="none"
+
+          if echo "$LOG" | grep -qiE "(BREAKING CHANGE|!:|\+semver:\s*(major|breaking))"; then
+            BUMP_TYPE="major"
+          elif echo "$LOG" | grep -qiE "^feat(\(.+\))?:|^feature:|\+semver:\s*minor"; then
+            BUMP_TYPE="minor"
+          elif echo "$LOG" | grep -qiE "^fix:|^docs:|^style:|^refactor:|^perf:|^test:|^chore:"; then
+            BUMP_TYPE="patch"
+          fi
+
+          echo "DEBUG: Detected BUMP_TYPE='$BUMP_TYPE'"
+
+          if [ "$BUMP_TYPE" = "none" ]; then
+            if [ -z "$LOG" ]; then
+              echo "No new commits → skipping"
+            else
+              echo "Commits exist but no recognized conventional prefix → skipping bump (add 'fix:', 'feat:', etc.)"
+            fi
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+
+          CURRENT=$(jq -r '.version // "0.0.0"' Assets/manifest.json)
+          echo "current_version=$CURRENT" >> $GITHUB_OUTPUT
+
+          CLEAN_VERSION="${CURRENT%%[-+]*}"
+
+          if ! [[ $CLEAN_VERSION =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
+            echo "Warning: Invalid version '$CURRENT' → reset to 0.0.0"
+            CLEAN_VERSION="0.0.0"
+          fi
+
+          # Split and pad safely
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CLEAN_VERSION"
+          MAJOR=${MAJOR:-0}
+          MINOR=${MINOR:-0}
+          PATCH=${PATCH:-0}
+
+          echo "DEBUG: Parsed MAJOR=$MAJOR MINOR=$MINOR PATCH=$PATCH"
+
+          # Now safe to bump
+          case "$BUMP_TYPE" in
+            major) ((MAJOR += 1)); MINOR=0; PATCH=0 ;;
+            minor) ((MINOR += 1)); PATCH=0 ;;
+            patch) ((PATCH += 1)) ;;
+          esac
+
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Bump → $BUMP_TYPE ($CURRENT → $NEW_VERSION)"
+
+      - name: Update version in manifest.json
+        if: steps.bump.outputs.skip != 'true'
+        run: |
+          NEW_VER="${{ steps.bump.outputs.new_version }}"
+          jq --arg v "$NEW_VER" '.version = $v' Assets/manifest.json > tmp.json && mv tmp.json Assets/manifest.json
+
+      - name: Commit version bump
+        if: steps.bump.outputs.skip != 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add Assets/manifest.json
+
+          git diff --staged --quiet || \
+            git commit -m "chore(release): ${{ steps.bump.outputs.bump_type }} bump to ${{ steps.bump.outputs.new_version }} [skip ci]"
+
+      - name: Push version bump commit
+        if: steps.bump.outputs.skip != 'true'
+        run: git push
+
+      - name: Create & push git tag
+        if: steps.bump.outputs.skip != 'true'
+        run: |
+          NEW_VER="${{ steps.bump.outputs.new_version }}"
+          git tag "v${NEW_VER}"
+          git push origin "v${NEW_VER}"
+
+      # Optional – nicer GitHub Release (recommended)
+      - name: Create GitHub Release
+        if: steps.bump.outputs.skip != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.bump.outputs.new_version }}
+          name: v${{ steps.bump.outputs.new_version }}
+          body: |
+            **Type**: ${{ steps.bump.outputs.bump_type }}
+            **From**: ${{ steps.bump.outputs.current_version }}
+            **To**: ${{ steps.bump.outputs.new_version }}
+
+            Auto-released via conventional commits.
+          generate_release_notes: true

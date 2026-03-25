@@ -1,0 +1,198 @@
+body {
+  overflow: hidden;
+  -ms-content-zooming: none;
+  -ms-high-contrast-adjust: none;
+}
+
+@keyframes circle1Path {
+  0% {
+    transform: translate(0vw, 0vh);
+    width: 30vw;
+    height: 30vw;
+  }
+  100% {
+    transform: translate(0vw, -35vh);
+    width: 80vw;
+    height: 80vw;
+  }
+}
+
+@keyframes circle2Path {
+  0% {
+    transform: translate(0vw, 0vh);
+    width: 20vw;
+    height: 20vw;
+  }
+  100% {
+    transform: translate(-45vw, -40vh);
+    width: 80vw;
+    height: 80vw;
+  }
+}
+
+@keyframes circle3Path {
+  0% {
+    transform: translate(0vw, 0vh);
+    width: 20vw;
+    height: 20vw;
+  }
+  100% {
+    transform: translate(-55vw, -80vh);
+    width: 120vw;
+    height: 120vw;
+  }
+}
+
+@keyframes fadeCircleIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.circle {
+  position: fixed;
+  border-radius: 100vw;
+  width: 30vw;
+  height: 30vw;
+  min-width: 140px;
+  min-height: 140px;
+  opacity: 0;
+
+  --base-path-duration: 12s;
+  --final-duration: var(--base-path-duration);
+
+  animation:
+    var(--path-name) var(--final-duration) infinite,
+    fadeCircleIn 1332ms ease-out forwards;
+  animation-direction: alternate;
+
+  transition: opacity 0.5s ease;
+}
+
+.circle1,
+.circle2,
+.circle3 {
+  transition: background 0.6s ease-in-out;
+}
+
+.circle1 {
+  --path-name: circle1Path;
+  --base-path-duration: 12s;
+  left: 30vw;
+  top: 25vh;
+  position: absolute;
+}
+
+.circle2 {
+  --path-name: circle2Path;
+  --base-path-duration: 11.5s;
+  left: 45vw;
+  top: 30vh;
+  position: absolute;
+}
+
+.circle3 {
+  --path-name: circle3Path;
+  --base-path-duration: 15s;
+  left: 35vw;
+  top: 30vh;
+  position: absolute;
+}
+
+[data-speed="slow"] {
+  --final-duration: calc(var(--base-path-duration) * 1.5);
+}
+
+[data-speed="fast"] {
+  --final-duration: calc(var(--base-path-duration) * 0.3);
+}
+
+/* Blue family - Primary */
+.circle1-primary {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(12, 119, 255, 0.3) 15.62%, rgba(12, 119, 255, 0) 100%);
+}
+.circle2-primary {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(0, 56, 255, 0.3) 15.62%, rgba(12, 119, 255, 0) 100%);
+}
+.circle3-primary {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(65, 56, 210, 0.5) 15.62%, rgba(65, 56, 210, 0) 100%);
+}
+
+/* Red family - Danger */
+.circle1-danger {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255, 40, 40, 0.35) 15.62%, rgba(255, 40, 40, 0) 100%);
+}
+.circle2-danger {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(200, 20, 20, 0.45) 15.62%, rgba(200, 20, 20, 0) 100%);
+}
+.circle3-danger {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255, 100, 100, 0.3) 15.62%, rgba(255, 100, 100, 0) 100%);
+}
+
+/* Green family - Success */
+.circle1-success {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(40, 220, 40, 0.35) 15.62%, rgba(40, 220, 40, 0) 100%);
+}
+
+.circle2-success {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(20, 140, 20, 0.45) 15.62%, rgba(20, 140, 20, 0) 100%);
+}
+
+.circle3-success {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(100, 255, 140, 0.3) 15.62%, rgba(100, 255, 140, 0) 100%);
+}
+
+/* Yellow family - Warning */
+.circle1-warning {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255, 220, 60, 0.35) 15.62%, rgba(255, 220, 60, 0) 100%);
+}
+
+.circle2-warning {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(220, 160, 20, 0.45) 15.62%, rgba(220, 160, 20, 0) 100%);
+}
+
+.circle3-warning {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255, 245, 140, 0.28) 15.62%, rgba(255, 245, 140, 0) 100%);
+}
+
+/* Custom Version */
+.circle1-cv {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(140, 60, 255, 0.35) 15.62%, rgba(140, 60, 255, 0) 100%);
+}
+
+.circle2-cv {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(40, 220, 240, 0.35) 15.62%, rgba(40, 220, 240, 0) 100%);
+}
+
+.circle3-cv {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255, 60, 180, 0.35) 15.62%, rgba(255, 60, 180, 0) 100%);
+}
+
+/* DARK MODE */
+.circle1-dark {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255, 255, 255, 0.18) 15.62%, rgba(255, 255, 255, 0) 100%);
+}
+
+.circle2-dark {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255, 255, 255, 0.22) 15.62%, rgba(255, 255, 255, 0) 100%);
+}
+
+.circle3-dark {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255, 255, 255, 0.26) 15.62%, rgba(255, 255, 255, 0) 100%);
+}
+
+/* LIGHT MODE */
+.circle1-light {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(0, 0, 0, 0.13) 15.62%, rgba(0, 0, 0, 0) 100%);
+}
+
+.circle2-light {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(0, 0, 0, 0.16) 15.62%, rgba(0, 0, 0, 0) 100%);
+}
+
+.circle3-light {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(0, 0, 0, 0.19) 15.62%, rgba(0, 0, 0, 0) 100%);
+}

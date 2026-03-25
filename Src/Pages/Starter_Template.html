@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../../libs/bootstrap/css/bootstrap.css" />
+    <link rel="stylesheet" href="../../libs/aos/css/aos.css" />
+    <link rel="stylesheet" href="../../libs/driverjs/css/driver.css" />
+    <link rel="stylesheet" href="../../Assets/style/AniBG.css" />
+    <link rel="stylesheet" href="../../Assets/style/MainStyle.css" />
+    <link rel="manifest" href="../../Assets/manifest.json" />
+
+    <script defer src="../../libs/bootstrap/js/bootstrap.bundle.js"></script>
+    <script defer src="../../libs/sweetalert2/js/sweetalert2.all.min.js"></script>
+    <script defer src="../../libs/aos/js/aos.js"></script>
+    <script src="../../libs/driverjs/js/driver.js.iife.js"></script>
+    <script src="../../libs/jquery/js/jquery-3.7.1.min.js"></script>
+    <script type="module" src="../../Assets/Script/StarterScript.js"></script>
+    <title>Starter Template</title>
+  </head>
+  <body>
+    <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
+      <div class="circle circle1" data-speed="fast"></div>
+      <div class="circle circle2" data-speed="normal"></div>
+      <div class="circle circle3" data-speed="slow"></div>
+    </div>
+    <div class="w-100 vh-100 d-flex justify-content-center align-items-center z-1 bg-dark bg-opacity-75" id="pageLoader">
+      <div class="d-flex flex-column align-items-center">
+        <span class="loader"></span>
+      </div>
+    </div>
+    <div class="d-flex flex-nowrap z-3" id="PageMainContent">
+      <main class="d-flex flex-column flex-grow-1">
+        <nav class="navbar navbar-expand-lg bg-semi-transparent m-3 border rounded-2" aria-label="Main navigation">
+          <div class="container-fluid">
+            <a class="navbar-brand" href="#">Offcanvas navbar</a>
+            <button class="navbar-toggler p-0 border-0 shadow-none" type="button" id="navbarSideCollapse" aria-label="Toggle navigation">
+              <i class="bi bi-list fs-1"></i>
+            </button>
+            <div class="navbar-collapse offcanvas-collapse" id="navbarsExampleDefault">
+              <ul class="navbar-nav ms-auto mb-2 mb-lg-0 bg-semi-transparent">
+                <li class="nav-item">
+                  <a class="nav-link active" aria-current="page" href="#">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" aria-current="page" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" aria-current="page" href="#">Link</a>
+                </li>
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="https://placehold.co/30x30?text=No+Photo" alt="Profile" class="rounded-circle" />
+                  </a>
+                  <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
+                    <li><span class="dropdown-item-text text-nowrap">Signed in as <strong>Ryan James Capadocia</strong></span></li>
+                    <li><a class="dropdown-item" href="#">Profile</a></li>
+                    <li><a class="dropdown-item" href="#">Settings</a></li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li><a class="dropdown-item text-end" href="#">Sign out</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+        <div class="container-fluid px-4 w-100 vh-100">
+          <h1>Starter Template</h1>
+          <p class="lead">
+            Use this document as a way to quickly start any new project.<br />
+            All you get is this text and a mostly barebones HTML document.
+          </p>
+          <span>current window width: <span id="windowWidth"></span>px</span>
+        </div>
+      </main>
+    </div>
+  </body>
+
+</html>

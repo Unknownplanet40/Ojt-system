@@ -1,74 +1,75 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./libs/bootstrap/css/bootstrap.css" />
+    <link rel="stylesheet" href="./libs/aos/css/aos.css" />
+    <link rel="stylesheet" href="./libs/driverjs/css/driver.css" />
+    <link rel="stylesheet" href="./Assets/style/AniBG.css" />
+    <link rel="stylesheet" href="./Assets/style/MainStyle.css" />
+    <link rel="manifest" href="./Assets/manifest.json" />
 
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!--<meta http-equiv="refresh" content="0; url=./login.php">-->
-    <link rel="stylesheet" href="./Style/ImportantImport.css">
-    <title>Please Wait...</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Poppins";
-        }
-
-        body {
-            background-color: #e4e9f7;
-            background: url(./Image/bg-redirect.svg);
-            background-repeat: no-repeat;
-            background-size: cover;
-            background-position: center;
-        }
-
-        .cont {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-        }
-
-        h1 {
-            margin: 0;
-        }
-
-        p {
-            margin: 0;
-        }
-
-        a {
-            text-decoration: none;
-        }
-
-    </style>
-</head>
-
-<body class="text-bg-light">
-    <div class="cont container-fluid">
-        <div class="spinner-border text-success" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <h1 class="text-dark fw-bold">Please Wait While We Redirect You</h1>
-        <p class="size text-warning"></p>
-        <p class="text-muted">If you are not redirected in 5 seconds, click <a href="./login.php">here</a>.</p>
+    <script defer src="./libs/bootstrap/js/bootstrap.js"></script>
+    <script defer src="./libs/sweetalert2/js/sweetalert2.all.min.js"></script>
+    <script defer src="./libs/aos/js/aos.js"></script>
+    <script src="./libs/driverjs/js/driver.js.iife.js"></script>
+    <script src="./libs/jquery/js/jquery-3.7.1.min.js"></script>
+    <script type="module" src="./Assets/Script/RedirectScript.js"></script>
+    <title>Redirection Page</title>
+  </head>
+  <body>
+    <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
+      <div class="circle circle1" data-speed="fast"></div>
+      <div class="circle circle2" data-speed="normal"></div>
+      <div class="circle circle3" data-speed="slow"></div>
     </div>
-    <!-- This is just a esthetic thing, it's not important,
-        but in case it fails to redirect, it will show a link to the login page -->
-    <script>
-        var width = screen.width;
-        var size = document.querySelector(".size");
-
-        if (width < 768) {
-            size.innerHTML = "Your screen is too small for this website you will have a bad experience using it";
-        }
-        setTimeout(function() {
-            window.location.href = "./login.php";
-        }, 5000);
-    </script>
-</body>
-
+    <div class="container w-100 vh-100 d-flex justify-content-center align-items-center z-1 d-none" id="version1">
+      <div class="vstack gap-3 h-100 justify-content-center align-items-center">
+        <span class="loader"></span>
+        <span class="text-center px-3 fs-5 fw-bold" id="status">Checking server status...</span>
+        <span class="text-center fs-6 mt-2" id="dot"></span>
+      </div>
+    </div>
+    <div class="container w-100 vh-100 d-flex justify-content-center align-items-center z-1 d-none" id="version2">
+      <div class="card bg-blur-5 bg-semi-transparent p-3" style="width: 20rem">
+        <div class="card-body">
+          <h5 class="card-title text-center mb-5">Server Status</h5>
+          <span class="hstack gap-2">
+            <span class="fw-bold text-uppercase" role="status">Apache Server </span>
+            <div class="ms-auto">
+              <span class="spinner-border spinner-border-sm d-none" id="apacheSpinner" role="status" aria-hidden="true"></span>
+              <i class="bi bi-check-lg text-success fs-4" id="apacheSuccess"></i>
+            </div>
+          </span>
+          <span class="hstack gap-2">
+            <span class="fw-bold text-uppercase" role="status">MySQL Server </span>
+            <div class="ms-auto">
+              <span class="spinner-border spinner-border-sm d-none" id="mysqlSpinner" role="status" aria-hidden="true"></span>
+              <i class="bi bi-check-lg text-success fs-4" id="mysqlSuccess"></i>
+            </div>
+          </span>
+          <span class="hstack gap-2">
+            <span class="fw-bold text-uppercase" role="status">Database Connection </span>
+            <div class="ms-auto">
+              <span class="spinner-border spinner-border-sm d-none" id="dbSpinner" role="status" aria-hidden="true"></span>
+              <i class="bi bi-check-lg text-success fs-4" id="dbSuccess"></i>
+            </div>
+          </span>
+          <div>
+            <span class="hstack gap-2">
+              <span class="fw-bold text-uppercase" role="status">PHP Version </span>
+              <div class="ms-auto">
+                <span class="spinner-border spinner-border-sm d-none" id="phpSpinner" role="status" aria-hidden="true"></span>
+                <i class="bi bi-check-lg text-success fs-4" id="phpSuccess"></i>
+              </div>
+            </span>
+          </div>
+          <div class="d-grid mt-5">
+            <button class="btn btn-sm btn-outline-primary rounded-1" id="RetryBtn">Retry</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>
