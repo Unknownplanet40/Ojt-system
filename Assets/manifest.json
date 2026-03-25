@@ -1,7 +1,7 @@
 {
   "name": "Internship Management System",
   "short_name": "OJTMS",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A web-based application designed to streamline the management of internship programs, providing tools for students, supervisors, and administrators to efficiently handle tasks such as application processing, progress tracking, and communication.",
   "lang": "en-US",
   "dir": "ltr",
@@ -13,7 +13,11 @@
       "body": "You have a new notification from OJTMS.",
       "icon": "Images/Icons/Icon-x192.png",
       "badge": "Images/Icons/Icon-x72.png",
-      "vibrate": [200, 100, 200],
+      "vibrate": [
+        200,
+        100,
+        200
+      ],
       "actions": [
         {
           "action": "open",
@@ -32,7 +36,9 @@
   "background_color": "#212529",
   "theme_color": "#212529",
   "orientation": "portrait-primary",
-  "display_override": ["window-controls-overlay"],
+  "display_override": [
+    "window-controls-overlay"
+  ],
   "author": "Ryan James Capadocia",
   "license": "MIT",
   "screenshots": [
