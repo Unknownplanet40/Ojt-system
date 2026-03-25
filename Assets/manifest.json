@@ -57,6 +57,20 @@
       "form_factor": "wide"
     },
     {
+      "src": "Images/Previews/Batch.png",
+      "sizes": "1365x740",
+      "type": "image/png",
+      "purpose": "any",
+      "form_factor": "wide"
+    },
+    {
+      "src": "Images/Previews/Programs.png",
+      "sizes": "1365x739",
+      "type": "image/png",
+      "purpose": "any",
+      "form_factor": "wide"
+    },
+    {
       "src": "Images/Previews/SSM_1.png",
       "sizes": "1082x2400",
       "type": "image/png",
