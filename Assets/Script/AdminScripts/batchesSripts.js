@@ -35,7 +35,7 @@ function loadBatches() {
 
         sortedBatches.forEach((batch) => {
           const batchCard = `
-            <div class="col">
+            <div class="col card-container">
               <div class="card h-100 bg-blur-5 bg-semi-transparent rounded-4 shadow-sm ${batch.status === "active" ? "border-success border-2" : batch.status === "closed" ? "border-danger border-2" : ""}" style="--blur-lvl: 0.60">
           <div class="card-body py-3 px-4">
             <div class="hstack">
@@ -111,6 +111,8 @@ function loadBatches() {
             </div>
           `;
           batchesContainer.append(batchCard);
+
+          $("#activeBatchLabel").html(`● <span class="fw-bold">${activeBatch ? activeBatch.label : "N/A"}</span> is currently active`);
 
           $(`#closeBatchBtn-${batch.uuid}`).click(function () {
             $("#closeBatchModal").attr("data-closebatch-uuid", batch.uuid);
