@@ -1,6 +1,8 @@
-# 🚀 Project Template
+# 🚀 OJT System (Rebuild)
 
-A lightweight starter template designed to accelerate web development with pre-configured libraries, a clean directory structure, and essential boilerplate — so you can skip setup and start building.
+This project is a **rebuild of my old OJT Coordinator System project**, modernized with a cleaner structure, pre-configured libraries, and improved setup flow for easier maintenance and future development.
+
+> ℹ️ The repository originally started from a template-style base, but it now serves as the active codebase for the rebuilt OJT system.
 
 ---
 
@@ -10,6 +12,85 @@ A lightweight starter template designed to accelerate web development with pre-c
 - **Pre-bundled Libraries** — all dependencies are included locally in `/libs`, no package manager required
 - **Clean Directory Structure** — organized folders for assets, source pages, and libraries
 - **Apache Ready** — includes a pre-configured `.htaccess` for URL rewriting and access control
+
+---
+
+### BREAKING CHANGE: initial system setup with auth, user management, and academic modules
+
+### Database & Schema
+
+- Configured for MariaDB using `utf8mb4` connection settings via `Assets/database/dbconfig.php`
+- Uses a dual-ID approach in the app layer: numeric internal IDs + UUIDs for public references (UUID generation is handled in PHP)
+- Core role model supports `admin`, `coordinator`, `student`, and `supervisor`
+- Role profile flow is implemented with dedicated profile pages:
+   - `Src/Pages/Admin/Admin_Profile.php`
+   - `Src/Pages/Coordinator/Coordinator_Profile.php`
+   - `Src/Pages/Students/Students_Profile.php`
+   - `Src/Pages/Supervisor/Supervisor_Profile.php`
+- Audit/auth tracking integrations are present in API layer:
+   - `Assets/api/logs.php` (`auditLog()`, `loginAudit()`)
+   - `Assets/api/admin_dashboard_queries.php` (activity + alerts feed)
+- Batch management is implemented with status transitions and actor tracking in:
+   - `Assets/api/batch_functions.php`
+- Development/testing data assumptions are supported by dashboard/batch queries, while seed SQL files are maintained outside this repository
+
+### Authentication
+
+- Login UI and no-registration messaging are implemented in `Src/Pages/Login.php`
+- Post-login routing chain is implemented in `Assets/api/loginProcess.php`:
+   - `must_change_password` → password change screen
+   - missing profile → role profile page
+   - complete profile → role dashboard
+- Forgot password request and reset UX states are implemented in `Src/Pages/ForgotPassword.php`
+- Change password supports forced + voluntary modes in:
+   - `Src/Pages/ChangePassword.php`
+   - `Assets/api/ChangePasswordProcess.php`
+- Password hashing uses `password_hash()` (bcrypt-compatible default in PHP)
+
+### User Interface
+
+- Login page includes no-registration notice and first-login guidance (`Src/Pages/Login.php`)
+- Profile setup forms exist for all 4 roles (see profile pages above)
+- Admin dashboard with stat cards/activity/alerts is implemented in:
+   - `Src/Pages/Admin/AdminDashboard.php`
+   - `Assets/api/admin_dashboard_queries.php`
+- Admin navigation and shared layout are handled through reusable components:
+   - `Src/Components/Header.php`
+   - `Src/Components/lvl1cards.php`
+   - `Src/Components/lvl2cards.php`
+   - `Src/Components/lvl3cards.php`
+- Forgot password screens include request, sent, reset, expired, and success states (`Src/Pages/ForgotPassword.php`)
+- Change password screens include forced and voluntary variants with strength checks (`Src/Pages/ChangePassword.php`)
+- Batches module UI is implemented in `Src/Pages/Admin/Batches.php` with:
+   - Active batch highlighting and status pills
+   - Create/edit batch forms with school-year validation hints and activate toggle
+   - Activate confirmation modal (with active-batch close warning)
+   - Close confirmation modal (with `CLOSE` typed safety check)
+
+### Backend Functions (MySQLi)
+
+- Dashboard API (`Assets/api/admin_dashboard_queries.php`):
+   - `getDashboardData()`
+   - `getStatCards()`
+   - `getUsersByRole()`
+   - `getRecentAccounts()`
+   - `getRecentActivity()`
+   - `getNeedsAttention()`
+   - `timeAgo()`
+- Batch API (`Assets/api/batch_functions.php`):
+   - `createBatch()`, `updateBatch()`, `activateBatch()`, `closeBatch()`
+   - `getAllBatches()`, `getActiveBatch()`
+   - `generateUuid()` for UUID generation in MariaDB-compatible flow
+- Logging helpers (`Assets/api/logs.php`):
+   - `auditLog()`
+   - `loginAudit()`
+
+### Current Notes
+
+- UUIDs are generated in PHP before INSERT operations where needed (`generateUuid()` in `batch_functions.php`)
+- Single active batch behavior is enforced at application layer through `activateBatch()`
+- Program management functions/pages (`createProgram`, `editProgram`, `toggleProgram`, `getAllPrograms`) are **not yet present** in this repository state
+- Some company/MOA-related alert logic is still placeholder-level in `getNeedsAttention()` until those modules/tables are added
 
 ---
 
@@ -32,10 +113,10 @@ A lightweight starter template designed to accelerate web development with pre-c
 ## 📁 Directory Structure
 
 ```
-Project-Template/
+Ojt-system/
 ├── Assets/
 │   └── database/
-│       └── dbconfig    # Database connection configuration
+│       └── dbconfig.php    # Database connection configuration
 ├── Src/
 │   └── Pages/          # PHP/HTML page files
 ├── libs/               # All bundled front-end libraries (offline-ready)
@@ -99,8 +180,8 @@ AllowOverride All
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Unknownplanet40/Project-Template.git
-cd Project-Template
+git clone <your-repository-url>
+cd Ojt-system
 ```
 
 ### 2. Place in Your Web Server Root
@@ -116,7 +197,7 @@ Copy the project folder into your server's document root:
 Update the database connection settings in:
 
 ```
-Assets/database/dbconfig
+Assets/database/dbconfig.php
 ```
 
 Set your database host, name, username, and password here before running the project.
@@ -126,7 +207,7 @@ Set your database host, name, username, and password here before running the pro
 Make sure **Apache** and **MySQL** are running, then navigate to:
 
 ```
-http://localhost/Project-Template/
+http://localhost/Ojt-system/
 ```
 
 ### 5. How It Works — Server Check & Redirect
@@ -146,7 +227,7 @@ This ensures users and developers always know the server environment is healthy 
 
 ## 🔧 Optional Add-ons
 
-These are not required to run the template but are available if your project needs them. Both are set up via Composer and their packages are located in `libs/composer/`.
+These are not required to run the core system but are available if your project needs them. Both are set up via Composer and their packages are located in `libs/composer/`.
 
 ### 📧 PHPMailer — Email Support
 
@@ -196,4 +277,4 @@ Pull requests are welcome! If you'd like to suggest improvements or add features
 
 ## 🔗 Live Demo
 
-[unknownplanet40.github.io/Project-Template](https://unknownplanet40.github.io/Project-Template/)
+_To be updated for the rebuilt OJT System._
