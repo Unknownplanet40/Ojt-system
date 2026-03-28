@@ -4,6 +4,27 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once "../../Assets/SystemInfo.php";
+
+if ($_SESSION['user']) {
+    switch ($_SESSION['user']['role']) {
+        case 'admin':
+            header("Location: ../Pages/Admin/AdminDashboard");
+            exit();
+        case 'coordinator':
+            header("Location: ../Pages/Coordinator/CoordinatorDashboard");
+            exit();
+        case 'student':
+            header("Location: ../Pages/Student/StudentDashboard");
+            exit();
+        case 'supervisor':
+            header("Location: ../Pages/Supervisor/SupervisorDashboard");
+            exit();
+        default:
+            session_destroy();
+            header("Location: Login");
+            exit();
+    }
+}
 ?>
 
 
@@ -81,7 +102,8 @@ require_once "../../Assets/SystemInfo.php";
               <input type="password" class="form-control rounded-2 bg-semi-transparent fw-bold" id="password"
                 placeholder="Enter your password">
               <div class="hstack">
-                <div class="form-text me-auto"><a href="ForgotPassword.php" class="text-decoration-none text-success">Forgot
+                <div class="form-text me-auto"><a href="ForgotPassword.php"
+                    class="text-decoration-none text-success">Forgot
                     password?</a></div>
                 <div class="form-text"><input type="checkbox" class="form-check-input" id="showPassword"> <label
                     for="showPassword" class="form-check-label text-muted">Show Password</label></div>

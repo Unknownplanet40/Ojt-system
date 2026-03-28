@@ -82,7 +82,7 @@
     <div class="card h-100 bg-blur-5 bg-semi-transparent shadow" style="max-height: 400px; overflow-y: auto">
       <div class="card-body">
         <div class="hstack">
-          <h5 class="card-title">Recent Activity</h5>
+          <h5 class="card-title">Recent Activity - (<small class="text-muted" id="activityCount">0</small>)</h5>
           <a href="javascript:void(0)" class="ms-auto text-decoration-none text-success fw-medium">View all</a>
         </div>
         <ul class="list-group list-group-flush mt-3" id="recentActivityList">

@@ -1,6 +1,6 @@
 import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
 import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "../SystemTheme.js";
-import { fetchUserData } from "../DashboardScripts/AdminDashboardScript.js";
+import { fetchUserData, signOut } from "../DashboardScripts/AdminDashboardScript.js";
 
 const driver = window.driver.js.driver;
 MatchsystemThemes(true);
@@ -214,6 +214,13 @@ function triggerActionFromURL() {
       $(`#editBatchBtnc-${batchUuid}`).click();
     }, 100);
   }
+  
+  if (action) {
+    urlParams.delete("action");
+    urlParams.delete("batch");
+    const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+    window.history.replaceState({}, document.title, newUrl);
+  }
 }
 
 $(document).ready(function () {
@@ -223,6 +230,7 @@ $(document).ready(function () {
 
   loadBatches();
   triggerActionFromURL();
+  signOut();
 
   $("#cancelActivateBatchBtn").click(function () {
     $("#ActivateBatchModal").removeAttr("data-activatebatch-uuid");

@@ -1,6 +1,6 @@
 import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
 import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "../SystemTheme.js";
-import { fetchUserData } from "../DashboardScripts/AdminDashboardScript.js";
+import { fetchUserData, signOut } from "../DashboardScripts/AdminDashboardScript.js";
 
 const driver = window.driver.js.driver;
 MatchsystemThemes(true);
@@ -146,6 +146,7 @@ $(document).ready(function () {
   });
 
   loadPrograms();
+  signOut();
 
   $("#cancelEditProgramBtn").on("click", function () {
     $("#EditProgramModal").removeAttr("data-editprogram-uuid");

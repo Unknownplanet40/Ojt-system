@@ -56,6 +56,37 @@ try {
     ]);
 }
 
+require_once 'helpers.php';
+
+function getExpiringMoas($conn, int $daysThreshold = 30): array
+{
+    $result = $conn->query("
+        SELECT
+          c.uuid,
+          c.name,
+          cd.valid_until,
+          DATEDIFF(cd.valid_until, CURDATE()) AS days_left
+        FROM company_documents cd
+        JOIN companies c ON cd.company_uuid = c.uuid
+        WHERE cd.doc_type = 'moa'
+          AND cd.valid_until BETWEEN CURDATE()
+          AND DATE_ADD(CURDATE(), INTERVAL {$daysThreshold} DAY)
+          AND c.accreditation_status = 'active'
+        ORDER BY cd.valid_until ASC
+    ");
+
+    $expiring = [];
+    while ($row = $result->fetch_assoc()) {
+        $expiring[] = [
+            'company_uuid' => $row['uuid'],
+            'company_name' => $row['name'],
+            'expiry_date'  => date('M j, Y', strtotime($row['valid_until'])),
+            'days_left'    => (int) $row['days_left'],
+        ];
+    }
+
+    return $expiring;
+}
 
 function getStatCards($conn): array
 {
@@ -83,6 +114,14 @@ function getStatCards($conn): array
     ");
     $noProfile = $result->fetch_assoc()['total'];
 
+    $result    = $conn->query("
+    SELECT
+      COUNT(*) AS total_companies,
+      SUM(CASE WHEN accreditation_status = 'active' THEN 1 ELSE 0 END) AS active_companies
+    FROM companies
+    ");
+    $companies = $result->fetch_assoc();
+
     return [
         'total_users'         => (int) $counts['total_users'],
         'total_students'      => (int) $counts['total_students'],
@@ -90,8 +129,9 @@ function getStatCards($conn): array
         'total_supervisors'   => (int) $counts['total_supervisors'],
         'total_admins'        => (int) $counts['total_admins'],
         'students_no_profile' => (int) $noProfile,
-        'total_companies'     => 0,  // placeholder until companies table exists
-        'moa_expiring'        => 0,  // placeholder until companies table exists
+        'total_companies'  => (int) ($companies['total_companies']  ?? 0),
+        'active_companies' => (int) ($companies['active_companies'] ?? 0),
+        'moa_expiring'     => count(getExpiringMoas($conn, 30)),
     ];
 }
 
@@ -112,7 +152,7 @@ function getUsersByRole($conn): array
 
     $grandTotal = array_sum(array_column($rows, 'total'));
 
-    $breakdown = array_map(fn($row) => [
+    $breakdown = array_map(fn ($row) => [
         'role'       => $row['role'],
         'label'      => ucfirst($row['role']) . 's',
         'total'      => (int) $row['total'],
@@ -210,7 +250,7 @@ function getRecentAccounts($conn, int $limit = 5): array
     return $accounts;
 }
 
-function getRecentActivity($conn, int $limit = 10): array
+function getRecentActivity($conn, int $limit = 20): array
 {
     $limit = (int) $limit;
 
@@ -252,27 +292,24 @@ function getRecentActivity($conn, int $limit = 10): array
             'time_ago'    => timeAgo($row['created_at']),
             'full_date'   => date('M j, Y g:i A', strtotime($row['created_at'])),
             'icon_type'   => match(true) {
-                in_array($row['event_type'], [
-                    'login_success', 'profile_completed', 'account_created',
-                    'ojt_started', 'ojt_completed', 'dtr_approved',
-                    'application_approved', 'grade_finalized',
-                    'endorsement_issued', 'requirement_approved',
-                    'journal_reviewed', 'evaluation_submitted',
-                    'company_added', 'batch_created',
-                    'batch_activated', 'moa_uploaded'
-                ]) => 'success',
-                in_array($row['event_type'], [
-                    'login_failed', 'account_deactivated',
-                    'application_rejected', 'dtr_rejected',
-                    'company_blacklisted', 'moa_expired'
-                ]) => 'danger',
-                in_array($row['event_type'], [
-                    'moa_expiring_soon', 'application_returned',
-                    'journal_returned', 'dtr_edited', 'grade_overridden'
-                ]) => 'warning',
-                default => 'info',
-            },
-        ];
+                str_contains($row['event_type'], 'created'),
+                str_contains($row['event_type'], 'approved'),
+                str_contains($row['event_type'], 'activated'),
+                str_contains($row['event_type'], 'success'),
+                str_contains($row['event_type'], 'enabled') => 'success',
+
+                str_contains($row['event_type'], 'updated'),
+                str_contains($row['event_type'], 'submitted'),
+                str_contains($row['event_type'], 'issued') => 'primary',
+
+                str_contains($row['event_type'], 'deactivated'),
+                str_contains($row['event_type'], 'rejected'),
+                str_contains($row['event_type'], 'failed'),
+                str_contains($row['event_type'], 'disabled') => 'danger',
+
+                default => 'secondary'
+            }
+            ];
     }
 
     return $activities;
@@ -282,13 +319,12 @@ function getNeedsAttention($conn): array
 {
     $alerts = [];
 
+    // students with no profile
     $result = $conn->query("
         SELECT COUNT(*) AS total
         FROM users u
         LEFT JOIN student_profiles sp ON u.uuid = sp.user_uuid
-        WHERE u.role = 'student'
-          AND u.is_active = 1
-          AND sp.id IS NULL
+        WHERE u.role = 'student' AND u.is_active = 1 AND sp.id IS NULL
     ");
     $count = (int) $result->fetch_assoc()['total'];
     if ($count > 0) {
@@ -296,89 +332,80 @@ function getNeedsAttention($conn): array
             'type'    => 'warning',
             'message' => "{$count} student" . ($count > 1 ? 's have' : ' has') . " incomplete profiles",
             'action'  => 'View students',
+            'description' => 'These students have registered accounts but have not completed their profiles. Encourage them to complete their profiles to access all features.',
             'link'    => '/admin/users?role=student&filter=no_profile',
         ];
     }
 
-        $result = $conn->query("
-        SELECT COUNT(*) AS total
-        FROM users u
-        LEFT JOIN coordinator_profiles cp ON u.uuid = cp.user_uuid
-        WHERE u.role = 'coordinator'
-          AND u.is_active = 1
-          AND cp.id IS NULL
-    ");
-    $count = (int) $result->fetch_assoc()['total'];
-    if ($count > 0) {
-        $alerts[] = [
-            'type'    => 'warning',
-            'message' => "{$count} coordinator" . ($count > 1 ? 's have' : ' has') . " incomplete profiles",
-            'action'  => 'View coordinators',
-            'link'    => '/admin/users?role=coordinator&filter=no_profile',
-        ];
-    }
-
+    // accounts that never logged in
     $result = $conn->query("
-        SELECT COUNT(*) AS total
-        FROM users
-        WHERE last_login_at IS NULL
-          AND is_active = 1
+        SELECT COUNT(*) AS total FROM users
+        WHERE last_login_at IS NULL AND is_active = 1
     ");
     $count = (int) $result->fetch_assoc()['total'];
+    $emails = [];
+    $emailResult = $conn->query("
+        SELECT email FROM users
+        WHERE last_login_at IS NULL AND is_active = 1
+        LIMIT 3
+    ");
+    while ($row = $emailResult->fetch_assoc()) {
+        $emails[] = $row['email'];
+    }
     if ($count > 0) {
         $alerts[] = [
             'type'    => 'info',
             'message' => "{$count} account" . ($count > 1 ? 's have' : ' has') . " never logged in",
+            'description' => implode(', ', $emails) . ($count > 3 ? ', ...' : ''),
             'action'  => 'View accounts',
             'link'    => '/admin/users?filter=never_logged_in',
         ];
     }
 
-    $result = $conn->query("
-        SELECT COUNT(*) AS total
-        FROM users
-        WHERE is_active = 0
-    ");
+    // no active batch
+    $result = $conn->query("SELECT COUNT(*) AS total FROM batches WHERE status = 'active'");
+    $hasActiveBatch = (int) $result->fetch_assoc()['total'];
+    if ($hasActiveBatch === 0) {
+        $alerts[] = [
+            'type'    => 'danger',
+            'message' => 'No active batch configured for current semester',
+            'description' => 'Students cannot be assigned to a batch until an active batch is created.',
+            'action'  => 'Create batch',
+            'link'    => '../../Pages/Admin/batches?action=create',
+        ];
+    }
+
+    $expiring = getExpiringMoas($conn, 30);
+    foreach ($expiring as $co) {
+        $alerts[] = [
+            'type'    => 'warning',
+            'message' => "MOA expiring soon",
+            'action'  => 'View company',
+            'description' => "{$co['company_name']} MOA expires in {$co['days_left']} day" . ($co['days_left'] > 1 ? 's' : ''),
+            'link'    => "../../Pages/Admin/Companies?company_uuid={$co['company_uuid']}",
+        ];
+    }
+
+    // deactivated accounts
+    $result = $conn->query("SELECT COUNT(*) AS total FROM users WHERE is_active = 0");
     $count = (int) $result->fetch_assoc()['total'];
     if ($count > 0) {
         $alerts[] = [
             'type'    => 'info',
             'message' => "{$count} account" . ($count > 1 ? 's are' : ' is') . " deactivated",
+            'description' => 'Review deactivated accounts to ensure they were intentionally deactivated and not due to an error.',
             'action'  => 'View all users',
             'link'    => '/admin/users?filter=inactive',
         ];
     }
 
-    $result = $conn->query("
-        SELECT COUNT(*) AS total
-        FROM batches
-        WHERE status = 'active'
-    ");
-    $count = (int) $result->fetch_assoc()['total'];
-    if ($count === 0) {
-        $alerts[] = [
-            'type'    => 'danger',
-            'message' => "No active batch configured for the current semester",
-            'action'  => 'Create batch',
-            'link'    => '../Admin/batches?action=create',
-        ];
-    }
+    usort($alerts, function ($a, $b) {
+        $priority = ['danger' => 3, 'warning' => 2, 'info' => 1];
+        return ($priority[$b['type']] ?? 0) <=> ($priority[$a['type']] ?? 0);
+    });
+
 
     return $alerts;
-}
-
-
-function timeAgo(string $datetime): string
-{
-    $diff = time() - strtotime($datetime);
-
-    return match(true) {
-        $diff < 60     => 'Just now',
-        $diff < 3600   => floor($diff / 60)   . ' min ago',
-        $diff < 86400  => floor($diff / 3600)  . ' hr ago',
-        $diff < 604800 => floor($diff / 86400) . ' day' . (floor($diff / 86400) > 1 ? 's' : '') . ' ago',
-        default        => date('M j, Y', strtotime($datetime)),
-    };
 }
 
 function getDashboardData($conn, string $type = null): array

@@ -63,22 +63,7 @@ try {
     ]);
 }
 
-require_once 'logs.php';
-
-function generateUuid(): string
-{
-    return sprintf(
-        '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-        mt_rand(0, 0xffff),
-        mt_rand(0, 0xffff),
-        mt_rand(0, 0xffff),
-        mt_rand(0, 0x0fff) | 0x4000,
-        mt_rand(0, 0x3fff) | 0x8000,
-        mt_rand(0, 0xffff),
-        mt_rand(0, 0xffff),
-        mt_rand(0, 0xffff)
-    );
-}
+require_once 'helpers.php';
 
 function createProgram($conn, array $data, string $adminUuid): array
 {
@@ -132,7 +117,8 @@ function createProgram($conn, array $data, string $adminUuid): array
     $stmt->execute();
     $stmt->close();
 
-    auditLog(
+    logActivity(
+        conn: $conn,
         eventType: 'program_create',
         description: "Admin created program {$code} — {$name}",
         module: 'programs',
@@ -194,9 +180,10 @@ function editProgram($conn, string $programUuid, array $data, string $adminUuid)
     $stmt->execute();
     $stmt->close();
 
-    auditLog(
-        eventType: 'program_update',
-        description: "Admin updated program {$code} — {$name}",
+    logActivity(
+        conn: $conn,
+        eventType: 'program_updated',
+        description: "Admin edited program {$code} — {$name}",
         module: 'programs',
         actorUuid: $adminUuid,
         meta: json_encode(['program_code' => $code, 'program_name' => $name])
@@ -225,12 +212,13 @@ function toggleProgram($conn, string $programUuid, string $adminUuid): array
     $stmt->execute();
     $stmt->close();
 
-    auditLog(
-        eventType: 'program_toggle',
+    logActivity(
+        conn: $conn,
+        eventType: 'program_' . strtolower($action),
         description: "Admin {$action} program {$prog['code']} — {$prog['name']}",
         module: 'programs',
         actorUuid: $adminUuid,
-        meta: json_encode(['program_code' => $prog['code'], 'program_name' => $prog['name'], 'new_status' => $newStatus])
+        meta: ['program_code' => $prog['code'], 'program_name' => $prog['name'], 'new_status' => $newStatus]
     );
 
     return ['success' => true, 'new_status' => $newStatus];
