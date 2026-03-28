@@ -55,7 +55,7 @@ try {
     ]);
 }
 
-require_once 'logs.php';
+require_once 'helpers.php';
 
 $email = isset($_POST['email']) ? trim($_POST['email']) : null;
 $password = isset($_POST['password']) ? $_POST['password'] : null;
@@ -205,7 +205,13 @@ if ($noProfile) {
     $LogMessage = 'logged in successfully';
 
     loginAudit($user['uuid'], 1);
-    auditLog('login_success', $user['email'] . ' ' . $LogMessage, 'authentication', $user['uuid']);
+    logActivity(
+        conn: $conn,
+        eventType: 'login_success',
+        description: "$user[email]" . " " . $LogMessage,
+        module: 'authentication',
+        actorUuid: $user['uuid']
+    );
 }
 
 $conn->close();

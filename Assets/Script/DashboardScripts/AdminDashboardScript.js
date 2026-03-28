@@ -9,6 +9,86 @@ AOS.init();
 
 $("#pageLoader").fadeIn(2000);
 
+/* 'profile_completed','account_created','account_deactivated','account_activated','password_changed','password_reset','role_changed','login_success','login_failed','logout','application_submitted','application_approved','application_rejected','endorsement_issued','dtr_submitted','dtr_approved','dtr_rejected','journal_submitted','evaluation_submitted','document_uploaded','company_added','company_updated','moa_uploaded','batch_created','batch_closed','other' */
+
+const ActivityIcons = {
+  other: "bi-activity",
+  profile_completed: "bi-person-check",
+  account_created: "bi-person-plus",
+  account_deactivated: "bi-person-x",
+  account_activated: "bi-person-check",
+  password_changed: "bi-key",
+  password_reset: "bi-key-fill",
+  role_changed: "bi-shield-lock",
+  login_success: "bi-box-arrow-in-right",
+  login_failed: "bi-box-arrow-in-right text-danger",
+  logout: "bi-box-arrow-right",
+  application_submitted: "bi-file-earmark-text",
+  application_approved: "bi-file-earmark-check",
+  application_rejected: "bi-file-earmark-x",
+  endorsement_issued: "bi-award",
+  dtr_submitted: "bi-journal-text",
+  dtr_approved: "bi-journal-check",
+  dtr_rejected: "bi-journal-x",
+  journal_submitted: "bi-journal-text",
+  evaluation_submitted: "bi-clipboard-check",
+  document_uploaded: "bi-cloud-upload",
+  company_added: "bi-building",
+  company_updated: "bi-building-up",
+  moa_uploaded: "bi-file-earmark-arrow-up",
+  batch_created: "bi-diagram-3",
+  batch_closed: "bi-diagram-3-fill",
+  program_created: "bi-collection",
+  program_updated: "bi-collection-fill",
+  program_disabled: "bi-collection-play",
+  program_enabled: "bi-collection-play-fill",
+};
+
+export function fetchUserData() {
+  $.ajax({
+    url: "../../../Assets/api/GET_userData",
+    method: "GET",
+    timeout: 5000,
+    success: function (response) {
+      if (response.status === "success") {
+        $("#userName").text(response.data.first_name + " " + response.data.middle_name.charAt(0) + ". " + response.data.last_name);
+        $("#welcomeUserName").text(response.data.first_name);
+        $("#dropdownMenuName").text(response.data.first_name + " " + response.data.last_name);
+        switch (response.data.role) {
+          case "admin":
+            $("#userRole").text("Administrator");
+            break;
+          case "supervisor":
+            $("#userRole").text("Supervisor");
+            break;
+          case "student":
+            $("#userRole").text("Student");
+            break;
+          case "coordinator":
+            $("#userRole").text("Coordinator");
+            break;
+          default:
+            $("#userRole").text("User");
+        }
+        if (response.data.profile_path) {
+          $("#navProfilePhoto").attr("src", "../../../" + response.data.profile_path);
+          $("#dropdownProfilePhoto").attr("src", "../../../" + response.data.profile_path);
+        } else {
+          $("#navProfilePhoto").attr("src", "https://placehold.co/30x30?text=No+Photo");
+          $("#dropdownProfilePhoto").attr("src", "https://placehold.co/30x30?text=No+Photo");
+        }
+      }
+    },
+    error: function (xhr, status, error) {
+      if (status === "timeout") {
+        ToastVersion(swalTheme, "Request timed out. Please try again.", "error", 3000);
+      } else {
+        ToastVersion(swalTheme, "An error occurred while fetching user data. Please try again.", "error", 3000);
+      }
+    },
+  });
+}
+
 function loadRecentActivity() {
   const recentActivityList = $("#recentActivityList");
   recentActivityList.empty();
@@ -19,12 +99,12 @@ function loadRecentActivity() {
     timeout: 5000,
     success: function (response) {
       if (response.status === "success") {
+        $("#activityCount").text(response.data.length);
         response.data.forEach((activity) => {
-          const iconClass =
-            activity.event_type === "login_success" ? "bi-person-check text-success" : activity.event_type === "login_failure" ? "bi-person-x text-danger" : "bi-info-circle text-secondary";
+          const iconClass = ActivityIcons[activity.event_type] || "bi-activity";
           const listItem = `<li class="list-group-item bg-transparent">
             <div class="hstack">
-              <i class="bi ${iconClass} me-3 fs-4"></i>
+              <i class="bi ${iconClass} text-${activity.icon_type} me-3"></i>
               <div>
               <div>${activity.description}</div>
               <small class="text-muted">${activity.actor_name} (${activity.actor_role.charAt(0).toUpperCase() + activity.actor_role.slice(1)}) - ${activity.time_ago}</small>
@@ -84,7 +164,13 @@ function loadRecentAccountActivity() {
               : account.status === "inactive"
                 ? "bg-secondary-subtle text-secondary-emphasis"
                 : "bg-warning-subtle text-warning-emphasis";
-          const ProfileColor = account.status_label.no_profile ? "\/031633/6ea8fe" : account.status === "active" ? "\/0f5132/75b798" : account.status === "inactive" ? "\/343a40/f8f9fa" : "\/483a0f/c7983d";
+          const ProfileColor = account.status_label.no_profile
+            ? "\/031633/6ea8fe"
+            : account.status === "active"
+              ? "\/0f5132/75b798"
+              : account.status === "inactive"
+                ? "\/343a40/f8f9fa"
+                : "\/483a0f/c7983d";
 
           const statusBadgeText = account.status_label;
           const listItem = `<li class="list-group-item bg-transparent">
@@ -202,8 +288,9 @@ function loadNeedsAttention() {
           const listItem = `<li class="list-group-item bg-transparent">
                         <div class="hstack">
                             <i class="bi ${alertIconClass} me-3 fs-4"></i>
-                            <div>
+                            <div class="vstack">
                                 <div>${alert.message}</div>
+                                <small class="text-muted" style="font-size: 0.7em">${alert.description || ""}</small>
                                 <small class="text-muted" style="font-size: 0.7em"><a href="${alert.link}" class="text-decoration-none">View details</a></small>
                             </div>
                         </div>
@@ -263,21 +350,28 @@ function loadDashboardStats() {
       if (response.status === "success") {
         const stats = response.data;
         totalUsersCount.text(stats.total_users);
-        $("#totalUsersBadge").text(stats.total_users);
+        totalUsersStatus
+          .text(stats.total_users > 0 ? "All systems operational" : "No users found")
+          .removeClass("text-success text-danger")
+          .addClass(stats.total_users > 0 ? "text-success" : "text-danger");
         studentsCount.text(stats.total_students);
+        studentStatus
+          .text(stats.students_no_profile > 0 ? `${stats.students_no_profile} students missing profiles` : "All students have profiles")
+          .removeClass("text-success text-warning")
+          .addClass(stats.students_no_profile > 0 ? "text-warning" : "text-success");
         coordinatorCount.text(stats.total_coordinators);
+        coordinatorStatus
+          .text(stats.total_coordinators > 0 ? "Coordinators active" : "No coordinators found")
+          .removeClass("text-success text-danger")
+          .addClass(stats.total_coordinators > 0 ? "text-success" : "text-danger");
         companiesCount.text(stats.total_companies);
-        totalUsersStatus.text("All roles combined.");
-        if (stats.students_no_profile > 0) {
-          studentStatus.text(`${stats.students_no_profile} Incomplete Profiles`).removeClass("text-success").addClass("text-warning");
-        } else {
-          studentStatus.text("All Complete").removeClass("text-warning").addClass("text-success");
-        }
-        coordinatorStatus.text("All Active");
         if (stats.moa_expiring > 0) {
-          companiesStatus.text(`${stats.moa_expiring} MOA Expiring Soon`).removeClass("text-success").addClass("text-warning");
+          companiesStatus.addClass("text-warning").removeClass("text-success text-danger").text(`${stats.moa_expiring} MOAs expiring soon`);
         } else {
-          companiesStatus.text("All MOAs Valid").removeClass("text-warning").addClass("text-success");
+          companiesStatus
+            .removeClass("text-warning")
+            .addClass(stats.active_companies > 0 ? "text-success" : "text-danger")
+            .text(stats.active_companies > 0 ? `${stats.active_companies} active companies` : "No active companies");
         }
       } else {
         ToastVersion(swalTheme, "Failed to load dashboard stats. Please try again.", "error", 3000);
@@ -293,49 +387,28 @@ function loadDashboardStats() {
   });
 }
 
-export function fetchUserData() {
+export function signOut() {
+  $("#signOutBtn").on("click", function (e) {
     $.ajax({
-      url: "../../../Assets/api/GET_userData",
-      method: "GET",
+      url: "../../../Assets/api/logout",
+      method: "POST",
       timeout: 5000,
       success: function (response) {
         if (response.status === "success") {
-          $("#userName").text(response.data.first_name + " " + response.data.middle_name.charAt(0) + ". " + response.data.last_name);
-          $("#welcomeUserName").text(response.data.first_name);
-          $("#dropdownMenuName").text(response.data.first_name + " " + response.data.last_name);
-          switch (response.data.role) {
-            case "admin":
-              $("#userRole").text("Administrator");
-              break;
-            case "supervisor":
-              $("#userRole").text("Supervisor");
-              break;
-            case "student":
-              $("#userRole").text("Student");
-              break;
-            case "coordinator":
-              $("#userRole").text("Coordinator");
-              break;
-            default:
-              $("#userRole").text("User");
-          }
-          if (response.data.profile_path) {
-            $("#navProfilePhoto").attr("src", "../../../" + response.data.profile_path);
-            $("#dropdownProfilePhoto").attr("src", "../../../" + response.data.profile_path);
-          } else {
-            $("#navProfilePhoto").attr("src", "https://placehold.co/30x30?text=No+Photo");
-            $("#dropdownProfilePhoto").attr("src", "https://placehold.co/30x30?text=No+Photo");
-          }
+          window.location.href = "../../../";
+        } else {
+          ToastVersion(swalTheme, "Failed to sign out. Please try again.", "error", 3000);
         }
       },
       error: function (xhr, status, error) {
         if (status === "timeout") {
           ToastVersion(swalTheme, "Request timed out. Please try again.", "error", 3000);
         } else {
-          ToastVersion(swalTheme, "An error occurred while fetching user data. Please try again.", "error", 3000);
+          ToastVersion(swalTheme, "An error occurred while signing out. Please try again.", "error", 3000);
         }
       },
     });
+  });
 }
 
 $(document).ready(function () {
@@ -347,6 +420,7 @@ $(document).ready(function () {
   loadNeedsAttention();
   loadDashboardStats();
   fetchUserData();
+  signOut();
 
   $("#pageLoader").fadeOut(500, function () {
     $(this).remove();
@@ -399,5 +473,4 @@ $(document).ready(function () {
   $("#quickCreateBatch").on("click", function () {
     window.location.href = "../Admin/batches?action=create";
   });
-
 });

@@ -19,6 +19,23 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
 
 > _Last updated: March 2026_
 
+- ✅ Added **Companies Management module** for admins:
+   - `Src/Pages/Admin/Companies.php`
+   - `Assets/Script/AdminScripts/CompaniesScripts.js`
+   - `Assets/api/company_functions.php`
+- ✅ Implemented company lifecycle + assignment support:
+   - Create and edit company profiles
+   - Manage accreditation status (`pending`, `active`, `expired`, `blacklisted`)
+   - Track batch-based OJT slots (total, filled, remaining)
+   - Assign accepted programs per company
+   - Manage primary contact details
+- ✅ Added company document workflow:
+   - Upload PDF documents (MOA/NDA/Insurance/BIR/SEC-DTI/Other)
+   - MOA validity tracking with expiring/expired indicators
+   - Auto-promote company status from `pending` to `active` after MOA upload
+   - Role-protected viewing/serving via `file_serve.php`
+   - `file_serve.php` includes strict access control to ensure only authorized users can access sensitive company documents
+   - `file_server?company_uuid=xxx$action=inline` for inline viewing(New tab) and `file_server?company_uuid=xxx$action=download` for forced download
 - ✅ Added **Programs Management module** for admins:
    - `Src/Pages/Admin/Programs.php`
    - `Assets/Script/AdminScripts/ProgramsScripts.js`
@@ -85,6 +102,12 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
    - Create/edit batch forms with school-year validation hints and activate toggle
    - Activate confirmation modal (with active-batch close warning)
    - Close confirmation modal (with `CLOSE` typed safety check)
+- Companies module UI is implemented in `Src/Pages/Admin/Companies.php` with:
+   - Search + filters (status, work setup, accepted program)
+   - Company cards showing slots, MOA expiry, accreditation state, and accepted programs
+   - Create/edit modals for company details, slot configuration, accepted programs, and contact person
+   - Company detail modal with slot summary, contact info, and uploaded document list
+   - Document upload modal with PDF validation and MOA date-range fields
 - Programs module UI is implemented in `Src/Pages/Admin/Programs.php` with:
    - Program listing cards showing code, name, department, required hours, and status
    - Create/edit program modals with validation for required OJT hours
@@ -108,6 +131,11 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
 - Program API (`Assets/api/program_functions.php`):
    - `createProgram()`, `editProgram()`, `toggleProgram()`
    - `getAllPrograms()`, `getProgramHours()`
+- Company API (`Assets/api/company_functions.php`):
+   - `createCompany()`, `updateCompany()`, `getAllCompanies()`, `getCompany()`
+   - `addCompanyContact()`, `setCompanySlots()`, `setAcceptedPrograms()`
+   - `uploadCompanyDocument()`, `getAvailableCompanies()`, `getExpiringMoas()`
+   - `getAllPrograms()`, `getCompanyStatuses()`, `companyWorkSetup()`, `activebatch()`
 - Logging helpers (`Assets/api/logs.php`):
    - `auditLog()`
    - `loginAudit()`
@@ -120,7 +148,15 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
    - `Src/Pages/Admin/Programs.php`
    - `Assets/api/program_functions.php`
    - `Assets/Script/AdminScripts/ProgramsScripts.js`
-- Some company/MOA-related alert logic is still placeholder-level in `getNeedsAttention()` until those modules/tables are added
+- Company management is now available in:
+   - `Src/Pages/Admin/Companies.php`
+   - `Assets/api/company_functions.php`
+   - `Assets/Script/AdminScripts/CompaniesScripts.js`
+- Company document streaming/downloading is available via:
+   - `file_serve.php` (restricted to authenticated `admin` and `coordinator` roles)
+- Some advanced company/MOA alert criteria in `getNeedsAttention()` are still placeholder-level pending additional workflow/table integrations
+- Dashboard recent activity and needs attention feeds are currently based on login audits and batch status, but will be expanded to include more relevant events (company MOA expirations, program changes, etc.) as those features are fully implemented
+- Next Implementations is student management for coordinators. This covers creating student accounts, the student list page, and editing student profiles.
 
 ---
 
@@ -257,7 +293,6 @@ This ensures users and developers always know the server environment is healthy 
 
 ## 🖼️ Screenshots / GIFs (Placeholders)
 
-Use these placeholders for documentation previews. Replace files in `Assets/Images/Previews/` with real captures.
 
 ### Login Flow
 ![Login Page Placeholder](Assets/Images/Previews/Login.png)
@@ -268,14 +303,11 @@ Use these placeholders for documentation previews. Replace files in `Assets/Imag
 ### Batches Management
 ![Batches Module Placeholder](Assets/Images/Previews/Batch.png)
 
+### Companies Management
+![Companies Module Placeholder](Assets/Images/Previews/Companies.png)
+
 ### Programs Management
 ![Programs Module Placeholder](Assets/Images/Previews/Programs.png)
-
-### Program Disable Confirmation (GIF)
-![Program Disable Flow Placeholder](Assets/Images/Previews/program-disable-flow-placeholder.gif)
-
-### Batch Activate / Close Flow (GIF)
-![Batch Lifecycle Flow Placeholder](Assets/Images/Previews/batch-lifecycle-flow-placeholder.gif)
 
 ---
 

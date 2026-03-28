@@ -63,19 +63,7 @@ try {
     ]);
 }
 
-require_once 'logs.php';
-
-function generateUuid(): string
-{
-    return sprintf(
-        '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-        mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-        mt_rand(0, 0xffff),
-        mt_rand(0, 0x0fff) | 0x4000,
-        mt_rand(0, 0x3fff) | 0x8000,
-        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-    );
-}
+require_once 'helpers.php';
 
 function createBatch($conn, array $data, string $adminUuid): array
 {
@@ -140,16 +128,17 @@ function createBatch($conn, array $data, string $adminUuid): array
     $stmt->execute();
     $stmt->close();
 
-    auditLog(
+    logActivity(
+        conn: $conn,
         eventType: 'batch_created',
-        description: "Admin created batch {$data['school_year']} {$data['semester']} Semester",
+        description: "Admin created batch AY {$data['school_year']} {$data['semester']} Semester",
         module: 'system',
         actorUuid: $adminUuid,
         targetUuid: $batchUuid,
         meta: [
-                    'school_year' => $data['school_year'],
-                    'semester' => $data['semester']
-                ]
+            'school_year' => $data['school_year'],
+            'semester'    => $data['semester']
+        ]
     );
 
     return ['success' => true, 'uuid' => $batchUuid];
@@ -256,7 +245,8 @@ function updateBatch($conn, string $batchUuid, array $data, string $adminUuid): 
     $stmt->execute();
     $stmt->close();
 
-    auditLog(
+    logActivity(
+        conn: $conn,
         eventType: 'batch_updated',
         description: "Admin updated batch AY {$schoolYear} {$semester} Semester",
         module: 'system',
@@ -264,7 +254,7 @@ function updateBatch($conn, string $batchUuid, array $data, string $adminUuid): 
         targetUuid: $batchUuid,
         meta: [
             'school_year' => $schoolYear,
-            'semester'    => $semester,
+            'semester'    => $semester
         ]
     );
 
@@ -317,12 +307,13 @@ function activateBatch($conn, string $batchUuid, string $adminUuid): array
     $stmt->execute();
     $stmt->close();
 
-    auditLog(
+    logActivity(
+        conn: $conn,
         eventType: 'batch_activated',
-        description: "Admin activated batch {$batch['school_year']} {$batch['semester']} Semester",
+        description: "Admin activated batch AY {$batch['school_year']} {$batch['semester']} Semester",
         module: 'system',
         actorUuid: $adminUuid,
-        targetUuid: $batchUuid
+        targetUuid: $batchUuid,
     );
 
     return ['success' => true];
@@ -360,14 +351,15 @@ function closeBatch($conn, string $batchUuid, string $adminUuid): array
     $stmt->execute();
     $stmt->close();
 
-    auditLog(
+    logActivity(
+        conn: $conn,
         eventType: 'batch_closed',
-        description: "Admin closed batch {$batch['school_year']} {$batch['semester']} Semester",
+        description: "Admin closed batch AY {$batch['school_year']} {$batch['semester']} Semester",
         module: 'system',
         actorUuid: $adminUuid,
         targetUuid: $batchUuid,
     );
-
+    
     return ['success' => true];
 }
 
