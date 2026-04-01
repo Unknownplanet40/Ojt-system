@@ -5,7 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once "../../Assets/SystemInfo.php";
 
-if ($_SESSION['user']) {
+if (isset($_SESSION['user'])) {
     switch ($_SESSION['user']['role']) {
         case 'admin':
             header("Location: ../Pages/Admin/AdminDashboard");

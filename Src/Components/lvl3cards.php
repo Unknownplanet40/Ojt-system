@@ -1,6 +1,6 @@
 <div class="row row-cols-1 row-cols-md-3 g-4 mt-1">
   <div class="col-md-4">
-    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow" style="max-height: 400px; overflow-y: auto">
+    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow" style="max-height: 400px; overflow-y: auto; --blur-lvl: <?= $opacitylvl ?>">
       <div class="card-body">
         <div class="hstack">
           <h5 class="card-title">User by role</h5>
@@ -67,7 +67,7 @@
     </div>
   </div>
   <div class="col-md-4">
-    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow" style="max-height: 400px; overflow-y: auto">
+    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow" style="max-height: 400px; overflow-y: auto; --blur-lvl: <?= $opacitylvl ?>">
       <div class="card-body">
         <div class="hstack">
           <h5 class="card-title">Recent Accounts</h5>
@@ -79,7 +79,7 @@
     </div>
   </div>
   <div class="col-md-4">
-    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow" style="max-height: 400px; overflow-y: auto">
+    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow" style="max-height: 400px; overflow-y: auto; --blur-lvl: <?= $opacitylvl ?>">
       <div class="card-body">
         <div class="hstack">
           <h5 class="card-title">Recent Activity - (<small class="text-muted" id="activityCount">0</small>)</h5>

@@ -9,8 +9,6 @@ AOS.init();
 
 $("#pageLoader").fadeIn(2000);
 
-/* 'profile_completed','account_created','account_deactivated','account_activated','password_changed','password_reset','role_changed','login_success','login_failed','logout','application_submitted','application_approved','application_rejected','endorsement_issued','dtr_submitted','dtr_approved','dtr_rejected','journal_submitted','evaluation_submitted','document_uploaded','company_added','company_updated','moa_uploaded','batch_created','batch_closed','other' */
-
 const ActivityIcons = {
   other: "bi-activity",
   profile_completed: "bi-person-check",
@@ -411,17 +409,7 @@ export function signOut() {
   });
 }
 
-$(document).ready(function () {
-  const userUuid = $("body").data("uuid");
-
-  loadRecentActivity();
-  loadRecentAccountActivity();
-  loadUserbyRole();
-  loadNeedsAttention();
-  loadDashboardStats();
-  fetchUserData();
-  signOut();
-
+export function DashbopardEsentialElements(userUuid) {
   $("#pageLoader").fadeOut(500, function () {
     $(this).remove();
   });
@@ -469,6 +457,19 @@ $(document).ready(function () {
     window.location.href = "../../../Src/Pages/Login";
     return;
   }
+}
+
+$(document).ready(function () {
+  const userUuid = $("body").data("uuid");
+
+  loadRecentActivity();
+  loadRecentAccountActivity();
+  loadUserbyRole();
+  loadNeedsAttention();
+  loadDashboardStats();
+  fetchUserData();
+  DashbopardEsentialElements(userUuid);
+  signOut();
 
   $("#quickCreateBatch").on("click", function () {
     window.location.href = "../Admin/batches?action=create";
