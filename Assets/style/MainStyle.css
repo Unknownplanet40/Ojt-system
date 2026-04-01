@@ -164,7 +164,7 @@ body {
   .offcanvas-collapse {
     --blur-lvl: 0.15;
     position: fixed;
-    top: 90px;
+    top: 100px;
     bottom: 0;
     left: 100%;
     width: 100%;

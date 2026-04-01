@@ -2,8 +2,13 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+// time to manila asia
+date_default_timezone_set('Asia/Manila');
 
 if (empty($_SESSION['user'])) {
+    header("Location: ../Login");
+    exit;
+} elseif ($_SESSION['user']['role'] !== "admin") {
     header("Location: ../Login");
     exit;
 }
@@ -18,27 +23,12 @@ $CurrentPage = "AdminDashboard";
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="../../../libs/bootstrap/css/bootstrap.css" />
-    <link rel="stylesheet" href="../../../libs/aos/css/aos.css" />
-    <link rel="stylesheet" href="../../../libs/driverjs/css/driver.css" />
-    <link rel="stylesheet" href="../../../Assets/style/AniBG.css" />
-    <link rel="stylesheet" href="../../../Assets/style/MainStyle.css" />
-    <link rel="manifest" href="../../../Assets/manifest.json" />
-
-    <script defer src="../../../libs/bootstrap/js/bootstrap.bundle.js"></script>
-    <script defer src="../../../libs/sweetalert2/js/sweetalert2.all.min.js"></script>
-    <script defer src="../../../libs/aos/js/aos.js"></script>
-    <script src="../../../libs/driverjs/js/driver.js.iife.js"></script>
-    <script src="../../../libs/jquery/js/jquery-3.7.1.min.js"></script>
+    <?php require_once "pagehead.php" ?>
     <script type="module" src="../../../Assets/Script/DashboardScripts/AdminDashboardScript.js"></script>
     <title><?= $ShortTitle ?></title>
 </head>
 
-<body class="login-page"
-    data-role="<?= $_SESSION['user']['role'] ?>"
-    data-uuid="<?= $_SESSION['user']['uuid'] ?>">
+<body class="login-page" data-role="<?= $_SESSION['user']['role'] ?>" data-uuid="<?= $_SESSION['user']['uuid'] ?>">
     <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
         <div class="circle circle1" data-speed="fast"></div>
         <div class="circle circle2" data-speed="normal"></div>

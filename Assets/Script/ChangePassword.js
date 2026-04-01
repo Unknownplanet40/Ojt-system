@@ -49,18 +49,34 @@ function handleAjaxError(xhr, textStatus, customMessage = null) {
   ToastVersion(swalTheme, errorMessage, "error", 3000, "top-end");
 }
 
-const changepasswordmode = $("body").data("changepasswordmode");
+let changepasswordmode = $("body").data("changepasswordmode");
 const userUuid = $("body").data("user-uuid");
+
+const urlParams = new URLSearchParams(window.location.search);
+const action = urlParams.get("action");
+const uuid = urlParams.get("uuid");
 
 if (userUuid === "Unauthenticated") {
   window.location.href = "../../Src/Pages/Login";
 }
 
-if (changepasswordmode === "forced") {
-  //CardtoShow("ForcePasswordChangeCard");
-  CardtoShow("VoluntaryPasswordChangeCard");
-} else if (changepasswordmode === "voluntary") {
-  CardtoShow("VoluntaryPasswordChangeCard");
+if (action && uuid) {
+  if (action === "forced") {
+    CardtoShow("ForcePasswordChangeCard");
+  } else if (action === "voluntary") {
+    CardtoShow("VoluntaryPasswordChangeCard");
+  }
+
+  if (changepasswordmode === "none") {
+    changepasswordmode = null;
+  }
+} else {
+  if (changepasswordmode === "forced") {
+    CardtoShow("ForcePasswordChangeCard");
+    CardtoShow("VoluntaryPasswordChangeCard");
+  } else if (changepasswordmode === "voluntary") {
+    CardtoShow("VoluntaryPasswordChangeCard");
+  }
 }
 
 $(document).ready(function () {
@@ -186,7 +202,6 @@ $(document).ready(function () {
     }
   });
 
-  //updatePasswordBtn
   $("#updatePasswordBtn").on("click", function (e) {
     const newPassword = $("#voluntaryNewPassword").val();
     const currentPassword = $("#currentPassword").val();
@@ -208,8 +223,7 @@ $(document).ready(function () {
       data: {
         newPassword: newPassword,
         currentPassword: currentPassword,
-        //type: changepasswordmode,
-        type: "voluntary",
+        type: changepasswordmode || action || "voluntary",
       },
       success: function (response) {
         if (response.status === "success") {
@@ -225,5 +239,9 @@ $(document).ready(function () {
         $("#updatePasswordBtn").prop("disabled", false);
       },
     });
+  });
+
+  $("#GoToLoginBtn").on("click", function () {
+    window.location.href = "../../Src/Pages/Login";
   });
 });

@@ -17,7 +17,7 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
 
 ## 📝 Recent Updates
 
-> _Last updated: March 2026_
+> _Last updated: April 2026_
 
 - ✅ Added **Companies Management module** for admins:
    - `Src/Pages/Admin/Companies.php`
@@ -35,7 +35,8 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
    - Auto-promote company status from `pending` to `active` after MOA upload
    - Role-protected viewing/serving via `file_serve.php`
    - `file_serve.php` includes strict access control to ensure only authorized users can access sensitive company documents
-   - `file_server?company_uuid=xxx$action=inline` for inline viewing(New tab) and `file_server?company_uuid=xxx$action=download` for forced download
+   - `file_serve.php?company_uuid=xxx&action=inline` for inline viewing (new tab)
+   - `file_serve.php?company_uuid=xxx&action=download` for forced download
 - ✅ Added **Programs Management module** for admins:
    - `Src/Pages/Admin/Programs.php`
    - `Assets/Script/AdminScripts/ProgramsScripts.js`
@@ -47,6 +48,23 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
    - Fetch all programs for UI rendering
 - ✅ Added program-level required OJT hours support (`getProgramHours()`), allowing overrides from batch default hours
 - ✅ Added audit trail entries for program actions (`program_create`, `program_update`, `program_toggle`)
+- ✅ Confirmed role-specific pages currently present in the project:
+   - Coordinator: `Src/Pages/Coordinator/CoordinatorDashboard.php`, `Coordinator_Profile.php`, `viewProfile.php`
+   - Students: `Src/Pages/Students/StudentsDashboard.php`, `Students_Profile.php`
+   - Supervisor: `Src/Pages/Supervisor/SupervisorDashboard.php`, `Supervisor_Profile.php`
+- ✅ Added and wired **Coordinator module** components:
+    - Dashboard page + script:
+       - `Src/Pages/Coordinator/CoordinatorDashboard.php`
+       - `Assets/Script/DashboardScripts/CoordinatorDashboardScript.js`
+    - Profile and view-profile pages + scripts:
+       - `Src/Pages/Coordinator/Coordinator_Profile.php`
+       - `Src/Pages/Coordinator/viewProfile.php`
+       - `Assets/Script/ProfileScripts/CoordinatorProfileScript.js`
+       - `Assets/Script/ProfileScripts/CoordinatorViewProfileScript.js`
+    - Coordinator API endpoints:
+       - `Assets/api/coordinator_dashboard_queries.php`
+       - `Assets/api/coordinator_profile_functions.php`
+       - `Assets/api/SaveProfile_Coordinator.php`
 - ✅ Updated README feature/backend notes to reflect current repository state
 
 ---
@@ -87,6 +105,15 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
 
 - Login page includes no-registration notice and first-login guidance (`Src/Pages/Login.php`)
 - Profile setup forms exist for all 4 roles (see profile pages above)
+- Role dashboards currently available:
+   - `Src/Pages/Coordinator/CoordinatorDashboard.php`
+   - `Src/Pages/Students/StudentsDashboard.php`
+   - `Src/Pages/Supervisor/SupervisorDashboard.php`
+   - `Src/Pages/Coordinator/viewProfile.php`
+- Coordinator module UI now includes:
+   - Coordinator dashboard summary cards and action panels
+   - Coordinator profile update flow
+   - Coordinator read-only profile view page
 - Admin dashboard with stat cards/activity/alerts is implemented in:
    - `Src/Pages/Admin/AdminDashboard.php`
    - `Assets/api/admin_dashboard_queries.php`
@@ -139,6 +166,20 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
 - Logging helpers (`Assets/api/logs.php`):
    - `auditLog()`
    - `loginAudit()`
+- Coordinator dashboard API (`Assets/api/coordinator_dashboard_queries.php`):
+   - `getCoordinatorDashboardData()`
+   - `getCoordinatorStats_Dashboard()`
+   - `getCoordinatorNeedsAction()`
+   - `getCoordinatorStudentsSummary()`
+   - `getCoordinatorHoursProgress()`
+   - `getCoordinatorCompanies()`
+   - `getCoordinatorUpcomingVisits()`
+   - `getActiveBatch()`
+- Coordinator profile API (`Assets/api/coordinator_profile_functions.php`):
+   - `getCoordinatorProfile()`
+   - `getCoordinatorStats()`
+   - `getCoordinatorStudents()`
+   - `updateCoordinatorProfile()`
 
 ### Current Notes
 
@@ -154,6 +195,12 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
    - `Assets/Script/AdminScripts/CompaniesScripts.js`
 - Company document streaming/downloading is available via:
    - `file_serve.php` (restricted to authenticated `admin` and `coordinator` roles)
+- Coordinator dashboard/profile functionality is implemented with dedicated APIs and scripts:
+   - `Assets/api/coordinator_dashboard_queries.php`
+   - `Assets/api/coordinator_profile_functions.php`
+   - `Assets/Script/DashboardScripts/CoordinatorDashboardScript.js`
+   - `Assets/Script/ProfileScripts/CoordinatorProfileScript.js`
+   - `Assets/Script/ProfileScripts/CoordinatorViewProfileScript.js`
 - Some advanced company/MOA alert criteria in `getNeedsAttention()` are still placeholder-level pending additional workflow/table integrations
 - Dashboard recent activity and needs attention feeds are currently based on login audits and batch status, but will be expanded to include more relevant events (company MOA expirations, program changes, etc.) as those features are fully implemented
 - Next Implementations is student management for coordinators. This covers creating student accounts, the student list page, and editing student profiles.

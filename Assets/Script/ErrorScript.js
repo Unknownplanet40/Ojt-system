@@ -94,7 +94,7 @@ $(document).ready(function () {
     if (document.referrer && document.referrer !== window.location.href) {
       window.history.back();
     } else {
-      window.location.href = "../../";
+      window.location.href = "/Ojt-system/index.html";
     }
   })
 });

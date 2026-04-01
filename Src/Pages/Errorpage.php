@@ -1,7 +1,7 @@
 <?php
 $status = $_SERVER['REDIRECT_STATUS'] ?? 0;
 
-$path = '/templatesNew/';
+$path = '/Ojt-system/';
 ?>
 
 <!DOCTYPE html>
@@ -10,31 +10,21 @@ $path = '/templatesNew/';
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet"
-        href="<?php echo $path; ?>libs/bootstrap/css/bootstrap.css" />
-    <link rel="stylesheet"
-        href="<?php echo $path; ?>libs/aos/css/aos.css" />
-    <link rel="stylesheet"
-        href="<?php echo $path; ?>libs/driverjs/css/driver.css" />
-    <link rel="stylesheet"
-        href="<?php echo $path; ?>Assets/style/AniBG.css" />
-    <link rel="stylesheet"
-        href="<?php echo $path; ?>Assets/style/MainStyle.css" />
+    <link rel="stylesheet" href="<?php echo $path; ?>libs/bootstrap/css/bootstrap.css" />
+    <link rel="stylesheet" href="<?php echo $path; ?>libs/aos/css/aos.css" />
+    <link rel="stylesheet" href="<?php echo $path; ?>libs/driverjs/css/driver.css" />
+    <link rel="stylesheet" href="<?php echo $path; ?>Assets/style/AniBG.css" />
+    <link rel="stylesheet" href="<?php echo $path; ?>Assets/style/MainStyle.css" />
 
-    <script defer src="<?php echo $path; ?>libs/bootstrap/js/bootstrap.js">
-    </script>
-    <script defer
-        src="<?php echo $path; ?>libs/sweetalert2/js/sweetalert2.all.min.js">
-    </script>
-    <script src="<?php echo $path; ?>libs/driverjs/js/driver.js.iife.js">
-    </script>
-    <script src="<?php echo $path; ?>libs/jquery/js/jquery-3.7.1.min.js">
-    </script>
+    <script defer src="<?php echo $path; ?>libs/bootstrap/js/bootstrap.js"></script>
+    <script defer src="<?php echo $path; ?>libs/sweetalert2/js/sweetalert2.all.min.js"></script>
+    <script src="<?php echo $path; ?>libs/driverjs/js/driver.js.iife.js"></script>
+    <script src="<?php echo $path; ?>libs/jquery/js/jquery-3.7.1.min.js"></script>
     <script type="module" src="<?php echo $path; ?>Assets/Script/ErrorScript.js"></script>
-    <?php
+    <?php 
         if ($status != 200) {
             echo '<script>let ServerStatus = ' . $status . ';</script>';
-        } 
+        }
     ?>
 </head>
 
