@@ -138,7 +138,7 @@ switch ($user['role']) {
     case 'student':
         $profileTable = 'student_profiles';
         $redirectFolder = 'Students';
-        $redirectPage = 'StudentDashboard';
+        $redirectPage = 'StudentsDashboard';
         break;
     case 'supervisor':
         $profileTable = 'supervisor_profiles';

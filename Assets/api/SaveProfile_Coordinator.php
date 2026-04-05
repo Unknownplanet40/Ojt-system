@@ -59,6 +59,8 @@ try {
     ]);
 }
 
+require_once 'helpers.php';
+
 $firstName = isset($_POST['firstName']) ? trim($_POST['firstName']) : null;
 $lastName = isset($_POST['lastName']) ? trim($_POST['lastName']) : null;
 $middleName = isset($_POST['middleName']) ? trim($_POST['middleName']) : null;
@@ -66,7 +68,6 @@ $employeeId = isset($_POST['employeeId']) ? trim($_POST['employeeId']) : null;
 $contactNumber = isset($_POST['contactNumber']) ? trim($_POST['contactNumber']) : null;
 $ProfilePhoto = isset($_POST['ProfilePhoto']) ? trim($_POST['ProfilePhoto']) : null;
 $department = isset($_POST['department']) ? trim($_POST['department']) : null;
-$newPassword = isset($_POST['newPassword']) ? $_POST['newPassword'] : null;
 $progfileName = null;
 
 if (empty($firstName) || empty($lastName) || empty($employeeId) || empty($contactNumber) || empty($department)) {
@@ -112,23 +113,43 @@ $stmt = $conn->prepare("SELECT user_uuid FROM coordinator_profiles WHERE user_uu
 $stmt->bind_param("s", $_SESSION['user']['uuid']);
 $stmt->execute();
 $result = $stmt->get_result();
-
+$isUpdate = false;
 if ($result->num_rows > 0) {
     $stmt = $conn->prepare("UPDATE coordinator_profiles SET first_name = ?, last_name = ?, middle_name = ?, employee_id = ?, mobile = ?, profile_path = ?, profile_name = ?, department = ? WHERE user_uuid = ?");
     $stmt->bind_param("sssssssss", $firstName, $lastName, $middleName, $employeeId, $contactNumber, $ProfilePhoto, $progfileName, $department, $_SESSION['user']['uuid']);
+    $isUpdate = true;
 } else {
     $stmt = $conn->prepare("INSERT INTO coordinator_profiles (user_uuid, first_name, last_name, middle_name, employee_id, mobile, profile_path, profile_name, department) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("sssssssss", $_SESSION['user']['uuid'], $firstName, $lastName, $middleName, $employeeId, $contactNumber, $ProfilePhoto, $progfileName, $department);
 }
 
 if ($stmt->execute()) {
-    if ($newPassword) {
-        $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
-        $updatePasswordStmt = $conn->prepare("UPDATE users SET password_hash = ?, must_change_password = 0 WHERE uuid = ?");
-        $updatePasswordStmt->bind_param("ss", $passwordHash, $_SESSION['user']['uuid']);
-        $updatePasswordStmt->execute();
-        $updatePasswordStmt->close();
+    if ($isUpdate) {
+        logActivity(
+            conn: $conn,
+            eventType: 'profile_updated',
+            description: "Coordinator updated their profile",
+            module: 'profile',
+            actorUuid: $_SESSION['user']['uuid'],
+            targetUuid: $_SESSION['user']['uuid'],
+            meta: [
+                'employee_id' => $employeeId
+            ]
+        );
+    } else {
+        logActivity(
+            conn: $conn,
+            eventType: 'profile_created',
+            description: "Coordinator created their profile",
+            module: 'profile',
+            actorUuid: $_SESSION['user']['uuid'],
+            targetUuid: $_SESSION['user']['uuid'],
+            meta: [
+                'employee_id' => $employeeId
+            ]
+        );
     }
+
     response([
         'status' => 'success',
         'message' => 'Profile saved successfully.',

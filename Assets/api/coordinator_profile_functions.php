@@ -247,6 +247,21 @@ function updateCoordinatorProfile($conn, string $profileUuid, array $data, strin
 $action = isset($_POST['action']) ? $_POST['action'] : null;
 $uuid  = isset($_POST['uuid']) ? $_POST['uuid'] : null;
 
+function UUID_convert($conn, $uuid): ?string
+{
+    $stmt = $conn->prepare("SELECT uuid FROM coordinator_profiles WHERE user_uuid = ?");
+    $stmt->bind_param("s",$uuid);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $coordinatorProfileUuid = null;
+    if ($result->num_rows > 0) {
+        $coordinatorProfileUuid = $result->fetch_assoc()['uuid'];
+    }
+
+    return $coordinatorProfileUuid;
+}
+
+
 if (empty($action)) {
     response([
         'status' => 'info',
@@ -264,6 +279,7 @@ if (empty($uuid)) {
 }
 
 if ($action === 'fetch_profile_data') {
+
     $profileData = getCoordinatorProfile($conn, $uuid);
     if (!$profileData) {
         response([
@@ -273,13 +289,15 @@ if ($action === 'fetch_profile_data') {
         ]);
     }
 
-    $stats = getCoordinatorStats($conn, $uuid);
+    $stats = getCoordinatorStats($conn, UUID_convert($conn, $uuid));
+    $Students = getCoordinatorStudents($conn, UUID_convert($conn, $uuid));
 
     response([
         'status' => 'success',
         'data' => [
             'profile' => $profileData,
             'stats'   => $stats,
+            'students' => $Students,
         ]
     ]);
 }

@@ -48,6 +48,12 @@ function fetchProfileData(uuid) {
             const studentList = $("#studentList");
             studentList.empty();
             data.students.forEach(student => {
+              const status = [
+                { label: "Active", class: "bg-success-subtle text-success-emphasis border-success-subtle" },
+                { label: "Inactive", class: "bg-danger-subtle text-danger-emphasis border-danger-subtle" },
+                { label: "Never Logged In", class: "bg-secondary-subtle text-secondary-emphasis border-secondary-subtle" },
+                { label: "Unknown", class: "bg-warning-subtle text-warning-emphasis border-warning-subtle" }
+              ]
                 const studentItem = `
                     <li class="list-group-item bg-transparent">
                         <div class="hstack">
@@ -56,9 +62,9 @@ function fetchProfileData(uuid) {
                                 style="width: 40px; height: 40px;">
                             <div>
                                 <div class="fw-bold">${student.full_name}</div>
-                                <small class="text-muted">${student.program}, ${student.year_level}</small>
+                                <small class="text-muted">${student.student_number} - ${student.program_code}, ${student.year_label}</small>
                             </div>
-                            <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle rounded-pill ms-auto align-self-start">Active</span>
+                            <span class="badge ${status.find(s => s.label === student.status_label)?.class || 'bg-secondary-subtle text-secondary-emphasis border-secondary-subtle'} rounded-pill ms-auto align-self-start">${student.status_label}</span>
                         </div>
                     </li>
                 `;

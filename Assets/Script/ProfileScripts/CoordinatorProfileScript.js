@@ -1,6 +1,3 @@
-import { animate } from "../../../libs/animejs/modules/animation/animation.js";
-import { splitText } from "../../../libs/animejs/modules/text/split.js";
-import { stagger } from "../../../libs/animejs/modules/utils/stagger.js";
 import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
 import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "../SystemTheme.js";
 
@@ -18,20 +15,18 @@ const action = urlParams.get("action");
 const userUuid = urlParams.get("uuid");
 
 function ProfileProgressBar(fill = 0) {
-  const totalFields = enableChangePassword ? 6 : 5; // Include new password field if enabled
-  let filledFields = fill; // Start with the provided fill value
+  const totalFields = 5;
+  let filledFields = fill;
 
   if ($("#firstName").val().trim()) filledFields++;
   if ($("#lastName").val().trim()) filledFields++;
   if ($("#employeeId").val().trim()) filledFields++;
   if ($("#contactNumber").val().trim()) filledFields++;
   if ($("#department").val().trim()) filledFields++;
-  if (enableChangePassword && $("#newPassword").val().trim()) filledFields++;
 
   const progressPercent = (filledFields / totalFields) * 100;
   progressBar.css("width", progressPercent + "%");
   progressStatus.text(Math.round(progressPercent) + "%");
-
 }
 
 function getProfileData(uuid) {
@@ -74,7 +69,6 @@ function getProfileData(uuid) {
   });
 }
 
-
 $(document).ready(function () {
   $("#firstName, #lastName, #employeeId, #contactNumber, #department").on("input", function () {
     ProfileProgressBar();
@@ -83,7 +77,6 @@ $(document).ready(function () {
   if (action === "edit" && userUuid) {
     getProfileData(userUuid);
   }
-
 
   $("#uploadPhotoBtn").on("click", function () {
     $("#photoInput").click();
@@ -145,7 +138,6 @@ $(document).ready(function () {
     let contactNumber = $("#contactNumber").val().trim();
     let department = $("#department").val().trim();
     let ProfilePhoto = $("#adminProfilePhoto").attr("src");
-    let newPassword = enableChangePassword ? $("#newPassword").val().trim() : null;
 
     if (!firstName || !lastName || !employeeId || !contactNumber) {
       ToastVersion(swalTheme, "Please fill in all required fields.", "warning", 3000);
@@ -175,12 +167,6 @@ $(document).ready(function () {
       return;
     }
 
-    const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-    if (enableChangePassword && !passwordPattern.test(newPassword)) {
-      ToastVersion(swalTheme, "Invalid password format. Password must be at least 8 characters long and contain both letters and numbers.", "warning", 3000);
-      return;
-    }
-
     if (!department) {
       ToastVersion(swalTheme, "Please enter your department.", "warning", 3000);
       return;
@@ -197,12 +183,16 @@ $(document).ready(function () {
         contactNumber: contactNumber,
         ProfilePhoto: ProfilePhoto,
         department: department,
-        newPassword: newPassword,
       },
       dataType: "json",
       timeout: 5000,
       success: function (response) {
         if (response.status === "success") {
+          if (enableChangePassword) {
+            window.location.href = "../../../Src/Pages/ChangePassword.php";
+            return;
+          }
+
           window.location.href = "../../../Src/Pages/Coordinator/CoordinatorDashboard.php";
         } else {
           ToastVersion(swalTheme, response.message, "error", 3000);

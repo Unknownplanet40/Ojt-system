@@ -14,7 +14,7 @@ if (isset($_SESSION['user'])) {
             header("Location: ../Pages/Coordinator/CoordinatorDashboard");
             exit();
         case 'student':
-            header("Location: ../Pages/Student/StudentDashboard");
+            header("Location: ../Pages/Students/StudentsDashboard");
             exit();
         case 'supervisor':
             header("Location: ../Pages/Supervisor/SupervisorDashboard");

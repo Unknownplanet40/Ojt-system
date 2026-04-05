@@ -69,9 +69,16 @@ function getExpiringMoas($conn, int $daysThreshold = 30): array
         FROM company_documents cd
         JOIN companies c ON cd.company_uuid = c.uuid
         WHERE cd.doc_type = 'moa'
-          AND cd.valid_until BETWEEN CURDATE()
-          AND DATE_ADD(CURDATE(), INTERVAL {$daysThreshold} DAY)
+          AND cd.valid_until > CURDATE()
+          AND cd.valid_until <= DATE_ADD(CURDATE(), INTERVAL {$daysThreshold} DAY)
           AND c.accreditation_status = 'active'
+          AND cd.id = (
+            SELECT id FROM company_documents cd2
+            WHERE cd2.company_uuid = cd.company_uuid
+              AND cd2.doc_type = 'moa'
+            ORDER BY cd2.created_at DESC
+            LIMIT 1
+          )
         ORDER BY cd.valid_until ASC
     ");
 

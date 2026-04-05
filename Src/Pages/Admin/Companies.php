@@ -111,10 +111,10 @@ $CurrentPage = "Companies";
                                             <label for="companyworksetup" class="form-label">Preferred Work Setup<span
                                                     class="text-danger">*</span></label>
                                             <select class="form-select" id="companyworksetup" required>
-                                                <option value="" selected disabled>Select work setup</option>
-                                                <option value="on-site">On-site</option>
-                                                <option value="remote">Remote</option>
-                                                <option value="hybrid">Hybrid</option>
+                                                <option class="CustomOption" value="" selected disabled>Select work setup</option>
+                                                <option class="CustomOption" value="on-site">On-site</option>
+                                                <option class="CustomOption" value="remote">Remote</option>
+                                                <option class="CustomOption" value="hybrid">Hybrid</option>
                                             </select>
                                         </div>
                                     </div>

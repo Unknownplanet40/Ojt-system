@@ -302,14 +302,14 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
         }
     }
 
-/*     logActivity(
+logActivity(
         conn: $conn,
         eventType: 'company_updated',
         description: "Updated company: {$name}",
         module: 'companies',
         actorUuid: $actorUuid,
         targetUuid: $companyUuid
-    ); */
+    );
 
     return ['success' => true];
 }
@@ -346,7 +346,7 @@ function getAllCompanies($conn, string $batchUuid = null): array
           GROUP_CONCAT(DISTINCT p.code ORDER BY p.code SEPARATOR ', ') AS accepted_programs,
           GROUP_CONCAT(DISTINCT p.uuid ORDER BY p.code SEPARATOR ',') AS accepted_program_uuids,
 
-          cd.valid_until AS moa_expiry
+          MAX(cd.valid_until) AS moa_expiry
 
         FROM companies c
         LEFT JOIN company_contacts cc

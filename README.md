@@ -1,6 +1,6 @@
 # 🚀 OJT System (Rebuild)
 
-This project is a **rebuild of my old OJT Coordinator System project**, modernized with a cleaner structure, pre-configured libraries, and improved setup flow for easier maintenance and future development.
+This project is a **rebuild of my previous OJT Coordinator System**, modernized with a cleaner structure, pre-configured libraries, and a smoother setup flow for easier maintenance and future development.
 
 > ℹ️ The repository originally started from a template-style base, but it now serves as the active codebase for the rebuilt OJT system.
 
@@ -34,7 +34,7 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
    - MOA validity tracking with expiring/expired indicators
    - Auto-promote company status from `pending` to `active` after MOA upload
    - Role-protected viewing/serving via `file_serve.php`
-   - `file_serve.php` includes strict access control to ensure only authorized users can access sensitive company documents
+   - Strict access control ensures only authorized users can access sensitive company documents
    - `file_serve.php?company_uuid=xxx&action=inline` for inline viewing (new tab)
    - `file_serve.php?company_uuid=xxx&action=download` for forced download
 - ✅ Added **Programs Management module** for admins:
@@ -65,6 +65,20 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
        - `Assets/api/coordinator_dashboard_queries.php`
        - `Assets/api/coordinator_profile_functions.php`
        - `Assets/api/SaveProfile_Coordinator.php`
+- ✅ Added **Requirements review and submission modules**:
+   - Coordinator side:
+      - `Src/Pages/Coordinator/Requirements.php`
+      - `Assets/Script/CoordinatorScripts/RequirementsScripts.js`
+      - Review workflow for submitted student documents with approve/return actions
+   - Student side:
+      - `Src/Pages/Students/Requirements.php`
+      - `Assets/Script/StudentsScripts/RequirementsScripts.js`
+      - `Assets/api/requirements_functions.php`
+      - Requirement upload/review flow for resume and pre-OJT documents
+- ✅ Added student profile setup and save endpoints:
+   - `Src/Pages/Students/Students_Profile.php`
+   - `Assets/Script/ProfileScripts/StudentProfileScript.js`
+   - `Assets/api/saveProfile_Students.php`
 - ✅ Updated README feature/backend notes to reflect current repository state
 
 ---
@@ -110,10 +124,18 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
    - `Src/Pages/Students/StudentsDashboard.php`
    - `Src/Pages/Supervisor/SupervisorDashboard.php`
    - `Src/Pages/Coordinator/viewProfile.php`
+- Requirements pages are available for:
+   - `Src/Pages/Coordinator/Requirements.php`
+   - `Src/Pages/Students/Requirements.php`
 - Coordinator module UI now includes:
    - Coordinator dashboard summary cards and action panels
    - Coordinator profile update flow
    - Coordinator read-only profile view page
+   - Coordinator student requirements review page
+- Student module UI now includes:
+   - Student dashboard with greeting panel
+   - Student profile setup/update flow
+   - Student pre-OJT requirements submission page
 - Admin dashboard with stat cards/activity/alerts is implemented in:
    - `Src/Pages/Admin/AdminDashboard.php`
    - `Assets/api/admin_dashboard_queries.php`
@@ -180,6 +202,12 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
    - `getCoordinatorStats()`
    - `getCoordinatorStudents()`
    - `updateCoordinatorProfile()`
+- Requirements API (`Assets/api/requirements_functions.php`):
+   - Student document upload and status tracking
+   - Coordinator document review actions
+- Student profile API (`Assets/api/saveProfile_Students.php`):
+   - `fetch_profile_data`
+   - save/update profile data for student accounts
 
 ### Current Notes
 
@@ -201,11 +229,48 @@ This project is a **rebuild of my old OJT Coordinator System project**, moderniz
    - `Assets/Script/DashboardScripts/CoordinatorDashboardScript.js`
    - `Assets/Script/ProfileScripts/CoordinatorProfileScript.js`
    - `Assets/Script/ProfileScripts/CoordinatorViewProfileScript.js`
-- Some advanced company/MOA alert criteria in `getNeedsAttention()` are still placeholder-level pending additional workflow/table integrations
-- Dashboard recent activity and needs attention feeds are currently based on login audits and batch status, but will be expanded to include more relevant events (company MOA expirations, program changes, etc.) as those features are fully implemented
-- Next Implementations is student management for coordinators. This covers creating student accounts, the student list page, and editing student profiles.
+- Coordinator requirements review and student requirements submission are implemented through:
+   - `Src/Pages/Coordinator/Requirements.php`
+   - `Src/Pages/Students/Requirements.php`
+   - `Assets/api/requirements_functions.php`
+- Student profile setup is implemented through:
+   - `Src/Pages/Students/Students_Profile.php`
+   - `Assets/api/saveProfile_Students.php`
+   - `Assets/Script/ProfileScripts/StudentProfileScript.js`
+- Some advanced company/MOA alert criteria in `getNeedsAttention()` are still placeholder-level and will improve as more workflow/table integrations land
+- Dashboard recent activity and needs-attention feeds currently lean on login audits and batch status, and will expand to include company MOA expirations, program changes, and similar events as those pieces are completed
+- Next implementation focus is coordinator student management beyond requirements review, including student account creation, a student list page, and editing student profiles.
 
 ---
+## 🔐 Secure Document Serving
+
+### Why `file_serve.php`?
+
+Company documents (MOA, NDA, insurance certificates, etc.) contain sensitive business information that should never be directly accessible via static URLs. `file_serve.php` acts as a **gatekeeper**, enforcing consistent security checks before any document is served.
+
+**Key Benefits:**
+- **Authentication Required** — only logged-in users can access documents
+- **Role-Based Access Control** — restricted to `admin` and `coordinator` roles
+- **Flexible Serving Options** — inline viewing or forced downloads
+- **Audit Trail** — all access attempts are logged for compliance
+- **Hidden Storage** — actual files are stored outside the web root, preventing direct URL bypassing
+
+### How It Works
+
+The script validates the request based on two parameters:
+- **`company_uuid`** — identifies which company's document to retrieve
+- **`action`** — determines how to serve the file (`inline` for viewing in browser, `download` for direct file download)
+
+Example usage:
+```
+file_serve.php?company_uuid=550e8400-e29b-41d4-a716-446655440000&action=inline
+file_serve.php?company_uuid=550e8400-e29b-41d4-a716-446655440000&action=download
+```
+
+Access is automatically logged for security auditing.
+
+---
+
 
 ## 🧰 Tech Stack
 
@@ -230,14 +295,19 @@ Ojt-system/
 ├── Assets/
 │   └── database/
 │       └── dbconfig.php    # Database connection configuration
+│   └── Images/            # All image assets (previews, icons, etc.)
+│   └── Script/            # JavaScript files organized by page/module
 ├── Src/
-│   └── Pages/          # PHP/HTML page files
-├── libs/               # All bundled front-end libraries (offline-ready)
-│   └── composer/       # Optional: PHPMailer & Ratchet (via Composer)
-├── index.html          # Entry point with server status checking
-├── .htaccess           # Apache configuration (URL rewriting, access rules)
+|   └── Components/         # Reusable PHP components (headers, cards, etc.)
+│   └── Pages/              # PHP/HTML page files
+├── Uploads/              # Uploaded files (company documents, etc.)
+├── libs/                   # All bundled front-end libraries (offline-ready)
+│   └── composer/           # Optional: PHPMailer & Ratchet (via Composer)
+├── index.html              # Entry point with server status checking
+├── file_serve.php          # Secure file serving endpoint for company documents
+├── .htaccess               # Apache configuration (URL rewriting, access rules)
 ├── InstallDependencies.md  # Guide for setting up server dependencies
-└── LICENSE             # MIT License
+└── LICENSE                 # MIT License
 ```
 
 ---
@@ -356,6 +426,14 @@ This ensures users and developers always know the server environment is healthy 
 ### Programs Management
 ![Programs Module Placeholder](Assets/Images/Previews/Programs.png)
 
+### Requirements Review
+![Requirements Review Placeholder](Assets/Images/Previews/Requirement_Review.png)
+
+### Student Profile Setup
+![Student Profile Placeholder](Assets/Images/Previews/stud_profile.png)
+
+### Requirements Submission
+![Requirements Submission Placeholder](Assets/Images/Previews/pre_Requrements.png)
 ---
 
 ## 🔧 Optional Add-ons

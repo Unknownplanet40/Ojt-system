@@ -104,13 +104,6 @@ require_once "../../../Assets/SystemInfo.php";
                                 <input type="text" class="form-control form-control-sm bg-semi-transparent"
                                     id="contactNumber" placeholder="09XX-XXX-XXXX">
                             </div>
-                            <?php if ($_SESSION['user']['require_password_change'] ?? false): ?>
-                            <div class="col-md-4">
-                                <small for="newPassword" class="form-label">New Password <span class="text-danger">*</span></small>
-                                <input type="password" class="form-control form-control-sm bg-semi-transparent"
-                                    id="newPassword" placeholder="Enter a new password">
-                            </div>
-                            <?php endif; ?>
                         </div>
                     </div>
                 </div>

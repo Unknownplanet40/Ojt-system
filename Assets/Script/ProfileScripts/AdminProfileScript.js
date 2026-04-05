@@ -14,19 +14,17 @@ const progressStatus = $("#profileprogressStatus");
 const enableChangePassword = $("body").data("enable-changepassword") === "true";
 
 function ProfileProgressBar() {
-  const totalFields = enableChangePassword ? 5 : 4; // Include new password field if enabled
+  const totalFields = 4;
   let filledFields = 0;
 
   if ($("#firstName").val().trim()) filledFields++;
   if ($("#lastName").val().trim()) filledFields++;
   if ($("#employeeId").val().trim()) filledFields++;
   if ($("#contactNumber").val().trim()) filledFields++;
-  if (enableChangePassword && $("#newPassword").val().trim()) filledFields++;
 
   const progressPercent = (filledFields / totalFields) * 100;
   progressBar.css("width", progressPercent + "%");
   progressStatus.text(Math.round(progressPercent) + "%");
-
 }
 
 $(document).ready(function () {
@@ -92,7 +90,6 @@ $(document).ready(function () {
     let employeeId = $("#employeeId").val().trim();
     let contactNumber = $("#contactNumber").val().trim();
     let ProfilePhoto = $("#adminProfilePhoto").attr("src");
-    let newPassword = enableChangePassword ? $("#newPassword").val().trim() : null;
 
     if (!firstName || !lastName || !employeeId || !contactNumber) {
       ToastVersion(swalTheme, "Please fill in all required fields.", "warning", 3000);
@@ -122,11 +119,6 @@ $(document).ready(function () {
       return;
     }
 
-    const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-    if (enableChangePassword && !passwordPattern.test(newPassword)) {
-      ToastVersion(swalTheme, "Invalid password format. Password must be at least 8 characters long and contain both letters and numbers.", "warning", 3000);
-      return;
-    }
 
     $.ajax({
       url: "../../../Assets/api/SaveProfile_Admin",
@@ -138,13 +130,16 @@ $(document).ready(function () {
         employeeId: employeeId,
         contactNumber: contactNumber,
         ProfilePhoto: ProfilePhoto,
-        newPassword: newPassword,
       },
       dataType: "json",
       timeout: 5000,
       success: function (response) {
         if (response.status === "success") {
-          windows.location.href = "../../../Src/Pages/Admin/AdminDashboard.php";
+          if (enableChangePassword) {
+            window.location.href = "../../../Src/Pages/ChangePassword.php";
+            return;
+          }
+          window.location.href = "../../../Src/Pages/Admin/AdminDashboard.php";
         } else {
           ToastVersion(swalTheme, response.message, "error", 3000);
         }
