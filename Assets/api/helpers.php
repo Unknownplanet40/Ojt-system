@@ -29,6 +29,28 @@ function generateUuid(): string
     );
 }
 
+function resolveUserUuidOrNull($conn, $uuid): ?string
+{
+    if (empty($uuid)) {
+        return null;
+    }
+
+    $candidate = trim((string) $uuid);
+    $stmt = $conn->prepare("SELECT uuid FROM users WHERE uuid = ? LIMIT 1");
+
+    if (!$stmt) {
+        return null;
+    }
+
+    $stmt->bind_param('s', $candidate);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $exists = $result && $result->num_rows > 0;
+    $stmt->close();
+
+    return $exists ? $candidate : null;
+}
+
 function logActivity(
     $conn,
     string $eventType,
@@ -40,22 +62,34 @@ function logActivity(
 ): void {
     $metaJson = !empty($meta) ? json_encode($meta) : null;
 
-    $stmt = $conn->prepare("
-        INSERT INTO activity_log
-          (actor_uuid, target_uuid, event_type, description, module, meta)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ");
-    $stmt->bind_param(
-        'ssssss',
-        $actorUuid,
-        $targetUuid,
-        $eventType,
-        $description,
-        $module,
-        $metaJson
-    );
-    $stmt->execute();
-    $stmt->close();
+    $actorUuid = resolveUserUuidOrNull($conn, $actorUuid);
+    $targetUuid = resolveUserUuidOrNull($conn, $targetUuid);
+
+    try {
+        $stmt = $conn->prepare("
+            INSERT INTO activity_log
+              (actor_uuid, target_uuid, event_type, description, module, meta)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+
+        if (!$stmt) {
+            return;
+        }
+
+        $stmt->bind_param(
+            'ssssss',
+            $actorUuid,
+            $targetUuid,
+            $eventType,
+            $description,
+            $module,
+            $metaJson
+        );
+        $stmt->execute();
+        $stmt->close();
+    } catch (mysqli_sql_exception $e) {
+        error_log('logActivity failed: ' . $e->getMessage());
+    }
 }
 
 function loginAudit($userUuid, $success, $reason = '')
@@ -88,4 +122,23 @@ function isStrongPassword(string $password): bool
         && preg_match('/[A-Z]/', $password)
         && preg_match('/[0-9]/', $password)
         && preg_match('/[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]/', $password);
+}
+
+if (!function_exists('ordinal')) {
+    function ordinal(int $number): string
+    {
+        $abs = abs($number);
+        $lastTwo = $abs % 100;
+
+        if ($lastTwo >= 11 && $lastTwo <= 13) {
+            return $number . 'th';
+        }
+
+        return match ($abs % 10) {
+            1 => $number . 'st',
+            2 => $number . 'nd',
+            3 => $number . 'rd',
+            default => $number . 'th',
+        };
+    }
 }

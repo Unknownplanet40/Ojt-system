@@ -49,18 +49,6 @@ if (!isModRewriteEnabled()) {
     ]);
 }
 
-/* firstName
-jhg
-lastName
-jghjgh
-middleName
-jgghhj
-employeeId
-EMP-2020-20202020
-contactNumber
-09282828282
-ProfilePhoto */
-
 try {
     $conn = new mysqli($servername, $username, $password, $dbname);
 } catch (Exception $e) {
@@ -77,7 +65,6 @@ $middleName = isset($_POST['middleName']) ? trim($_POST['middleName']) : null;
 $employeeId = isset($_POST['employeeId']) ? trim($_POST['employeeId']) : null;
 $contactNumber = isset($_POST['contactNumber']) ? trim($_POST['contactNumber']) : null;
 $ProfilePhoto = isset($_POST['ProfilePhoto']) ? trim($_POST['ProfilePhoto']) : null;
-$newPassword = isset($_POST['newPassword']) ? $_POST['newPassword'] : null;
 $progfileName = null;
 
 if (empty($firstName) || empty($lastName) || empty($employeeId) || empty($contactNumber)) {
@@ -133,13 +120,6 @@ if ($result->num_rows > 0) {
 }
 
 if ($stmt->execute()) {
-    if ($newPassword) {
-        $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
-        $updatePasswordStmt = $conn->prepare("UPDATE users SET password_hash = ?, must_change_password = 0 WHERE uuid = ?");
-        $updatePasswordStmt->bind_param("ss", $passwordHash, $_SESSION['user']['uuid']);
-        $updatePasswordStmt->execute();
-        $updatePasswordStmt->close();
-    }
     response([
         'status' => 'success',
         'message' => 'Profile saved successfully.',

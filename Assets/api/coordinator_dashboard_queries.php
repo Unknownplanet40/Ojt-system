@@ -65,6 +65,7 @@ try {
 
 require_once 'helpers.php';
 
+
 function getCoordinatorDashboardData($conn, string $coordinatorProfileUuid): array
 {
     $activeBatch = getActiveBatch($conn);
@@ -77,7 +78,7 @@ function getCoordinatorDashboardData($conn, string $coordinatorProfileUuid): arr
         'my_students'    => getCoordinatorStudentsSummary($conn, $coordinatorProfileUuid, $batchUuid),
         'hours_progress' => getCoordinatorHoursProgress($conn, $coordinatorProfileUuid, $batchUuid),
         'companies'      => getCoordinatorCompanies($conn, $batchUuid),
-        'upcoming_visits'=> getCoordinatorUpcomingVisits($conn, $coordinatorProfileUuid),
+        'upcoming_visits' => getCoordinatorUpcomingVisits($conn, $coordinatorProfileUuid),
     ];
 }
 
@@ -116,8 +117,8 @@ function getCoordinatorStats_Dashboard($conn, string $coordinatorUuid, ?string $
         'not_started'         => $totalStudents - $activeOjt,
         'pending_approvals'   => $totalPending,
         'pending_dtr'         => $pendingDtr,
-        'pending_applications'=> $pendingApplications,
-        'pending_requirements'=> $pendingRequirements,
+        'pending_applications' => $pendingApplications,
+        'pending_requirements' => $pendingRequirements,
         'avg_hours'           => $avgHours,
     ];
 }
@@ -167,41 +168,25 @@ function getCoordinatorNeedsAction($conn, string $coordinatorUuid, ?string $batc
         ];
     }
 
-    // temp
-    $tasks[] = [
-        'type'    => 'danger',
-        'message' => 'Pending OJT applications to review',
-        'count'   => 0,
-        'link'    => '/coordinator/applications?status=pending',
-        'module'  => 'applications',
-    ];
+    $result = $conn->query("
+    SELECT COUNT(*) AS total
+    FROM student_requirements sr
+    JOIN student_profiles sp ON sr.student_uuid = sp.uuid
+    WHERE sp.coordinator_uuid = '{$safeCoord}'
+      AND sr.batch_uuid       = '{$safeBatch}'
+      AND sr.status           = 'submitted'
+");
+    $pendingReqs = (int) $result->fetch_assoc()['total'];
 
-    // temp
-    $tasks[] = [
-        'type'    => 'warning',
-        'message' => 'DTR entries awaiting approval',
-        'count'   => 0, 
-        'link'    => '/coordinator/dtr?status=pending',
-        'module'  => 'dtr',
-    ];
-
-    // temp
-    $tasks[] = [
-        'type'    => 'info',
-        'message' => 'Pre-OJT requirements pending review',
-        'count'   => 0,
-        'link'    => '/coordinator/requirements?status=pending',
-        'module'  => 'requirements',
-    ];
-
-    // temp
-    $tasks[] = [
-        'type'    => 'warning',
-        'message' => 'Weekly journals submitted — not yet reviewed',
-        'count'   => 0,
-        'link'    => '/coordinator/journals?status=submitted',
-        'module'  => 'journals',
-    ];
+    if ($pendingReqs > 0) {
+        $tasks[] = [
+            'type'    => 'warning',
+            'message' => "{$pendingReqs} requirement" . ($pendingReqs > 1 ? 's are' : ' is') . " pending review",
+            'count'   => $pendingReqs,
+            'link'    => '../../Pages/Coordinator/Requirements',
+            'module'  => 'requirements',
+        ];
+    }
 
     return $tasks;
 }
@@ -244,7 +229,7 @@ function getCoordinatorStudentsSummary($conn, string $coordinatorUuid, ?string $
         $students[] = [
             'profile_uuid' => $row['profile_uuid'],
             'full_name'    => $row['first_name'] . ' ' . $row['last_name'],
-            'initials'     => strtoupper(substr($row['first_name'],0,1) . substr($row['last_name'],0,1)),
+            'initials'     => strtoupper(substr($row['first_name'], 0, 1) . substr($row['last_name'], 0, 1)),
             'program_code' => $row['program_code'] ?? '—',
             'year_level'   => ordinal((int)$row['year_level']) . ' Year',
             'company_name' => $row['company_name'] ?? null,
@@ -334,7 +319,14 @@ function getCoordinatorCompanies($conn, ?string $batchUuid): array
           ON c.uuid = sp.company_uuid
           AND sp.batch_uuid = '{$safeBatch}'
         LEFT JOIN company_documents cd
-          ON c.uuid = cd.company_uuid AND cd.doc_type = 'moa'
+          ON c.uuid = cd.company_uuid 
+          AND cd.doc_type = 'moa'
+          AND cd.valid_until = (
+            SELECT MAX(valid_until)
+            FROM company_documents
+            WHERE company_uuid = c.uuid
+              AND doc_type = 'moa'
+          )
         WHERE c.accreditation_status = 'active'
         GROUP BY c.id
         ORDER BY c.name ASC
@@ -392,7 +384,9 @@ function getActiveBatch($conn): ?array
         FROM batches WHERE status = 'active' LIMIT 1
     ");
     $row = $result->fetch_assoc();
-    if (!$row) return null;
+    if (!$row) {
+        return null;
+    }
 
     return [
         'uuid'           => $row['uuid'],
@@ -401,11 +395,24 @@ function getActiveBatch($conn): ?array
     ];
 }
 
+function UUID_convert($conn, $uuid): ?string
+{
+    $stmt = $conn->prepare("SELECT uuid FROM coordinator_profiles WHERE user_uuid = ?");
+    $stmt->bind_param("s",$uuid);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $coordinatorProfileUuid = null;
+    if ($result->num_rows > 0) {
+        $coordinatorProfileUuid = $result->fetch_assoc()['uuid'];
+    }
+
+    return $coordinatorProfileUuid;
+}
+
 //fetch_dashboard_data
 if ($action === 'fetch_dashboard_data') {
-    //fetch all
+    $coordinatorProfileUuid = UUID_convert($conn, $_SESSION['user']['uuid']);
 
-    $coordinatorProfileUuid = $_SESSION['user']['uuid'] ?? null;
     if (!$coordinatorProfileUuid) {
         response([
             'status' => 'error',

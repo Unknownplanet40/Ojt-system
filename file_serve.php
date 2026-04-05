@@ -9,7 +9,7 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-$allowedRoles = ['admin', 'coordinator'];
+$allowedRoles = ['admin', 'coordinator', 'student'];
 if (!in_array($_SESSION['user']['role'], $allowedRoles)) {
     http_response_code(403);
     header('Location: Src/Pages/ErrorPage.php?error=403');
@@ -27,6 +27,23 @@ try {
 }
 
 $documentUuid = trim($_GET['uuid'] ?? '');
+$forModules   = ['coordinatorView', 'studentView', 'adminView', 'companyView'];
+$documentFor  = $_GET['for'] ?? '';
+$documentFor  = in_array($documentFor, $forModules, true) ? $documentFor : 'companyView';
+
+function UUID_convert_Student($conn, $uuid): ?string
+{
+    $stmt = $conn->prepare("SELECT uuid FROM student_profiles WHERE user_uuid = ?");
+    $stmt->bind_param("s", $uuid);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $studentProfileUuid = null;
+    if ($result->num_rows > 0) {
+        $studentProfileUuid = $result->fetch_assoc()['uuid'];
+    }
+
+    return $studentProfileUuid;
+}
 
 if (empty($documentUuid)) {
     http_response_code(400);
@@ -34,13 +51,53 @@ if (empty($documentUuid)) {
     exit('Missing document ID');
 }
 
-$stmt = $conn->prepare("
-    SELECT file_path, file_name
-    FROM company_documents
-    WHERE uuid = ?
-    LIMIT 1
-");
-$stmt->bind_param('s', $documentUuid);
+$userRole = $_SESSION['user']['role'];
+$userUuid = $_SESSION['user']['uuid'];
+
+if ($documentFor === 'companyView') {
+    $stmt = $conn->prepare("
+        SELECT file_path, file_name
+        FROM company_documents
+        WHERE uuid = ?
+        LIMIT 1
+    ");
+    $stmt->bind_param('s', $documentUuid);
+
+} elseif ($documentFor === 'studentView' && $userRole === 'student') {
+    $studentProfileUuid = UUID_convert_Student($conn, $userUuid);
+
+    if (!$studentProfileUuid) {
+        http_response_code(403);
+        header('Location: Src/Pages/ErrorPage.php?error=403');
+        exit;
+    }
+
+    $stmt = $conn->prepare("
+        SELECT file_path, file_name
+        FROM student_requirements
+        WHERE uuid = ? AND student_uuid = ?
+        LIMIT 1
+    ");
+    $stmt->bind_param('ss', $documentUuid, $studentProfileUuid);
+
+} elseif (
+    ($documentFor === 'coordinatorView' && $userRole === 'coordinator') ||
+    ($documentFor === 'adminView'       && $userRole === 'admin')
+) {
+    $stmt = $conn->prepare("
+        SELECT file_path, file_name
+        FROM student_requirements
+        WHERE uuid = ?
+        LIMIT 1
+    ");
+    $stmt->bind_param('s', $documentUuid);
+
+} else {
+    http_response_code(403);
+    header('Location: Src/Pages/ErrorPage.php?error=403');
+    exit;
+}
+
 $stmt->execute();
 $doc = $stmt->get_result()->fetch_assoc();
 $stmt->close();
@@ -81,6 +138,7 @@ if ($action === 'download') {
 } else {
     header('Content-Disposition: inline; filename="' . $fileName . '"');
 }
+
 
 readfile($realPath);
 exit;
