@@ -8,10 +8,85 @@ let swalTheme = SwalTheme();
 BGcircleTheme(true);
 AOS.init();
 $("#pageLoader").fadeIn(2000);
+let ForExportingData = [];
+let currentBatchStudents = [];
 
 fetchUserData();
 
 const randomConformationWord = ["CONFIRM", "AGREE", "YES", "OK", "PROCEED", "ACCEPT", "VALIDATE", "APPROVE", "ACKNOWLEDGE", "CONSENT"];
+
+function renderBatchStudentsCards(students, isFiltered = false) {
+  const StudentlistContainer = $("#batchStudentsContainer");
+  StudentlistContainer.empty();
+
+  if (students.length > 0) {
+    students.forEach((student) => {
+      const studentCard = `
+        <div class="col Student-Card">
+          <div class="card bg-blur-5 bg-semi-transparent border border-muted shadow-sm h-100 p-2" style="--blur-lvl: 0.2;">
+            <div class="card-body p-2 p-sm-3">
+              <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 gap-sm-3">
+                <img src="https://placehold.co/64x64/031633/6ea8fe?text=${student.initials}&font=poppins" alt="Student Avatar" class="rounded-circle flex-shrink-0" style="width: 40px; height: 40px; object-fit: cover;">
+                <div class="d-flex flex-column min-w-0 w-100">
+                  <span class="fw-medium text-truncate">${student.full_name}</span>
+                  <small class="text-muted text-wrap">${student.program_department}, ${student.year_label}</small>
+                  <small class="text-muted text-wrap">Coordinator: ${student.coordinator}</small>
+                  <div class="d-flex flex-wrap gap-2 mt-2">
+                    <span class="badge bg-info bg-opacity-25 text-info-emphasis">${student.status_label}</span>
+                    <span class="badge bg-secondary bg-opacity-25 text-secondary-emphasis">${student.program_code} - ${student.year_level}${student.section}</span>
+                    <span class="badge bg-secondary bg-opacity-25 text-secondary-emphasis">${student.student_number}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      StudentlistContainer.append(studentCard);
+    });
+    return;
+  }
+
+  const noStudentsCard = `
+    <div class="col-12">
+      <div class="card bg-blur-5 bg-semi-transparent rounded-4 shadow-sm border-0 h-100" style="--blur-lvl: 0.60">
+        <div class="card-body py-3 px-4">
+          <div class="hstack">
+            <p class="card-title mb-0 fw-bold text-muted">${isFiltered ? "No matching students found" : "No students assigned to this batch"}</p>
+          </div>
+          <small class="text-muted" style="font-size: 0.875rem;">${isFiltered ? "Try a different keyword." : "Students assigned to this batch will appear here."}</small>
+        </div>
+      </div>
+    </div>
+  `;
+  StudentlistContainer.append(noStudentsCard);
+}
+
+function filterBatchStudents(searchValue = "") {
+  const normalizedSearch = String(searchValue).trim().toLowerCase();
+
+  if (!normalizedSearch) {
+    renderBatchStudentsCards(currentBatchStudents, false);
+    return;
+  }
+
+  const filteredStudents = currentBatchStudents.filter((student) => {
+    const searchableFields = [
+      student.full_name,
+      student.program_department,
+      student.program_code,
+      student.year_label,
+      `${student.year_level}${student.section}`,
+      student.student_number,
+      student.status_label,
+      student.coordinator,
+    ];
+
+    return searchableFields.some((field) => String(field ?? "").toLowerCase().includes(normalizedSearch));
+  });
+
+  renderBatchStudentsCards(filteredStudents, true);
+}
 
 function loadBatches() {
   const batchesContainer = $("#batchesContainer");
@@ -82,7 +157,7 @@ function loadBatches() {
             <div class="hstack">
               <span class="text-muted" style="font-size: 0.80rem;">Created ${batch.created_at}</span>
               <div class="gap-2 ms-auto ${batch.status === "active" ? "d-block" : "d-none"}">
-                <button class="btn btn-sm btn-outline-dark text-white border border-light px-3 rounded-2">
+                <button class="btn btn-sm btn-outline-dark text-white border border-light px-3 rounded-2" data-bs-toggle="modal" data-bs-target="#ViewStudentBatchModal" id="viewStudentsBtn-${batch.uuid}">
             <span class="d-sm-none"><i class="bi bi-eye"></i></span>
             <span class="d-none d-sm-block">View Students</span>
                 </button>
@@ -164,6 +239,65 @@ function loadBatches() {
               }
             });
           });
+
+          $(`#viewStudentsBtn-${batch.uuid}`).click(function () {
+            $("#ViewStudentBatchModalLabel").text(`Students in ${batch.label}`);
+            $("#ViewStudentBatchModal").attr("data-viewstudents-batch-uuid", batch.uuid);
+            const StudentlistContainer = $("#batchStudentsContainer");
+            StudentlistContainer.empty();
+            $.ajax({
+              url: "../../../Assets/api/batch_functions",
+              method: "POST",
+              data: {
+                action: "get_batch_students",
+                batch_uuid: batch.uuid,
+              },
+              success: function (response) {
+                if (response.status === "success") {
+                  const students = Array.isArray(response?.data?.students) ? response.data.students : [];
+                  currentBatchStudents = students;
+
+                  ForExportingData = ForExportingData.filter((student) => student.batch_uuid !== batch.uuid);
+                  students.forEach((student) => {
+                    ForExportingData.push({ ...student, batch_uuid: batch.uuid });
+                  });
+
+                  filterBatchStudents($("#searchBatchStudentsInput").val());
+                } else {
+                  currentBatchStudents = [];
+                  const errorCard = `
+                    <div class="col-12">
+                      <div class="card bg-blur-5 bg-semi-transparent rounded-4 shadow-sm border-0 h-100" style="--blur-lvl: 0.60">
+                        <div class="card-body py-3 px-4">
+                          <div class="hstack">
+                            <p class="card-title mb-0 fw-bold text-muted">Error loading students</p>
+                          </div>
+                          <small class="text-muted" style="font-size: 0.875rem;">Please try again later.</small>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                  StudentlistContainer.append(errorCard);
+                }
+              },
+              error: function (xhr, status, error) {
+                currentBatchStudents = [];
+                const errorCard = `
+                  <div class="col-12">
+                    <div class="card bg-blur-5 bg-semi-transparent rounded-4 shadow-sm border-0 h-100" style="--blur-lvl: 0.60">
+                      <div class="card-body py-3 px-4">
+                        <div class="hstack">
+                          <p class="card-title mb-0 fw-bold text-muted">Error loading students</p>
+                        </div>
+                        <small class="text-muted" style="font-size: 0.875rem;">Please try again later.</small>
+                      </div>
+                    </div>
+                  </div>
+                  `;
+                StudentlistContainer.append(errorCard);
+              },
+            });
+          });
         });
       } else {
         const errorCard = `
@@ -200,7 +334,6 @@ function loadBatches() {
   });
 }
 
-// get action from url parameter if exists and trigger corresponding button click
 function triggerActionFromURL() {
   const urlParams = new URLSearchParams(window.location.search);
   const action = urlParams.get("action");
@@ -214,7 +347,7 @@ function triggerActionFromURL() {
       $(`#editBatchBtnc-${batchUuid}`).click();
     }, 100);
   }
-  
+
   if (action) {
     urlParams.delete("action");
     urlParams.delete("batch");
@@ -454,5 +587,72 @@ $(document).ready(function () {
         ToastVersion(swalTheme, "An error occurred while updating the batch. Please try again.", "error", 3000);
       },
     });
+  });
+
+  $("#refreshBatchStudentsBtn").click(function () {
+    const batchUuid = $("#ViewStudentBatchModal").attr("data-viewstudents-batch-uuid");
+    const $btn = $(this);
+    const $modal = $("#ViewStudentBatchModal");
+    const $studentsContainer = $("#batchStudentsContainer");
+
+    if (batchUuid) {
+      $btn.prop("disabled", true);
+
+      $studentsContainer.stop(true, true).fadeTo(180, 0.2, function () {
+        $(`#viewStudentsBtn-${batchUuid}`).triggerHandler("click");
+
+        setTimeout(() => {
+          $studentsContainer.stop(true, true).fadeTo(250, 1);
+          $modal.modal("handleUpdate");
+        }, 250);
+      });
+
+      setTimeout(() => {
+        $btn.prop("disabled", false);
+      }, 2000);
+    }
+  });
+
+  $("#searchBatchStudentsInput").on("input", function () {
+    filterBatchStudents($(this).val());
+  });
+
+  $("#clearSearchBatchStudentsBtn").click(function () {
+    $("#searchBatchStudentsInput").val("").trigger("focus");
+    filterBatchStudents("");
+  });
+
+  $("#ViewStudentBatchModal").on("hidden.bs.modal", function () {
+    currentBatchStudents = [];
+    $("#searchBatchStudentsInput").val("");
+    $("#batchStudentsContainer").empty();
+  });
+
+  $("#exportBatchStudentsBtn").click(function () {
+    const batchUuid = $("#ViewStudentBatchModal").attr("data-viewstudents-batch-uuid");
+    if (batchUuid) {
+      const studentsToExport = ForExportingData.filter((student) => String(student.batch_uuid) === String(batchUuid));
+
+      if (studentsToExport.length > 0) {
+        const escapeCsv = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+        const headers = ["Full Name", "Program", "Year Level", "Status", "Student Number", "Status", "Coordinator"];
+        const rows = studentsToExport.map((s) =>
+          [s.full_name, s.program_name, s.year_label, s.status_label, s.student_number, s.status_label, s.coordinator].map(escapeCsv).join(","),
+        );
+        const csvText = [headers.join(","), ...rows].join("\n");
+        const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.setAttribute("href", downloadUrl);
+        link.setAttribute("download", `Batch_${batchUuid}_Students.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(downloadUrl);
+      } else {
+        ToastVersion(swalTheme, "No students to export for this batch.", "info", 3000);
+      }
+    }
   });
 });

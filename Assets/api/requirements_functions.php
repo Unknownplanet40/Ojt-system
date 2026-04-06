@@ -66,8 +66,6 @@ try {
 
 require_once 'helpers.php';
 
-
-// requirement type definitions — label + description
 const REQUIREMENT_TYPES = [
     'medical_certificate' => [
         'label'       => 'Medical Certificate',
@@ -101,12 +99,6 @@ const REQUIREMENT_TYPES = [
     ],
 ];
 
-
-// -----------------------------------------------
-// INITIALIZE requirements for a student
-// called when a student is added to a batch
-// creates one 'not_submitted' row per requirement type
-// -----------------------------------------------
 function initializeRequirements($conn, string $studentUuid, string $batchUuid): void
 {
     $stmt = $conn->prepare("
@@ -125,10 +117,6 @@ function initializeRequirements($conn, string $studentUuid, string $batchUuid): 
 }
 
 
-// -----------------------------------------------
-// GET all requirements for a student
-// used on the student's requirements page
-// -----------------------------------------------
 function getStudentRequirements($conn, string $studentUuid, string $batchUuid): array
 {
     $stmt = $conn->prepare("
@@ -183,11 +171,6 @@ function getStudentRequirements($conn, string $studentUuid, string $batchUuid): 
     return $requirements;
 }
 
-
-// -----------------------------------------------
-// GET requirements summary for a student
-// used in coordinator overview list
-// -----------------------------------------------
 function getRequirementsSummary($conn, string $studentUuid, string $batchUuid): array
 {
     $stmt = $conn->prepare("
@@ -231,10 +214,6 @@ function getRequirementsSummary($conn, string $studentUuid, string $batchUuid): 
     ];
 }
 
-
-// -----------------------------------------------
-// SUBMIT a requirement (student action)
-// -----------------------------------------------
 function submitRequirement($conn, string $requirementUuid, array $file, string $studentNote = ''): array
 {
     // validate file
@@ -250,9 +229,9 @@ function submitRequirement($conn, string $requirementUuid, array $file, string $
         return ['success' => false, 'error' => 'File must be 5MB or less.'];
     }
 
-    // fetch requirement to get student_uuid and req_type
+    // fetch requirement to get student_uuid, req_type, and old file_path
     $stmt = $conn->prepare("
-        SELECT uuid, student_uuid, req_type, status
+        SELECT uuid, student_uuid, req_type, status, file_path
         FROM student_requirements
         WHERE uuid = ? LIMIT 1
     ");
@@ -270,7 +249,7 @@ function submitRequirement($conn, string $requirementUuid, array $file, string $
         return ['success' => false, 'error' => 'This document has already been submitted or approved.'];
     }
 
-    // save file
+    // save new file
     $safeFileName = generateUuid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($file['name']));
     $uploadDir    = dirname(__DIR__, 2) . '/uploads/requirements/' . $req['req_type'] . '/' . $req['student_uuid'] . '/';
     $relativePath = 'uploads/requirements/' . $req['req_type'] . '/' . $req['student_uuid'] . '/' . $safeFileName;
@@ -286,14 +265,14 @@ function submitRequirement($conn, string $requirementUuid, array $file, string $
     // update DB
     $stmt = $conn->prepare("
         UPDATE student_requirements
-        SET status       = 'submitted',
-            file_name    = ?,
-            file_path    = ?,
-            student_note = ?,
+        SET status           = 'submitted',
+            file_name        = ?,
+            file_path        = ?,
+            student_note     = ?,
             coordinator_note = NULL,
-            submitted_at = NOW(),
-            reviewed_at  = NULL,
-            reviewed_by  = NULL
+            submitted_at     = NOW(),
+            reviewed_at      = NULL,
+            reviewed_by      = NULL
         WHERE uuid = ?
     ");
     $stmt->bind_param(
@@ -305,6 +284,16 @@ function submitRequirement($conn, string $requirementUuid, array $file, string $
     );
     $stmt->execute();
     $stmt->close();
+
+    // delete old file after successful replacement
+    if (!empty($req['file_path'])) {
+        $oldAbsolutePath = dirname(__DIR__, 2) . '/' . ltrim($req['file_path'], '/\\');
+        $newAbsolutePath = $uploadDir . $safeFileName;
+
+        if ($oldAbsolutePath !== $newAbsolutePath && is_file($oldAbsolutePath)) {
+            @unlink($oldAbsolutePath);
+        }
+    }
 
     logActivity(
         conn: $conn,
@@ -318,10 +307,6 @@ function submitRequirement($conn, string $requirementUuid, array $file, string $
     return ['success' => true];
 }
 
-
-// -----------------------------------------------
-// APPROVE a requirement (coordinator action)
-// -----------------------------------------------
 function approveRequirement($conn, string $requirementUuid, string $coordinatorUserUuid): array
 {
     $stmt = $conn->prepare("
@@ -391,10 +376,6 @@ function approveRequirement($conn, string $requirementUuid, string $coordinatorU
     return ['success' => true];
 }
 
-
-// -----------------------------------------------
-// RETURN a requirement (coordinator action)
-// -----------------------------------------------
 function returnRequirement($conn, string $requirementUuid, string $coordinatorNote, string $coordinatorUserUuid): array
 {
     if (empty(trim($coordinatorNote))) {
@@ -443,11 +424,6 @@ function returnRequirement($conn, string $requirementUuid, string $coordinatorNo
     return ['success' => true];
 }
 
-
-// -----------------------------------------------
-// CHECK if student can apply
-// all 6 requirements must be approved
-// -----------------------------------------------
 function canStudentApply($conn, string $studentUuid, string $batchUuid): bool
 {
     $stmt = $conn->prepare("
@@ -468,11 +444,6 @@ function canStudentApply($conn, string $studentUuid, string $batchUuid): bool
     return $total > 0 && $approved === $total;
 }
 
-
-// -----------------------------------------------
-// GET all students with requirement status
-// coordinator overview page
-// -----------------------------------------------
 function getStudentsRequirementsOverview($conn, string $coordinatorUuid, string $batchUuid): array
 {
     $safeCoord = $conn->real_escape_string($coordinatorUuid);
@@ -529,9 +500,6 @@ function getStudentsRequirementsOverview($conn, string $coordinatorUuid, string 
     return $students;
 }
 
-// -----------------------------------------------
-// fetch 1 requirement for student to view details in modal so that coordinator can approve/return with note but only fetch submitted one
-// -----------------------------------------------
 function getRequirementDetails($conn, string $studentUuid, string $batchUuid): ?array
 {
 

@@ -11,7 +11,7 @@ if (empty($_SESSION['user'])) {
 
 require_once "../../../Assets/SystemInfo.php";
 
-$CurrentPage = "Dashboard";
+$CurrentPage = "StudentDashboard";
 
 $greeting = "";
 $currentHour = date("H");

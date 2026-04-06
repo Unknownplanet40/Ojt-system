@@ -181,7 +181,7 @@ function getUsersByRole($conn): array
     ];
 }
 
-function getRecentAccounts($conn, int $limit = 5): array
+function getRecentAccounts($conn, int $limit = 10): array
 {
     $limit = (int) $limit;
 
@@ -226,7 +226,7 @@ function getRecentAccounts($conn, int $limit = 5): array
         LEFT JOIN coordinator_profiles cp  ON u.uuid = cp.user_uuid
         LEFT JOIN supervisor_profiles  svp ON u.uuid = svp.user_uuid
         LEFT JOIN admin_profiles       ap  ON u.uuid = ap.user_uuid
-        ORDER BY u.created_at DESC
+        ORDER BY u.last_login_at DESC
         LIMIT {$limit}
     ");
 

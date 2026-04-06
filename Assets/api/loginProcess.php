@@ -123,6 +123,7 @@ $redirectPage = '';
 $redirectUrl = '';
 $noProfile = false;
 $LogMessage = '';
+$hasSubmittedRequrement = false;
 
 switch ($user['role']) {
     case 'admin':
@@ -214,10 +215,35 @@ if ($noProfile) {
     );
 }
 
+if ($user['role'] === 'student') {
+
+    //get the batch uuid of the student and uuid of the student from student_profiles table
+    $stmt = $conn->prepare("SELECT uuid, batch_uuid FROM student_profiles WHERE user_uuid = ?");
+    $stmt->bind_param("s", $user['uuid']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $batchData = $result->fetch_assoc();
+
+    $stmt = $conn->prepare("
+        SELECT
+          COUNT(*)                                                    AS total,
+          SUM(CASE WHEN status = 'not_submitted' THEN 1 ELSE 0 END)  AS not_submitted
+        FROM student_requirements
+        WHERE student_uuid = ? AND batch_uuid = ?
+    ");
+    $stmt->bind_param("ss", $batchData['uuid'], $batchData['batch_uuid']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = $result->fetch_assoc();
+    
+    $hasSubmittedRequrement = ($data['total'] == $data['not_submitted']);
+}
+
 $conn->close();
 
 response([
     'status' => 'success',
     'message' => $LogMessage,
-    'redirect_url' => $redirectUrl
+    'redirect_url' => $redirectUrl,
+    'has_submitted_requirements' => $hasSubmittedRequrement
 ]);

@@ -34,6 +34,7 @@ require_once "../../../Assets/SystemInfo.php";
         <div class="admin-profile-card card rounded-3 bg-blur-3 bg-semi-transparent w-100" style="--blur-lvl: 0.50;">
             <div class="card-body">
                 <div class="hstack mb-4">
+                    <button class="btn btn-sm btn-outline-secondary p-1 px-2 me-3 d-none" id="backBtn"><i class="bi bi-arrow-left"></i> Back</button>
                     <small class="fw-bold"><?= $LongTitle ?> <span
                             class="badge bg-warning-subtle bg-opacity-50 text-warning-emphasis rounded-pill px-2 fw-medium">Student</span></small>
                     <small class="text-muted ms-auto">Step 1 of

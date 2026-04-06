@@ -1,11 +1,13 @@
 <div class="row row-cols-1 row-cols-md-3 g-4 mt-1">
   <div class="col-md-4">
-    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow" style="max-height: 400px; overflow-y: auto; --blur-lvl: <?= $opacitylvl ?>">
-      <div class="card-body">
+    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow p-1 h-100" style="auto; --blur-lvl: <?= $opacitylvl ?>">
+      <dov class="card-header border-bottom-0 bg-transparent">
         <div class="hstack">
           <h5 class="card-title">User by role</h5>
         </div>
-        <ul class="list-group list-group-flush mt-3">
+      </dov>
+    <div class="card-body">
+        <ul class="list-group list-group-flush">
           <li class="list-group-item bg-transparent">
             <div class="hstack">
               <i class="bi bi-person-circle me-3 text-primary fs-4"></i>
@@ -67,25 +69,29 @@
     </div>
   </div>
   <div class="col-md-4">
-    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow" style="max-height: 400px; overflow-y: auto; --blur-lvl: <?= $opacitylvl ?>">
-      <div class="card-body">
+    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow h-100" style="--blur-lvl: <?= $opacitylvl ?>">
+      <div class="card-header border-bottom-0 bg-transparent">
         <div class="hstack">
           <h5 class="card-title">Recent Accounts</h5>
           <a href="javascript:void(0)" class="ms-auto text-decoration-none text-success fw-medium">View all</a>
         </div>
-        <ul class="list-group list-group-flush mt-3" id="recentAccountsList">
+      </div>  
+    <div class="card-body">
+        <ul class="list-group list-group-flush" id="recentAccountsList" style="max-height: 400px; overflow-y: auto;">
         </ul>
       </div>
     </div>
   </div>
   <div class="col-md-4">
-    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow" style="max-height: 400px; overflow-y: auto; --blur-lvl: <?= $opacitylvl ?>">
-      <div class="card-body">
+    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow h-100" style="--blur-lvl: <?= $opacitylvl ?>">
+      <div class="card-header border-bottom-0 bg-transparent">
         <div class="hstack">
           <h5 class="card-title">Recent Activity - (<small class="text-muted" id="activityCount">0</small>)</h5>
           <a href="javascript:void(0)" class="ms-auto text-decoration-none text-success fw-medium">View all</a>
         </div>
-        <ul class="list-group list-group-flush mt-3" id="recentActivityList">
+      </div>
+    <div class="card-body">
+        <ul class="list-group list-group-flush" id="recentActivityList" style="max-height: 400px; overflow-y: auto;">
         </ul>
       </div>
     </div>

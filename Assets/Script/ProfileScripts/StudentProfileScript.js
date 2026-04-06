@@ -42,7 +42,6 @@ function ProfileProgressBar(fill = 0) {
   }
 }
 
-
 function getProfileData(uuid) {
   $("#profileprogressLabel").text("Updating Profile");
   $("#profileInfoText").text("Make changes to your profile information. Don't forget to save your changes.");
@@ -68,9 +67,9 @@ function getProfileData(uuid) {
         if (data.profile_path) {
           $("#adminProfilePhoto").attr("src", "../../../" + data.profile_path);
         } else {
-            const initials = (data.first_name.charAt(0) + data.last_name.charAt(0)).toUpperCase();
-            const placeholderUrl = `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`;
-             $("#adminProfilePhoto").attr("src", placeholderUrl);
+          const initials = (data.first_name.charAt(0) + data.last_name.charAt(0)).toUpperCase();
+          const placeholderUrl = `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`;
+          $("#adminProfilePhoto").attr("src", placeholderUrl);
         }
 
         ProfileProgressBar();
@@ -135,8 +134,13 @@ $(document).ready(function () {
 
   academicinfoDropdown(function () {
     if (action === "edit" && userUuid) {
-        history.replaceState(null, "", window.location.pathname);
-        getProfileData(userUuid);
+      history.replaceState(null, "", window.location.pathname);
+      getProfileData(userUuid);
+      $("#backBtn").removeClass("d-none");
+    } else {
+      $("#profileprogressLabel").text("Complete Your Profile");
+      $("#profileInfoText").text("Please fill in your profile information to complete your registration.");
+      $("#backBtn").remove();
     }
   });
 
@@ -263,16 +267,16 @@ $(document).ready(function () {
       success: function (response) {
         if (response.status === "success") {
           if (enableChangePassword) {
-            window.location.href = "../../../Src/Pages/ChangePassword.php";
+            window.location.href = "../../../Src/Pages/ChangePassword";
             return;
           }
 
           if (response.data.hasSubmittedRequirements) {
-            window.location.href = "../../../Src/Pages/Students/Requirements.php";
+            window.location.href = "../../../Src/Pages/Students/Requirements";
             return;
           }
-          
-          window.location.href = "../../../Src/Pages/Students/StudentsDashboard.php";
+
+          window.location.href = "../../../Src/Pages/Students/StudentsDashboard";
         } else {
           ToastVersion(swalTheme, response.message, "error", 3000);
         }
@@ -285,5 +289,28 @@ $(document).ready(function () {
         }
       },
     });
+  });
+
+  const profileEditState = history.state && history.state.profileEdit;
+
+  if (!action && !userUuid && profileEditState?.uuid) {
+    window.location.replace(`${window.location.pathname}?action=edit&uuid=${encodeURIComponent(profileEditState.uuid)}`);
+    return;
+  }
+
+  if (action === "edit" && userUuid) {
+    const persistEditState = () => {
+      history.replaceState({ profileEdit: { uuid: userUuid } }, "", window.location.pathname);
+    };
+
+    $(document).one("ajaxComplete.profileEditState", function (_event, _xhr, settings) {
+      if (settings?.url && settings.url.includes("academic_info_function")) {
+        persistEditState();
+      }
+    });
+  }
+
+  $("#backBtn").on("click", function () {
+    window.history.back();
   });
 });

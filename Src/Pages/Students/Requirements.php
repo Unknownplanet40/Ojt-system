@@ -53,7 +53,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
     </div>
     <div class="d-flex flex-nowrap z-3 min-vh-100" id="PageMainContent">
         <main class="d-flex flex-column flex-grow-1 overflow-auto">
-            <?php //require_once "../../Components/Header_Student.php"?>
+            <?php require_once "../../Components/Header_Students.php"; ?>
             <div class="container p-4 w-100" id="dashboardContent">
                 <div class="hstack">
                     <div>
@@ -96,7 +96,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                     </div>
                     <div class="col-md-12" id="ResumeContainer" data-Requirement-uuid=""> <!-- Resume Container -->
                         <!-- only show if resume is submitted -->
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-0 rounded-end-3 border-0 border-danger border-start border-3"
+                        <div class="card bg-blur-5 bg-semi-transparent rounded-0 rounded-end-3 border-0 border-danger border-start border-5"
                             style="--blur-lvl: <?= $opacitylvl ?>"
                             id="SubmittedResumeCard">
                             <div class="card-body">

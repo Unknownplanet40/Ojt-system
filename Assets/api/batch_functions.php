@@ -359,7 +359,7 @@ function closeBatch($conn, string $batchUuid, string $adminUuid): array
         actorUuid: $adminUuid,
         targetUuid: $batchUuid,
     );
-    
+
     return ['success' => true];
 }
 
@@ -447,6 +447,78 @@ function getActiveBatch($conn): ?array
         'start_date'     => $row['start_date'],
         'end_date'       => $row['end_date'],
     ];
+}
+
+function getBatchStudents($conn, string $batchUuid): array
+{
+    $stmt = $conn->prepare("
+        SELECT
+          sp.uuid            AS profile_uuid,
+          sp.student_number,
+          sp.first_name,
+          sp.last_name,
+          sp.year_level,
+          sp.section,
+
+          u.uuid             AS user_uuid,
+          u.email,
+          u.is_active,
+          u.last_login_at,
+
+          p.code             AS program_code,
+          p.name             AS program_name,
+          p.department       AS program_department,
+
+          CONCAT(cp.first_name, ' ', cp.last_name) AS coordinator_name,
+
+          CASE
+            WHEN u.is_active = 0         THEN 'inactive'
+            WHEN u.last_login_at IS NULL THEN 'never_logged_in'
+            ELSE 'active'
+          END AS account_status
+
+        FROM student_profiles sp
+        JOIN users u
+          ON sp.user_uuid = u.uuid
+        LEFT JOIN programs p
+          ON sp.program_uuid = p.uuid
+        LEFT JOIN coordinator_profiles cp
+          ON sp.coordinator_uuid = cp.uuid
+        WHERE sp.batch_uuid = ?
+        ORDER BY sp.last_name ASC, sp.first_name ASC
+    ");
+
+    $stmt->bind_param('s', $batchUuid);
+    $stmt->execute();
+    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+
+    return array_map(fn ($row) => [
+        'profile_uuid'        => $row['profile_uuid'],
+        'user_uuid'           => $row['user_uuid'],
+        'student_number'      => $row['student_number'],
+        'full_name'           => $row['first_name'] . ' ' . $row['last_name'],
+        'initials'            => strtoupper(substr($row['first_name'], 0, 1) . substr($row['last_name'], 0, 1)),
+        'email'               => $row['email'],
+        'program_code'        => $row['program_code'] ?? '—',
+        'program_name'        => $row['program_name'] ?? '—',
+        'program_department'  => $row['program_department'] ?? '—',
+        'year_level'          => $row['year_level'],
+        'year_label'          => ordinal((int)$row['year_level']) . ' Year',
+        'section'             => $row['section'] ?? '—',
+        'coordinator'         => $row['coordinator_name'] ?? '—',
+        'is_active'           => (int) $row['is_active'],
+        'account_status'      => $row['account_status'],
+        'status_label'        => match($row['account_status']) {
+            'active'          => 'Active',
+            'inactive'        => 'Inactive',
+            'never_logged_in' => 'Never logged in',
+            default           => 'Unknown',
+        },
+        'last_login'          => $row['last_login_at']
+                                   ? date('M j, Y', strtotime($row['last_login_at']))
+                                   : null,
+    ], $rows);
 }
 
 if ($action === 'create_batch') {
@@ -597,6 +669,23 @@ if ($action === 'create_batch') {
         'data' => [
             'batches' => $batches,
             'active_batch' => $activeBatch
+        ]
+    ]);
+} elseif ($action === 'get_batch_students') {
+    $batch_uuid = isset($_POST['batch_uuid']) ? $_POST['batch_uuid'] : null;
+    if (!$batch_uuid) {
+        response([
+            'status' => 'error',
+            'message' => 'Batch UUID is required.',
+            'long_message' => 'To get students of a batch, the batch UUID must be provided.'
+        ]);
+    }
+
+    $students = getBatchStudents($conn, $batch_uuid);
+    response([
+        'status' => 'success',
+        'data' => [
+            'students' => $students
         ]
     ]);
 } else {
