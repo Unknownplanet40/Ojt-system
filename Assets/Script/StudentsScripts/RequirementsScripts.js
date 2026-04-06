@@ -85,14 +85,6 @@ function ReturnRequrementStatus(status, maincontainerid, submittedCardId, notSub
   // not submitted card
   const labelNS = $(`#${Doc}LabelNS`);
   const descriptionNS = $(`#${Doc}DescriptionNS`);
-  const uploadAreaNS = $(`#upload${Doc}AreaNS`);
-  const fileInputNS = $(`#${Doc}FileInputNS`);
-  const selectedInfoNS = $(`#selected${Doc}InfoNS`);
-  const selectedFileNameNS = $(`#selected${Doc}FileNameNS`);
-  const viewBtnNS = $(`#view${Doc}BtnNS`);
-  const removeBtnNS = $(`#remove${Doc}BtnNS`);
-  const noteInputNS = $(`#${Doc}NoteInputNS`);
-  const submitBtnNS = $(`#submit${Doc}BtnNS`);
   const cancelBtnNS = $(`#Cancel${Doc}BtnNS`);
 
   const BadgeColors = {

@@ -105,7 +105,11 @@ $(document).ready(function () {
       },
       success: function (response) {
         if (response.status === "success") {
-          window.location.href = response.redirect_url || "../../Src/Pages";
+          if (response.has_submitted_requirements) {
+            window.location.href = "../../Src/Pages/Students/Requirements";
+            return;
+          }
+          window.location.href = response.redirect_url || "../../Src/Pages/Login";
         } else if (response.status === "info") {
           ToastVersion(swalTheme, response.message, response.status, 3000, "top-end");
         } else {
@@ -132,5 +136,15 @@ $(document).ready(function () {
         },
       },
     });
+  });
+
+  $("#email, #password").on("keypress", function (e) {
+    if (e.which === 13) {
+      if ($("#email").val() && $("#password").val()) {
+        $("#loginBtn").click();
+      } else {
+        ToastVersion(swalTheme, "Please fill in both email and password fields!", "warning", 3000, "top-end");
+      }
+    }
   });
 });
