@@ -19,6 +19,11 @@ This project is a **rebuild of my previous OJT Coordinator System**, modernized 
 
 > _Last updated: April 2026_
 
+- ✅ Implemented core UI styles, dashboard components, and authentication logic for admin and student modules:
+   - Updated Batches management UI and scripts (`Src/Pages/Admin/Batches.php`, `Assets/Script/AdminScripts/batchesSripts.js`, `Assets/api/batch_functions.php`)
+   - Enhanced Student Profile and Requirements functionalities (`Src/Components/Header_Students.php`, `Assets/Script/ProfileScripts/StudentProfileScript.js`)
+   - Improved login and authentication routing (`Assets/api/loginProcess.php`, `Assets/Script/loginScript.js`)
+   - Added core UI styles (`Assets/style/MainStyle.css`)
 - ✅ Added **Companies Management module** for admins:
    - `Src/Pages/Admin/Companies.php`
    - `Assets/Script/AdminScripts/CompaniesScripts.js`

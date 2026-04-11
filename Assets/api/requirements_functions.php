@@ -786,10 +786,59 @@ if ($action === 'fetch_students') {
             'message' => $result['error']
         ]);
     }
-}
+} elseif ($action === 'check_can_apply') {
+    $studentId = $_SESSION['user']['uuid'];
+    $convertedId = UUID_convert_Student($conn, $studentId);
+    $activeBatch = activebatch($conn);
+
+    if (!$activeBatch) {
+        response([
+            'status' => 'error',
+            'message' => 'No active batch found. Please contact the administrator.'
+        ]);
+    }
+
+    $canApply = canStudentApply($conn, $convertedId, $activeBatch['uuid']);
+    $getDetails = getStudentRequirements($conn, $convertedId, $activeBatch['uuid']);
+
+    $getDetails = array_map(function($req) {
+        return [
+            'req_type' => $req['req_type'],
+            'status' => $req['status'],
+            'status_label' => $req['status_label']
+        ];
+    }, $getDetails);
+
+    // get ojt application status if student has already applied
+    $stmt = $conn->prepare("
+        SELECT status
+        FROM ojt_applications
+        WHERE student_uuid = ? AND batch_uuid = ?
+        ORDER BY created_at DESC
+        LIMIT 1
+    ");
+    $stmt->bind_param('ss', $convertedId, $activeBatch['uuid']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $applicationStatus = $result->fetch_assoc();
+
+    // if student has already applied make showApplyModal to false and return application status
+
+    response([
+        'status' => 'success',
+        'can_apply' => $canApply,
+        'details' => $getDetails,
+        'active_batch' => [
+            'uuid' => $activeBatch['uuid'],
+            'school_year' => $activeBatch['school_year'],
+            'semester' => $activeBatch['semester']
+        ],
+        'showModal' => !$applicationStatus,
+        'application_status' => $applicationStatus['status'] ?? null
+    ]);
 
 
-else {
+} else {
     response([
         'status' => 'error',
         'message' => 'Invalid action specified.'

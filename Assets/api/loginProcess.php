@@ -216,8 +216,6 @@ if ($noProfile) {
 }
 
 if ($user['role'] === 'student') {
-
-    //get the batch uuid of the student and uuid of the student from student_profiles table
     $stmt = $conn->prepare("SELECT uuid, batch_uuid FROM student_profiles WHERE user_uuid = ?");
     $stmt->bind_param("s", $user['uuid']);
     $stmt->execute();

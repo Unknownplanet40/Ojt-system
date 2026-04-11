@@ -56,21 +56,22 @@ if ($currentHour >= 5 && $currentHour < 12) {
             <div class="container-fluid p-4 w-100" id="dashboardContent">
                 <div class="hstack">
                     <div>
-                        <h4 class="" id="dashboardTitle">Dashboard <i class="bi bi-arrow-clockwise ms-2" id="dashboardRefreshBtn" style="cursor: pointer;"></i></h4>
+                        <h4 class="" id="dashboardTitle">Dashboard <i class="bi bi-arrow-clockwise ms-2"
+                                id="dashboardRefreshBtn" style="cursor: pointer;"></i></h4>
                         <p class="blockquote-footer pt-2 fs-6">
                             <?= $greeting ?>, <strong
                                 id="welcomeUserName"></strong>! Here's what's happening this semester.
                         </p>
                     </div>
-                    <button class="btn btn-sm btn-outline-secondary ms-auto text-nowrap"
-                        id="dashboardAddStudentBtn">
+                    <button class="btn btn-sm btn-outline-secondary ms-auto text-nowrap" id="dashboardAddStudentBtn">
                         <i class="bi bi-person-plus me-1"></i>
                         Add Student
                     </button>
                 </div>
                 <div class="row row-cols-1 row-cols-md-4 g-4">
                     <div class="col">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body">
                                 <h5 class="card-title">My Students</h5>
                                 <p class="card-text display-6 fw-bold mb-0" id="TotalUsersCounts">0</p>
@@ -79,7 +80,8 @@ if ($currentHour >= 5 && $currentHour < 12) {
                         </div>
                     </div>
                     <div class="col">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body">
                                 <h5 class="card-title">Active OJT</h5>
                                 <p class="card-text display-6 fw-bold mb-0" id="activeOjtCounts">0</p>
@@ -88,7 +90,8 @@ if ($currentHour >= 5 && $currentHour < 12) {
                         </div>
                     </div>
                     <div class="col">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body">
                                 <h5 class="card-title">Pending Approvals</h5>
                                 <p class="card-text display-6 fw-bold mb-0" id="pendingApprovalsCounts">0</p>
@@ -97,7 +100,8 @@ if ($currentHour >= 5 && $currentHour < 12) {
                         </div>
                     </div>
                     <div class="col">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body">
                                 <h5 class="card-title">Avg hours rendered</h5>
                                 <p class="card-text display-6 fw-bold mb-0" id="avgHoursRendered">0</p>
@@ -108,7 +112,8 @@ if ($currentHour >= 5 && $currentHour < 12) {
                 </div>
                 <div class="row row-cols-1 row-cols-md-2 g-4 mt-1">
                     <div class="col">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body">
                                 <div class="hstack">
                                     <h5 class="card-title">Need your action</h5>
@@ -117,13 +122,35 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                         View all
                                     </a>
                                 </div>
-                                <ul class="list-group list-group-flush" id="needActionList" style="min-height: 210px; max-height: 320px; overflow-y: auto;">
+                                <ul class="list-group list-group-flush" id="needActionList"
+                                    style="min-height: 210px; max-height: 320px; overflow-y: auto;">
+                                    <li class="list-group-item bg-transparent border-0 px-0">
+                                        <div
+                                            class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 p-3 rounded-3 border bg-body-tertiary">
+                                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-info-subtle text-info flex-shrink-0"
+                                                style="width: 40px; height: 40px;">
+                                                <i class="bi bi-person-fill fs-6"></i>
+                                            </div>
+
+                                            <div class="flex-grow-1 min-w-0">
+                                                <div class="fw-semibold text-break">3 students have no OJT application
+                                                    yet</div>
+                                                <small class="text-muted d-block mt-1">Action needed</small>
+                                            </div>
+
+                                            <a href="/coordinator/students"
+                                                class="btn btn-sm btn-outline-success text-nowrap align-self-stretch align-self-sm-center">
+                                                View details
+                                            </a>
+                                        </div>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                     <div class="col">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body">
                                 <div class="hstack">
                                     <h5 class="card-title">My Students</h5>
@@ -132,7 +159,9 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                         View all
                                     </a>
                                 </div>
-                                <ul class="list-group list-group-flush" id="myStudentsList" style="min-height: 210px; max-height: 320px; overflow-y: auto;">
+                                <ul class="list-group list-group-flush" id="myStudentsList"
+                                    style="min-height: 210px; max-height: 320px; overflow-y: auto;">
+                                    
                                 </ul>
                             </div>
                         </div>
@@ -140,18 +169,21 @@ if ($currentHour >= 5 && $currentHour < 12) {
                 </div>
                 <div class="row row-cols-1 row-cols-md-3 g-4 mt-1">
                     <div class="col">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body">
                                 <div class="hstack">
                                     <h5 class="card-title">Hours Progress</h5>
                                 </div>
-                                <ul class="list-group list-group-flush" id="hoursProgressList" style="min-height: 210px; max-height: 320px; overflow-y: auto;">
+                                <ul class="list-group list-group-flush p-3" id="hoursProgressList"
+                                    style="min-height: 210px; max-height: 320px; overflow-y: auto;">
                                 </ul>
                             </div>
                         </div>
                     </div>
                     <div class="col">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body">
                                 <div class="hstack">
                                     <h5 class="card-title">Partner Companies</h5>
@@ -160,13 +192,16 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                         View all
                                     </a>
                                 </div>
-                                <ul class="list-group list-group-flush" id="partnerCompaniesList" style="min-height: 210px; max-height: 320px; overflow-y: auto;">
+                                <ul class="list-group list-group-flush p-3" id="partnerCompaniesList"
+                                    style="min-height: 210px; max-height: 320px; overflow-y: auto;">
+
                                 </ul>
                             </div>
                         </div>
                     </div>
                     <div class="col">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body">
                                 <div class="hstack">
                                     <h5 class="card-title">Upcoming visits</h5>
@@ -175,11 +210,15 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                         Schedule
                                     </a>
                                 </div>
-                                <ul class="list-group list-group-flush d-none" id="upcomingVisitsList" style="min-height: 210px; max-height: 320px; overflow-y: auto;">
+                                <ul class="list-group list-group-flush d-none" id="upcomingVisitsList"
+                                    style="min-height: 210px; max-height: 320px; overflow-y: auto;">
                                 </ul>
-                                <div class="vstack" id="noVisitsScheduled" style="min-height: 210px; max-height: 320px; justify-content: center;">
+                                <div class="vstack" id="noVisitsScheduled"
+                                    style="min-height: 210px; max-height: 320px; justify-content: center;">
                                     <p class="text-muted text-center mt-3 mb-0">No visits scheduled yet.</p>
-                                    <button class="btn btn-sm bg-bg-secondary-subtle text-secondary-emphasis border mt-2 align-self-center" id="scheduleVisitBtn">
+                                    <button
+                                        class="btn btn-sm bg-bg-secondary-subtle text-secondary-emphasis border mt-2 align-self-center"
+                                        id="scheduleVisitBtn">
                                         <i class="bi bi-plus-lg me-1"></i>
                                         Schedule a visit
                                     </button>

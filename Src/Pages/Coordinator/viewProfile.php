@@ -45,21 +45,34 @@ $CurrentPage = "viewProfile";
                         <div class="card h-100 bg-blur-5 bg-semi-transparent rounded-4" style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body">
                                 <div class="row row-cols-1 row-cols-md-2 g-3">
-                                    <div class="col-md-8">
-                                        <div class="hstack">
+                                    <div class="col-12 col-lg-8">
+                                        <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-3">
                                             <img src="https://placehold.co/64x64/C1C1C1/000000/png?text=RJ&font=poppins"
-                                                alt="profile picture" class="rounded-circle m-2 mx-3 me-4"
-                                                style="width: 64px; height: 64px;" id="ProfilePicture">
-                                            <div class="vstack">
-                                                <h5 class="card-title mb-0" id="FullName">John Michael Doe</h5>
-                                                <p class="card-text">
-                                                    <small><?= $_SESSION['user']['email'] ?>
-                                                        &bull; <span id="Department"></span></small>
+                                                alt="profile picture"
+                                                class="rounded-circle border border-2 border-light-subtle shadow-sm flex-shrink-0"
+                                                style="width: clamp(56px, 16vw, 72px); height: clamp(56px, 16vw, 72px);"
+                                                id="ProfilePicture">
+
+                                            <div class="w-100 text-center text-sm-start">
+                                                <h5 class="card-title mb-1" id="FullName">John Michael Doe</h5>
+                                                <p class="card-text mb-2">
+                                                    <small class="text-muted d-inline-flex flex-wrap justify-content-center justify-content-sm-start align-items-center gap-1">
+                                                        <span class="text-break"><?= htmlspecialchars($_SESSION['user']['email']) ?></span>
+                                                        <span class="d-none d-sm-inline">&bull;</span>
+                                                        <span id="Department"></span>
+                                                    </small>
                                                 </p>
-                                                <div class="hstack gap-2">
-                                                    <small class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle rounded-pill"><?= ucfirst($_SESSION['user']['role']) ?></small>
-                                                    <small class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill" id="StatusBadge"><span id="Status">Active</span></small>
-                                                    <small class="badge bg-dark-subtle text-dark-emphasis border border-dark-subtle rounded-pill" id="EmployeeIDBadge"><span id="EmployeeID">EMP-0000-00000000</span></small>
+
+                                                <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-sm-start">
+                                                    <small class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle rounded-pill px-2 py-1">
+                                                        <?= ucfirst($_SESSION['user']['role']) ?>
+                                                    </small>
+                                                    <small class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill px-2 py-1" id="StatusBadge">
+                                                        <span id="Status">Active</span>
+                                                    </small>
+                                                    <small class="badge bg-dark-subtle text-dark-emphasis border border-dark-subtle rounded-pill px-2 py-1" id="EmployeeIDBadge">
+                                                        <span id="EmployeeID">EMP-0000-00000000</span>
+                                                    </small>
                                                 </div>
                                             </div>
                                         </div>
@@ -82,60 +95,144 @@ $CurrentPage = "viewProfile";
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card bg-blur-5 bg-semi-transparent h-100 rounded-4" style="--blur-lvl: <?= $opacitylvl ?>">
-                            <div class="card-body">
-                                <h6 class="card-title">My students</h6>
-                                <p class="card-text display-6 fw-bold mb-0" id="StudentCount">0</p>
+                    <div class="col-12 col-md-4">
+                        <div class="card bg-blur-5 bg-semi-transparent h-100 rounded-4 shadow-sm border border-light border-opacity-10"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
+                            <div class="card-body d-flex flex-column justify-content-between p-4">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <div class="text-muted small text-uppercase fw-semibold">My Students</div>
+                                    <div class="rounded-circle bg-primary-subtle text-primary-emphasis d-inline-flex align-items-center justify-content-center"
+                                        style="width: 40px; height: 40px;">
+                                        <i class="bi bi-people-fill"></i>
+                                    </div>
+                                </div>
+                                <p class="card-text display-6 fw-bold mb-0 lh-1" id="StudentCount">0</p>
+                                <small class="text-muted mt-2">Total assigned students</small>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card bg-blur-5 bg-semi-transparent h-100 rounded-4" style="--blur-lvl: <?= $opacitylvl ?>">
-                            <div class="card-body">
-                                <h6 class="card-title">Active batches</h6>
-                                <p class="card-text fw-bold" id="activeBatch"></p>
+
+                    <div class="col-12 col-md-4">
+                        <div class="card bg-blur-5 bg-semi-transparent h-100 rounded-4 shadow-sm border border-light border-opacity-10"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
+                            <div class="card-body d-flex flex-column justify-content-between p-4">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <div class="text-muted small text-uppercase fw-semibold">Active Batches</div>
+                                    <div class="rounded-circle bg-success-subtle text-success-emphasis d-inline-flex align-items-center justify-content-center"
+                                        style="width: 40px; height: 40px;">
+                                        <i class="bi bi-calendar2-check-fill"></i>
+                                    </div>
+                                </div>
+                                <p class="card-text fs-2 fw-bold mb-0 lh-1" id="activeBatch"></p>
+                                <small class="text-muted mt-2">Currently active batches</small>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card bg-blur-5 bg-semi-transparent h-100 rounded-4" style="--blur-lvl: <?= $opacitylvl ?>">
-                            <div class="card-body">
-                                <h6 class="card-title">last Login</h6>
-                                <p class="card-text fw-bold" id="lastLogin">N/A</p>
+
+                    <div class="col-12 col-md-4">
+                        <div class="card bg-blur-5 bg-semi-transparent h-100 rounded-4 shadow-sm border border-light border-opacity-10"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
+                            <div class="card-body d-flex flex-column justify-content-between p-4">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <div class="text-muted small text-uppercase fw-semibold">Last Login</div>
+                                    <div class="rounded-circle bg-dark-subtle text-dark-emphasis d-inline-flex align-items-center justify-content-center"
+                                        style="width: 40px; height: 40px;">
+                                        <i class="bi bi-clock-history"></i>
+                                    </div>
+                                </div>
+                                <p class="card-text fs-5 fw-semibold mb-0 lh-sm" id="lastLogin">N/A</p>
+                                <small class="text-muted mt-2">Most recent account access</small>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card bg-blur-5 bg-semi-transparent h-100 rounded-4" style="--blur-lvl: <?= $opacitylvl ?>">
-                            <div class="card-body">
-                                <h6 class="card-title">Personal Information</h6>
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item bg-transparent">
-                                        <strong class="text-muted w-50 d-inline-block">Employee ID:</strong>
-                                        <span id="PIEmployeeID"></span>
-                                    </li>
-                                    <li class="list-group-item bg-transparent">
-                                        <strong class="text-muted w-50 d-inline-block">Full Name:</strong>
-                                        <span id="PIFullName"></span>
-                                    </li>
-                                    <li class="list-group-item bg-transparent">
-                                        <strong class="text-muted w-50 d-inline-block">Department:</strong>
-                                        <span id="PIDepartment"></span>
-                                    </li>
-                                    <li class="list-group-item bg-transparent">
-                                        <strong class="text-muted w-50 d-inline-block">Mobile Number:</strong>
-                                        <span id="PIMobileNumber"></span>
-                                    </li>
-                                    <li class="list-group-item bg-transparent">
-                                        <strong class="text-muted w-50 d-inline-block">Email:</strong>
-                                        <span id="Email"><?= $_SESSION['user']['email'] ?></span>
-                                    </li>
-                                    <li class="list-group-item bg-transparent">
-                                        <strong class="text-muted w-50 d-inline-block">Account Created:</strong>
-                                        <span id="PIAccountCreated"></span>
-                                    </li>
-                                </ul>
+                        <div class="card bg-blur-5 bg-semi-transparent h-100 rounded-4 shadow-sm border border-light border-opacity-10"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center justify-content-between mb-4">
+                                    <div>
+                                        <h6 class="card-title mb-1">Personal Information</h6>
+                                        <small class="text-muted">Your account details at a glance</small>
+                                    </div>
+                                    <div class="rounded-circle bg-primary-subtle text-primary-emphasis d-inline-flex align-items-center justify-content-center"
+                                        style="width: 40px; height: 40px;">
+                                        <i class="bi bi-person-vcard"></i>
+                                    </div>
+                                </div>
+
+                                <div class="list-group list-group-flush rounded-3 overflow-hidden">
+                                    <div class="list-group-item bg-transparent px-0 py-3">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <div class="text-primary-emphasis">
+                                                <i class="bi bi-upc-scan fs-5"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted d-block">Employee ID</small>
+                                                <span class="fw-semibold" id="PIEmployeeID"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="list-group-item bg-transparent px-0 py-3">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <div class="text-primary-emphasis">
+                                                <i class="bi bi-person-fill fs-5"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted d-block">Full Name</small>
+                                                <span class="fw-semibold" id="PIFullName"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="list-group-item bg-transparent px-0 py-3">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <div class="text-primary-emphasis">
+                                                <i class="bi bi-building fs-5"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted d-block">Department</small>
+                                                <span class="fw-semibold" id="PIDepartment"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="list-group-item bg-transparent px-0 py-3">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <div class="text-primary-emphasis">
+                                                <i class="bi bi-phone fs-5"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted d-block">Mobile Number</small>
+                                                <span class="fw-semibold" id="PIMobileNumber"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="list-group-item bg-transparent px-0 py-3">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <div class="text-primary-emphasis">
+                                                <i class="bi bi-envelope fs-5"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted d-block">Email</small>
+                                                <span class="fw-semibold text-break" id="Email"><?= htmlspecialchars($_SESSION['user']['email']) ?></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="list-group-item bg-transparent px-0 py-3">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <div class="text-primary-emphasis">
+                                                <i class="bi bi-calendar-event fs-5"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted d-block">Account Created</small>
+                                                <span class="fw-semibold" id="PIAccountCreated"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -145,21 +242,7 @@ $CurrentPage = "viewProfile";
                                 <div class="hstack">
                                     <h6 class="card-title">My Students &bull; <small class="text-muted" id="BatchInfo"></small></h6>
                                 </div>
-                                <ul class="list-group list-group-flush" id="studentList" style="max-height: 265px; overflow-y: auto;">
-                                    <?php for ($i = 0; $i < 5; $i++) : ?>
-                                    <li class="list-group-item bg-transparent">
-                                        <div class="hstack">
-                                            <img src="https://placehold.co/40x40/C1C1C1/000000/png?text=JD&font=poppins"
-                                                alt="profile picture" class="rounded-circle me-3"
-                                                style="width: 40px; height: 40px;">
-                                            <div>
-                                                <div class="fw-bold">Jane Doe</div>
-                                                <small class="text-muted">BS Computer Science, 3rd Year</small>
-                                            </div>
-                                            <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle rounded-pill ms-auto align-self-start">Active</span>
-                                        </div>
-                                    </li>
-                                    <?php endfor; ?>
+                                <ul class="list-group list-group-flush" id="studentList" style="max-height: 512px; overflow-y: auto;">
                                 </ul>
                             </div>
                         </div>

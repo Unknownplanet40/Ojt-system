@@ -38,7 +38,7 @@ require_once "../../Assets/SystemInfo.php";
 
     <div class="container">
         <div class="d-flex justify-content-center align-items-center min-vh-100">
-            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent" style="width: 400px; --blur-lvl: 0.65;" id="SendResetLinkCard">
+            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent border border-secondary" style="width: 400px; --blur-lvl: 0.65;" id="SendResetLinkCard">
                 <span class="mt-3 ms-3 bg-primary-subtle text-primary rounded-circle d-inline-flex justify-content-center align-items-center" style="width: 48px; height: 48px;">
                     <i class="bi bi-envelope-at-fill text-primary-emphasis" style="font-size: 18px;"></i>
                 </span>
@@ -47,17 +47,17 @@ require_once "../../Assets/SystemInfo.php";
                     <p class="mb-4">Enter the email address on your account and we'll send you a reset link.</p>
                     <div class="mb-3">
                         <small class="form-label">Email address</small>
-                        <input type="email" class="form-control bg-semi-transparent" id="email" name="email"
+                        <input type="email" class="form-control bg-semi-transparent border border-secondary" id="email" name="email"
                             placeholder="yourname@school.edu.ph" required>
                     </div>
-                    <button type="submit" class="btn btn-outline-dark w-100 border-white text-white" id="SendLinkBtn">Send reset link</button>
+                    <button type="submit" class="btn btn-outline-dark w-100 border border-secondary text-body" id="SendLinkBtn">Send reset link</button>
                     <hr>
                     <div class="text-center mt-2">
                         <a href="Login.php" class="text-decoration-none text-success"><small>Back to sign in</small></a>
                     </div>
                 </div>
             </div>
-            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent d-none" style="width: 400px; --blur-lvl: 0.65;" id="EmailSentCard">
+            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent border border-secondary d-none" style="width: 400px; --blur-lvl: 0.65;" id="EmailSentCard">
                 <span class="mt-3 ms-3 bg-success-subtle text-success rounded-circle d-inline-flex justify-content-center align-items-center" style="width: 48px; height: 48px;">
                     <i class="bi bi-send-check-fill text-success-emphasis" style="font-size: 18px;"></i>
                 </span>
@@ -75,7 +75,7 @@ require_once "../../Assets/SystemInfo.php";
                     </div>
                 </div>
             </div>
-            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent d-none" style="width: 400px; --blur-lvl: 0.65;" id="ResetPasswordCard">
+            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent border border-secondary d-none" style="width: 400px; --blur-lvl: 0.65;" id="ResetPasswordCard">
                 <span class="mt-3 ms-3 bg-warning-subtle text-warning rounded-circle d-inline-flex justify-content-center align-items-center" style="width: 48px; height: 48px;">
                     <i class="bi bi-key-fill text-warning-emphasis" style="font-size: 18px;"></i>
                 </span>
@@ -89,13 +89,13 @@ require_once "../../Assets/SystemInfo.php";
                     <small class="text-muted">Choose a strong password for your account.</small>
                     <div class="mb-2 mt-3">
                         <small class="form-label">New password</small>
-                        <input type="password" class="form-control bg-semi-transparent" id="newPassword"
+                        <input type="password" class="form-control bg-semi-transparent border border-secondary" id="newPassword"
                             name="newPassword" placeholder="Enter new password" required>
                         <small class="form-text text-muted" style="font-size: 11px;">Minimum 8 characters</small>
                     </div>
                     <div class="mb-2">
                         <small class="form-label">Confirm new password</small>
-                        <input type="password" class="form-control bg-semi-transparent" id="confirmPassword"
+                        <input type="password" class="form-control bg-semi-transparent border border-secondary" id="confirmPassword"
                             name="confirmPassword" placeholder="Confirm new password" required>
                     </div>
                     <div>
@@ -118,7 +118,7 @@ require_once "../../Assets/SystemInfo.php";
                     <button type="submit" class="btn btn-outline-dark w-100 border-white text-white mt-3" disabled id="ResetPasswordBtn">Update Password</button>
                 </div>
             </div>
-            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent d-none" style="width: 400px; --blur-lvl: 0.65;" id="ExpiredLinkCard">
+            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent border border-secondary d-none" style="width: 400px; --blur-lvl: 0.65;" id="ExpiredLinkCard">
                 <span class="mt-3 ms-3 bg-danger-subtle text-danger rounded-circle d-inline-flex justify-content-center align-items-center" style="width: 48px; height: 48px;">
                     <i class="bi bi-x-octagon-fill text-danger-emphasis" style="font-size: 18px;"></i>
                 </span>
@@ -135,7 +135,7 @@ require_once "../../Assets/SystemInfo.php";
                     </div>
                 </div>
             </div>
-            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent d-none" style="width: 400px; --blur-lvl: 0.65;" id="SuccessCard">
+            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent border border-secondary d-none" style="width: 400px; --blur-lvl: 0.65;" id="SuccessCard">
                 <span class="mt-3 ms-3 bg-success-subtle text-success rounded-circle d-inline-flex justify-content-center align-items-center" style="width: 48px; height: 48px;">
                     <i class="bi bi-check-circle-fill text-success-emphasis" style="font-size: 18px;"></i>
                 </span>

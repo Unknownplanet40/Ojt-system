@@ -16,8 +16,9 @@ RewriteRule ^([a-zA-Z0-9_/]+)$ $1.php [L]
 Options -Indexes
 
 # Custom error pages
-ErrorDocument 403 /templatesNew/Src/Pages/Errorpage.php?error=403
-ErrorDocument 404 /templatesNew/Src/Pages/Errorpage.php?error=404
+ErrorDocument 403 /Ojt-system/Src/Pages/Errorpage.php?error=403
+ErrorDocument 404 /Ojt-system/Src/Pages/Errorpage.php?error=404
+ErrorDocument 500 /Ojt-system/Src/Pages/Errorpage.php?error=500
 
 
 # Set the default index file

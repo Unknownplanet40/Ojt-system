@@ -188,6 +188,27 @@ function getCoordinatorNeedsAction($conn, string $coordinatorUuid, ?string $batc
         ];
     }
 
+    $result = $conn->query("
+    SELECT COUNT(*) AS total
+    FROM ojt_applications a
+    JOIN student_profiles sp ON a.student_uuid = sp.uuid
+    WHERE sp.coordinator_uuid = '{$safeCoord}'
+      AND a.batch_uuid        = '{$safeBatch}'
+      AND a.status            = 'pending'
+");
+$pendingApps = (int) $result->fetch_assoc()['total'];
+
+if ($pendingApps > 0) {
+
+    $tasks[] = [
+        'type'    => 'danger',
+        'message' => 'Pending OJT applications to review',
+        'count'   => $pendingApps,
+        'link'    => '/Src/Pages/Coordinator/Applications/index.php?status=pending',
+        'module'  => 'applications',
+    ];
+}
+
     return $tasks;
 }
 

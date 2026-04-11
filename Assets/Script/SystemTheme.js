@@ -1,8 +1,11 @@
 let ThemeColor = null;
 let sameTheme = "default";
 
-export function MatchsystemThemes(isEnabled = true, ForceDefaultTheme = "default") {
+let FORCE_DEFAULT_THEME = "dark";
+
+export function MatchsystemThemes(isEnabled = true, ForceDefaultTheme = FORCE_DEFAULT_THEME) {
   const validThemes = ["default", "light", "dark"];
+  isEnabled =false;
   if (!isEnabled && ForceDefaultTheme.toLowerCase() !== "default") {
     const themeToApply = validThemes.includes(ForceDefaultTheme.toLowerCase()) ? ForceDefaultTheme.toLowerCase() : "light";
     document.documentElement.setAttribute("data-bs-theme", themeToApply);

@@ -512,3 +512,17 @@ body {
   transform: scale(0.98);
   box-shadow: 0 2px 10px rgba(var(--bs-dark-rgb), 0.05);
 }
+
+.selected-card {
+  border-color: var(--bs-success) !important;
+  border-width: 2px !important;
+}
+
+.comcard {
+  transition: border-color 0.3s ease;
+}
+
+.comcard:not(.selected-card):hover {
+  border-color: var(--bs-secondary) !important;
+  --blur-lvl: 0.7 !important;
+}

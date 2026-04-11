@@ -26,7 +26,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
           href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> My OJT </a>
         <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
           <li>
-            <a class="dropdown-item <?= $CurrentPage === 'Requirements' ? 'nav-active' : '' ?>" href="../../Pages/Students/Requirements?from=header">
+            <a class="dropdown-item <?= $CurrentPage === 'Requirements' ? 'nav-active' : '' ?>" href="../../Pages/Students/Requirements">
               <div class="hstack">
                 <i class="bi bi-file-earmark-text me-2"></i>
                 <div class="vstack">
@@ -40,7 +40,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
             </a>
           </li>
           <li>
-            <a class="dropdown-item <?= $CurrentPage === 'Applications' ? 'nav-active' : '' ?>" href="javascript:void(0)">
+            <a class="dropdown-item <?= $CurrentPage === 'Applications' ? 'nav-active' : '' ?>" href="../../Pages/Students/Applications">
               <div class="hstack">
                 <i class="bi bi-calendar-event me-2"></i>
                 <div class="vstack">

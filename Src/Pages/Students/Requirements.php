@@ -201,7 +201,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                     </div>
                     <div class="col-md-12" id="PersonalAccidentInsuranceContainer" data-Requirement-uuid=""> <!-- PersonalAccidentInsurance Container -->
                         <!-- only show if PersonalAccidentInsurance is submitted -->
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-0 rounded-end-3 border-0 border-danger border-start border-3"
+                        <div class="card bg-blur-5 bg-semi-transparent rounded-0 rounded-end-3 border-0 border-danger border-start border-5"
                             style="--blur-lvl: <?= $opacitylvl ?>"
                             id="SubmittedPersonalAccidentInsuranceCard">
                             <div class="card-body">
@@ -306,7 +306,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                     </div>
                     <div class="col-md-12" id="ParentConsentContainer" data-Requirement-uuid=""> <!-- ParentConsent Container -->
                         <!-- only show if ParentConsent is submitted -->
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-0 rounded-end-3 border-0 border-danger border-start border-3"
+                        <div class="card bg-blur-5 bg-semi-transparent rounded-0 rounded-end-3 border-0 border-danger border-start border-5"
                             style="--blur-lvl: <?= $opacitylvl ?>"
                             id="SubmittedParentConsentCard">
                             <div class="card-body">
@@ -411,7 +411,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                     </div>
                     <div class="col-md-12" id="ParentalGuardianInfoContainer" data-Requirement-uuid=""> <!-- ParentalGuardianInfo Container -->
                         <!-- only show if ParentalGuardianInfo is submitted -->
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-0 rounded-end-3 border-0 border-danger border-start border-3"
+                        <div class="card bg-blur-5 bg-semi-transparent rounded-0 rounded-end-3 border-0 border-danger border-start border-5"
                             style="--blur-lvl: <?= $opacitylvl ?>"
                             id="SubmittedParentalGuardianInfoCard">
                             <div class="card-body">
@@ -492,7 +492,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                     <div class="alert bg-secondary-subtle text-secondary-emphasis rounded-3 border py-2 px-3 mt-2 bg-blur-5 bg-semi-transparent d-none"
                                         role="alert"
                                         style="--blur-lvl: <?= $opacitylvl ?>"
-                                        id="selectedParentalGuardianInfoNS">
+                                        id="selectedParentalGuardianInfoInfoNS">
                                         <div class="hstack">
                                             <i class="bi bi-file-earmark-pdf me-3"></i>
                                             <div>
@@ -516,7 +516,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                     </div>
                     <div class="col-md-12" id="MedCertContainer" data-Requirement-uuid=""> <!-- MedCert Container -->
                         <!-- only show if MedCert is submitted -->
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-0 rounded-end-3 border-0 border-danger border-start border-3"
+                        <div class="card bg-blur-5 bg-semi-transparent rounded-0 rounded-end-3 border-0 border-danger border-start border-5"
                             style="--blur-lvl: <?= $opacitylvl ?>"
                             id="SubmittedMedCertCard">
                             <div class="card-body">
@@ -597,7 +597,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                     <div class="alert bg-secondary-subtle text-secondary-emphasis rounded-3 border py-2 px-3 mt-2 bg-blur-5 bg-semi-transparent d-none"
                                         role="alert"
                                         style="--blur-lvl: <?= $opacitylvl ?>"
-                                        id="selectedMedCertNS">
+                                        id="selectedMedCertInfoNS">
                                         <div class="hstack">
                                             <i class="bi bi-file-earmark-pdf me-3"></i>
                                             <div>
@@ -621,7 +621,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                     </div>
                     <div class="col-md-12" id="NbiClearanceContainer" data-Requirement-uuid=""> <!-- NbiClearance Container -->
                         <!-- only show if NbiClearance is submitted -->
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-0 rounded-end-3 border-0 border-danger border-start border-3"
+                        <div class="card bg-blur-5 bg-semi-transparent rounded-0 rounded-end-3 border-0 border-danger border-start border-5"
                             style="--blur-lvl: <?= $opacitylvl ?>"
                             id="SubmittedNbiClearanceCard">
                             <div class="card-body">
@@ -702,7 +702,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                     <div class="alert bg-secondary-subtle text-secondary-emphasis rounded-3 border py-2 px-3 mt-2 bg-blur-5 bg-semi-transparent d-none"
                                         role="alert"
                                         style="--blur-lvl: <?= $opacitylvl ?>"
-                                        id="selectedNbiClearanceNS">
+                                        id="selectedNbiClearanceInfoNS">
                                         <div class="hstack">
                                             <i class="bi bi-file-earmark-pdf me-3"></i>
                                             <div>

@@ -302,7 +302,7 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
         }
     }
 
-logActivity(
+    logActivity(
         conn: $conn,
         eventType: 'company_updated',
         description: "Updated company: {$name}",

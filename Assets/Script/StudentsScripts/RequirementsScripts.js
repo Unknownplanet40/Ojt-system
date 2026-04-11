@@ -28,6 +28,7 @@ function setupFileUploadHandlerNS(Doc) {
       }
       selectedFileName.text(file.name);
       selectedInfo.removeClass("d-none");
+      console.log(`selected${Doc}InfoNS`);
       uploadArea.addClass("d-none");
       viewBtn.off("click").on("click", function () {
         const fileURL = URL.createObjectURL(file);
@@ -303,7 +304,142 @@ $(document).ready(function () {
       ToastVersion(swalTheme, "Please select a file to upload.", "error", 3000);
       return;
     }
+
+    if (!requirementId) {
+      ToastVersion(swalTheme, "Requirement ID not found. Please refresh the page and try again.", "error", 3000);
+      return;
+    }
+
     const file = fileInput.files[0];
     uploadRequrements(requirementId, file, noteInput);
+  });
+
+  $("#submitPersonalAccidentInsuranceBtnNS").on("click", function () {
+    const requirementId = $("#PersonalAccidentInsuranceContainer").data("requirement-uuid");
+    const fileInput = $("#PersonalAccidentInsuranceFileInputNS")[0];
+    const noteInput = $("#PersonalAccidentInsuranceNoteInputNS").val().trim();
+    if (fileInput.files.length === 0) {
+      ToastVersion(swalTheme, "Please select a file to upload.", "error", 3000);
+      return;
+    }
+
+      if (!requirementId) {
+      ToastVersion(swalTheme, "Requirement ID not found. Please refresh the page and try again.", "error", 3000);
+      return;
+    }
+
+    const file = fileInput.files[0];
+    uploadRequrements(requirementId, file, noteInput);
+  });
+
+  $("#submitParentConsentBtnNS").on("click", function () {
+    const requirementId = $("#ParentConsentContainer").data("requirement-uuid");
+    const fileInput = $("#ParentConsentFileInputNS")[0];
+    const noteInput = $("#ParentConsentNoteInputNS").val().trim();
+    if (fileInput.files.length === 0) {
+      ToastVersion(swalTheme, "Please select a file to upload.", "error", 3000);
+      return;
+    }
+
+    if (!requirementId) {
+      ToastVersion(swalTheme, "Requirement ID not found. Please refresh the page and try again.", "error", 3000);
+      return;
+    }
+
+    const file = fileInput.files[0];
+    uploadRequrements(requirementId, file, noteInput);
+  });
+
+  $("#submitParentalGuardianInfoBtnNS").on("click", function () {
+    const requirementId = $("#ParentalGuardianInfoContainer").data("requirement-uuid");
+    const fileInput = $("#ParentalGuardianInfoFileInputNS")[0];
+    const noteInput = $("#ParentalGuardianInfoNoteInputNS").val().trim();
+
+    if (fileInput.files.length === 0) {
+      ToastVersion(swalTheme, "Please select a file to upload.", "error", 3000);
+      return;
+    }
+
+    if (!requirementId) {
+      ToastVersion(swalTheme, "Requirement ID not found. Please refresh the page and try again.", "error", 3000);
+      return;
+    }
+
+    const file = fileInput.files[0];
+    uploadRequrements(requirementId, file, noteInput);
+  });
+
+  $("#submitMedCertBtnNS").on("click", function () {
+    const requirementId = $("#MedCertContainer").data("requirement-uuid");
+    const fileInput = $("#MedCertFileInputNS")[0];
+    const noteInput = $("#MedCertNoteInputNS").val().trim();
+    if (fileInput.files.length === 0) {
+      ToastVersion(swalTheme, "Please select a file to upload.", "error", 3000);
+      return;
+    }
+
+    if (!requirementId) {
+      ToastVersion(swalTheme, "Requirement ID not found. Please refresh the page and try again.", "error", 3000);
+      return;
+    }
+
+    const file = fileInput.files[0];
+    uploadRequrements(requirementId, file, noteInput);
+  });
+
+  $("#submitNbiClearanceBtnNS").on("click", function () {
+    const requirementId = $("#NbiClearanceContainer").data("requirement-uuid");
+    const fileInput = $("#NbiClearanceFileInputNS")[0];
+    const noteInput = $("#NbiClearanceNoteInputNS").val().trim();
+
+    if (fileInput.files.length === 0) {
+      ToastVersion(swalTheme, "Please select a file to upload.", "error", 3000);
+      return;
+    }
+
+    if (!requirementId) {
+      ToastVersion(swalTheme, "Requirement ID not found. Please refresh the page and try again.", "error", 3000);
+      return;
+    }
+
+    const file = fileInput.files[0];
+    uploadRequrements(requirementId, file, noteInput);
+  });
+
+  $("#CancelResumeBtnNS").on("click", function () {
+    $("#ResumeFileInputNS").val("");
+    $("#selectedResumeInfoNS").addClass("d-none");
+    $("#uploadResumeAreaNS").removeClass("d-none");
+    });
+
+  $("#CancelPersonalAccidentInsuranceBtnNS").on("click", function () {
+    $("#PersonalAccidentInsuranceFileInputNS").val("");
+    $("#selectedPersonalAccidentInsuranceInfoNS").addClass("d-none");
+    $("#uploadPersonalAccidentInsuranceAreaNS").removeClass("d-none");
+  }
+  );
+
+  $("#CancelParentConsentBtnNS").on("click", function () {
+    $("#ParentConsentFileInputNS").val("");
+    $("#selectedParentConsentInfoNS").addClass("d-none");
+    $("#uploadParentConsentAreaNS").removeClass("d-none");
+  });
+  
+  $("#CancelParentalGuardianInfoBtnNS").on("click", function () {
+    $("#ParentalGuardianInfoFileInputNS").val("");
+    $("#selectedParentalGuardianInfoInfoNS").addClass("d-none");
+    $("#uploadParentalGuardianInfoAreaNS").removeClass("d-none");
+  });
+
+  $("#CancelMedCertBtnNS").on("click", function () {
+    $("#MedCertFileInputNS").val("");
+    $("#selectedMedCertInfoNS").addClass("d-none");
+    $("#uploadMedCertAreaNS").removeClass("d-none");
+  });
+
+  $("#CancelNbiClearanceBtnNS").on("click", function () {
+    $("#NbiClearanceFileInputNS").val("");
+    $("#selectedNbiClearanceInfoNS").addClass("d-none");
+    $("#uploadNbiClearanceAreaNS").removeClass("d-none");
   });
 });

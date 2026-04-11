@@ -44,7 +44,7 @@ if (!isModRewriteEnabled()) {
     ]);
 }
 
-$action = isset($_POST['action']) ? $_POST['action'] : '';
+$action = isset($_POST['action']) ? $_POST['action'] : null;
 
 try {
     $conn = new mysqli($servername, $username, $password, $dbname);

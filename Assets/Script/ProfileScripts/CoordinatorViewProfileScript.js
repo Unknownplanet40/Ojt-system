@@ -47,28 +47,46 @@ function fetchProfileData(uuid) {
         if (data.students && data.students.length > 0) {
             const studentList = $("#studentList");
             studentList.empty();
-            data.students.forEach(student => {
+            data.students.forEach((student) => {
               const status = [
-                { label: "Active", class: "bg-success-subtle text-success-emphasis border-success-subtle" },
-                { label: "Inactive", class: "bg-danger-subtle text-danger-emphasis border-danger-subtle" },
-                { label: "Never Logged In", class: "bg-secondary-subtle text-secondary-emphasis border-secondary-subtle" },
-                { label: "Unknown", class: "bg-warning-subtle text-warning-emphasis border-warning-subtle" }
-              ]
-                const studentItem = `
-                    <li class="list-group-item bg-transparent">
-                        <div class="hstack">
-                            <img src="${student.profile_path ? '../../../' + student.profile_path : 'https://placehold.co/40x40/C1C1C1/000000/png?text=' + student.initials + '&font=poppins'}"
-                                alt="profile picture" class="rounded-circle me-3"
-                                style="width: 40px; height: 40px;">
-                            <div>
-                                <div class="fw-bold">${student.full_name}</div>
-                                <small class="text-muted">${student.student_number} - ${student.program_code}, ${student.year_label}</small>
-                            </div>
-                            <span class="badge ${status.find(s => s.label === student.status_label)?.class || 'bg-secondary-subtle text-secondary-emphasis border-secondary-subtle'} rounded-pill ms-auto align-self-start">${student.status_label}</span>
+                { label: "Active", class: "bg-success-subtle text-success-emphasis border border-success-subtle" },
+                { label: "Inactive", class: "bg-danger-subtle text-danger-emphasis border border-danger-subtle" },
+                { label: "Never Logged In", class: "bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle" },
+                { label: "Unknown", class: "bg-warning-subtle text-warning-emphasis border border-warning-subtle" },
+              ];
+
+              const statusClass =
+                status.find((s) => s.label === student.status_label)?.class ||
+                "bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle";
+
+              const studentItem = `
+                <li class="list-group-item bg-transparent border-0 px-0 py-1">
+                  <div class="d-flex align-items-center gap-3 p-3 rounded-4 border border-light border-opacity-10 bg-black bg-opacity-25 shadow-sm">
+                    <img src="${
+                      student.profile_path
+                        ? "../../../" + student.profile_path
+                        : "https://placehold.co/48x48/C1C1C1/000000/png?text=" + student.initials + "&font=poppins"
+                    }"
+                      alt="profile picture"
+                      class="rounded-circle flex-shrink-0 border border-2 border-light-subtle shadow-sm"
+                      style="width: 48px; height: 48px; object-fit: cover;">
+
+                    <div class="flex-grow-1 min-w-0">
+                      <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="min-w-0">
+                          <div class="fw-semibold text-truncate">${student.full_name}</div>
+                          <small class="text-muted text-truncate d-block">${student.program_code} • ${student.year_label}</small>
                         </div>
-                    </li>
-                `;
-                studentList.append(studentItem);
+                        <span class="badge ${statusClass} rounded-pill px-3 py-2 flex-shrink-0">
+                          ${student.status_label}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              `;
+
+              studentList.append(studentItem);
             });
         } else {
             $("#studentList").html('<li class="list-group-item bg-transparent"><div class="text-center text-muted">No students assigned yet.</div></li>');

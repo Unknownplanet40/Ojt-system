@@ -72,9 +72,11 @@ export function fetchUserData() {
         if (response.data.profile_path) {
           $("#navProfilePhoto").attr("src", "../../../" + response.data.profile_path);
           $("#dropdownProfilePhoto").attr("src", "../../../" + response.data.profile_path);
+          $("#DashboardProfilePhoto").attr("src", "../../../" + response.data.profile_path);
         } else {
           $("#navProfilePhoto").attr("src", "https://placehold.co/30x30?text=No+Photo");
           $("#dropdownProfilePhoto").attr("src", "https://placehold.co/30x30?text=No+Photo");
+          $("#DashboardProfilePhoto").attr("src", "https://placehold.co/80x80?text=No+Photo");
         }
       }
     },
