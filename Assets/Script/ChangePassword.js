@@ -1,11 +1,12 @@
 import { ToastVersion, ModalVersion } from "./CustomSweetAlert.js";
 import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "./SystemTheme.js";
 
-const driver = window.driver.js.driver;
 MatchsystemThemes(true);
 let swalTheme = SwalTheme();
 BGcircleTheme(true);
 
+const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
+let redirectUrl = null;
 function CardtoShow(cardId) {
   const cards = ["ForcePasswordChangeCard", "VoluntaryPasswordChangeCard", "SuccessCard"];
   cards.forEach((id) => {
@@ -37,46 +38,74 @@ function CardtoShow(cardId) {
   }
 }
 
-function handleAjaxError(xhr, textStatus, customMessage = null) {
-  let errorMessage = customMessage || "An error occurred. Please try again.";
+function Errors(xhr, status, error) {
+  // xhr: The XMLHttpRequest object that was used to make the request.
+  // status: A string describing the type of error that occurred. Possible values include "timeout", "error", "abort", and "parsererror".
+  // error: An optional exception object, if one occurred.
 
-  if (textStatus === "timeout") {
-    errorMessage = "Request timed out! Please check your connection and try again.";
-  } else if (xhr && xhr.status) {
-    errorMessage = `Error ${xhr.status}: ${xhr.statusText}`;
+  if (xhr.status === 403) {
+    ModalVersion(swalTheme, "Access Denied", "Your session may have expired or you do not have permission to access this resource. Please refresh the page and try again.", "error", 0, "center");
+    return;
   }
 
-  ToastVersion(swalTheme, errorMessage, "error", 3000, "top-end");
-}
+  if (xhr.status === 404) {
+    ModalVersion(swalTheme, "Not Found", "The requested resource was not found.", "error", 0, "center");
+    return;
+  }
 
-let changepasswordmode = $("body").data("changepasswordmode");
-const userUuid = $("body").data("user-uuid");
+  if (xhr.status >= 498) {
+    ModalVersion(swalTheme, "Token Error", "There was an issue with your session token. Please refresh the page and try again.", "error", 0, "center");
+    return;
+  }
+
+  if (xhr.status >= 500) {
+    ModalVersion(swalTheme, "Server Error", "An unexpected error occurred on the server. Please try again later.", "error", 0, "center");
+    return;
+  }
+
+  if (status === "timeout") {
+    ToastVersion(swalTheme, "The request timed out. Please check your internet connection and try again.", "error", 3000, "top-end");
+    return;
+  }
+
+  if (status === "abort") {
+    ToastVersion(swalTheme, "The request was aborted. Please try again.", "error", 3000, "top-end");
+    return;
+  }
+
+  if (status === "network") {
+    ToastVersion(swalTheme, "A network error occurred. Please check your connection and try again.", "error", 3000, "top-end");
+    return;
+  }
+
+  if (status === "parsererror") {
+    ModalVersion(swalTheme, "Response Error", "The server returned an unexpected response. Please try again later.", "error", 0, "center");
+    return;
+  }
+
+  if (error) {
+    ModalVersion(swalTheme, "Error", "An unexpected error occurred: " + error, "error", 0, "center");
+    return;
+  }
+
+  ModalVersion(swalTheme, "Unknown Error", "An unknown error occurred. Please try again later.", "error", 0, "center");
+  console.error("An unknown error occurred:", { xhr, status, error });
+}
 
 const urlParams = new URLSearchParams(window.location.search);
 const action = urlParams.get("action");
 const uuid = urlParams.get("uuid");
 
-if (userUuid === "Unauthenticated") {
-  window.location.href = "../../Src/Pages/Login";
-}
+const must_change_password = $("body").data("must-change");
+const user_uuid = $("body").data("uuid");
+const changepasswordmode = must_change_password ? "force" : action || "voluntary";
 
-if (action && uuid) {
-  if (action === "forced") {
-    CardtoShow("ForcePasswordChangeCard");
-  } else if (action === "voluntary") {
-    CardtoShow("VoluntaryPasswordChangeCard");
-  }
-
-  if (changepasswordmode === "none") {
-    changepasswordmode = null;
-  }
+if (changepasswordmode === "force") {
+  CardtoShow("ForcePasswordChangeCard");
+} else if (changepasswordmode === "voluntary") {
+  CardtoShow("VoluntaryPasswordChangeCard");
 } else {
-  if (changepasswordmode === "forced") {
-    CardtoShow("ForcePasswordChangeCard");
-    CardtoShow("VoluntaryPasswordChangeCard");
-  } else if (changepasswordmode === "voluntary") {
-    CardtoShow("VoluntaryPasswordChangeCard");
-  }
+  CardtoShow("VoluntaryPasswordChangeCard");
 }
 
 $(document).ready(function () {
@@ -135,25 +164,34 @@ $(document).ready(function () {
       return;
     }
 
-    $(this).prop("disabled", true);
     $.ajax({
-      url: "../../Assets/api/ChangePasswordProcess",
+      url: "../../process/auth/changepass",
       method: "POST",
       data: {
         newPassword: newPassword,
         tempPassword: tempPassword,
-        type: changepasswordmode,
+        csrf_token: csrfToken,
+      },
+      beforeSend: function () {
+        ModalVersion(swalTheme, "Updating Password", "Please wait while we update your password...", "info", 0, "center");
       },
       success: function (response) {
         if (response.status === "success") {
+          Swal.close();
+          ToastVersion(swalTheme, response.message, "success", 3000, "top-end");
+          redirectUrl = response.redirect || "../../Src/Pages/Login";
           CardtoShow("SuccessCard");
         } else {
-          ToastVersion(swalTheme, response.message, "error", 3000, "top-end");
+          Swal.close();
+          const errorMessage =
+            response.message && typeof response.message === "object" ? Object.values(response.message).join(" ") : response.message || "An error occurred while changing the password.";
+          ToastVersion(swalTheme, errorMessage, "error", 3000, "top-end");
           $("#SetPasswordBtn").prop("disabled", false);
         }
       },
-      error: function (xhr, textStatus) {
-        handleAjaxError(xhr, textStatus);
+      error: function (xhr, status, error) {
+        Swal.close();
+        Errors(xhr, status, error);
         $("#SetPasswordBtn").prop("disabled", false);
       },
     });
@@ -194,12 +232,7 @@ $(document).ready(function () {
     });
 
   $("#CancelBtn").on("click", function () {
-    const destination = $(this).data("distination");
-    if (destination && destination !== "none") {
-      window.location.href = destination;
-    } else {
-      window.location.href = "../../";
-    }
+    window.location.href = "../../Src/Pages/Login";
   });
 
   $("#updatePasswordBtn").on("click", function (e) {
@@ -216,26 +249,34 @@ $(document).ready(function () {
       return;
     }
 
-    $(this).prop("disabled", true);
     $.ajax({
-      url: "../../Assets/api/ChangePasswordProcess",
+      url: "../../process/auth/changepass",
       method: "POST",
       data: {
         newPassword: newPassword,
         currentPassword: currentPassword,
-        type: changepasswordmode || action || "voluntary",
+        csrf_token: csrfToken,
+      },
+      beforeSend: function () {
+        ModalVersion(swalTheme, "Updating Password", "Please wait while we update your password...", "info", 0, "center");
       },
       success: function (response) {
         if (response.status === "success") {
+          Swal.close();
           ToastVersion(swalTheme, response.message, "success", 3000, "top-end");
+          redirectUrl = response.redirect || "../../Src/Pages/Login";
           CardtoShow("SuccessCard");
         } else {
-          ToastVersion(swalTheme, response.message, "error", 3000, "top-end");
+          Swal.close();
+          const errorMessage =
+            response.message && typeof response.message === "object" ? Object.values(response.message).join(" ") : response.message || "An error occurred while changing the password.";
+          ToastVersion(swalTheme, errorMessage, "error", 3000, "top-end");
           $("#updatePasswordBtn").prop("disabled", false);
         }
       },
-      error: function (xhr, textStatus) {
-        handleAjaxError(xhr, textStatus);
+      error: function (xhr, status, error) {
+        Swal.close();
+        Errors(xhr, status, error);
         $("#updatePasswordBtn").prop("disabled", false);
       },
     });
@@ -243,5 +284,13 @@ $(document).ready(function () {
 
   $("#GoToLoginBtn").on("click", function () {
     window.location.href = "../../Src/Pages/Login";
+  });
+
+  $("#redirectBtn").on("click", function () {
+        if (redirectUrl) {
+      window.location.href = redirectUrl;
+    } else {
+      window.location.href = "../../Src/Pages/Login"; 
+    }
   });
 });

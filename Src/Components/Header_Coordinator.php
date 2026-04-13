@@ -49,7 +49,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
           <a class="nav-link dropdown-toggle text-capitalize <?= in_array($CurrentPage, ['Applications', 'DTR_Approvals', 'journals', 'evaluations']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> OJT Process</a>
           <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
             <li>
-              <a class="dropdown-item <?= $CurrentPage === 'Applications' ? 'nav-active' : '' ?>" href="javascript:void(0)">
+              <a class="dropdown-item <?= $CurrentPage === 'Applications' ? 'nav-active' : '' ?>" href="../Coordinator/Applications">
                 <div class="hstack">
                   <i class="bi bi-calendar-event me-2"></i>
                   <div class="vstack">
@@ -131,7 +131,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
                 <img src="https://placehold.co/30x30?text=No+Photo" alt="Profile" id="dropdownProfilePhoto" class="rounded-circle mx-3" style="width: 30px; height: 30px; object-fit: cover" />
                 <div>
                   <span class="dropdown-item-text text-nowrap ps-0 pb-0"><strong id="userName"></strong> </span>
-                  <small class="text-muted dropdown-item-text ps-0 pt-0" id="userRole"></small>
+                  <small class="text-muted dropdown-item-text ps-0 pt-0"><?= isset($_SESSION['user_role']) ? ucfirst($_SESSION['user_role']) : 'Coordinator' ?></small>
                 </div>
               </div>
             </li>

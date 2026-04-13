@@ -11,25 +11,14 @@ require_once "../../Assets/SystemInfo.php";
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="../../libs/bootstrap/css/bootstrap.css" />
-    <link rel="stylesheet" href="../../libs/aos/css/aos.css" />
-    <link rel="stylesheet" href="../../libs/driverjs/css/driver.css" />
-    <link rel="stylesheet" href="../../Assets/style/AniBG.css" />
-    <link rel="stylesheet" href="../../Assets/style/MainStyle.css" />
-    <link rel="manifest" href="../../Assets/manifest.json" />
-
-    <script defer src="../../libs/bootstrap/js/bootstrap.bundle.js"></script>
-    <script defer src="../../libs/sweetalert2/js/sweetalert2.all.min.js"></script>
-    <script defer src="../../libs/aos/js/aos.js"></script>
-    <script src="../../libs/driverjs/js/driver.js.iife.js"></script>
-    <script src="../../libs/jquery/js/jquery-3.7.1.min.js"></script>
+    <?php require_once "./srcPageHeader.php" ?>
     <script type="module" src="../../Assets/Script/ChangePassword.js"></script>
     <title><?= $ShortTitle ?></title>
 </head>
 
-<body class="login-page" data-changepasswordmode="<?= isset($_SESSION['user']['mode']) ? $_SESSION['user']['mode'] : 'none' ?>" data-user-uuid="<?= isset($_SESSION['user']['uuid']) ? 'Authenticated' : 'Unauthenticated' ?>">
+<body class="login-page"
+    data-must-change="<?= $_SESSION['must_change_password'] ?>"
+    data-user-uuid="<?= $_SESSION['user_uuid'] ?>">
     <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
         <div class="circle circle1" data-speed="fast"></div>
         <div class="circle circle2" data-speed="normal"></div>
@@ -38,110 +27,167 @@ require_once "../../Assets/SystemInfo.php";
 
     <div class="container-fluid py-5" style="overflow-y: auto; max-height: 100vh;">
         <div class="d-flex justify-content-center align-items-center min-vh-100">
-            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent d-none" style="width: 400px; --blur-lvl: 0.65;" id="ForcePasswordChangeCard">
-                <span class="mt-3 ms-3 bg-warning-subtle text-warning rounded-circle d-inline-flex justify-content-center align-items-center" style="width: 48px; height: 48px;">
-                    <i class="bi bi-key-fill text-warning-emphasis" style="font-size: 18px;"></i>
-                </span>
-                <div class="card-body">
-                    <div class="vstack mb-0">
-                        <span class="alert alert-warning d-flex align-items-center mb-3 p-3 py-2" role="alert">
-                                <small class="fw-medium text-warning-emphasis text-center" style="font-size: 12px;">You must set a new password before continuing.</small>
-                        </span>
-                        <span class="fw-bold fs-5">Set your password</span>
-                    </div>
-                    <small class="text-muted">Your account was created with a temporary password. Choose a new one to secure your account.</small>
-                    <div class="mb-2 mt-3">
-                        <small class="form-label">Temporary password</small>
-                        <input type="password" class="form-control bg-semi-transparent" id="tempPassword" name="tempPassword" placeholder="Enter temporary password" required>
-                    </div>
-                    <div class="mb-2">
-                        <small class="form-label">New password</small>
-                        <input type="password" class="form-control bg-semi-transparent" id="newPassword" name="newPassword" placeholder="Enter new password" required>
-                        <div class="progress mt-1" style="height: 5px;">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: 0%;" id="passwordStrengthBar"></div>
-                        </div>
-                    </div>
-                    <div class="mb-2">
-                        <small class="form-label">Confirm new password</small>
-                        <input type="password" class="form-control bg-semi-transparent" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password" required>
-                    </div>
-                    <div class="mb-2 bg-dark p-3 rounded bg-opacity-75">
-                        <div class="vstack ps-3">
-                            <span><small class="text-secondary" id="charCheck" style="font-size: 11px;">&#9864;</small>
-                                <small class="text-muted" style="font-size: 11px;">At least 8 characters</small></span>
-                            <span><small class="text-secondary" id="upperCheck" style="font-size: 11px;">&#9864;</small>
-                                <small class="text-muted" style="font-size: 11px;">At least one uppercase
-                                    letter</small></span>
-                            <span><small class="text-secondary" id="numberCheck"
-                                    style="font-size: 11px;">&#9864;</small> <small class="text-muted"
-                                    style="font-size: 11px;">At least one number</small></span>
-                            <span><small class="text-secondary" id="specialCheck"
-                                    style="font-size: 11px;">&#9864;</small> <small class="text-muted"
-                                    style="font-size: 11px;">At least one special character (e.g. !@#$%^&*)</small></span>
-                            <span><small class="text-secondary" id="matchCheck" style="font-size: 11px;">&#9864;</small>
-                                <small class="text-muted" style="font-size: 11px;">Passwords match</small></span>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-outline-dark w-100 border-white text-white mt-3" disabled id="SetPasswordBtn">Set password and continue</button>
+            <div class="card p-5 rounded-4 bg-blur-3 bg-semi-transparent d-none shadow-lg"
+                style="width: 95%; max-width: 500px; --blur-lvl: <?= $opacitylvl ?>"
+                id="ForcePasswordChangeCard">
+                <div class="mb-4">
+                    <span
+                        class="bg-warning-subtle text-warning rounded-circle d-inline-flex justify-content-center align-items-center"
+                        style="width: 56px; height: 56px;">
+                        <i class="bi bi-key-fill text-warning-emphasis" style="font-size: 24px;"></i>
+                    </span>
                 </div>
-            </div>
-            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent d-none" style="width: 400px; --blur-lvl: 0.65;" id="VoluntaryPasswordChangeCard">
-                <span class="mt-3 ms-3 bg-info-subtle text-info rounded-circle d-inline-flex justify-content-center align-items-center" style="width: 48px; height: 48px;">
-                    <i class="bi bi-key-fill text-info-emphasis" style="font-size: 18px;"></i>
-                </span>
-                <div class="card-body">
-                    <div class="vstack mb-0">
-                        <span class="fw-bold fs-5">Change password</span>
-                    </div>
-                    <small class="text-muted">Enter your current password then choose a new one.</small>
-                    <div class="mb-2 mt-3">
-                        <small class="form-label">Current password</small>
-                        <input type="password" class="form-control bg-semi-transparent" id="currentPassword" name="currentPassword" placeholder="Enter current password" required>
-                        <small class="form-text text-muted" style="font-size: 11px;">Forgot your password? <a href="ForgotPassword" class="text-decoration-none">Reset it here</a>.</small>
-                    </div>
-                    <div class="mb-2 mt-3">
-                        <small class="form-label">New password</small>
-                        <input type="password" class="form-control bg-semi-transparent" id="voluntaryNewPassword" name="voluntaryNewPassword" placeholder="Enter new password" required>
-                        <div class="progress mt-1" style="height: 5px;">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: 0%;" id="voluntaryPasswordStrengthBar"></div>
-                        </div>
-                    </div>
-                    <div class="mb-2">
-                        <small class="form-label">Confirm new password</small>
-                        <input type="password" class="form-control bg-semi-transparent" id="voluntaryConfirmPassword" name="voluntaryConfirmPassword" placeholder="Confirm new password" required>
+                <div class="mb-4">
+                    <h4 class="fw-bold mb-2" style="font-size: 22px;">Set your password</h4>
+                    <p class="text-muted mb-0" style="font-size: 14px; line-height: 1.6;">Your account was created with
+                        a temporary password. Choose a new one to secure your account.</p>
+                </div>
+                <div class="alert alert-warning d-flex align-items-center mb-4 p-3" role="alert"
+                    style="border-radius: 8px; border: none; font-size: 13px;">
+                    <i class="bi bi-exclamation-circle-fill me-2" style="font-size: 16px;"></i>
+                    <small class="fw-500 m-0">You must set a new password before continuing.</small>
+                </div>
+                <div class="vstack gap-3">
+                    <div>
+                        <label for="tempPassword" class="form-label fw-500 mb-2" style="font-size: 13px;">Temporary
+                            password</label>
+                        <input type="password" class="form-control bg-semi-transparent border-1" id="tempPassword"
+                            name="tempPassword" placeholder="Enter temporary password" required
+                            style="border-radius: 8px; font-size: 14px; padding: 10px 12px;">
                     </div>
                     <div>
-                        <div class="vstack ps-3 bg-dark rounded bg-opacity-75 p-3">
-                            <span><small class="text-secondary" id="vcharCheck" style="font-size: 11px;">&#9864;</small>
-                                <small class="text-muted" style="font-size: 11px;">At least 8 characters</small></span>
-                            <span><small class="text-secondary" id="vupperCheck" style="font-size: 11px;">&#9864;</small>
-                                <small class="text-muted" style="font-size: 11px;">At least one uppercase
-                                    letter</small></span>
-                            <span><small class="text-secondary" id="vnumberCheck"
-                                    style="font-size: 11px;">&#9864;</small> <small class="text-muted"
-                                    style="font-size: 11px;">At least one number</small></span>
-                            <span><small class="text-secondary" id="vspecialCheck"
-                                    style="font-size: 11px;">&#9864;</small> <small class="text-muted"
-                                    style="font-size: 11px;">At least one special character (e.g. !@#$%^&*)</small></span>
-                            <span><small class="text-secondary" id="vmatchCheck" style="font-size: 11px;">&#9864;</small>
-                                <small class="text-muted" style="font-size: 11px;">Passwords match</small></span>
+                        <label for="newPassword" class="form-label fw-500 mb-2" style="font-size: 13px;">New
+                            password</label>
+                        <input type="password" class="form-control bg-semi-transparent border-1" id="newPassword"
+                            name="newPassword" placeholder="Enter new password" required
+                            style="border-radius: 8px; font-size: 14px; padding: 10px 12px;">
+                        <div class="progress mt-2" style="height: 4px; border-radius: 4px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 0%;"
+                                id="passwordStrengthBar"></div>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-outline-dark w-100 border-white text-white mt-3" disabled id="updatePasswordBtn">Update password</button>
-                    <button type="button" class="btn btn-outline-secondary w-100 border-white text-white mt-2" id="CancelBtn" data-distination="<?= isset($_SESSION['user']['continueUrl']) ? $_SESSION['user']['continueUrl'] : 'none' ?>">Cancel</button>
+                    <div>
+                        <label for="confirmPassword" class="form-label fw-500 mb-2" style="font-size: 13px;">Confirm new
+                            password</label>
+                        <input type="password" class="form-control bg-semi-transparent border-1" id="confirmPassword"
+                            name="confirmPassword" placeholder="Confirm new password" required
+                            style="border-radius: 8px; font-size: 14px; padding: 10px 12px;">
+                    </div>
+                    <div class="bg-dark p-3 rounded-3 bg-opacity-50 mt-2" style="font-size: 12px;">
+                        <div class="vstack">
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="text-secondary m-0 fw-bold" id="charCheck">✓</h6>
+                                <small class="text-muted my-1">At least 8 characters</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="text-secondary m-0 fw-bold" id="upperCheck">✓</h6>
+                                <small class="text-muted my-1">Uppercase letter</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="text-secondary m-0 fw-bold" id="numberCheck">✓</h6>
+                                <small class="text-muted my-1">One number</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="text-secondary m-0 fw-bold" id="specialCheck">✓</h6>
+                                <small class="text-muted my-1">One special character</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="text-secondary m-0 fw-bold" id="matchCheck">✓</h6>
+                                <small class="text-muted my-1">Passwords match</small>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100 fw-500 mt-3" disabled id="SetPasswordBtn"
+                        style="border-radius: 8px; padding: 11px; font-size: 14px;">Set password and continue</button>
                 </div>
             </div>
-            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent d-none" style="width: 400px; --blur-lvl: 0.65;" id="SuccessCard">
-                <span class="mt-3 ms-3 bg-success-subtle text-success rounded-circle d-inline-flex justify-content-center align-items-center" style="width: 48px; height: 48px;">
-                    <i class="bi bi-check-circle-fill text-success-emphasis" style="font-size: 18px;"></i>
-                </span>
-                <div class="card-body">
-                    <span class="fw-bold fs-5">Password updated</span>
-                    <p class="mb-4" style="font-size: 12px;">Your password has been changed successfully. You can now sign in with your new password.</p>
-                    <div class="mb-3">
-                        <button type="submit" class="btn btn-outline-dark w-100 border-white text-white"
-                            id="GoToLoginBtn">Go to sign in</button>
+            <div class="card p-5 rounded-4 bg-blur-3 bg-semi-transparent d-none shadow-lg"
+                style="width: 95%; max-width: 500px; --blur-lvl: <?= $opacitylvl ?>" id="VoluntaryPasswordChangeCard">
+                <div class="mb-4">
+                    <span
+                        class="bg-info-subtle text-info rounded-circle d-inline-flex justify-content-center align-items-center"
+                        style="width: 56px; height: 56px;">
+                        <i class="bi bi-key-fill text-info-emphasis" style="font-size: 24px;"></i>
+                    </span>
+                </div>
+                <div class="mb-4">
+                    <h4 class="fw-bold mb-2" style="font-size: 22px;">Change password</h4>
+                    <p class="text-muted mb-0" style="font-size: 14px; line-height: 1.6;">Enter your current password
+                        and choose a new one to secure your account.</p>
+                </div>
+                <div class="vstack gap-3">
+                    <div>
+                        <label for="currentPassword" class="form-label fw-500 mb-2" style="font-size: 13px;">Current
+                            password</label>
+                        <input type="password" class="form-control bg-semi-transparent border-1" id="currentPassword"
+                            name="currentPassword" placeholder="Enter current password" required
+                            style="border-radius: 8px; font-size: 14px; padding: 10px 12px;">
+                        <small class="form-text text-muted d-block mt-2" style="font-size: 12px;">Forgot your password?
+                            <a href="ForgotPassword" class="text-decoration-none">Reset it here</a>.</small>
                     </div>
+                    <div>
+                        <label for="voluntaryNewPassword" class="form-label fw-500 mb-2" style="font-size: 13px;">New
+                            password</label>
+                        <input type="password" class="form-control bg-semi-transparent border-1"
+                            id="voluntaryNewPassword" name="voluntaryNewPassword" placeholder="Enter new password"
+                            required style="border-radius: 8px; font-size: 14px; padding: 10px 12px;">
+                        <div class="progress mt-2" style="height: 4px; border-radius: 4px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 0%;"
+                                id="voluntaryPasswordStrengthBar"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="voluntaryConfirmPassword" class="form-label fw-500 mb-2"
+                            style="font-size: 13px;">Confirm new password</label>
+                        <input type="password" class="form-control bg-semi-transparent border-1"
+                            id="voluntaryConfirmPassword" name="voluntaryConfirmPassword"
+                            placeholder="Confirm new password" required
+                            style="border-radius: 8px; font-size: 14px; padding: 10px 12px;">
+                    </div>
+                    <div class="bg-dark p-3 rounded-3 bg-opacity-50 mt-2" style="font-size: 12px;">
+                        <div class="vstack gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <small class="text-secondary" id="vcharCheck">✓</small>
+                                <small class="text-muted m-0">At least 8 characters</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <small class="text-secondary" id="vupperCheck">✓</small>
+                                <small class="text-muted m-0">Uppercase letter</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <small class="text-secondary" id="vnumberCheck">✓</small>
+                                <small class="text-muted m-0">One number</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <small class="text-secondary" id="vspecialCheck">✓</small>
+                                <small class="text-muted m-0">One special character</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <small class="text-secondary" id="vmatchCheck">✓</small>
+                                <small class="text-muted m-0">Passwords match</small>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100 fw-500 mt-3" disabled id="updatePasswordBtn"
+                        style="border-radius: 8px; padding: 11px; font-size: 14px;">Update password</button>
+                    <button type="button" class="btn btn-outline-secondary w-100 fw-500" id="CancelBtn"
+                        style="border-radius: 8px; padding: 11px; font-size: 14px;">Cancel</button>
+                </div>
+            </div>
+            <div class="card p-4 rounded-3 bg-blur-3 bg-semi-transparent d-none" style="width: 400px; --blur-lvl: <?= $opacitylvl ?>" id="SuccessCard">
+                <div class="text-center">
+                    <div class="mb-4">
+                        <span class="bg-success-subtle text-success rounded-circle d-inline-flex justify-content-center align-items-center"
+                            style="width: 64px; height: 64px;">
+                            <i class="bi bi-check-circle-fill text-success-emphasis" style="font-size: 32px;"></i>
+                        </span>
+                    </div>
+                    <h5 class="fw-bold mb-2" style="font-size: 20px;">Password Updated</h5>
+                    <p class="text-muted mb-4" style="font-size: 14px; line-height: 1.6; margin: 0;">Your password has now been updated. if you are not redirected automatically, click the button below to continue.</p>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success w-100 fw-500"
+                        id="redirectBtn" style="border-radius: 8px; padding: 11px; font-size: 14px;">Continue</button>
                 </div>
             </div>
         </div>

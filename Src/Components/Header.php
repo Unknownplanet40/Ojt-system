@@ -102,7 +102,7 @@
                 <img src="https://placehold.co/30x30?text=No+Photo" alt="Profile" id="dropdownProfilePhoto" class="rounded-circle mx-3" style="width: 30px; height: 30px; object-fit: cover" />
                 <div>
                   <span class="dropdown-item-text text-nowrap ps-0 pb-0"><strong id="userName"></strong> </span>
-                  <small class="text-muted dropdown-item-text ps-0 pt-0" id="userRole"></small>
+                  <small class="text-muted dropdown-item-text ps-0 pt-0"><?= $_SESSION['user_role'] === 'admin' ? 'Administrator' : $_SESSION['user_role'] ?></small>
                 </div>
               </div>
             </li>

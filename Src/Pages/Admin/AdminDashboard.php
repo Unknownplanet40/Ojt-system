@@ -5,14 +5,6 @@ if (session_status() === PHP_SESSION_NONE) {
 // time to manila asia
 date_default_timezone_set('Asia/Manila');
 
-if (empty($_SESSION['user'])) {
-    header("Location: ../Login");
-    exit;
-} elseif ($_SESSION['user']['role'] !== "admin") {
-    header("Location: ../Login");
-    exit;
-}
-
 require_once "../../../Assets/SystemInfo.php";
 
 $CurrentPage = "AdminDashboard";
@@ -24,11 +16,11 @@ $CurrentPage = "AdminDashboard";
 
 <head>
     <?php require_once "pagehead.php" ?>
-    <script type="module" src="../../../Assets/Script/DashboardScripts/AdminDashboardScript.js"></script>
+    <script type="module" src="../../../Assets/Script/dashboardScripts/AdminDashboard.js"></script>
     <title><?= $ShortTitle ?></title>
 </head>
 
-<body class="login-page" data-role="<?= $_SESSION['user']['role'] ?>" data-uuid="<?= $_SESSION['user']['uuid'] ?>">
+<body class="login-page" data-role="<?= $_SESSION['user_role'] ?>" data-uuid="<?= $_SESSION['user_uuid'] ?>" data-only="<?= $CurrentPage ?>">
     <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
         <div class="circle circle1" data-speed="fast"></div>
         <div class="circle circle2" data-speed="normal"></div>

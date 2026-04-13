@@ -1,118 +1,15 @@
 import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
 import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "../SystemTheme.js";
+import { Errors } from "../ErrorFunctions.js";
 
-const driver = window.driver.js.driver;
 MatchsystemThemes(true);
 let swalTheme = SwalTheme();
 BGcircleTheme(true);
-AOS.init();
 
-$("#pageLoader").fadeIn(2000);
+const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
+const Onlypage = $("body").data("only") || "";
 
-const ActivityIcons = {
-  other: "bi-activity",
-  profile_completed: "bi-person-check",
-  account_created: "bi-person-plus",
-  account_deactivated: "bi-person-x",
-  account_activated: "bi-person-check",
-  password_changed: "bi-key",
-  password_reset: "bi-key-fill",
-  role_changed: "bi-shield-lock",
-  login_success: "bi-box-arrow-in-right",
-  login_failed: "bi-box-arrow-in-right text-danger",
-  logout: "bi-box-arrow-right",
-  application_submitted: "bi-file-earmark-text",
-  application_approved: "bi-file-earmark-check",
-  application_rejected: "bi-file-earmark-x",
-  endorsement_issued: "bi-award",
-  dtr_submitted: "bi-journal-text",
-  dtr_approved: "bi-journal-check",
-  dtr_rejected: "bi-journal-x",
-  journal_submitted: "bi-journal-text",
-  evaluation_submitted: "bi-clipboard-check",
-  document_uploaded: "bi-cloud-upload",
-  company_added: "bi-building",
-  company_updated: "bi-building-up",
-  moa_uploaded: "bi-file-earmark-arrow-up",
-  batch_created: "bi-diagram-3",
-  batch_closed: "bi-diagram-3-fill",
-  program_created: "bi-collection",
-  program_updated: "bi-collection-fill",
-  program_disabled: "bi-collection-play",
-  program_enabled: "bi-collection-play-fill",
-};
-
-export function fetchUserData() {
-  $.ajax({
-    url: "../../../Assets/api/GET_userData",
-    method: "GET",
-    timeout: 5000,
-    success: function (response) {
-      if (response.status === "success") {
-        $("body").attr("data-uuid", response.data.uuid);
-        $("#userName").text(response.data.first_name + " " + response.data.middle_name.charAt(0) + ". " + response.data.last_name);
-        $("#welcomeUserName").text(response.data.first_name);
-        $("#dropdownMenuName").text(response.data.first_name + " " + response.data.last_name);
-        switch (response.data.role) {
-          case "admin":
-            $("#userRole").text("Administrator");
-            break;
-          case "supervisor":
-            $("#userRole").text("Supervisor");
-            break;
-          case "student":
-            $("#userRole").text("Student");
-            break;
-          case "coordinator":
-            $("#userRole").text("Coordinator");
-            break;
-          default:
-            $("#userRole").text("User");
-        }
-        if (response.data.profile_path) {
-          $("#navProfilePhoto").attr("src", "../../../" + response.data.profile_path);
-          $("#dropdownProfilePhoto").attr("src", "../../../" + response.data.profile_path);
-        } else {
-          $("#navProfilePhoto").attr("src", "https://placehold.co/30x30?text=No+Photo");
-          $("#dropdownProfilePhoto").attr("src", "https://placehold.co/30x30?text=No+Photo");
-        }
-      }
-    },
-    error: function (xhr, status, error) {
-      if (status === "timeout") {
-        ToastVersion(swalTheme, "Request timed out. Please try again.", "error", 3000, "top-end", "8");
-      } else {
-        ToastVersion(swalTheme, "An error occurred while fetching user data. Please try again.", "error", 3000, "top-end", "8");  
-      }
-    },
-  });
-}
-
-export function signOut() {
-  $("#signOutBtn").on("click", function (e) {
-    $.ajax({
-      url: "../../../Assets/api/logout",
-      method: "POST",
-      timeout: 5000,
-      success: function (response) {
-        if (response.status === "success") {
-          window.location.href = "../../../";
-        } else {
-          ToastVersion(swalTheme, "Failed to sign out. Please try again.", "error", 3000, "top-end", "8");
-        }
-      },
-      error: function (xhr, status, error) {
-        if (status === "timeout") {
-          ToastVersion(swalTheme, "Request timed out. Please try again.", "error", 3000, "top-end", "8");
-        } else {
-          ToastVersion(swalTheme, "An error occurred while signing out. Please try again.", "error", 3000, "top-end", "8");
-        }
-      },
-    });
-  });
-}
-
-export function DashboardEsentialElements(userUuid) {
+function DashboardEsentialElements(mainContentSelector = "#PageMainContent") {
   $("#pageLoader").fadeOut(500, function () {
     $(this).remove();
   });
@@ -151,24 +48,75 @@ export function DashboardEsentialElements(userUuid) {
 
   $("#pageLoader").fadeOut(1000, function () {
     $(this).remove();
-    $("#mainContent").fadeIn(1000, function () {
+    $(mainContentSelector).fadeIn(1000, function () {
       $(this).removeClass("d-none");
     });
   });
 
-  if (!userUuid) {
-    window.location.href = "../../../Src/Pages/Login";
-    return;
-  }
+    $("#signOutBtn").on("click", function () {
+    SignOut();
+  });
 }
 
+function fetchProfile() {
+  $.ajax({
+    url: "../../../process/profile/get_profile",
+    method: "POST",
+    dataType: "json",
+    data: {
+      csrf_token: csrfToken,
+    },
+    success: function (response) {
+      if (response.status === "success") {
+        const profile = response.profile;
+        if (!profile.profile_name) {
+          const initials = profile.initials || "NA";
+          $("#navProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
+          $("#dropdownProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
+        } else {
+          $("#navProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
+          $("#dropdownProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
+        }
+
+        $("#userName").text(profile.first_name + " " + profile.last_name);
+        $("#welcomeUserName").text(profile.first_name);
+      } else {
+        ToastVersion(swalTheme, response.message, "error", 3000, "top-end");
+      }
+    },
+
+    error: function (xhr, status, error) {
+      Errors(xhr, status, error);
+    },
+  });
+}
+
+function SignOut() {
+  $.ajax({
+    url: "../../../process/auth/logout",
+    method: "POST",
+    dataType: "json",
+    data: {
+      csrf_token: csrfToken,
+    },
+    beforeSend: function () {
+      ModalVersion(swalTheme, "Signing Out", "Please wait while we sign you out...", "info", 0, "center");
+    },
+    success: function (response) {
+      if (response.status === "success") {
+        Swal.close();
+        window.location.href = response.redirect_url;
+      } else {
+        ToastVersion(swalTheme, response.message, "error", 3000, "top-end");
+      }
+    },
+    error: function (xhr, status, error) {
+      Errors(xhr, status, error);
+    },
+  });
+}
 
 $(document).ready(function () {
-  fetchUserData();
-  DashboardEsentialElements($("body").data("uuid"));
-  signOut();
-
-  $("#dashboardRefreshBtn").on("click", function () {
-    $("#dashboardContent").stop(true, true).fadeTo(500, 0.5).fadeTo(500, 1);
-  });
+  DashboardEsentialElements();
+  fetchProfile();
 });
