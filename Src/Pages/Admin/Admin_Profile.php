@@ -3,12 +3,6 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// if session is empty, redirect to login page
-if (empty($_SESSION['user'])) {
-    header("Location: ../Login");
-    exit;
-}
-
 require_once "../../../Assets/SystemInfo.php";
 ?>
 
@@ -22,7 +16,7 @@ require_once "../../../Assets/SystemInfo.php";
     <title><?= $ShortTitle ?></title>
 </head>
 
-<body class="admin-profile-page" data-enable-changepassword="<?= isset($_SESSION['user']['require_password_change']) ? 'true' : 'false' ?>">
+<body class="admin-profile-page">
     <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
         <div class="circle circle1" data-speed="fast"></div>
         <div class="circle circle2" data-speed="normal"></div>
@@ -30,8 +24,10 @@ require_once "../../../Assets/SystemInfo.php";
     </div>
 
     <div class="admin-profile-main container w-100 d-flex justify-content-center align-items-center z-1">
-        <div class="admin-profile-card card rounded-3 bg-blur-3 bg-semi-transparent w-100" style="--blur-lvl: 0.50;">
+        <div class="admin-profile-card card rounded-3 bg-blur-3 bg-semi-transparent w-100"
+            style="--blur-lvl: <?= $opacitylvl ?>;">
             <div class="card-body">
+                <small class="text-muted" id="backToDashboardLink"><a href="./AdminDashboard" class="text-decoration-none text-muted">&larr; Back</a></small>
                 <div class="hstack mb-4">
                     <small class="fw-bold"><?= $LongTitle ?> <span
                             class="badge bg-danger rounded-pill px-2 fw-medium">Admin</span></small>
@@ -48,7 +44,8 @@ require_once "../../../Assets/SystemInfo.php";
                 <div class="alert alert-info mb-3 rounded-3 py-2 border-0" role="alert">
                     <small class="mb-0">Set up your administrator profile to get started.</small>
                 </div>
-                <div class="card bg-semi-transparent mb-3" style="--blur-lvl: 0.70;">
+                <div class="card bg-semi-transparent mb-3"
+                    style="--blur-lvl: <?= $opacitylvl ?>;">
                     <div class="card-body p-3 px-4">
                         <div class="vstack">
                             <small class="fw-medium">Administrator information</small>
@@ -56,15 +53,18 @@ require_once "../../../Assets/SystemInfo.php";
                                     account.</small></span>
                         </div>
                         <div class="hstack">
-                            <img src="https://placehold.co/64x64?text=Upload+Photo" alt="" class="rounded-circle mt-2"
-                                id="adminProfilePhoto" style="width: 64px; height: 64px; object-fit: cover;">
-                            <div class="vstack ms-3 justify-content-center">
-                                <small class="fw-medium"><?= $_SESSION['user']['email'] ?></small>
+                            <img src="https://placehold.co/64x64/483a0f/c6983d/png?text=Profile\nPhoto&font=poppins"
+                                alt="" class="rounded-circle mt-2" id="adminProfilePhoto"
+                                style="width: 64px; height: 64px; object-fit: cover;">
+                            <div class="vstack ms-3 justify-content-center emailInfo">
+                                <small
+                                    class="fw-medium"><?= $_SESSION['user_email'] ?></small>
                                 <small class="text-muted">System administrator account.</small>
                             </div>
                             <div class="ms-auto vstack gap-2 justify-content-center" style="min-width: 150px;">
                                 <button class="btn btn-sm btn-primary p-1" id="saveProfileBtn"> Save & Continue</button>
-                                <button class="btn btn-sm btn-outline-secondary p-1" id="uploadPhotoBtn">Upload Photo</button>
+                                <button class="btn btn-sm btn-outline-secondary p-1" id="uploadPhotoBtn"
+                                    onclick="$('#photoInput').click();">Upload Photo</button>
                                 <input type="file" id="photoInput" accept="image/*" class="d-none">
                             </div>
                         </div>
@@ -87,27 +87,18 @@ require_once "../../../Assets/SystemInfo.php";
                                     id="middleName" placeholder="Enter your middle name (optional)">
                             </div>
                             <div class="col-md-4">
-                                <small for="employeeId" class="form-label">Employee ID <span
-                                        class="text-danger">*</span></small>
-                                <input type="text" class="form-control form-control-sm bg-semi-transparent"
-                                    id="employeeId" placeholder="EMP-12345">
-                            </div>
-                            <div class="col-md-4">
                                 <small for="contactNumber" class="form-label">Contact Number <span
                                         class="text-danger">*</span></small>
                                 <input type="text" class="form-control form-control-sm bg-semi-transparent"
                                     id="contactNumber" placeholder="09XX-XXX-XXXX">
                             </div>
-                            <?php if ($_SESSION['user']['require_password_change'] ?? false): ?>
-                            <div class="col-md-4">
-                                <small for="newPassword" class="form-label">New Password <span class="text-danger">*</span></small>
-                                <input type="password" class="form-control form-control-sm bg-semi-transparent"
-                                    id="newPassword" placeholder="Enter a new password">
-                            </div>
-                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
+                <div class="text-center">
+                            <small class="text-muted"><a href="javascript:void(0);" id="startTourLink">Take a tour of the profile
+                                    setup</a></small>
+                        </div>
             </div>
         </div>
     </div>

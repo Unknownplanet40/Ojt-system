@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 date_default_timezone_set('Asia/Manila');
 
-if (empty($_SESSION['user'])) {
+if (empty($_SESSION['user_uuid'])) {
     header("Location: ../Login");
     exit;
 }
@@ -36,9 +36,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
     <title><?= $ShortTitle ?></title>
 </head>
 
-<body class="login-page"
-    data-role="<?= $_SESSION['user']['role'] ?>"
-    data-uuid="<?= $_SESSION['user']['uuid'] ?>">
+<body class="login-page" >
     <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
         <div class="circle circle1" data-speed="fast"></div>
         <div class="circle circle2" data-speed="normal"></div>

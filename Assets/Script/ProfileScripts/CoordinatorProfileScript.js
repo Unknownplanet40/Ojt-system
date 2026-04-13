@@ -1,20 +1,180 @@
 import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
 import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "../SystemTheme.js";
+import { Errors } from "../ErrorFunctions.js";
 
 const driver = window.driver.js.driver;
 MatchsystemThemes(true);
 let swalTheme = SwalTheme();
 BGcircleTheme(true);
 
-const progressBar = $("#profileProgressBar");
-const progressStatus = $("#profileprogressStatus");
-const enableChangePassword = $("body").data("enable-changepassword") === "true";
+const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 
+function startCoordinatorProfileTour() {
+  if (!window.driver?.js?.driver || typeof driver !== "function") {
+    ToastVersion(swalTheme, "Guided tour is currently unavailable.", "warning", 3000);
+    return;
+  }
+  const profileTour = driver({
+    showProgress: true,
+    animate: true,
+    smoothScroll: true,
+    allowClose: false,
+    doneBtnText: "Finish",
+    nextBtnText: "&#187;",
+    prevBtnText: "&#171;",
+    popoverClass: "bg-blur-10 bg-semi-transparent text-body",
+    overlayColor: "rgba(0, 0, 0, 0.80)",
+    steps: [
+      {
+        element: ".admin-profile-card",
+        popover: {
+          title: "Coordinator Profile Setup",
+          description: "Welcome! This quick tour shows the important sections so you can finish your profile faster.",
+          side: "over",
+          align: "center",
+        },
+      },
+      {
+        element: ".progress",
+        popover: {
+          title: "Progress Tracker",
+          description: "This bar updates as you complete required fields.",
+          side: "bottom",
+          align: "start",
+        },
+      },
+      {
+        element: "#adminProfilePhoto",
+        popover: {
+          title: "Profile Photo",
+          description: "Upload a clear photo so students and supervisors can easily identify you.",
+          side: "right",
+          align: "center",
+        },
+      },
+      {
+        element: "#uploadPhotoBtn",
+        popover: {
+          title: "Upload Button",
+          description: "Click here to choose a new photo from your device.",
+          side: "left",
+          align: "center",
+        },
+      },
+      {
+        element: ".fname-group",
+        popover: {
+          title: "Required Information",
+          description: "Enter your first name here. This is required for your profile to be complete.",
+          side: "top",
+          align: "start",
+        },
+      },
+      {
+        element: ".lname-group",
+        popover: {
+          title: "Required Information",
+          description: "Enter your last name here. This is also required for your profile to be complete.",
+          side: "top",
+          align: "start",
+        },
+      },
+      {
+        element: ".mname-group",
+        popover: {
+          title: "Optional Information",
+          description: "Enter your middle name here. This is optional but helps with identification.",
+          side: "top",
+          align: "start",
+        },
+      },
+      {
+        element: ".employeeId-group",
+        popover: {
+          title: "Required Information",
+          description: "Enter your employee ID here. Use the ID provided by your institution.",
+          side: "top",
+          align: "start",
+        },
+      },
+      {
+        element: ".department-group",
+        popover: {
+          title: "Required Information",
+          description: "Select your department. This helps students know which department you belong to.",
+          side: "top",
+          align: "start",
+        },
+      },
+      {
+        element: ".contactNumber-group",
+        popover: {
+          title: "Required Information",
+          description: "Enter your contact number here. This allows students and supervisors to reach you if needed.",
+          side: "top",
+          align: "start",
+        },
+      },
+      {
+        element: "#saveProfileBtn",
+        popover: {
+          title: "Save Your Profile",
+          description: "After filling out all required fields, click here to save your profile information.",
+          side: "top",
+          align: "center",
+        },
+      },
+      {
+        element: "#startTourLink",
+        popover: {
+          title: "Retake the Tour",
+          description: "Click here anytime to retake this tour and review the profile setup steps.",
+          side: "top",
+          align: "center",
+        },
+      },
+    ],
+  });
+
+  profileTour.drive();
+}
+
+const ACTION_STORAGE_KEY = "coordinator_profile_action";
 const urlParams = new URLSearchParams(window.location.search);
-const action = urlParams.get("action");
-const userUuid = urlParams.get("uuid");
+const actionFromUrl = urlParams.get("action");
+let action = actionFromUrl || sessionStorage.getItem(ACTION_STORAGE_KEY);
+let setupProfile = action === "edit" ? false : true;
+
+if (actionFromUrl) {
+  sessionStorage.setItem(ACTION_STORAGE_KEY, actionFromUrl);
+  action = actionFromUrl;
+
+  const newUrl = window.location.href.split("?")[0];
+  window.history.replaceState({}, document.title, newUrl);
+}
+
+function showError(inputSelector, message) {
+  if (!inputSelector) {
+    ToastVersion(swalTheme, message, "info", 3000, "top");
+    return;
+  }
+
+  if (inputSelector === "#photoInput") {
+    ToastVersion(swalTheme, "Invalid file. Please select a valid image file (jpg, png, gif) that is less than 5MB.", "info", 3000, "top");
+    return;
+  } else {
+    $(inputSelector).addClass("is-invalid");
+    ToastVersion(swalTheme, message, "info", 3000, "top");
+    setTimeout(() => {
+      $(inputSelector).removeClass("is-invalid");
+    }, 3000);
+    return;
+  }
+}
 
 function ProfileProgressBar(fill = 0) {
+  const progressBar = $("#profileProgressBar");
+  const progressStatus = $("#profileprogressStatus");
   const totalFields = 5;
   let filledFields = fill;
 
@@ -29,57 +189,59 @@ function ProfileProgressBar(fill = 0) {
   progressStatus.text(Math.round(progressPercent) + "%");
 }
 
-function getProfileData(uuid) {
-  $("#profileprogressLabel").text("Updating Profile");
-  $("#profileInfoText").text("Make changes to your profile information. Don't forget to save your changes.");
+function fetchProfileData() {
   $.ajax({
-    url: "../../../Assets/api/coordinator_profile_functions",
-    method: "POST",
-    data: { action: "fetch_profile_data", uuid: uuid },
-    timeout: 5000,
+    url: "../../../process/profile/get_profile",
+    type: "POST",
+    data: { csrf_token: csrfToken },
+    dataType: "json",
     success: function (response) {
       if (response.status === "success") {
-        const data = response.data;
-        const fill = data.profile.first_name && data.profile.last_name && data.profile.employee_id && data.profile.mobile && data.profile.department ? 5 : 0;
-        ProfileProgressBar(fill);
+        const profile = response.profile;
 
-        $("#firstName").val(data.profile.first_name);
-        $("#lastName").val(data.profile.last_name);
-        $("#middleName").val(data.profile.middle_name);
-        $("#employeeId").val(data.profile.employee_id);
-        $("#contactNumber").val(data.profile.mobile ? data.profile.mobile.replace(/\D/g, "").slice(0, 11) : "");
-        $("#department").val(data.profile.department);
-
-        if (data.profile.profile_path) {
-          $("#adminProfilePhoto").attr("src", "../../../" + data.profile.profile_path);
+        if (profile.profile_name) {
+          $("#adminProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
         } else {
-          $("#adminProfilePhoto").attr("src", "https://placehold.co/64x64/C1C1C1/000000/png?text=" + data.profile.initials + "&font=poppins");
+          const initials = profile.initials || "NA";
+          $("#adminProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
         }
+
+        $("#firstName").val(profile.first_name);
+        $("#lastName").val(profile.last_name);
+        $("#middleName").val(profile.middle_name);
+        $("#employeeId").val(profile.employee_id);
+        $("#department").val(profile.department);
+        $("#contactNumber").val(profile.mobile);
+        ProfileProgressBar();
       } else {
-        ToastVersion(swalTheme, response.message, "error", 3000);
+        ToastVersion(swalTheme, response.message || "An error occurred while fetching your profile data. Please try again.", "error", 3000, "top");
       }
     },
     error: function (xhr, status, error) {
-      if (status === "timeout") {
-        ToastVersion(swalTheme, "Request timed out. Please try again.", "error", 3000);
-      } else {
-        ToastVersion(swalTheme, "An error occurred while fetching profile data. Please try again.", "error", 3000);
-      }
+      Errors(xhr, status, error);
+    },
+    complete: function () {
+      $("#saveProfileBtn").prop("disabled", false).text("Save Profile");
     },
   });
 }
 
 $(document).ready(function () {
-  $("#firstName, #lastName, #employeeId, #contactNumber, #department").on("input", function () {
-    ProfileProgressBar();
+  $("#startTourLink").on("click", function (e) {
+    e.preventDefault();
+    startCoordinatorProfileTour();
   });
 
-  if (action === "edit" && userUuid) {
-    getProfileData(userUuid);
+  if (action === "edit") {
+    $("#backToDashboardLink").removeClass("d-none");
+    fetchProfileData();
+  } else {
+    $("#backToDashboardLink").addClass("d-none");
+    startCoordinatorProfileTour();
   }
 
-  $("#uploadPhotoBtn").on("click", function () {
-    $("#photoInput").click();
+  $("#backToDashboardLink").on("click", function () {
+    sessionStorage.removeItem(ACTION_STORAGE_KEY);
   });
 
   $("#photoInput").on("change", function (event) {
@@ -87,12 +249,12 @@ $(document).ready(function () {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      ToastVersion(swalTheme, "Invalid file type. Please select an image file.", "warning", 3000);
+      showError("#photoInput", "Invalid file type. Please select an image.");
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      ToastVersion(swalTheme, "File size exceeds 10MB. Please select a smaller image.", "warning", 3000);
+      showError("#photoInput", "File size exceeds 10MB. Please select a smaller image.");
       return;
     }
 
@@ -101,7 +263,7 @@ $(document).ready(function () {
       const img = new Image();
       img.onload = function () {
         if (img.width > 3000 || img.height > 3000) {
-          ToastVersion(swalTheme, "Image dimensions exceed 3000x3000. Please select a smaller image.", "warning", 3000);
+          showError("#photoInput", "Image dimensions exceed 3000x3000. Please select a smaller image.");
           return;
         }
         $("#adminProfilePhoto").attr("src", e.target.result);
@@ -109,6 +271,10 @@ $(document).ready(function () {
       img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+  });
+
+  $("#firstName, #lastName, #employeeId, #contactNumber, #department").on("input", function () {
+    ProfileProgressBar();
   });
 
   $("#contactNumber").on("input", function () {
@@ -119,109 +285,83 @@ $(document).ready(function () {
     $(this).val(value);
   });
 
-  $("#employeeId").on("input", function () {
-    let value = $(this)
-      .val()
-      .toUpperCase()
-      .replace(/[^A-Z0-9-]/g, "");
-    if (value.length > 17) {
-      value = value.slice(0, 17);
-    }
-    $(this).val(value);
-  });
-
   $("#saveProfileBtn").on("click", function () {
-    let firstName = $("#firstName").val().trim();
-    let lastName = $("#lastName").val().trim();
-    let middleName = $("#middleName").val().trim();
-    let employeeId = $("#employeeId").val().trim();
-    let contactNumber = $("#contactNumber").val().trim();
-    let department = $("#department").val().trim();
-    let ProfilePhoto = $("#adminProfilePhoto").attr("src");
+    sessionStorage.removeItem(ACTION_STORAGE_KEY);
 
-    if (!firstName || !lastName || !employeeId || !contactNumber) {
-      ToastVersion(swalTheme, "Please fill in all required fields.", "warning", 3000);
+    const firstName = $("#firstName").val().trim();
+    const lastName = $("#lastName").val().trim();
+    const middleName = $("#middleName").val().trim();
+    const employeeId = $("#employeeId").val().trim();
+    const department = $("#department").val();
+    const contactNumber = $("#contactNumber").val().trim();
+    const photoInput = $("#photoInput")[0];
+
+    if (!firstName) {
+      showError("#firstName", "First name is required.");
       return;
     }
 
-    if (enableChangePassword && !newPassword) {
-      ToastVersion(swalTheme, "Please enter a new password.", "warning", 3000);
+    if (!lastName) {
+      showError("#lastName", "Last name is required.");
       return;
     }
 
-    const contactPattern = /^09\d{9}$/;
-    if (!contactPattern.test(contactNumber)) {
-      ToastVersion(swalTheme, "Invalid contact number format. Please enter a valid 11-digit number starting with 09.", "warning", 3000);
-      return;
-    }
-
-    const employeeIdPattern = /^EMP-\d{4}-\d{8}$/;
-    if (!employeeIdPattern.test(employeeId)) {
-      ToastVersion(swalTheme, "Invalid employee ID format. Please use the format EMP-0000-00000000.", "warning", 3000);
-      return;
-    }
-
-    const namePattern = /^[A-Za-z\s]{2,50}$/;
-    if (!namePattern.test(firstName) || !namePattern.test(lastName)) {
-      ToastVersion(swalTheme, "Invalid name format. Names must be between 2 and 50 characters and can only contain letters and spaces.", "warning", 3000);
+    if (!employeeId) {
+      showError("#employeeId", "Employee ID is required.");
       return;
     }
 
     if (!department) {
-      ToastVersion(swalTheme, "Please enter your department.", "warning", 3000);
+      showError("#department", "Please select a department.");
       return;
     }
 
+    if (!contactNumber) {
+      showError("#contactNumber", "Contact number is required.");
+      return;
+    }
+
+    $("#saveProfileBtn").prop("disabled", true).text("Saving...");
+
+    const formData = new FormData();
+    formData.append("firstName", firstName);
+    formData.append("lastName", lastName);
+    formData.append("middleName", middleName);
+    formData.append("employeeId", employeeId);
+    formData.append("department", department);
+    formData.append("contactNumber", contactNumber);
+    if (photoInput.files.length > 0) {
+      formData.append("profilePhoto", photoInput.files[0]);
+    }
+    formData.append("csrf_token", csrfToken);
+    formData.append("setupProfile", setupProfile);
+
     $.ajax({
-      url: "../../../Assets/api/SaveProfile_Coordinator",
-      method: "POST",
-      data: {
-        firstName: firstName,
-        lastName: lastName,
-        middleName: middleName,
-        employeeId: employeeId,
-        contactNumber: contactNumber,
-        ProfilePhoto: ProfilePhoto,
-        department: department,
+      url: "../../../process/profile/save_profile",
+      type: "POST",
+      data: formData,
+      processData: false,
+      contentType: false,
+      beforeSend: function () {
+        $("#saveProfileBtn").prop("disabled", true).text("Saving...");
       },
-      dataType: "json",
-      timeout: 5000,
       success: function (response) {
         if (response.status === "success") {
-          if (enableChangePassword) {
-            window.location.href = "../../../Src/Pages/ChangePassword.php";
-            return;
+          ToastVersion(swalTheme, response.message || "Profile saved successfully.", "success", 3000);
+          fetchProfileData();
+          if (response.redirect_url && setupProfile) {
+            setTimeout(() => {
+              window.location.href = response.redirect_url;
+            }, 3000);
+          } else {
+            window.location.href = "../../../Src/Pages/Coordinator/viewProfile.php";
           }
-
-          window.location.href = "../../../Src/Pages/Coordinator/CoordinatorDashboard.php";
         } else {
-          ToastVersion(swalTheme, response.message, "error", 3000);
+          ToastVersion(swalTheme, response.message || "An error occurred while saving your profile. Please try again.", "error", 3000, "top");
         }
       },
       error: function (xhr, status, error) {
-        if (status === "timeout") {
-          ToastVersion(swalTheme, "Request timed out. Please try again.", "error", 3000);
-        } else {
-          ToastVersion(swalTheme, "An error occurred: " + error, "error", 3000);
-        }
-      },
-      complete: function () {
-        $("#firstName, #lastName, #middleName, #employeeId, #contactNumber").val("");
-        $("#adminProfilePhoto").attr("src", "https://placehold.co/64x64?text=No+Photo");
-      },
-      statusCode: {
-        400: function () {
-          ToastVersion(swalTheme, "Bad Request. Please check your input and try again.", "error", 3000);
-        },
-        403: function () {
-          window.location.href = "../../../Src/Pages";
-        },
-        404: function () {
-          ToastVersion(swalTheme, "Endpoint not found. Please contact support.", "error", 3000);
-        },
-        500: function () {
-          ToastVersion(swalTheme, "Server Error. Please try again later.", "error", 3000);
-        },
+        Errors(xhr, status, error);
       },
     });
   });

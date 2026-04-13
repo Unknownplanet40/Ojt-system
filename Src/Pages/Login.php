@@ -4,15 +4,15 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once "../../Assets/SystemInfo.php";
-require_once "../../Assets/database/dbconfig.php";
+require_once "../../config/db.php";
 
 $active_sy = date("Y") . "-" . (date("Y") + 1);
 $active_sem = (date("m") >= 6 && date("m") <= 11) ? "1st Semester" : "2nd Semester";
 
 try {
-    $conn = new mysqli($servername, $username, $password, $dbname);
+    $conn = new mysqli($host, $username, $password, $dbname);
     if ($conn->connect_error) {
-        // Fallback to defaults
+		 throw new Exception("Connection failed: " . $conn->connect_error);
     } else {
         $result = $conn->query("SELECT school_year, semester FROM batches WHERE status = 'active' LIMIT 1");
         if ($result && $row = $result->fetch_assoc()) {
@@ -21,11 +21,11 @@ try {
         }
     }
 } catch (Exception $e) {
-    // Fallback to defaults
+	error_log("Database connection error: " . $e->getMessage());
 }
 
-if (isset($_SESSION['user'])) {
-    switch ($_SESSION['user']['role']) {
+if (isset($_SESSION['user_role'])) {
+    switch ($_SESSION['user_role']) {
         case 'admin':
             header("Location: ../Pages/Admin/AdminDashboard");
             exit();
@@ -51,21 +51,8 @@ if (isset($_SESSION['user'])) {
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<link rel="stylesheet" href="../../libs/bootstrap/css/bootstrap.css" />
-	<link rel="stylesheet" href="../../libs/aos/css/aos.css" />
-	<link rel="stylesheet" href="../../libs/driverjs/css/driver.css" />
-	<link rel="stylesheet" href="../../Assets/style/AniBG.css" />
-	<link rel="stylesheet" href="../../Assets/style/MainStyle.css" />
-	<link rel="manifest" href="../../Assets/manifest.json" />
-
-	<script defer src="../../libs/bootstrap/js/bootstrap.bundle.js"></script>
-	<script defer src="../../libs/sweetalert2/js/sweetalert2.all.min.js"></script>
-	<script defer src="../../libs/aos/js/aos.js"></script>
-	<script src="../../libs/driverjs/js/driver.js.iife.js"></script>
-	<script src="../../libs/jquery/js/jquery-3.7.1.min.js"></script>
-	<script type="module" src="../../Assets/Script/loginScript.js"></script>
+	<?php include_once "./srcPageHeader.php"; ?>
+	<script type="module" src="../../Assets/Script/auth/login.js"></script>
 	<title><?= $ShortTitle ?></title>
 </head>
 

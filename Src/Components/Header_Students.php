@@ -104,8 +104,8 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
               <img src="https://placehold.co/30x30?text=No+Photo" alt="Profile" id="dropdownProfilePhoto"
                 class="rounded-circle mx-3" style="width: 30px; height: 30px; object-fit: cover" />
               <div>
-                <span class="dropdown-item-text text-nowrap ps-0 pb-0"><strong id="userName"></strong> </span>
-                <small class="text-muted dropdown-item-text ps-0 pt-0" id="userRole"></small>
+                <span class="dropdown-item-text text-nowrap ps-0 pb-0"><strong id="userName"></strong></span>
+                <small class="text-muted dropdown-item-text ps-0 pt-0" id="userRole"><?= ucfirst($_SESSION['user_role']) ?></small>
               </div>
             </div>
           </li>
@@ -114,7 +114,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
           </li>
           <li>
             <a class="dropdown-item <?= $CurrentPage === 'viewProfile' ? 'nav-active' : '' ?>"
-              href="../Students/Students_Profile?action=edit&uuid=<?= $_SESSION['user']['uuid'] ?>">
+              href="../Students/Students_Profile?action=edit">
               <div class="hstack">
                 <i class="bi bi-person me-2"></i>
                 <div class="vstack">

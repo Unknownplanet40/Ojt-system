@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 date_default_timezone_set('Asia/Manila');
 
-if (empty($_SESSION['user'])) {
+if (empty($_SESSION['user_uuid'])) {
     header("Location: ../Login");
     exit;
 }
@@ -19,12 +19,13 @@ $CurrentPage = "viewProfile";
 
 <head>
     <?php require_once "pagehead.php"; ?>
+    <script type="module" src="../../../Assets/Script/dashboardScripts/CoordinatorDashboardScript.js"></script>
     <script type="module" src="../../../Assets/Script/ProfileScripts/CoordinatorViewProfileScript.js"></script>
 </head>
 
 <body class="login-page"
-    data-role="<?= $_SESSION['user']['role'] ?>"
-    data-uuid="<?= $_SESSION['user']['uuid'] ?>">
+    data-role="<?= $_SESSION['user_role'] ?>"
+    data-uuid="<?= $_SESSION['user_uuid'] ?>">
     <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
         <div class="circle circle1" data-speed="fast"></div>
         <div class="circle circle2" data-speed="normal"></div>
@@ -42,35 +43,47 @@ $CurrentPage = "viewProfile";
             <div class="container-fluid p-4 w-100" id="dashboardContent">
                 <div class="row row-cols-1 row-cols-md-3 g-3">
                     <div class="col-md-12">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent rounded-4" style="--blur-lvl: <?= $opacitylvl ?>">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent rounded-4"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body">
                                 <div class="row row-cols-1 row-cols-md-2 g-3">
                                     <div class="col-12 col-lg-8">
-                                        <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-3">
-                                            <img src="https://placehold.co/64x64/C1C1C1/000000/png?text=RJ&font=poppins"
+                                        <div
+                                            class="d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-3">
+                                            <img src="https://placehold.co/64x64/C1C1C1/000000/png?text=<?= $_SESSION['user_initials'] ?>&font=poppins"
                                                 alt="profile picture"
                                                 class="rounded-circle border border-2 border-light-subtle shadow-sm flex-shrink-0"
                                                 style="width: clamp(56px, 16vw, 72px); height: clamp(56px, 16vw, 72px);"
                                                 id="ProfilePicture">
 
                                             <div class="w-100 text-center text-sm-start">
-                                                <h5 class="card-title mb-1" id="FullName">John Michael Doe</h5>
+                                                <h5 class="card-title mb-1" id="FullName">
+                                                    <?= ucfirst($_SESSION['user_name']) ?>
+                                                </h5>
                                                 <p class="card-text mb-2">
-                                                    <small class="text-muted d-inline-flex flex-wrap justify-content-center justify-content-sm-start align-items-center gap-1">
-                                                        <span class="text-break"><?= htmlspecialchars($_SESSION['user']['email']) ?></span>
+                                                    <small
+                                                        class="text-muted d-inline-flex flex-wrap justify-content-center justify-content-sm-start align-items-center gap-1">
+                                                        <span
+                                                            class="text-break"><?= htmlspecialchars($_SESSION['user_email']) ?></span>
                                                         <span class="d-none d-sm-inline">&bull;</span>
                                                         <span id="Department"></span>
                                                     </small>
                                                 </p>
 
-                                                <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-sm-start">
-                                                    <small class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle rounded-pill px-2 py-1">
-                                                        <?= ucfirst($_SESSION['user']['role']) ?>
+                                                <div
+                                                    class="d-flex flex-wrap gap-2 justify-content-center justify-content-sm-start">
+                                                    <small
+                                                        class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle rounded-pill px-2 py-1">
+                                                        <?= ucfirst($_SESSION['user_role']) ?>
                                                     </small>
-                                                    <small class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill px-2 py-1" id="StatusBadge">
+                                                    <small
+                                                        class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill px-2 py-1"
+                                                        id="StatusBadge">
                                                         <span id="Status">Active</span>
                                                     </small>
-                                                    <small class="badge bg-dark-subtle text-dark-emphasis border border-dark-subtle rounded-pill px-2 py-1" id="EmployeeIDBadge">
+                                                    <small
+                                                        class="badge bg-dark-subtle text-dark-emphasis border border-dark-subtle rounded-pill px-2 py-1"
+                                                        id="EmployeeIDBadge">
                                                         <span id="EmployeeID">EMP-0000-00000000</span>
                                                     </small>
                                                 </div>
@@ -216,7 +229,8 @@ $CurrentPage = "viewProfile";
                                             </div>
                                             <div class="flex-grow-1">
                                                 <small class="text-muted d-block">Email</small>
-                                                <span class="fw-semibold text-break" id="Email"><?= htmlspecialchars($_SESSION['user']['email']) ?></span>
+                                                <span class="fw-semibold text-break"
+                                                    id="Email"><?= htmlspecialchars($_SESSION['user_email']) ?></span>
                                             </div>
                                         </div>
                                     </div>
@@ -237,12 +251,15 @@ $CurrentPage = "viewProfile";
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card bg-blur-5 bg-semi-transparent h-100 rounded-4" style="--blur-lvl: <?= $opacitylvl ?>">
+                        <div class="card bg-blur-5 bg-semi-transparent h-100 rounded-4"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body">
                                 <div class="hstack">
-                                    <h6 class="card-title">My Students &bull; <small class="text-muted" id="BatchInfo"></small></h6>
+                                    <h6 class="card-title">My Students &bull; <small class="text-muted"
+                                            id="BatchInfo"></small></h6>
                                 </div>
-                                <ul class="list-group list-group-flush" id="studentList" style="max-height: 512px; overflow-y: auto;">
+                                <ul class="list-group list-group-flush" id="studentList"
+                                    style="max-height: 512px; overflow-y: auto;">
                                 </ul>
                             </div>
                         </div>

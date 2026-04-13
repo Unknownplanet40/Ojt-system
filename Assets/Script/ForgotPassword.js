@@ -91,9 +91,13 @@ $(document).ready(function () {
 
   if (token) {
     $.ajax({
-      url: "../../Assets/api/validateResetToken",
+      url: "../../process/auth/validate_reset_token",
       method: "POST",
       timeout: 5000,
+      dataType: "json",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+      },
       data: {
         token: token,
       },
@@ -138,6 +142,13 @@ $(document).ready(function () {
     CardtoShow("SendResetLinkCard");
   }
 
+  $("#ResendLinkBtn").click(function () {
+    const email = $("#emailDisplay").text().trim();
+    $("#email").val(email);
+    $("#SendLinkBtn").trigger("click");
+    $(this).prop("disabled", true).text("Resending...");
+  });
+
   $("#SendLinkBtn").click(function () {
     const email = $("#email").val().trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -152,29 +163,45 @@ $(document).ready(function () {
     }
 
     $.ajax({
-      url: "../../Assets/api/sendResetLinkProcess",
+      url: "../../process/auth/send_reset_link",
       method: "POST",
       timeout: 10000,
+      dataType: "json",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+      },
       data: {
         email: email,
       },
+      beforeSend: function () {
+        $("#SendLinkBtn").prop("disabled", true).text("Please wait...");
+      },
       success: function (response) {
         if (response.status === "success") {
+          $("#SendLinkBtn").prop("disabled", false).text("Send Reset Link");
           $("#emailDisplay").text(email);
           CardtoShow("EmailSentCard");
+          ToastVersion(swalTheme, response.message, "success", 3000, "top-end");
+          $("#ResendLinkBtn").prop("disabled", false).text("Resend Link");
         } else if (response.status === "info") {
           ToastVersion(swalTheme, response.message, response.status, 3000, "top-end");
         } else {
           handleAjaxError(null, null, response.message || "Failed to send reset link! Please try again later.");
+          $("#SendLinkBtn").prop("disabled", false).text("Send Reset Link");
         }
       },
       error: function (xhr, textStatus) {
         handleAjaxError(xhr, textStatus, "An error occurred while sending the reset link. Please try again.");
+        $("#SendLinkBtn").prop("disabled", false).text("Send Reset Link");
       },
       statusCode: {
         404: function () {
           handleAjaxError(null, null, "Reset link endpoint not found! Please contact support.");
         },
+        405: function () {
+          handleAjaxError(null, null, "Method not allowed! Please contact support.");
+        },
+
         500: function () {
           handleAjaxError(null, null, "Server error! Please try again later.");
         },
@@ -195,12 +222,66 @@ $(document).ready(function () {
     window.location.href = "Login.php";
   });
 
-  $("#ResetPasswordBtn").click(function () {
+  $("#ResetPasswordBtn").click(function (e) {
+    e.preventDefault();
+
     const newPassword = $("#newPassword").val();
+    const confirmPassword = $("#confirmPassword").val();
 
     if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/\d/.test(newPassword) || !/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
       ToastVersion(swalTheme, "Password does not meet the required criteria!", "info", 3000, "top-end");
       return;
     }
+
+    if (newPassword !== confirmPassword) {
+      ToastVersion(swalTheme, "Passwords do not match!", "info", 3000, "top-end");
+      return;
+    }
+
+    $(this).prop("disabled", true);
+
+    $.ajax({
+      url: "../../process/auth/reset_password",
+      method: "POST",
+      timeout: 10000,
+      dataType: "json",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      data: {
+        token: token,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      },
+      success: function (response) {
+        if (response.status === "success") {
+          CardtoShow("SuccessCard");
+          ToastVersion(swalTheme, response.message, "success", 3000, "top-end");
+          setTimeout(() => {
+            window.location.href = response.redirect_url || "../../Src/Pages/Login";
+          }, 1500);
+        } else {
+          ToastVersion(swalTheme, response.message || "Failed to reset password! Please try again.", "error", 3000, "top-end");
+          $("#ResetPasswordBtn").prop("disabled", false);
+        }
+      },
+      error: function (xhr, textStatus) {
+        handleAjaxError(xhr, textStatus, "An error occurred while resetting password. Please try again.");
+        $("#ResetPasswordBtn").prop("disabled", false);
+      },
+      statusCode: {
+        404: function () {
+          handleAjaxError(null, null, "Reset password endpoint not found! Please contact support.");
+          $("#ResetPasswordBtn").prop("disabled", false);
+        },
+        500: function () {
+          handleAjaxError(null, null, "Server error! Please try again later.");
+          $("#ResetPasswordBtn").prop("disabled", false);
+        },
+        403: function () {
+          window.location.href = "../../Src/Pages/";
+        },
+      },
+    });
   });
 });
