@@ -7,6 +7,7 @@ let swalTheme = SwalTheme();
 BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
+const userUUID = $('meta[name="user-UUID"]').attr("content") || "";
 const Onlypage = $("body").data("only") || "";
 
 function DashboardEsentialElements(mainContentSelector = "#PageMainContent") {
@@ -53,12 +54,17 @@ function DashboardEsentialElements(mainContentSelector = "#PageMainContent") {
     });
   });
 
-    $("#signOutBtn").on("click", function () {
+  $("#signOutBtn").on("click", function () {
     SignOut();
   });
 }
 
 function fetchProfile() {
+  if (!csrfToken || !userUUID) {
+    window.location.href = "../../../Src/Pages/Login.php";
+    return;
+  }
+
   $.ajax({
     url: "../../../process/profile/get_profile",
     method: "POST",

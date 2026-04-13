@@ -10,6 +10,10 @@ BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 
+if (!csrfToken) {
+  window.location.href = "../../../Src/Pages/Login";
+}
+
 $(document).ready(function () {
   $("#editprofileBtn").on("click", function () {
     window.location.href = "../../../Src/Pages/Coordinator/Coordinator_Profile?action=edit";

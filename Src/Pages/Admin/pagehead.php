@@ -6,10 +6,8 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
 ?>
 
 <meta charset="UTF-8" />
-<meta name="csrf-token"
-    content="<?= $_SESSION['csrf_token'] ?? '' ?>">
-<meta name="user-UUID"
-    content="<?= $_SESSION['user_uuid'] ?? '' ?>">
+<meta name="csrf-token" content="<?= isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : '' ?>">
+<meta name="user-UUID" content="<?= isset($_SESSION['user_uuid']) ? $_SESSION['user_uuid'] : '' ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="../../../libs/bootstrap/css/bootstrap.css" />
 <link rel="stylesheet" href="../../../libs/aos/css/aos.css" />

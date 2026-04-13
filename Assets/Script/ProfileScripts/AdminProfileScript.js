@@ -9,6 +9,10 @@ BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 
+if (!csrfToken) {
+  window.location.href = "../../../Src/Pages/Login";
+}
+
 const ACTION_STORAGE_KEY = "admin_profile_action";
 const urlParams = new URLSearchParams(window.location.search);
 const actionFromUrl = urlParams.get("action");

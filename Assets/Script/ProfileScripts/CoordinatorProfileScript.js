@@ -9,6 +9,10 @@ BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 
+if (!csrfToken) {
+  window.location.href = "../../../Src/Pages/Login";
+}
+
 function startCoordinatorProfileTour() {
   if (!window.driver?.js?.driver || typeof driver !== "function") {
     ToastVersion(swalTheme, "Guided tour is currently unavailable.", "warning", 3000);

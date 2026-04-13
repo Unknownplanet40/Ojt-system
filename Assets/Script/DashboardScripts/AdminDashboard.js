@@ -11,6 +11,12 @@ const userUUID = $('meta[name="user-UUID"]').attr("content") || "";
 const Onlypage = $("body").data("only") || "";
 
 function fetchProfile() {
+
+  if (!csrfToken || !userUUID) {
+    window.location.href = "../../../Src/Pages/Login.php";
+    return;
+  }
+
   $.ajax({
     url: "../../../process/profile/get_profile",
     method: "POST",
@@ -21,11 +27,6 @@ function fetchProfile() {
     success: function (response) {
       if (response.status === "success") {
         const profile = response.profile;
-
-        if (userUUID === "" || userUUID === null || userUUID === undefined) {
-          window.location.href = "../../../Src/Pages/Login";
-          return;
-        }
 
         if (profile.user_uuid !== userUUID) {
           ToastVersion(swalTheme, "Profile data mismatch. Please refresh the page.", "error", 3000, "top-end");
@@ -135,6 +136,9 @@ $(document).ready(function () {
     $(this).remove();
     $("#PageMainContent").fadeIn(500);
   });
+  
+  console.log("User UUID:", userUUID);
+  console.log("CSRF Token:", csrfToken);
 
   fetchProfile();
   DashboardEsentialElements();
