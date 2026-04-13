@@ -4,7 +4,7 @@ import { Errors } from "../ErrorFunctions.js";
 
 MatchsystemThemes(true);
 let swalTheme = SwalTheme();
-BGcircleTheme(true);
+BGcircleTheme(true, "default", "fast");
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 const randomConformationWord = ["CONFIRM", "AGREE", "YES", "OK", "PROCEED", "ACCEPT", "VALIDATE", "APPROVE", "ACKNOWLEDGE", "CONSENT"];
@@ -511,6 +511,9 @@ function loadBatches() {
           batchesContainer.append(noBatchesPlaceholder);
           ToastVersion(swalTheme, "No batches found. Please add a new batch to get started.", "info", 3000, "top-end");
         }
+      } else if (response.status === "critical") {
+        batchesContainer.append(noBatchesPlaceholder);
+        ModalVersion(swalTheme, "Critical Error", response.Details, "error", "OK");
       } else {
         batchesContainer.append(noBatchesPlaceholder);
         ToastVersion(swalTheme, response.message, "error", 3000, "top-end");

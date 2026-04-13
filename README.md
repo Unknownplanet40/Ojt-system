@@ -113,6 +113,7 @@ Typical request flow:
 - Password change: `process/auth/changepass.php`
 - Password reset flow: handlers under `process/auth/`
 - Batch lifecycle endpoints: `process/batches/` with logic in `functions/batch_functions.php`
+- Program lifecycle endpoints: `process/programs/` with logic in `functions/program_functions.php`
 - Profile fetch/save endpoints: `process/profile/` with logic in `functions/profile_functions.php`
 - Secure file delivery: `file_serve.php`
 - DB connection: `config/db.php` (MySQLi, `utf8mb4`)
@@ -180,10 +181,12 @@ Ojt-system/
 ├── functions/
 │   ├── auth_functions.php
 │   ├── batch_functions.php
+│   ├── program_functions.php
 │   └── profile_functions.php
 ├── process/
 │   ├── auth/
 │   ├── batches/
+│   ├── programs/
 │   └── profile/
 ├── Src/
 │   ├── Components/
@@ -215,30 +218,19 @@ Ojt-system/
 
 This summary is based on the current git changes in the local repository.
 
-- **Backend architecture refactor**
-	- Added modular backend layers: `config/`, `functions/`, `helpers/`, and `process/`
-	- New request handlers were added for auth, batches, and profile endpoints under `process/`
-	- Core logic was moved into `functions/auth_functions.php`, `functions/batch_functions.php`, and `functions/profile_functions.php`
+- **Programs module wiring (new files)**
+  - Added `functions/program_functions.php`
+  - Added program request handlers under `process/programs/`
+  - Added `Assets/Script/AdminScripts/ProgramsScripts.js`
 
-- **Legacy API deprecation and archival**
-	- Previous `Assets/api/*` endpoints and `Assets/database/dbconfig.php` were removed from active use
-	- A full legacy snapshot was added under `legacy/` to preserve old scripts, pages, API files, and sample uploads
+- **Admin flow updates (modified files)**
+  - Updated `Src/Pages/Admin/Programs.php`
+  - Updated `Assets/Script/DashboardScripts/AdminDashboard.js`
+  - Updated `Assets/Script/AdminScripts/batchesSripts.js`
+  - Updated shared nav/layout behavior in `Src/Components/Header.php`
 
-- **Frontend script restructuring and updates**
-	- Added new scripts: `Assets/Script/auth/login.js`, `Assets/Script/dashboardScripts/AdminDashboard.js`, `Assets/Script/ProfileScripts/SupervisorProfileScript.js`, and `Assets/Script/ErrorFunctions.js`
-	- Updated multiple existing scripts in batches, auth, dashboards, and profile modules
-	- Removed obsolete scripts such as `CustomSweetAlert_OLD.js` and old module-specific files no longer used in the active flow
-
-- **Page and component integration updates**
-	- Updated shared headers/components and role page files across Admin, Coordinator, Student, and Supervisor modules
-	- Added/updated shared page-head structure (`Src/Pages/srcPageHeader.php`, `Src/Pages/Supervisor/pagehead.php`)
-
-- **Assets and data fixtures**
-	- Profile image assets were rotated (old files removed, new profile images added)
-	- Additional sample legacy documents were added inside `legacy/uploads/`
-
-- **Documentation**
-	- `README.md` was rewritten and cleaned up to match the current architecture and setup direction
+- **Documentation refresh**
+  - Updated `README.md` to reflect the current unreleased changes above
 
 ---
 

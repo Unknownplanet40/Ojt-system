@@ -113,7 +113,7 @@
               <span class="dropdown-item-text text-nowrap text-success text-center text-capitalize">System Management</span>
             </li>
             <li>
-              <a class="dropdown-item" href="javascript:void(0)">
+              <a class="dropdown-item" href="../Admin/Admin_Profile?action=edit">
                 <div class="hstack">
                   <i class="bi bi-person-circle me-2"></i>
                   <div class="vstack">

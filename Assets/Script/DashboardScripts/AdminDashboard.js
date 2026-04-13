@@ -4,7 +4,7 @@ import { Errors } from "../ErrorFunctions.js";
 
 MatchsystemThemes(true);
 let swalTheme = SwalTheme();
-BGcircleTheme(true);
+BGcircleTheme(true, "default", "fast");
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 const userUUID = $('meta[name="user-UUID"]').attr("content") || "";
