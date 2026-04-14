@@ -1,6 +1,10 @@
 <nav class="navbar navbar-expand-lg bg-semi-transparent mx-3 mb-3 border rounded-2" aria-label="Main navigation" id="adminTopNavbar" style="--blur-lvl: 0.2">
   <div class="container-fluid">
-    <a class="navbar-brand" href="../Login"><?= $ShortTitle ?></a>
+    <div class="vstack">
+      <a class="navbar-brand mb-0 pb-0" href="../Login"><?= $ShortTitle ?></a>
+      <small class="text-muted" style="font-size: 0.7em" id="activebatchthissemester" data-batch-uuid="">Loading active batch...</small>
+    </div>
+    
     <button class="navbar-toggler p-0 border-0 shadow-none" type="button" id="navbarSideCollapse" aria-label="Toggle navigation">
       <i class="bi bi-list fs-1"></i>
     </button>

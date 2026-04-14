@@ -27,12 +27,16 @@ function fetchProfile() {
     success: function (response) {
       if (response.status === "success") {
         const profile = response.profile;
+        const activeBatch = response.activeBatch;
+        $("#activebatchthissemester").text(activeBatch ? `${activeBatch.label}` : "No active batch this semester");
+        $("#activebatchthissemester").attr("data-batch-uuid", activeBatch ? activeBatch.uuid : "");
 
         if (profile.user_uuid !== userUUID) {
           ToastVersion(swalTheme, "Profile data mismatch. Please refresh the page.", "error", 3000, "top-end");
           SignOut();
           return;
         }
+        
 
         if (!profile.profile_name) {
           const initials = profile.initials || "NA";

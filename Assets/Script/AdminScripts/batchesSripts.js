@@ -1,10 +1,7 @@
 import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
-import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "../SystemTheme.js";
+import { SwalTheme } from "../SystemTheme.js";
 import { Errors } from "../ErrorFunctions.js";
-
-MatchsystemThemes(true);
 let swalTheme = SwalTheme();
-BGcircleTheme(true, "default", "fast");
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 const randomConformationWord = ["CONFIRM", "AGREE", "YES", "OK", "PROCEED", "ACCEPT", "VALIDATE", "APPROVE", "ACKNOWLEDGE", "CONSENT"];

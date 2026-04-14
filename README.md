@@ -218,19 +218,46 @@ Ojt-system/
 
 This summary is based on the current git changes in the local repository.
 
-- **Programs module wiring (new files)**
-  - Added `functions/program_functions.php`
-  - Added program request handlers under `process/programs/`
-  - Added `Assets/Script/AdminScripts/ProgramsScripts.js`
+- **Companies module implementation (new files + endpoints)**
+  - Added `functions/company_functions.php`
+  - Added company endpoints under `process/companies/`:
+    - `create_company.php`
+    - `get_available_companies.php`
+    - `get_companies.php`
+    - `get_company.php`
+    - `update_company.php`
+    - `update_contact.php`
+    - `upload_document.php`
+  - Added `Assets/Script/AdminScripts/CompaniesScripts.js`
 
-- **Admin flow updates (modified files)**
-  - Updated `Src/Pages/Admin/Programs.php`
-  - Updated `Assets/Script/DashboardScripts/AdminDashboard.js`
-  - Updated `Assets/Script/AdminScripts/batchesSripts.js`
-  - Updated shared nav/layout behavior in `Src/Components/Header.php`
+- **Companies admin page and UX updates**
+  - Updated `Src/Pages/Admin/Companies.php` with redesigned create/edit/view/document modals and improved card layout
+  - Implemented client-side Companies **search + combined filters** (`status`, `work setup`, `program`)
+  - Added dynamic filter option generation and stable card re-rendering with preserved action bindings
+  - Improved program filter matching to handle mixed abbreviation/full-name values (alias normalization + deduping)
+  - Applied `CustomOption` class to generated Companies filter `<option>` elements
+
+- **Programs and dashboard/admin improvements**
+  - Updated `Assets/Script/AdminScripts/ProgramsScripts.js` with search + department filtering and table render refactor
+  - Updated `Src/Pages/Admin/Programs.php` to add search input and department filter controls
+  - Updated `Assets/Script/DashboardScripts/AdminDashboard.js` to surface active batch label/UUID in the admin header
+  - Updated `Src/Components/Header.php` to display current active batch context
+  - Updated `process/profile/get_profile.php` to include active batch data in profile response
+
+- **Server/config and file delivery changes**
+  - Updated `file_serve.php` for current session keys/config path and improved MIME/headers handling
+  - Added `config/serverConfig.php` and `config/serverStatus.php` for environment/server readiness checks
+
+- **Uploads and repository asset changes**
+  - Added `uploads/company_documents/.gitkeep`
+  - Added new sample MOA PDFs under `uploads/company_documents/moa/...`
+  - Removed older sample MOA PDFs under `uploads/company_documents/moa/...`
+
+- **Other admin script cleanup**
+  - Updated `Assets/Script/AdminScripts/batchesSripts.js` to simplify theme-related imports/initialization
 
 - **Documentation refresh**
-  - Updated `README.md` to reflect the current unreleased changes above
+  - Updated `README.md` to reflect the current unreleased git working-tree changes
 
 ---
 

@@ -233,6 +233,19 @@ $CurrentPage = "Programs";
                         <span>Hide inactive</span>
                     </button>
                 </div>
+                <div>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <div class="input-group input-group-sm w-100 w-sm-auto" style="max-width: 240px;">
+                            <span class="input-group-text bg-blur-5 bg-semi-transparent border-secondary-subtle text-muted" style="--blur-lvl: 0.3;">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" class="form-control bg-blur-5 bg-semi-transparent shadow-none border-secondary-subtle text-white" id="programSearchInput" placeholder="Search programs..." style="--blur-lvl: 0.3;">
+                        </div>
+                        <select class="form-select form-select-sm bg-blur-5 bg-semi-transparent border-secondary-subtle text-white w-100 w-sm-auto" id="departmentFilterSelect" style="--blur-lvl: 0.3; max-width: 200px;">
+                            <option value="" selected class="CustomOption">All departments</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="card bg-blur-5 bg-semi-transparent border-0 shadow-sm mt-3" style="--blur-lvl: 0.2">
                     <div class="card-body p-0">
                         <div class="table-responsive">
