@@ -744,7 +744,7 @@ function getPostPasswordChangeRedirect($conn, string $userUuid, string $role): s
             return match($role) {
                 'admin'       => '../../Src/Pages/Admin/Admin_Profile',
                 'coordinator' => '../../Src/Pages/Coordinator/Coordinator_Profile',
-                'student'     => '../../Src/Pages/Student/Student_Profile',
+                'student'     => '../../Src/Pages/Students/Student_Profile',
                 'supervisor'  => '../../Src/Pages/Supervisor/Supervisor_Profile',
                 default       => '../../Src/Pages/login',
             };
@@ -754,7 +754,7 @@ function getPostPasswordChangeRedirect($conn, string $userUuid, string $role): s
     return match($role) {
         'admin'       => '../../Src/Pages/Admin/Dashboard',
         'coordinator' => '../../Src/Pages/Coordinator/Dashboard',
-        'student'     => '../../Src/Pages/Student/Dashboard',
+        'student'     => '../../Src/Pages/Students/Dashboard',
         'supervisor'  => '../../Src/Pages/Supervisor/Dashboard',
         default       => '../../Src/Pages/Auth/Login',
     };
@@ -789,9 +789,6 @@ function sendResetLink($conn, string $email): array
     $user = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 
-    // user enumeration protection
-    // return success even if email not found
-    // so attackers can't determine which emails are registered
     if (!$user) {
         return [
             'success' => true,
@@ -809,8 +806,6 @@ function sendResetLink($conn, string $email): array
 
     $userUuid = $user['uuid'];
 
-    // delete any existing unused tokens for this user
-    // so only one valid token exists at a time
     $stmt = $conn->prepare("
         DELETE FROM password_reset_tokens
         WHERE user_uuid = ? AND used = 0

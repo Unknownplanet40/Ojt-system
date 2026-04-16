@@ -8,8 +8,9 @@ let swalTheme = SwalTheme();
 BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
+const userRole = $('meta[name="user-Role"]').attr("content") || "";
 
-if (!csrfToken) {
+if (!csrfToken || !userRole || userRole !== "student") {
   window.location.href = "../../../Src/Pages/Login";
 }
 
@@ -227,18 +228,17 @@ function fetchProfileData() {
         $("#lastName").val(profile.last_name);
         $("#middleName").val(profile.middle_name);
         $("#contactNumber").val(profile.mobile);
-        //student number
         $("#studentNumber").val(profile.student_number);
         $("#homeAddress").val(profile.home_address);
-        $("#emergencyContactNumber").val(profile.emergency_contact);
-        $("#emergencyContactName").val(profile.emergency_phone);
+        $("#emergencyContactNumber").val(profile.emergency_phone);
+        $("#emergencyContactName").val(profile.emergency_contact);
         $("#section").val(profile.section);
         $("#yearLevel").val(profile.year_level);
         if (profile.program_name) {
           const programOption = $("<option>").val(profile.program_id).text(profile.program_name).addClass("CustomOption").prop("selected", true).prop("disabled", true);
           $("#program").append(programOption);
         }
-        ProfileProgressBar();
+        setTimeout(() => ProfileProgressBar(), 100);
       } else {
         ToastVersion(swalTheme, response.message || "An error occurred while fetching your profile data. Please try again.", "error", 3000, "top");
       }
@@ -300,7 +300,9 @@ $(document).ready(function () {
     startStudentProfileTour();
   });
 
-  $("#firstName, #lastName, #contactNumber, #studentNumber, #homeAddress, #emergencyContactNumber, #emergencyContactName, #section").on("input", ProfileProgressBar);
+  $("#firstName, #lastName, #contactNumber, #studentNumber, #homeAddress, #emergencyContactNumber, #emergencyContactName, #section").on("input", function () {
+    ProfileProgressBar();
+  });
 
   $("#saveProfileBtn").on("click", function () {
     const firstName = $("#firstName").val().trim();

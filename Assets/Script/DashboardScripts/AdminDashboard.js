@@ -5,18 +5,19 @@ import { Errors } from "../ErrorFunctions.js";
 MatchsystemThemes(true);
 let swalTheme = SwalTheme();
 BGcircleTheme(true, "default", "fast");
+let letPageLoad = true;
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 const userUUID = $('meta[name="user-UUID"]').attr("content") || "";
+const userRole = $('meta[name="user-Role"]').attr("content") || "";
 const Onlypage = $("body").data("only") || "";
 
+if (!csrfToken || !userUUID || !userRole || userRole !== "admin") {
+  window.location.href = "../../../Src/Pages/Login";
+  letPageLoad = false;
+}
+
 function fetchProfile() {
-
-  if (!csrfToken || !userUUID) {
-    window.location.href = "../../../Src/Pages/Login.php";
-    return;
-  }
-
   $.ajax({
     url: "../../../process/profile/get_profile",
     method: "POST",
@@ -30,13 +31,18 @@ function fetchProfile() {
         const activeBatch = response.activeBatch;
         $("#activebatchthissemester").text(activeBatch ? `${activeBatch.label}` : "No active batch this semester");
         $("#activebatchthissemester").attr("data-batch-uuid", activeBatch ? activeBatch.uuid : "");
+        $("#StudactiveBatch")
+          .val(activeBatch ? `${activeBatch.label}` : "No active batch this semester")
+          .attr("data-batch-uuid", activeBatch ? activeBatch.uuid : "");
+        $("#editActiveBatch")
+          .val(activeBatch ? `${activeBatch.label}` : "No active batch this semester")
+          .attr("data-batch-uuid", activeBatch ? activeBatch.uuid : "");
 
         if (profile.user_uuid !== userUUID) {
           ToastVersion(swalTheme, "Profile data mismatch. Please refresh the page.", "error", 3000, "top-end");
           SignOut();
           return;
         }
-        
 
         if (!profile.profile_name) {
           const initials = profile.initials || "NA";
@@ -135,18 +141,165 @@ function DashboardEsentialElements() {
   });
 }
 
+function tableDropdown() {
+  const MENU_Z_INDEX = 1030;
+  const VIEWPORT_PADDING = 8;
+
+  const ensureDropdownLink = (toggleBtn, menu) => {
+    if (!toggleBtn.length || !menu.length) return;
+
+    let dropdownId = toggleBtn.attr("data-dropdown-id") || menu.attr("data-dropdown-id");
+    if (!dropdownId) {
+      dropdownId = `dd-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    }
+
+    toggleBtn.attr("data-dropdown-id", dropdownId);
+    menu.attr("data-dropdown-id", dropdownId);
+  };
+
+  const resolveMenuForToggle = (toggleBtn) => {
+    let menu = toggleBtn.next(".customDropdown");
+    if (menu.length) {
+      ensureDropdownLink(toggleBtn, menu);
+      return menu;
+    }
+
+    const dropdownId = toggleBtn.attr("data-dropdown-id");
+    if (!dropdownId) return $();
+
+    menu = $(`.customDropdown[data-dropdown-id="${dropdownId}"]`).first();
+    return menu;
+  };
+
+  const restoreMenuToOrigin = (menu) => {
+    const placeholder = menu.data("dropdown-placeholder");
+    if (placeholder && placeholder.length) {
+      placeholder.before(menu);
+      placeholder.remove();
+    } else {
+      const originParent = menu.data("dropdown-origin-parent");
+      if (originParent && originParent.length) {
+        originParent.append(menu);
+      }
+    }
+
+    menu
+      .css({
+        position: "",
+        top: "",
+        left: "",
+        right: "",
+        bottom: "",
+        zIndex: "",
+        visibility: "",
+        display: "none",
+      })
+      .removeData("dropdown-placeholder")
+      .removeData("dropdown-origin-parent");
+  };
+
+  const positionMenuNearButton = (menu, toggleBtn) => {
+    const btnRect = toggleBtn[0].getBoundingClientRect();
+    const menuHeight = menu.outerHeight() || 0;
+    const menuWidth = menu.outerWidth() || 170;
+
+    const spaceBelow = window.innerHeight - btnRect.bottom;
+    const spaceAbove = btnRect.top;
+    const openUp = spaceBelow < menuHeight + 8 && spaceAbove >= spaceBelow;
+
+    const top = openUp ? Math.max(VIEWPORT_PADDING, btnRect.top - menuHeight - 4) : Math.min(window.innerHeight - menuHeight - VIEWPORT_PADDING, btnRect.bottom + 4);
+
+    const left = Math.min(window.innerWidth - menuWidth - VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, btnRect.right - menuWidth));
+
+    menu.css({
+      position: "fixed",
+      top: `${top}px`,
+      left: `${left}px`,
+      right: "auto",
+      bottom: "auto",
+      zIndex: String(MENU_Z_INDEX),
+      visibility: "visible",
+      display: "block",
+    });
+  };
+
+  const resetDropdownLayering = () => {
+    $(".customDropdown").each(function () {
+      restoreMenuToOrigin($(this));
+    });
+
+    $(".customDropdown").closest(".table-responsive").css({ overflowY: "" });
+    $(".customDropdown").closest("td, th").css({ position: "", zIndex: "" });
+  };
+
+  $(document).on("click", function (e) {
+    const target = $(e.target);
+    const toggleBtn = target.closest('[data-toggle="dropdown"]');
+    const dropdownItem = target.closest(".dropdown-item");
+
+    if (toggleBtn.length) {
+      const menu = resolveMenuForToggle(toggleBtn);
+      if (!menu.length) {
+        resetDropdownLayering();
+        return;
+      }
+
+      const parentCell = toggleBtn.closest("td, th");
+      const responsiveHost = toggleBtn.closest(".table-responsive");
+
+      // reset all previous open dropdown layers first
+      $(".customDropdown").not(menu).hide().closest("td, th").css({ position: "", zIndex: "" });
+
+      const willOpen = !menu.is(":visible");
+      if (!willOpen) {
+        resetDropdownLayering();
+        return;
+      }
+
+      if (responsiveHost.length) {
+        // prevent clipping inside Bootstrap table-responsive wrappers
+        responsiveHost.css({ overflowY: "visible" });
+      }
+
+      // elevate current table cell above neighboring rows
+      parentCell.css({ position: "relative", zIndex: "20" });
+
+      if (!menu.data("dropdown-origin-parent")) {
+        menu.data("dropdown-origin-parent", menu.parent());
+      }
+
+      if (!menu.data("dropdown-placeholder")) {
+        const placeholder = $('<span class="d-none dropdown-menu-placeholder"></span>');
+        menu.after(placeholder);
+        menu.data("dropdown-placeholder", placeholder);
+      }
+
+      $("body").append(menu);
+      positionMenuNearButton(menu, toggleBtn);
+    } else if (dropdownItem.length) {
+      resetDropdownLayering();
+    } else {
+      resetDropdownLayering();
+    }
+  });
+}
+
 $(document).ready(function () {
+  if (!letPageLoad) return;
+  
   $("#pageLoader").fadeOut(500, function () {
     $(this).remove();
     $("#PageMainContent").fadeIn(500);
   });
-  
-  console.log("User UUID:", userUUID);
-  console.log("CSRF Token:", csrfToken);
 
   fetchProfile();
   DashboardEsentialElements();
+  tableDropdown();
 
   if (Onlypage === "AdminDashboard") {
+    $("#quickCreateBatch").on("click", function (e) {
+      e.preventDefault();
+      window.location.href = "../../../Src/Pages/Admin/Batches?action=create";
+    });
   }
 });

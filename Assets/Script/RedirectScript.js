@@ -4,7 +4,6 @@ import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "./SystemTheme.js";
 MatchsystemThemes(true);
 let swalTheme = SwalTheme();
 BGcircleTheme(true, "primary", "normal");
-AOS.init();
 
 let retryCount = 0;
 
@@ -12,7 +11,7 @@ function checkServer() {
   $("#version1").removeClass("d-none");
   $("#version2").addClass("d-none");
   $.ajax({
-    url: "./Assets/api/serverStatus.php",
+    url: "./config/serverStatus",
     method: "GET",
     dataType: "json",
     timeout: 5000,
@@ -26,13 +25,13 @@ function checkServer() {
           $("#version1").fadeOut(1000, function () {
             $(this).addClass("d-none");
           });
-          window.location.href = "./Src/Pages/Login";
+          window.location.href = "./Src/Pages/Login.php";
         } else {
           BGcircleTheme(true, "info", "normal");
           ToastVersion(swalTheme, response.message, response.status === "success" ? "success" : "info", response.status === "success" ? 3000 : 5000, "top-end");
         }
       } else if (response.status === "critical") {
-        window.location.href = "./Src/Pages/ErrorPage?error=CE00";
+        window.location.href = "./Src/Pages/ErrorPage.php?error=CE00";
       } else {
         jqXHR.status = 500;
         jqXHR.responseJSON = response;

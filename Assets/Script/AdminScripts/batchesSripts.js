@@ -8,6 +8,14 @@ const randomConformationWord = ["CONFIRM", "AGREE", "YES", "OK", "PROCEED", "ACC
 let currentBatchStudents = [];
 let currentFilteredBatchStudents = [];
 let currentViewingBatchUuid = null;
+const urlParams = new URLSearchParams(window.location.search);
+const action = urlParams.get("action");
+if (action === "create") {
+  $("#NewBatchModal").modal("show");
+  urlParams.delete("action");
+  const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+  window.history.replaceState({}, "", newUrl);
+}
 
 function renderBatchStudents(students = []) {
   const batchStudentsContainer = $("#batchStudentsContainer");

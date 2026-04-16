@@ -212,49 +212,7 @@ function getPrograms(activeOnly = true) {
 }
 
 $(document).ready(function () {
-  $(document).on("click", function (e) {
-    const target = $(e.target);
-    const toggleBtn = target.closest('[data-toggle="dropdown"]');
-    const dropdownItem = target.closest(".dropdown-item");
-
-    if (toggleBtn.length) {
-      const menu = toggleBtn.next(".customDropdown");
-      $(".customDropdown").not(menu).hide();
-
-      // Toggle state
-      const willOpen = !menu.is(":visible");
-      if (!willOpen) {
-        menu.hide();
-        return;
-      }
-
-      // Find if this is the last visible row
-      const row = toggleBtn.closest("tr");
-      const tbody = row.parent();
-      const isLastVisibleRow = row.is(tbody.children("tr:visible").last());
-
-      // Measure space above/below button
-      menu.css({ display: "block", visibility: "hidden", top: "100%", bottom: "auto" });
-      const menuHeight = menu.outerHeight() || 0;
-      const btnRect = toggleBtn[0].getBoundingClientRect();
-      const spaceBelow = window.innerHeight - btnRect.bottom;
-      const spaceAbove = btnRect.top;
-
-      // Open upward if last row OR not enough space below
-      const openUp = isLastVisibleRow || (spaceBelow < menuHeight && spaceAbove > spaceBelow);
-
-      if (openUp) {
-        menu.css({ top: "auto", bottom: "100%", visibility: "visible" });
-      } else {
-        menu.css({ top: "100%", bottom: "auto", visibility: "visible" });
-      }
-    } else if (dropdownItem.length) {
-      dropdownItem.closest(".customDropdown").hide();
-    } else {
-      $(".customDropdown").hide();
-    }
-  });
-
+  
   $("#programSearchInput").on("input", function () {
     currentSearchTerm = $(this).val().trim();
     renderProgramsTable();

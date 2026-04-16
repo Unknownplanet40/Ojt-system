@@ -8,7 +8,12 @@ BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 const userUUID = $('meta[name="user-UUID"]').attr("content") || "";
+const userRole = $('meta[name="user-Role"]').attr("content") || "";
 const Onlypage = $("body").data("only") || "";
+
+if (!csrfToken || !userUUID || !userRole || userRole !== "student") {
+  window.location.href = "../../../Src/Pages/Login";
+}
 
 function DashboardEsentialElements(mainContentSelector = "#PageMainContent") {
   $("#pageLoader").fadeOut(500, function () {
@@ -60,11 +65,6 @@ function DashboardEsentialElements(mainContentSelector = "#PageMainContent") {
 }
 
 function fetchProfile() {
-  if (!csrfToken || !userUUID) {
-    window.location.href = "../../../Src/Pages/Login.php";
-    return;
-  }
-
   $.ajax({
     url: "../../../process/profile/get_profile",
     method: "POST",

@@ -5,10 +5,17 @@ import { Errors } from "../ErrorFunctions.js";
 MatchsystemThemes(true);
 let swalTheme = SwalTheme();
 BGcircleTheme(true);
+let letPageLoad = true;
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 const userUUID = $('meta[name="user-UUID"]').attr("content") || "";
+const userRole = $('meta[name="user-Role"]').attr("content") || "";
 const Onlypage = $("body").data("only") || "";
+
+if (!csrfToken || !userUUID || !userRole || userRole !== "coordinator") {
+  window.location.href = "../../../Src/Pages/Login";
+  letPageLoad = false;
+}
 
 function DashboardEsentialElements(mainContentSelector = "#PageMainContent") {
   $("#pageLoader").fadeOut(500, function () {
@@ -60,11 +67,6 @@ function DashboardEsentialElements(mainContentSelector = "#PageMainContent") {
 }
 
 function fetchProfile() {
-  if (!csrfToken || !userUUID) {
-    window.location.href = "../../../Src/Pages/Login.php";
-    return;
-  }
-
   $.ajax({
     url: "../../../process/profile/get_profile",
     method: "POST",
@@ -123,6 +125,11 @@ function SignOut() {
 }
 
 $(document).ready(function () {
+  if (!letPageLoad) return;
   DashboardEsentialElements();
   fetchProfile();
+
+  if (Onlypage === "CoordinatorDashboard") {
+    // only run code for coordinator dashboard
+  }
 });

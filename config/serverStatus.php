@@ -1,6 +1,6 @@
 <?php
 
-require_once 'ServerConfig.php';
+require_once './db.php';
 
 // Prevent direct access to this file
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
@@ -13,6 +13,15 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     }
 }
 
+function isModRewriteEnabled()
+{
+    if (function_exists('apache_get_modules')) {
+        $modules = apache_get_modules();
+        return in_array('mod_rewrite', $modules) || in_array('rewrite_module', $modules);
+    }
+    return function_exists('apache_getenv') || isset($_SERVER['REDIRECT_STATUS']);
+}
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -20,10 +29,41 @@ if (session_status() === PHP_SESSION_NONE) {
 header('Content-Type: application/json');
 date_default_timezone_set('Asia/Manila');
 
-require_once __DIR__ . '/../database/dbconfig.php';
+function response(array $data, int $statusCode = 200): void
+{
+    if (!headers_sent()) {
+        http_response_code($statusCode);
+        header('Content-Type: application/json; charset=utf-8');
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: DENY');
+        header('Content-Security-Policy: default-src \'none\'; frame-ancestors \'none\'; base-uri \'none\'; form-action \'none\';');
 
-function response($data) {
-    echo json_encode($data);
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
+        }
+
+        header('X-Powered-By:');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+        header('Referrer-Policy: strict-origin-when-cross-origin');
+        header('Cross-Origin-Resource-Policy: same-origin');
+    }
+
+    try {
+        echo json_encode(
+            $data,
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE
+        );
+    } catch (JsonException $e) {
+        if (!headers_sent()) {
+            http_response_code(500);
+        }
+
+        echo '{"status":"error","message":"Failed to encode response as JSON."}';
+    }
+
     exit;
 }
 
@@ -31,14 +71,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     response([
         'status' => 'info',
         'message' => 'Request method is not allowed.'
-    ]);
+    ], 405);
 }
 
 if (!isModRewriteEnabled()) {
     response([
         'status' => 'critical',
         'message' => 'mod_rewrite is disabled. Required for clean URLs. Enable it in httpd.conf and restart Apache.'
-    ]);
+    ], 500);
 }
 
 $apacheRunning = false;
@@ -60,7 +100,7 @@ if (count($outputMySQL) > 1) {
 
 if ($mysqlRunning) {
     try {
-        $conn = new mysqli($servername, $username, $password);
+        $conn = new mysqli($host, $username, $password);
         if ($conn->connect_error) {
             throw new Exception('Database connection failed: ' . $conn->connect_error);
         }
@@ -100,4 +140,4 @@ response([
         'status' => $errorStatus,
         'message' => $errorMessage,
         'isDatabaseExistError' => $isDatabaseExistError
-    ]);
+    ], 500);

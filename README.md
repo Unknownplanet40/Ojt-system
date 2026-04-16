@@ -216,48 +216,52 @@ Ojt-system/
 
 ### Unreleased — Working tree summary *(April 2026)*
 
-This summary is based on the current git changes in the local repository.
+This summary is based on the current local git working tree.
 
-- **Companies module implementation (new files + endpoints)**
-  - Added `functions/company_functions.php`
-  - Added company endpoints under `process/companies/`:
-    - `create_company.php`
-    - `get_available_companies.php`
-    - `get_companies.php`
-    - `get_company.php`
-    - `update_company.php`
-    - `update_contact.php`
-    - `upload_document.php`
-  - Added `Assets/Script/AdminScripts/CompaniesScripts.js`
+- **Student management module (new)**
+  - Added `Src/Pages/Admin/Students.php`
+  - Added `Assets/Script/AdminScripts/Students.js`
+  - Added `functions/student_functions.php`
+  - Added student process handlers under `process/students/` (create/get/update/deactivate/export-related flows)
 
-- **Companies admin page and UX updates**
-  - Updated `Src/Pages/Admin/Companies.php` with redesigned create/edit/view/document modals and improved card layout
-  - Implemented client-side Companies **search + combined filters** (`status`, `work setup`, `program`)
-  - Added dynamic filter option generation and stable card re-rendering with preserved action bindings
-  - Improved program filter matching to handle mixed abbreviation/full-name values (alias normalization + deduping)
-  - Applied `CustomOption` class to generated Companies filter `<option>` elements
+- **PDF export enhancements for student credentials**
+  - Added mPDF dependency via Composer (`libs/composer/composer.json`, `composer.lock`, `vendor/` updates)
+  - Updated student PDF export flow to load Composer autoload from `libs/composer/vendor/autoload.php`
+  - Improved client-side blob handling in `Students.js` to correctly detect `application/pdf` vs JSON error payloads
+  - Improved filename handling using `Content-Disposition` when available
 
-- **Programs and dashboard/admin improvements**
-  - Updated `Assets/Script/AdminScripts/ProgramsScripts.js` with search + department filtering and table render refactor
-  - Updated `Src/Pages/Admin/Programs.php` to add search input and department filter controls
-  - Updated `Assets/Script/DashboardScripts/AdminDashboard.js` to surface active batch label/UUID in the admin header
-  - Updated `Src/Components/Header.php` to display current active batch context
-  - Updated `process/profile/get_profile.php` to include active batch data in profile response
+- **Security and helper hardening**
+  - Updated `helpers/helpers.php`
+    - `response()` hardened with stricter headers and safer JSON error handling
+    - `generateUuid()` switched to cryptographically secure UUID v4 generation
+    - Added `isValidUuid()` helper
 
-- **Server/config and file delivery changes**
-  - Updated `file_serve.php` for current session keys/config path and improved MIME/headers handling
-  - Added `config/serverConfig.php` and `config/serverStatus.php` for environment/server readiness checks
+- **Programs / dashboard / profile / auth frontend updates**
+  - Updated scripts in:
+    - `Assets/Script/AdminScripts/ProgramsScripts.js`
+    - `Assets/Script/AdminScripts/batchesSripts.js`
+    - `Assets/Script/DashboardScripts/{AdminDashboard,CoordinatorDashboardScript,StudentDashboard}.js`
+    - `Assets/Script/ProfileScripts/{AdminProfileScript,CoordinatorProfileScript,CoordinatorViewProfileScript,StudentProfileScript,SupervisorProfileScript}.js`
+    - `Assets/Script/RedirectScript.js`
 
-- **Uploads and repository asset changes**
-  - Added `uploads/company_documents/.gitkeep`
-  - Added new sample MOA PDFs under `uploads/company_documents/moa/...`
-  - Removed older sample MOA PDFs under `uploads/company_documents/moa/...`
+- **Page/layout/style updates**
+  - Updated:
+    - `Src/Components/Header.php`
+    - `Src/Pages/Admin/{Programs.php,pagehead.php}`
+    - `Src/Pages/Coordinator/pagehead.php`
+    - `Src/Pages/Students/{Students_Profile.php,pagehead.php}`
+    - `Src/Pages/Login.php`
+    - `Assets/style/MainStyle.css`
+    - `Assets/SystemInfo.php`
 
-- **Other admin script cleanup**
-  - Updated `Assets/Script/AdminScripts/batchesSripts.js` to simplify theme-related imports/initialization
+- **Config/runtime changes**
+  - Updated `config/db.php` and `config/serverStatus.php`
+  - Removed `config/serverConfig.php`
+  - Updated `functions/auth_functions.php`
 
-- **Documentation refresh**
-  - Updated `README.md` to reflect the current unreleased git working-tree changes
+- **Assets added in working tree**
+  - New profile image asset under `Assets/Images/profiles/...`
+  - Additional style assets under `Assets/style/admin/`
 
 ---
 

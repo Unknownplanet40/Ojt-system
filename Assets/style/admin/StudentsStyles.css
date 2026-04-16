@@ -1,0 +1,33 @@
+.table-scroll-10 {
+  --row-height: 60px;
+  --header-height: 48px;
+  max-height: calc((var(--row-height) * 5) + var(--header-height));
+  overflow-y: auto;
+  overflow-x: auto;
+  position: relative;
+  isolation: isolate;
+}
+
+.table-scroll-10 table {
+  margin-bottom: 0;
+}
+
+.table-scroll-10 thead {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.table-scroll-10 thead th {
+  position: sticky;
+  top: 0;
+  z-index: 31;
+  background: rgba(24, 24, 24, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.table-scroll-10 tbody td {
+  position: relative;
+  z-index: 1;
+}
