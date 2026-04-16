@@ -7,7 +7,13 @@ let swalTheme = SwalTheme();
 BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
+const userUUID = $('meta[name="user-UUID"]').attr("content") || "";
+const userRole = $('meta[name="user-Role"]').attr("content") || "";
 const Onlypage = $("body").data("only") || "";
+
+if (!csrfToken || !userUUID || !userRole || userRole !== "student") {
+  window.location.href = "../../../Src/Pages/Login";
+}
 
 function DashboardEsentialElements(mainContentSelector = "#PageMainContent") {
   $("#pageLoader").fadeOut(500, function () {
@@ -53,7 +59,7 @@ function DashboardEsentialElements(mainContentSelector = "#PageMainContent") {
     });
   });
 
-    $("#signOutBtn").on("click", function () {
+  $("#signOutBtn").on("click", function () {
     SignOut();
   });
 }

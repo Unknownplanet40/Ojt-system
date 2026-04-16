@@ -79,118 +79,118 @@ require_once "../../../Assets/SystemInfo.php";
                             <div class="col-md-4 gap-2 d-flex align-items-center justify-content-end">
                                 <button class="btn btn-sm btn-primary p-1 px-2 text-nowrap" id="saveProfileBtn"> Save &
                                     Continue</button>
-                                <button class="btn btn-sm btn-outline-secondary p-1 px-2 text-nowrap" id="uploadPhotoBtn"
-                                    onclick="$('#photoInput').click();">Upload Photo</button>
+                                <button class="btn btn-sm btn-outline-secondary p-1 px-2 text-nowrap"
+                                    id="uploadPhotoBtn" onclick="$('#photoInput').click();">Upload Photo</button>
                                 <input type="file" id="photoInput" accept="image/*" class="d-none">
                                 <!-- change password button will only   show if user is not required to change password on next login -->
                                 <?php if (!isset($_SESSION['user']['require_password_change']) || !$_SESSION['user']['require_password_change']): ?>
-                                <button class="btn btn-sm btn-outline-secondary p-1 px-2 text-nowrap" id="changePasswordBtn">Change
+                                <button class="btn btn-sm btn-outline-secondary p-1 px-2 text-nowrap"
+                                    id="changePasswordBtn">Change
                                     Password</button>
                                 <?php endif; ?>
                             </div>
                         </div>
-                    </div>
-                    <div class="row g-3 mt-2">
-                        <div class="col-md-6">
-                            <label for="firstName" class="form-label fw-500 mb-2">First Name <span
-                                    class="text-danger">*</span></label>
-                            <input type="text"
-                                class="form-control form-control-sm bg-semi-transparent border shadow-none"
-                                id="firstName" placeholder="John">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="lastName" class="form-label fw-500 mb-2">Last Name <span
-                                    class="text-danger">*</span></label>
-                            <input type="text"
-                                class="form-control form-control-sm bg-semi-transparent border shadow-none"
-                                id="lastName" placeholder="Doe">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="middleName" class="form-label fw-500 mb-2">Middle Name</label>
-                            <input type="text"
-                                class="form-control form-control-sm bg-semi-transparent border shadow-none"
-                                id="middleName" placeholder="Optional">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="studentNumber" class="form-label fw-500 mb-2">Student Number <span
-                                    class="text-danger">*</span></label>
-                            <input type="text"
-                                class="form-control form-control-sm bg-semi-transparent border shadow-none"
-                                id="studentNumber" placeholder="2024-001">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="contactNumber" class="form-label fw-500 mb-2">Contact Number <span
-                                    class="text-danger">*</span></label>
-                            <input type="tel"
-                                class="form-control form-control-sm bg-semi-transparent border shadow-none"
-                                id="contactNumber" placeholder="09XX-XXX-XXXX">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="emergencyContactNumber" class="form-label fw-500 mb-2">Emergency Contact
-                                Number <span class="text-danger">*</span></label>
-                            <input type="tel"
-                                class="form-control form-control-sm bg-semi-transparent border shadow-none"
-                                id="emergencyContactNumber" placeholder="09XX-XXX-XXXX">
-                        </div>
-                        <div class="col-md-12">
-                            <label for="homeAddress" class="form-label fw-500 mb-2">Home Address <span
-                                    class="text-danger">*</span></label>
-                            <textarea class="form-control form-control-sm bg-semi-transparent border shadow-none"
-                                id="homeAddress" rows="3" placeholder="Street address, city, province"></textarea>
-                        </div>
-                        <div class="col-md-12">
-                            <label for="emergencyContactName" class="form-label fw-500 mb-2">Emergency Contact Name
-                                <span class="text-danger">*</span></label>
-                            <input type="text"
-                                class="form-control form-control-sm bg-semi-transparent border shadow-none"
-                                id="emergencyContactName" placeholder="Full name of emergency contact">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card bg-semi-transparent mb-3" style="--blur-lvl: 0.70;">
-                <div class="card-body p-3 px-4">
-                    <div class="vstack gap-2 mb-3">
-                        <h6 class="fw-600 mb-0">Academic Information</h6>
-                        <small class="text-muted">Pre-filled by your coordinator. Review and confirm.</small>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-12 col-md-6">
-                            <label for="program" class="form-label fw-500 mb-2">Program</label>
-                            <select class="form-select form-select-sm bg-semi-transparent border shadow-none"
-                                id="program" disabled>
-                                <option value="" class="CustomOption" selected hidden disabled>Already set by
-                                    coordinator</option>
-                            </select>
-                        </div>
-                        <div class="col-12 col-sm-6 col-md-4">
-                            <label for="yearLevel" class="form-label fw-500 mb-2">Year Level</label>
-                            <select class="form-select form-select-sm bg-semi-transparent border shadow-none"
-                                id="yearLevel" disabled>
-                                <option class="CustomOption" selected hidden disabled value="">Already set by
-                                    coordinator</option>
-                                <option value="1">1st Year</option>
-                                <option value="2">2nd Year</option>
-                                <option value="3">3rd Year</option>
-                                <option value="4">4th Year</option>
-                            </select>
-                        </div>
-                        <div class="col-12 col-sm-6 col-md-2">
-                            <label for="section" class="form-label fw-500 mb-2">Section <span
-                                    class="text-danger">*</span></label>
-                            <input type="text"
-                                class="form-control form-control-sm bg-semi-transparent border shadow-none" id="section"
-                                placeholder="e.g. A, B, C">
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label for="firstName" class="form-label fw-500 mb-2">First Name <span
+                                        class="text-danger">*</span></label>
+                                <input type="text"
+                                    class="form-control form-control-sm bg-semi-transparent border shadow-none"
+                                    id="firstName" placeholder="John">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="lastName" class="form-label fw-500 mb-2">Last Name <span
+                                        class="text-danger">*</span></label>
+                                <input type="text"
+                                    class="form-control form-control-sm bg-semi-transparent border shadow-none"
+                                    id="lastName" placeholder="Doe">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="middleName" class="form-label fw-500 mb-2">Middle Name</label>
+                                <input type="text"
+                                    class="form-control form-control-sm bg-semi-transparent border shadow-none"
+                                    id="middleName" placeholder="Optional">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="studentNumber" class="form-label fw-500 mb-2">Student Number <span
+                                        class="text-danger">*</span></label>
+                                <input type="text"
+                                    class="form-control form-control-sm bg-semi-transparent border shadow-none"
+                                    id="studentNumber" placeholder="2024-001">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="contactNumber" class="form-label fw-500 mb-2">Contact Number <span
+                                        class="text-danger">*</span></label>
+                                <input type="tel"
+                                    class="form-control form-control-sm bg-semi-transparent border shadow-none"
+                                    id="contactNumber" placeholder="09XX-XXX-XXXX">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="emergencyContactNumber" class="form-label fw-500 mb-2">Emergency Contact
+                                    Number <span class="text-danger">*</span></label>
+                                <input type="tel"
+                                    class="form-control form-control-sm bg-semi-transparent border shadow-none"
+                                    id="emergencyContactNumber" placeholder="09XX-XXX-XXXX">
+                            </div>
+                            <div class="col-md-12">
+                                <label for="homeAddress" class="form-label fw-500 mb-2">Home Address <span
+                                        class="text-danger">*</span></label>
+                                <textarea class="form-control form-control-sm bg-semi-transparent border shadow-none"
+                                    id="homeAddress" rows="3" placeholder="Street address, city, province"></textarea>
+                            </div>
+                            <div class="col-md-12">
+                                <label for="emergencyContactName" class="form-label fw-500 mb-2">Emergency Contact Name
+                                    <span class="text-danger">*</span></label>
+                                <input type="text"
+                                    class="form-control form-control-sm bg-semi-transparent border shadow-none"
+                                    id="emergencyContactName" placeholder="Full name of emergency contact">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="text-center">
-                <small class="text-muted"><a href="javascript:void(0);" id="startTourLink">Take a tour of the
-                        profile setup</a></small>
+                <div class="card bg-semi-transparent mb-3" style="--blur-lvl: 0.70;">
+                    <div class="card-body p-3 px-4">
+                        <div class="vstack gap-2 mb-3">
+                            <h6 class="fw-600 mb-0">Academic Information</h6>
+                            <small class="text-muted">Pre-filled by your coordinator. Review and confirm.</small>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label for="program" class="form-label fw-500 mb-2">Program</label>
+                                <select class="form-select form-select-sm bg-semi-transparent border shadow-none"
+                                    id="program" disabled>
+                                    <option value="" class="CustomOption" selected hidden disabled>Already set by
+                                        coordinator</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4">
+                                <label for="yearLevel" class="form-label fw-500 mb-2">Year Level</label>
+                                <select class="form-select form-select-sm bg-semi-transparent border shadow-none"
+                                    id="yearLevel" disabled>
+                                    <option class="CustomOption" selected hidden disabled value="">Already set by
+                                        coordinator</option>
+                                    <option value="1">1st Year</option>
+                                    <option value="2">2nd Year</option>
+                                    <option value="3">3rd Year</option>
+                                    <option value="4">4th Year</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-2">
+                                <label for="section" class="form-label fw-500 mb-2">Section <span
+                                        class="text-danger">*</span></label>
+                                <input type="text"
+                                    class="form-control form-control-sm bg-semi-transparent border shadow-none"
+                                    id="section" placeholder="e.g. A, B, C">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <small class="text-muted"><a href="javascript:void(0);" id="startTourLink">Take a tour of the
+                            profile setup</a></small>
+                </div>
             </div>
         </div>
-    </div>
     </div>
 </body>
 

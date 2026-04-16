@@ -8,6 +8,13 @@ let swalTheme = SwalTheme();
 BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
+const userRole = $('meta[name="user-Role"]').attr("content") || "";
+let LoadPage = true;
+
+if (!csrfToken || !userRole || userRole !== "supervisor") {
+  window.location.href = "../../../Src/Pages/Login";
+  LoadPage = false;
+}
 
 function startSupervisorProfileTour() {
   if (!window.driver?.js?.driver || typeof driver !== "function") {
@@ -217,6 +224,8 @@ function fetchProfileData() {
 }
 
 $(document).ready(function () {
+  if (!LoadPage) return;
+
   $("#startTourLink").on("click", function (e) {
     e.preventDefault();
     startSupervisorProfileTour();

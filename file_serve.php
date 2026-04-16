@@ -1,16 +1,16 @@
 <?php
 
 session_start();
-require_once __DIR__ . '/Assets/database/dbconfig.php';
+require_once __DIR__ . '/config/db.php';
 
-if (!isset($_SESSION['user'])) {
+if (!isset($_SESSION['user_uuid'])) {
     http_response_code(401);
     header('Location: Src/Pages/ErrorPage.php?error=401');
     exit;
 }
 
 $allowedRoles = ['admin', 'coordinator', 'student'];
-if (!in_array($_SESSION['user']['role'], $allowedRoles)) {
+if (!in_array($_SESSION['user_role'], $allowedRoles)) {
     http_response_code(403);
     header('Location: Src/Pages/ErrorPage.php?error=403');
     exit;
@@ -19,11 +19,9 @@ if (!in_array($_SESSION['user']['role'], $allowedRoles)) {
 try {
     $conn = new mysqli($servername, $username, $password, $dbname);
 } catch (Exception $e) {
-    response([
-        'status' => 'critical',
-        'message' => 'Database connection failed',
-        'long_message' => $e->getMessage()
-    ]);
+    http_response_code(500);
+    header('Location: Src/Pages/ErrorPage.php?error=500');
+    exit('Database connection failed');
 }
 
 $documentUuid = trim($_GET['uuid'] ?? '');
@@ -51,8 +49,8 @@ if (empty($documentUuid)) {
     exit('Missing document ID');
 }
 
-$userRole = $_SESSION['user']['role'];
-$userUuid = $_SESSION['user']['uuid'];
+$userRole = $_SESSION['user_role'] ?? '';
+$userUuid = $_SESSION['user_uuid'] ?? '';
 
 if ($documentFor === 'companyView') {
     $stmt = $conn->prepare("
@@ -126,19 +124,45 @@ if (!file_exists($realPath)) {
 
 $action   = $_GET['action'] ?? 'inline';
 $fileName = basename($doc['file_name']);
-$mimeType = mime_content_type($realPath) ?: 'application/pdf';
+$fileSize = filesize($realPath);
 
-header('Content-Type: '   . $mimeType);
-header('Content-Length: ' . filesize($realPath));
-header('Cache-Control: private, no-cache, no-store');
-header('Pragma: no-cache');
+// Determine MIME type based on file extension
+$ext = strtolower(pathinfo($realPath, PATHINFO_EXTENSION));
+$mimeTypes = [
+    'pdf'  => 'application/pdf',
+    'doc'  => 'application/msword',
+    'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xls'  => 'application/vnd.ms-excel',
+    'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'ppt'  => 'application/vnd.ms-powerpoint',
+    'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'png'  => 'image/png',
+    'jpg'  => 'image/jpeg',
+    'jpeg' => 'image/jpeg',
+    'gif'  => 'image/gif',
+    'txt'  => 'text/plain',
+];
 
-if ($action === 'download') {
-    header('Content-Disposition: attachment; filename="' . $fileName . '"');
-} else {
-    header('Content-Disposition: inline; filename="' . $fileName . '"');
+$mimeType = $mimeTypes[$ext] ?? 'application/octet-stream';
+
+// Clear output buffering
+if (ob_get_level()) {
+    ob_end_clean();
 }
 
+// Set headers before output
+header('Content-Type: ' . $mimeType);
+header('Content-Length: ' . $fileSize);
+header('Cache-Control: private, max-age=3600, must-revalidate');
+header('Pragma: public');
+header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
 
+if ($action === 'download') {
+    header('Content-Disposition: attachment; filename="' . addslashes($fileName) . '"');
+} else {
+    header('Content-Disposition: inline; filename="' . addslashes($fileName) . '"');
+}
+
+// Serve file
 readfile($realPath);
 exit;

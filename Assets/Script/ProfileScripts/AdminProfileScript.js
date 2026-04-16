@@ -8,6 +8,11 @@ let swalTheme = SwalTheme();
 BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
+const userRole = $('meta[name="user-Role"]').attr("content") || "";
+
+if (!csrfToken || !userRole || userRole !== "admin") {
+  window.location.href = "../../../Src/Pages/Login";
+}
 
 const ACTION_STORAGE_KEY = "admin_profile_action";
 const urlParams = new URLSearchParams(window.location.search);

@@ -9,6 +9,11 @@ let swalTheme = SwalTheme();
 BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
+const userRole = $('meta[name="user-Role"]').attr("content") || "";
+
+if (!csrfToken || !userRole || userRole !== "coordinator") {
+  window.location.href = "../../../Src/Pages/Login";
+}
 
 $(document).ready(function () {
   $("#editprofileBtn").on("click", function () {

@@ -113,6 +113,7 @@ Typical request flow:
 - Password change: `process/auth/changepass.php`
 - Password reset flow: handlers under `process/auth/`
 - Batch lifecycle endpoints: `process/batches/` with logic in `functions/batch_functions.php`
+- Program lifecycle endpoints: `process/programs/` with logic in `functions/program_functions.php`
 - Profile fetch/save endpoints: `process/profile/` with logic in `functions/profile_functions.php`
 - Secure file delivery: `file_serve.php`
 - DB connection: `config/db.php` (MySQLi, `utf8mb4`)
@@ -180,10 +181,12 @@ Ojt-system/
 ├── functions/
 │   ├── auth_functions.php
 │   ├── batch_functions.php
+│   ├── program_functions.php
 │   └── profile_functions.php
 ├── process/
 │   ├── auth/
 │   ├── batches/
+│   ├── programs/
 │   └── profile/
 ├── Src/
 │   ├── Components/
@@ -213,32 +216,52 @@ Ojt-system/
 
 ### Unreleased — Working tree summary *(April 2026)*
 
-This summary is based on the current git changes in the local repository.
+This summary is based on the current local git working tree.
 
-- **Backend architecture refactor**
-	- Added modular backend layers: `config/`, `functions/`, `helpers/`, and `process/`
-	- New request handlers were added for auth, batches, and profile endpoints under `process/`
-	- Core logic was moved into `functions/auth_functions.php`, `functions/batch_functions.php`, and `functions/profile_functions.php`
+- **Student management module (new)**
+  - Added `Src/Pages/Admin/Students.php`
+  - Added `Assets/Script/AdminScripts/Students.js`
+  - Added `functions/student_functions.php`
+  - Added student process handlers under `process/students/` (create/get/update/deactivate/export-related flows)
 
-- **Legacy API deprecation and archival**
-	- Previous `Assets/api/*` endpoints and `Assets/database/dbconfig.php` were removed from active use
-	- A full legacy snapshot was added under `legacy/` to preserve old scripts, pages, API files, and sample uploads
+- **PDF export enhancements for student credentials**
+  - Added mPDF dependency via Composer (`libs/composer/composer.json`, `composer.lock`, `vendor/` updates)
+  - Updated student PDF export flow to load Composer autoload from `libs/composer/vendor/autoload.php`
+  - Improved client-side blob handling in `Students.js` to correctly detect `application/pdf` vs JSON error payloads
+  - Improved filename handling using `Content-Disposition` when available
 
-- **Frontend script restructuring and updates**
-	- Added new scripts: `Assets/Script/auth/login.js`, `Assets/Script/dashboardScripts/AdminDashboard.js`, `Assets/Script/ProfileScripts/SupervisorProfileScript.js`, and `Assets/Script/ErrorFunctions.js`
-	- Updated multiple existing scripts in batches, auth, dashboards, and profile modules
-	- Removed obsolete scripts such as `CustomSweetAlert_OLD.js` and old module-specific files no longer used in the active flow
+- **Security and helper hardening**
+  - Updated `helpers/helpers.php`
+    - `response()` hardened with stricter headers and safer JSON error handling
+    - `generateUuid()` switched to cryptographically secure UUID v4 generation
+    - Added `isValidUuid()` helper
 
-- **Page and component integration updates**
-	- Updated shared headers/components and role page files across Admin, Coordinator, Student, and Supervisor modules
-	- Added/updated shared page-head structure (`Src/Pages/srcPageHeader.php`, `Src/Pages/Supervisor/pagehead.php`)
+- **Programs / dashboard / profile / auth frontend updates**
+  - Updated scripts in:
+    - `Assets/Script/AdminScripts/ProgramsScripts.js`
+    - `Assets/Script/AdminScripts/batchesSripts.js`
+    - `Assets/Script/DashboardScripts/{AdminDashboard,CoordinatorDashboardScript,StudentDashboard}.js`
+    - `Assets/Script/ProfileScripts/{AdminProfileScript,CoordinatorProfileScript,CoordinatorViewProfileScript,StudentProfileScript,SupervisorProfileScript}.js`
+    - `Assets/Script/RedirectScript.js`
 
-- **Assets and data fixtures**
-	- Profile image assets were rotated (old files removed, new profile images added)
-	- Additional sample legacy documents were added inside `legacy/uploads/`
+- **Page/layout/style updates**
+  - Updated:
+    - `Src/Components/Header.php`
+    - `Src/Pages/Admin/{Programs.php,pagehead.php}`
+    - `Src/Pages/Coordinator/pagehead.php`
+    - `Src/Pages/Students/{Students_Profile.php,pagehead.php}`
+    - `Src/Pages/Login.php`
+    - `Assets/style/MainStyle.css`
+    - `Assets/SystemInfo.php`
 
-- **Documentation**
-	- `README.md` was rewritten and cleaned up to match the current architecture and setup direction
+- **Config/runtime changes**
+  - Updated `config/db.php` and `config/serverStatus.php`
+  - Removed `config/serverConfig.php`
+  - Updated `functions/auth_functions.php`
+
+- **Assets added in working tree**
+  - New profile image asset under `Assets/Images/profiles/...`
+  - Additional style assets under `Assets/style/admin/`
 
 ---
 

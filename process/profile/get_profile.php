@@ -22,6 +22,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
 require_once dirname(__DIR__, 2) . '/functions/auth_functions.php';
+require_once dirname(__DIR__, 2) . '/functions/batch_functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -52,6 +53,7 @@ $userUuid = $_SESSION['user_uuid'];
 $role     = $_SESSION['user_role'];
 
 $profile = getProfileByRole($conn, $userUuid, $role);
+$active_Batch = getActiveBatch($conn);
 
 if (!$profile) {
     response([
@@ -65,4 +67,5 @@ if (!$profile) {
 response([
     'status'  => 'success',
     'profile' => $profile,
+    'activeBatch' => $active_Batch
 ]);

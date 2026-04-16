@@ -6,13 +6,15 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once "../../Assets/SystemInfo.php";
 require_once "../../config/db.php";
 
+date_default_timezone_set('Asia/Manila');
+
 $active_sy = date("Y") . "-" . (date("Y") + 1);
 $active_sem = (date("m") >= 6 && date("m") <= 11) ? "1st Semester" : "2nd Semester";
 
 try {
     $conn = new mysqli($host, $username, $password, $dbname);
     if ($conn->connect_error) {
-		 throw new Exception("Connection failed: " . $conn->connect_error);
+        throw new Exception("Connection failed: " . $conn->connect_error);
     } else {
         $result = $conn->query("SELECT school_year, semester FROM batches WHERE status = 'active' LIMIT 1");
         if ($result && $row = $result->fetch_assoc()) {
@@ -21,7 +23,7 @@ try {
         }
     }
 } catch (Exception $e) {
-	error_log("Database connection error: " . $e->getMessage());
+    error_log("Database connection error: " . $e->getMessage());
 }
 
 if (isset($_SESSION['user_role'])) {
@@ -79,9 +81,30 @@ if (isset($_SESSION['user_role'])) {
 								<small
 									class="text-start d-block mb-5 fw-bold text-muted"><?= $SchoolName ?></small>
 								<h3 class="text-start text-white mb-3 text-wrap">
-									<?= $LongTitle ?>
-								</h3><small
+									<?= $LongTitle ?></h3>
+								<small
 									class="text-start d-block mb-4 text-white-50"><?= $Description ?></small>
+								<div class="mt-4 pt-2">
+									<small class="text-start d-block text-success-emphasis fw-bold" id="currentDateTime"
+										style="font-size: 1.1rem;"></small>
+								</div>
+								<script>
+									function updateDateTime() {
+										const now = new Date();
+										const options = {
+											year: 'numeric',
+											month: 'long',
+											day: 'numeric',
+											hour: '2-digit',
+											minute: '2-digit',
+											second: '2-digit'
+										};
+										const formattedDateTime = now.toLocaleDateString('en-US', options);
+										document.getElementById('currentDateTime').textContent = formattedDateTime;
+									}
+									setInterval(updateDateTime, 1000);
+									updateDateTime();
+								</script>
 							</div>
 							<div class="mt-auto">
 								<div class="alert alert-dark mb-0 px-3 py-2 opacity-50" role="alert">
@@ -101,13 +124,15 @@ if (isset($_SESSION['user_role'])) {
 							admin.</small>
 						<div class="mb-3">
 							<label for="email" class="form-label">Email address</label>
-							<input type="email" class="form-control rounded-2 bg-semi-transparent fw-bold border border-secondary" id="email"
-								placeholder="yourname@school.edu.ph">
+							<input type="email"
+								class="form-control rounded-2 bg-semi-transparent fw-bold border border-secondary"
+								id="email" placeholder="yourname@school.edu.ph">
 							<div class="invalid-feedback" id="emailFeedback">Please enter a valid email address.</div>
 						</div>
 						<div class="mb-3">
 							<label for="password" class="form-label">Password</label>
-							<input type="password" class="form-control rounded-2 bg-semi-transparent fw-bold border border-secondary"
+							<input type="password"
+								class="form-control rounded-2 bg-semi-transparent fw-bold border border-secondary"
 								id="password" placeholder="Enter your password">
 							<div class="hstack">
 								<div class="form-text me-auto"><a href="ForgotPassword.php"

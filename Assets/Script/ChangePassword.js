@@ -6,6 +6,11 @@ let swalTheme = SwalTheme();
 BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
+
+if (!csrfToken) {
+  window.location.href = "../../../Src/Pages/Login";
+}
+
 let redirectUrl = null;
 function CardtoShow(cardId) {
   const cards = ["ForcePasswordChangeCard", "VoluntaryPasswordChangeCard", "SuccessCard"];

@@ -1,16 +1,21 @@
 import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
-import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "../SystemTheme.js";
+import { SwalTheme } from "../SystemTheme.js";
 import { Errors } from "../ErrorFunctions.js";
-
-MatchsystemThemes(true);
 let swalTheme = SwalTheme();
-BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 const randomConformationWord = ["CONFIRM", "AGREE", "YES", "OK", "PROCEED", "ACCEPT", "VALIDATE", "APPROVE", "ACKNOWLEDGE", "CONSENT"];
 let currentBatchStudents = [];
 let currentFilteredBatchStudents = [];
 let currentViewingBatchUuid = null;
+const urlParams = new URLSearchParams(window.location.search);
+const action = urlParams.get("action");
+if (action === "create") {
+  $("#NewBatchModal").modal("show");
+  urlParams.delete("action");
+  const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+  window.history.replaceState({}, "", newUrl);
+}
 
 function renderBatchStudents(students = []) {
   const batchStudentsContainer = $("#batchStudentsContainer");
@@ -511,6 +516,9 @@ function loadBatches() {
           batchesContainer.append(noBatchesPlaceholder);
           ToastVersion(swalTheme, "No batches found. Please add a new batch to get started.", "info", 3000, "top-end");
         }
+      } else if (response.status === "critical") {
+        batchesContainer.append(noBatchesPlaceholder);
+        ModalVersion(swalTheme, "Critical Error", response.Details, "error", "OK");
       } else {
         batchesContainer.append(noBatchesPlaceholder);
         ToastVersion(swalTheme, response.message, "error", 3000, "top-end");

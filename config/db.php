@@ -2,7 +2,7 @@
 
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     $base = dirname($_SERVER['SCRIPT_NAME'], 2);
-    header("Location: $base/Src/Pages/ErrorPage.php?error=403");
+    header("Location: $base/Src/Pages/ErrorPage?error=403");
     exit;
 }
 

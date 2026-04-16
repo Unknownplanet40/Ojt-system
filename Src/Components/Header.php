@@ -1,6 +1,10 @@
 <nav class="navbar navbar-expand-lg bg-semi-transparent mx-3 mb-3 border rounded-2" aria-label="Main navigation" id="adminTopNavbar" style="--blur-lvl: 0.2">
   <div class="container-fluid">
-    <a class="navbar-brand" href="../Login"><?= $ShortTitle ?></a>
+    <div class="vstack">
+      <a class="navbar-brand mb-0 pb-0" href="../Login"><?= $ShortTitle ?></a>
+      <small class="text-muted" style="font-size: 0.7em" id="activebatchthissemester" data-batch-uuid="">Loading active batch...</small>
+    </div>
+    
     <button class="navbar-toggler p-0 border-0 shadow-none" type="button" id="navbarSideCollapse" aria-label="Toggle navigation">
       <i class="bi bi-list fs-1"></i>
     </button>
@@ -13,7 +17,7 @@
           <a class="nav-link <?= $CurrentPage === 'Reports' ? 'active' : '' ?>" aria-current="page" href="../Admin/Reports">Reports</a>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> Accounts </a>
+          <a class="nav-link dropdown-toggle <?= in_array($CurrentPage, ['Coordinators', 'Students', 'Supervisors']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> Accounts </a>
           <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
             <li><span class="dropdown-item-text text-nowrap text-success text-center text-capitalize">User Management</span></li>
             <li>
@@ -28,7 +32,7 @@
               </a>
             </li>
             <li>
-              <a class="dropdown-item" href="javascript:void(0)">
+              <a class="dropdown-item <?= $CurrentPage === 'Students' ? 'nav-active' : '' ?>" href="../Admin/Students">
                 <div class="hstack">
                   <i class="bi bi-person me-2"></i>
                   <div class="vstack">
@@ -113,7 +117,7 @@
               <span class="dropdown-item-text text-nowrap text-success text-center text-capitalize">System Management</span>
             </li>
             <li>
-              <a class="dropdown-item" href="javascript:void(0)">
+              <a class="dropdown-item" href="../Admin/Admin_Profile?action=edit">
                 <div class="hstack">
                   <i class="bi bi-person-circle me-2"></i>
                   <div class="vstack">
