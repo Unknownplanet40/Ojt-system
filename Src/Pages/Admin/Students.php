@@ -402,9 +402,11 @@ $CurrentPage = "Students";
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="StudentCreatedModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" data-Student-Uuid="">
+        <div class="modal fade" id="StudentCreatedModal" tabindex="-1" data-bs-backdrop="static"
+            data-bs-keyboard="false" data-Student-Uuid="">
             <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-dialog-scrollable">
-                <div class="modal-content bg-blur-5 bg-semi-transparent border-0 shadow" style="--blur-lvl: <?= $opacitylvl ?>;">
+                <div class="modal-content bg-blur-5 bg-semi-transparent border-0 shadow"
+                    style="--blur-lvl: <?= $opacitylvl ?>;">
                     <div class="modal-body bg-success bg-opacity-25 rounded-4">
                         <div class="card bg-transparent border-0 shadow-sm">
                             <div class="card-body">
@@ -416,14 +418,353 @@ $CurrentPage = "Students";
                                         </div>
                                         <div class="vstack">
                                             <h5 class="mb-0 fw-bold text-success">Student account created</h5>
-                                            <p class="text-muted mb-3">Account created for <span id="createdStudentName"></span>. Share this temporary password with the student.</p>
+                                            <p class="text-muted mb-3">Account created for <span
+                                                    id="createdStudentName"></span>. Share this temporary password with
+                                                the student.</p>
                                             <small class="text-success-emphasis mb-1">Temporary Password</small>
-                                            <span class="badge text-bg-dark bg-opacity-75 fs-6 py-3" id="createdStudentTempPassword">123123123123</span>
+                                            <span class="badge text-bg-dark bg-opacity-75 fs-6 py-3"
+                                                id="createdStudentTempPassword"></span>
                                         </div>
                                     </div>
                                     <div class="hstack gap-3">
-                                        <button class="btn btn-sm btn-outline-secondary" id="exportPdfBtn"><i class="bi bi-file-earmark-pdf me-2"></i>Export PDF</button>
-                                        <button class="btn btn-sm btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#CreateStudentModal"><i class="bi bi-person-plus me-2"></i>Create Another Student</button>
+                                        <button class="btn btn-sm btn-outline-secondary" id="exportPdfBtn"><i
+                                                class="bi bi-file-earmark-pdf me-2"></i>Export PDF</button>
+                                        <button class="btn btn-sm btn-primary ms-auto" data-bs-toggle="modal"
+                                            data-bs-target="#CreateStudentModal"><i
+                                                class="bi bi-person-plus me-2"></i>Create Another Student</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="ResetPasswordSuccessModal" tabindex="-1" data-bs-backdrop="static"
+            data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-dialog-scrollable">
+            <div class="modal-content bg-blur-5 bg-semi-transparent border-0 shadow"
+                style="--blur-lvl: <?= $opacitylvl ?>;">
+                <div class="modal-body bg-success bg-opacity-25 rounded-4">
+                <div class="card bg-transparent border-0 shadow-sm">
+                    <div class="card-body">
+                    <div class="vstack gap-3 py-4">
+                        <div class="hstack gap-3">
+                        <div class="bg-success bg-opacity-75 rounded-circle d-flex justify-content-center align-items-center"
+                            style="min-width: 40px; min-height: 40px;">
+                            <i class="bi bi-check-lg text-white"></i>
+                        </div>
+                        <div class="vstack">
+                            <h5 class="mb-0 fw-bold text-success">Password reset successful</h5>
+                            <p class="text-muted mb-3">Password has been reset for <span
+                                id="resetPasswordSuccessStudentName"></span>. The new temporary password is:</p>
+                            <small class="text-success-emphasis mb-1">Temporary Password</small>
+                            <span class="badge text-bg-dark bg-opacity-75 fs-6 py-3"
+                            id="resetPasswordSuccessTempPassword"></span>
+                        </div>
+                        </div>
+                        <div class="hstack gap-3">
+                        <button class="btn btn-sm btn-outline-secondary" id="exportResetPdfBtn"><i
+                            class="bi bi-file-earmark-pdf me-2"></i>Export PDF</button>
+                        <button class="btn btn-sm btn-primary ms-auto" data-bs-dismiss="modal"><i
+                            class="bi bi-check-circle me-2"></i>Done</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="modal fade" id="ViewStudentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-dialog-scrollable modal-xl">
+                <div class="modal-content bg-blur-5 bg-semi-transparent border-0 shadow"
+                    style="--blur-lvl: <?= $opacitylvl ?>;">
+                    <div class="modal-body bg-blur-5 bg-semi-transparent rounded-4">
+                        <div class="card bg-transparent border-0 shadow-sm">
+                            <div class="vstack gap-4 p-2 p-md-4">
+                                <div class="hstack gap-3 flex-wrap align-items-start">
+                                    <div class="vstack gap-1">
+                                        <div class="hstack gap-2">
+                                            <img src="" alt="Profile Picture" class="rounded-circle border" id="viewStudentProfilePic"
+                                                style="width: 60px; height: 60px; object-fit: cover;">
+                                            <div>
+                                                <h5 class="mb-0 fw-bold">Student Profile</h5>
+                                                <p class="text-muted mb-0 hstack gap-2 align-items-center">
+                                                    <span id="viewStudentFullName"></span>
+                                                    <span class="mx-2">&bull;</span>
+                                                    <span id="viewStudentNumber"></span>
+                                                    <span class="mx-2">&bull;</span>
+                                                    <span class="px-3 py-2" id="viewStudentStatus"></span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="hstack gap-2 w-100 ms-md-auto flex-wrap justify-content-center justify-content-md-end">
+                                        <button type="button"
+                                            class="btn btn-sm bg-secondary-subtle text-body py-2 px-3 rounded-3 border flex-grow-1 flex-md-grow-0"
+                                            id="deactivateStudentBtn" title="Deactivate this student">
+                                            <i class="bi bi-person-x me-1"></i>Deactivate
+                                        </button>
+                                        <button type="button"
+                                            class="btn btn-sm bg-secondary-subtle text-body py-2 px-3 rounded-3 border flex-grow-1 flex-md-grow-0"
+                                            id="activateStudentBtn" title="Activate this student">
+                                            <i class="bi bi-person-check me-1"></i>Activate
+                                        </button>
+                                        <button type="button"
+                                            class="btn btn-sm bg-secondary-subtle text-body py-2 px-3 rounded-3 border flex-grow-1 flex-md-grow-0"
+                                            id="changePasswordBtn" title="Set a new password">
+                                            <i class="bi bi-key me-1"></i>Reset Password
+                                        </button>
+                                        <button type="button"
+                                            class="btn btn-sm bg-secondary-subtle text-body py-2 px-3 rounded-3 border flex-grow-1 flex-md-grow-0"
+                                            id="editStudentFromViewBtn" title="Edit student details">
+                                            <i class="bi bi-pencil-square me-1"></i>Edit
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <section class="w-100">
+                                    <div class="row g-3 g-md-4">
+                                        <div class="col-12">
+                                            <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-0 shadow-sm"
+                                                style="--blur-lvl: <?= $opacitylvl ?>;">
+                                                <div class="card-body p-3 pt-0 p-md-4">
+                                                    <div class="row g-4 mt-1">
+                                                        <div class="col-12 col-xl-6">
+                                                            <div
+                                                                class="rounded-4 border bg-dark bg-opacity-10 p-3 p-md-4 h-100 shadow-sm">
+                                                                <div class="mb-3">
+                                                                    <h6 class="fw-bold mb-1">Personal Information</h6>
+                                                                    <p class="text-muted small mb-0">Basic profile and
+                                                                        contact details</p>
+                                                                </div>
+
+                                                                <ul class="list-unstyled mb-0">
+                                                                    <li class="py-2">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Full
+                                                                                Name</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentFullName2"></span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li
+                                                                        class="py-2 border-top border-secondary border-opacity-25">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Email
+                                                                                Address</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentEmail"></span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li
+                                                                        class="py-2 border-top border-secondary border-opacity-25">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Mobile</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentMobile"></span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li
+                                                                        class="py-2 border-top border-secondary border-opacity-25">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Home
+                                                                                Address</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentHomeAddress"></span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li
+                                                                        class="py-2 border-top border-secondary border-opacity-25">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Emergency
+                                                                                Contact</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentEmergencyContact"></span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li
+                                                                        class="py-2 border-top border-secondary border-opacity-25">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Emergency
+                                                                                Contact Phone</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentEmergencyPhone"></span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li
+                                                                        class="pt-2 border-top border-secondary border-opacity-25">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Last
+                                                                                Login</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentLastLogin"></span>
+                                                                        </div>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-12 col-xl-6">
+                                                            <div
+                                                                class="rounded-4 border bg-dark bg-opacity-10 p-3 p-md-4 h-100 shadow-sm">
+                                                                <div class="mb-3">
+                                                                    <h6 class="fw-bold mb-1">Academic Information</h6>
+                                                                    <p class="text-muted small mb-0">Enrollment and
+                                                                        internship requirements</p>
+                                                                </div>
+
+                                                                <ul class="list-unstyled mb-0">
+                                                                    <li class="py-2">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Student
+                                                                                No.</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentStudentNo"></span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li
+                                                                        class="py-2 border-top border-secondary border-opacity-25">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Program</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentProgram"></span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li
+                                                                        class="py-2 border-top border-secondary border-opacity-25">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Year
+                                                                                &amp; Section</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentYearSection"></span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li
+                                                                        class="py-2 border-top border-secondary border-opacity-25">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Department</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentDepartment"></span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li
+                                                                        class="py-2 border-top border-secondary border-opacity-25">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Coordinator</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentCoordinator"></span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li
+                                                                        class="py-2 border-top border-secondary border-opacity-25">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Batch</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentBatch"></span>
+                                                                        </div>
+                                                                    </li>
+                                                                    <li
+                                                                        class="pt-2 border-top border-secondary border-opacity-25">
+                                                                        <div
+                                                                            class="d-flex flex-column flex-sm-row justify-content-between gap-1 gap-sm-3">
+                                                                            <span
+                                                                                class="text-muted small fw-semibold text-uppercase">Required
+                                                                                Hours</span>
+                                                                            <span
+                                                                                class="fw-medium text-sm-end text-break"
+                                                                                id="viewStudentRequiredHours">120</span>
+                                                                        </div>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                                <div class="hstack gap-3 justify-content-end">
+                                    <button class="btn btn-sm bg-secondary-subtle text-body py-2 px-3 rounded-3 border"
+                                        data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i>Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="ResetPasswordModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-dialog-scrollable">
+                <div class="modal-content bg-blur-5 bg-semi-transparent border-0 shadow"
+                    style="--blur-lvl: <?= $opacitylvl ?>;">
+                    <div class="modal-body bg-blur-5 bg-semi-transparent rounded-4">
+                        <div class="card bg-transparent border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <div class="vstack gap-4">
+                                    <div class="hstack gap-3">
+                                        <div class="bg-info bg-opacity-75 rounded-circle d-flex justify-content-center align-items-center"
+                                            style="min-width: 40px; min-height: 40px;">
+                                            <i class="bi bi-key text-white"></i>
+                                        </div>
+                                        <div class="vstack">
+                                            <h5 class="mb-0 fw-bold text-info">Reset Student Password</h5>
+                                            <p class="text-muted mb-0">
+                                                Reset password for <span id="resetPasswordStudentName"></span>. A temporary password will be generated automatically.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="hstack">
+                                        <button class="btn btn-primary py-2 px-4 align-self-start text-nowrap" id="resetPasswordBtn">
+                                            <i class="bi bi-check-circle me-2"></i>Reset Password
+                                        </button>
+                                        <button class="btn btn-outline-secondary py-2 px-4 align-self-start ms-auto" data-bs-dismiss="modal" id="cancelResetPasswordBtn">
+                                            <i class="bi bi-x-circle me-2"></i>Cancel
+                                        </button>
                                     </div>
                                 </div>
                             </div>

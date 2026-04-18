@@ -1,6 +1,6 @@
 # 📦 Install Dependencies
 
-This guide covers how to install **Ratchet** (WebSockets) and **PHPMailer** (Email) using Composer. Both are optional — only install what your project needs.
+This guide covers how to install the Composer packages used by the project: **Ratchet** (WebSockets), **PHPMailer** (Email), **mPDF** (PDF generation), and **PhpSpreadsheet** (Excel/spreadsheet handling). They are all optional — only install what your project needs.
 
 ---
 
@@ -8,7 +8,7 @@ This guide covers how to install **Ratchet** (WebSockets) and **PHPMailer** (Ema
 
 ### 1. Install Composer
 
-Composer is PHP's dependency manager and is required to install both packages.
+Composer is PHP's dependency manager and is required to install these packages.
 
 - Download and install from [getcomposer.org](https://getcomposer.org/)
 - Verify the installation by running:
@@ -35,12 +35,12 @@ cd /path/to/your/project/libs/composer
 
 ## 🔧 Installing the Packages
 
-### 3. Install Ratchet & PHPMailer
+### 3. Install the Composer Packages
 
-Run the following command to install both packages and their dependencies in one step:
+Run the following command to install all supported packages and their dependencies in one step:
 
 ```bash
-composer require cboden/ratchet phpmailer/phpmailer
+composer require cboden/ratchet phpmailer/phpmailer mpdf/mpdf phpoffice/phpspreadsheet
 ```
 
 > 💡 You can also install them separately if you only need one:
@@ -50,6 +50,12 @@ composer require cboden/ratchet phpmailer/phpmailer
 >
 > # PHPMailer only
 > composer require phpmailer/phpmailer
+>
+> # mPDF only
+> composer require mpdf/mpdf
+>
+> # PhpSpreadsheet only
+> composer require phpoffice/phpspreadsheet
 > ```
 
 Once complete, Composer will:
@@ -75,6 +81,8 @@ libs/composer/
 ├── vendor/
 │   ├── cboden/         # Ratchet
 │   ├── phpmailer/      # PHPMailer
+│   ├── mpdf/           # mPDF
+│   ├── phpoffice/      # PhpSpreadsheet
 │   └── autoload.php    # Composer autoloader
 ├── composer.json
 └── composer.lock
@@ -95,7 +103,7 @@ This will list all installed packages and their versions.
 
 ### 5. Include the Autoloader
 
-At the top of any PHP file where you want to use Ratchet or PHPMailer, include the Composer autoload file:
+At the top of any PHP file where you want to use Ratchet, PHPMailer, mPDF, or PhpSpreadsheet, include the Composer autoload file:
 
 ```php
 require 'libs/composer/vendor/autoload.php';
@@ -166,6 +174,33 @@ $server = IoServer::factory(
 $server->run();
 ```
 
+### PhpSpreadsheet — Basic Spreadsheet Example
+
+```php
+require 'libs/composer/vendor/autoload.php';
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
+$spreadsheet = new Spreadsheet();
+$sheet = $spreadsheet->getActiveSheet();
+$sheet->setCellValue('A1', 'Hello');
+$sheet->setCellValue('B1', 'World');
+
+$writer = new Xlsx($spreadsheet);
+$writer->save('example.xlsx');
+```
+
+### mPDF — Basic PDF Example
+
+```php
+require 'libs/composer/vendor/autoload.php';
+
+$mpdf = new \Mpdf\Mpdf();
+$mpdf->WriteHTML('<h1>Hello PDF</h1>');
+$mpdf->Output('example.pdf', 'D');
+```
+
 To start the WebSocket server, run:
 
 ```bash
@@ -194,3 +229,4 @@ composer update
 | Class not found errors | Make sure `autoload.php` is included at the top of your PHP file |
 | Ratchet server won't start | Check that port `8080` is not already in use |
 | PHPMailer SMTP error | Verify your SMTP credentials and that port 587 is open |
+| Spreadsheet export fails | Confirm `phpoffice/phpspreadsheet` is installed and the file is writable |

@@ -146,8 +146,15 @@ function getStudent($conn, string $profileUuid): ?array
           b.semester,
 
           CONCAT(cp.first_name, ' ', cp.last_name) AS coordinator_name,
+          
 
-          c.name         AS company_name
+          c.name         AS company_name,
+
+          CASE
+            WHEN u.is_active = 0         THEN 'inactive'
+            WHEN u.last_login_at IS NULL THEN 'never_logged_in'
+            ELSE 'active'
+          END AS account_status
 
         FROM student_profiles sp
         JOIN users u                   ON sp.user_uuid        = u.uuid

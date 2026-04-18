@@ -21,6 +21,10 @@ class ComposerStaticInit1a8884486a6043f06b49afd656b6e3ea
         array (
             'setasign\\Fpdi\\' => 14,
         ),
+        'Z' =>
+        array (
+            'ZipStream\\' => 10,
+        ),
         'S' =>
         array (
             'Symfony\\Polyfill\\Php83\\' => 23,
@@ -41,8 +45,10 @@ class ComposerStaticInit1a8884486a6043f06b49afd656b6e3ea
         ),
         'P' =>
         array (
+            'Psr\\SimpleCache\\' => 16,
             'Psr\\Log\\' => 8,
             'Psr\\Http\\Message\\' => 17,
+            'PhpOffice\\PhpSpreadsheet\\' => 25,
             'PHPMailer\\PHPMailer\\' => 20,
         ),
         'M' =>
@@ -50,6 +56,7 @@ class ComposerStaticInit1a8884486a6043f06b49afd656b6e3ea
             'Mpdf\\PsrLogAwareTrait\\' => 22,
             'Mpdf\\PsrHttpMessageShim\\' => 24,
             'Mpdf\\' => 5,
+            'Matrix\\' => 7,
         ),
         'G' =>
         array (
@@ -63,12 +70,21 @@ class ComposerStaticInit1a8884486a6043f06b49afd656b6e3ea
         array (
             'DeepCopy\\' => 9,
         ),
+        'C' =>
+        array (
+            'Composer\\Pcre\\' => 14,
+            'Complex\\' => 8,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
         'setasign\\Fpdi\\' =>
         array (
             0 => __DIR__ . '/..' . '/setasign/fpdi/src',
+        ),
+        'ZipStream\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/maennchen/zipstream-php/src',
         ),
         'Symfony\\Polyfill\\Php83\\' =>
         array (
@@ -118,6 +134,10 @@ class ComposerStaticInit1a8884486a6043f06b49afd656b6e3ea
         array (
             0 => __DIR__ . '/..' . '/cboden/ratchet/src/Ratchet',
         ),
+        'Psr\\SimpleCache\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/psr/simple-cache/src',
+        ),
         'Psr\\Log\\' =>
         array (
             0 => __DIR__ . '/..' . '/psr/log/src',
@@ -126,6 +146,10 @@ class ComposerStaticInit1a8884486a6043f06b49afd656b6e3ea
         array (
             0 => __DIR__ . '/..' . '/psr/http-factory/src',
             1 => __DIR__ . '/..' . '/psr/http-message/src',
+        ),
+        'PhpOffice\\PhpSpreadsheet\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/phpoffice/phpspreadsheet/src/PhpSpreadsheet',
         ),
         'PHPMailer\\PHPMailer\\' =>
         array (
@@ -143,6 +167,10 @@ class ComposerStaticInit1a8884486a6043f06b49afd656b6e3ea
         array (
             0 => __DIR__ . '/..' . '/mpdf/mpdf/src',
         ),
+        'Matrix\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/markbaker/matrix/classes/src',
+        ),
         'GuzzleHttp\\Psr7\\' =>
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/psr7/src',
@@ -154,6 +182,14 @@ class ComposerStaticInit1a8884486a6043f06b49afd656b6e3ea
         'DeepCopy\\' =>
         array (
             0 => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy',
+        ),
+        'Composer\\Pcre\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/composer/pcre/src',
+        ),
+        'Complex\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/markbaker/complex/classes/src',
         ),
     );
 
