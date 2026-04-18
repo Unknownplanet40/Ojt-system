@@ -34,7 +34,7 @@ The platform gives each role a focused workspace instead of making everyone wade
 | Database | MySQL / MariaDB |
 | Animations | Anime.js, AOS (Animate On Scroll) |
 | UX extras | SweetAlert2, Driver.js, Quill 2.0 |
-| Optional | PHPMailer (email), Ratchet (WebSockets) |
+| Optional | PHPMailer (email), Ratchet (WebSockets), mPDF (PDF generation), PhpSpreadsheet (Excel/spreadsheets) |
 
 All frontend libraries are bundled locally inside `/libs`, so the project does not depend on external CDNs.
 
@@ -224,8 +224,8 @@ This summary is based on the current local git working tree.
   - Added `functions/student_functions.php`
   - Added student process handlers under `process/students/` (create/get/update/deactivate/export-related flows)
 
-- **PDF export enhancements for student credentials**
-  - Added mPDF dependency via Composer (`libs/composer/composer.json`, `composer.lock`, `vendor/` updates)
+- **Document export enhancements for student credentials**
+  - Added mPDF and PhpSpreadsheet dependencies via Composer (`libs/composer/composer.json`, `composer.lock`, `vendor/` updates)
   - Updated student PDF export flow to load Composer autoload from `libs/composer/vendor/autoload.php`
   - Improved client-side blob handling in `Students.js` to correctly detect `application/pdf` vs JSON error payloads
   - Improved filename handling using `Content-Disposition` when available

@@ -246,7 +246,71 @@ function viewStudentDetails(studentUuid) {
     },
     success: function (response) {
       if (response.status === "success") {
-        // TODO: Implement the logic to display student details in a modal or a new page
+        $("#ViewStudentModal").modal("show");
+
+        let BadgeStatusClass = {
+          active: "bg-success-subtle text-success",
+          inactive: "bg-warning-subtle text-warning",
+          never_logged_in: "bg-info-subtle text-info",
+          suspended: "bg-danger-subtle text-danger",
+          unknown: "bg-secondary-subtle text-secondary",
+        };
+
+        if (response.student.profile_name === null || response.student.profile_name === "") {
+          response.student.profile_name = `https://placehold.co/64x64/483a0f/c6983d/png?text=${response.student.initials}&font=poppins`;
+        } else {
+          response.student.profile_name = "../../../Assets/Images/profiles/" + response.student.profile_name;
+        }
+
+        $("#viewStudentProfilePic")
+          .attr("src", response.student.profile_name)
+          .attr("alt", response.student.full_name + " Profile Picture");
+
+        $("#viewStudentFullName").text(response.student.full_name);
+        $("#viewStudentNumber").text(response.student.student_number);
+        $("#deactivateStudentBtn").toggleClass("d-none", response.student.is_active !== 1);
+        $("#activateStudentBtn").toggleClass("d-none", response.student.is_active === 1);
+        $("#viewStudentEmail").text(response.student.email);
+        $("#viewStudentFullName2").text(response.student.full_name);
+        $("#viewStudentMobile").text(response.student.mobile);
+        $("#viewStudentHomeAddress").text(response.student.home_address);
+        $("#viewStudentEmergencyContact").text(response.student.emergency_contact);
+        $("#viewStudentEmergencyPhone").text(response.student.emergency_phone);
+        $("#viewStudentLastLogin").text(response.student.last_login ? response.student.last_login : "Never logged in");
+        $("#viewStudentStudentNo").text(response.student.student_number);
+        $("#viewStudentProgram").text(response.student.program_name);
+        $("#viewStudentYearSection").text(`${response.student.year_label} - Section ${response.student.section}`);
+        $("#viewStudentDepartment").text(response.student.department);
+        $("#viewStudentCoordinator").text(response.student.coordinator_name);
+        $("#viewStudentBatch").text(response.student.batch_label);
+        $("#viewStudentRequiredHours").text(response.student.required_hours);
+        $("#viewStudentStatus").text(response.student.status_label).removeClass().addClass(`badge rounded-pill ${BadgeStatusClass[response.student.account_status]}`);
+
+        $("#deactivateStudentBtn")
+          .off("click")
+          .on("click", function () {
+            changeStudentStatus(response.student.user_uuid, false);
+          });
+
+        $("#activateStudentBtn")
+          .off("click")
+          .on("click", function () {
+            changeStudentStatus(response.student.user_uuid, true);
+          });
+
+        $("#editStudentFromViewBtn")
+          .off("click")
+          .on("click", function () {
+            $("#ViewStudentModal").modal("hide");
+            editStudentDetails(response.student.profile_uuid);
+          });
+
+        $("#changePasswordBtn")
+          .off("click")
+          .on("click", function () {
+            $("#ViewStudentModal").modal("hide");
+            resetStudentPassword(response.student.user_uuid, response.student.full_name, response.student.profile_uuid);
+          });
       } else if (response.status === "critical") {
         ToastVersion(swalTheme, response.Details, "error", 5000, "top-end");
       } else {
@@ -366,6 +430,7 @@ function changeStudentStatus(studentUuid, activate = true) {
             if (response.status === "success") {
               ToastVersion(swalTheme, response.message, "success", 3000, "top-end");
               getStudents();
+              $(".modal").modal("hide");
             } else if (response.status === "critical") {
               ToastVersion(swalTheme, response.Details, "error", 5000, "top-end");
             } else {
@@ -533,6 +598,128 @@ function SaveEditedStudent(uuid) {
   });
 }
 
+function resetStudentPassword(studentUuid, name = "", returnUUID = "") {
+  if (!studentUuid) {
+    ToastVersion(swalTheme, "Invalid student selected.", "error", 3000, "top-end");
+    return;
+  }
+
+  $("#ResetPasswordModal").modal("show");
+  $("#resetPasswordStudentName").text(name);
+
+  $("#cancelResetPasswordBtn")
+    .off("click")
+    .on("click", function () {
+      $("#ResetPasswordModal").modal("hide");
+      if (name) {
+        viewStudentDetails(returnUUID);
+      }
+    });
+
+  $("#resetPasswordBtn")
+    .off("click")
+    .on("click", function () {
+      $.ajax({
+        url: "../../../process/students/reset_student_password",
+        method: "POST",
+        dataType: "json",
+        data: {
+          csrf_token: csrfToken,
+          user_uuid: studentUuid,
+        },
+        beforeSend: function () {
+          $("#resetPasswordBtn").prop("disabled", true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Resetting...');
+        },
+        success: function (response) {
+          $("#resetPasswordBtn").prop("disabled", false).html("Reset Password");
+          if (response.status === "success") {
+            ToastVersion(swalTheme, response.message, "success", 3000, "top-end");
+            $("#ResetPasswordModal").modal("hide");
+
+            $("#ResetPasswordSuccessModal").modal("show");
+
+            $("#resetPasswordSuccessStudentName").text(name);
+            $("#resetPasswordSuccessTempPassword").text(response.temp_password);
+            $("#exportResetPdfBtn")
+              .off("click")
+              .on("click", function () {
+                const tempPassword = response.temp_password;
+                const fullName = name;
+                if (!tempPassword || !fullName) {
+                  ToastVersion(swalTheme, "Missing data for PDF export.", "error", 3000, "top-end");
+                  return;
+                }
+
+                const exportData = {
+                  full_name: fullName,
+                  temp_password: tempPassword,
+                };
+
+                $.ajax({
+                  url: "../../../process/students/export_reset_password_pdf",
+                  method: "POST",
+                  data: {
+                    csrf_token: csrfToken,
+                    student_data: JSON.stringify(exportData),
+                  },
+                  xhrFields: {
+                    responseType: "blob",
+                  },
+                  beforeSend: function () {
+                    ModalVersion(swalTheme, "Generating PDF...", "Please wait while we generate the reset password details PDF.", "info", 0, "center");
+                  },
+                  success: function (pdfResponse, _status, xhr) {
+                    swal.close();
+                    const contentType = (xhr.getResponseHeader("Content-Type") || "").toLowerCase();
+                    if (contentType.includes("application/json")) {
+                      const reader = new FileReader();
+                      reader.onload = function () {
+                        try {
+                          const json = JSON.parse(String(reader.result || "{}"));
+                          ToastVersion(swalTheme, json.message || "Failed to generate PDF.", "warning", 3500, "top-end");
+                        } catch {
+                          ToastVersion(swalTheme, "Unexpected server response while generating PDF.", "error", 3500, "top-end");
+                        }
+                      };
+                      reader.readAsText(pdfResponse);
+                      return;
+                    }
+                    const contentDisposition = xhr.getResponseHeader("Content-Disposition") || "";
+                    const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
+                    const fileNameFromHeader = fileNameMatch ? decodeURIComponent(fileNameMatch[1].trim()) : "";
+                    const blob = pdfResponse instanceof Blob ? pdfResponse : new Blob([pdfResponse], { type: "application/pdf" });
+                    const fileName = fileNameFromHeader || `${fullName.replace(/\s+/g, "_")}_Reset_Password_Details.pdf`;
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = blobUrl;
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(blobUrl);
+                    $("#ResetPasswordSuccessModal").modal("hide");
+                    viewStudentDetails(returnUUID);
+                  },
+                  error: function (xhr, status, error) {
+                    swal.close();
+                    Errors(xhr, status, error);
+                  },
+                });
+              });
+          } else if (response.status === "critical") {
+            ToastVersion(swalTheme, response.Details, "error", 5000, "top-end");
+          } else {
+            ToastVersion(swalTheme, response.message, "warning", 3000, "top-end");
+          }
+        },
+        error: function (xhr, status, error) {
+          $("#resetPasswordBtn").prop("disabled", false).html("Reset Password");
+          Errors(xhr, status, error);
+        },
+      });
+    });
+}
+
 $(document).ready(function () {
   $(document)
     .off("click", ".js-student-action-btn")
@@ -698,4 +885,3 @@ $(document).ready(function () {
     });
   });
 });
-

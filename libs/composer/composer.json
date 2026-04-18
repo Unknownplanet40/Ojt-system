@@ -2,6 +2,7 @@
     "require": {
         "cboden/ratchet": "^0.4.4",
         "phpmailer/phpmailer": "^7.0",
-        "mpdf/mpdf": "^8.3"
+        "mpdf/mpdf": "^8.3",
+        "phpoffice/phpspreadsheet": "^5.6"
     }
 }
