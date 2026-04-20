@@ -2,11 +2,22 @@
   <div class="col-md-8">
     <div class="card h-100 bg-blur-5 bg-semi-transparent shadow h-100" style="max-height: 645px; overflow-y: auto; --blur-lvl: <?= $opacitylvl ?>;">
       <div class="card-body">
-        <div class="hstack mb-3">
-          <h5 class="card-title">Needs attention</h5>
-          <a href="javascript:void(0)" class="ms-auto text-decoration-none text-success fw-medium">View all</a>
+        <div class="d-flex align-items-start gap-2 mb-2">
+          <div>
+            <h5 class="card-title mb-1">Needs attention</h5>
+            <p class="text-muted small mb-0" id="needsAttentionStatus">Monitoring key risks and blockers</p>
+          </div>
+          <div class="ms-auto d-flex align-items-center gap-2">
+            <small class="text-muted text-nowrap" id="needsAttentionLastUpdated">Last updated: --</small>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshNeedsAttentionBtn" title="Refresh dashboard insights">
+              <i class="bi bi-arrow-clockwise me-1"></i>
+              Refresh
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="needsAttentionViewAll">View all</button>
+          </div>
         </div>
-        <ul class="list-group list-group-flush" id="needsAttentionList">
+        <div class="d-flex flex-wrap gap-2 mb-3" id="needsAttentionSummary"></div>
+        <ul class="list-group list-group-flush needs-attention-list" id="needsAttentionList">
         </ul>
       </div>
     </div>

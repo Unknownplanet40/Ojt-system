@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once "../../Assets/SystemInfo.php";
 require_once "../../config/db.php";
+require_once "../../functions/auth_functions.php";
 
 date_default_timezone_set('Asia/Manila');
 
@@ -26,25 +27,16 @@ try {
     error_log("Database connection error: " . $e->getMessage());
 }
 
-if (isset($_SESSION['user_role'])) {
-    switch ($_SESSION['user_role']) {
-        case 'admin':
-            header("Location: ../Pages/Admin/AdminDashboard");
-            exit();
-        case 'coordinator':
-            header("Location: ../Pages/Coordinator/CoordinatorDashboard");
-            exit();
-        case 'student':
-            header("Location: ../Pages/Students/StudentsDashboard");
-            exit();
-        case 'supervisor':
-            header("Location: ../Pages/Supervisor/SupervisorDashboard");
-            exit();
-        default:
-            session_destroy();
-            header("Location: Login");
-            exit();
-    }
+if (!empty($_SESSION['user_uuid']) && !empty($_SESSION['user_role'])) {
+	$redirectUrl = getRedirectUrl($conn, [
+		'uuid'                 => $_SESSION['user_uuid'],
+		'email'                => $_SESSION['user_email'] ?? '',
+		'role'                 => $_SESSION['user_role'],
+		'must_change_password' => (int) ($_SESSION['must_change_password'] ?? 0),
+	]);
+
+	header("Location: " . $redirectUrl);
+	exit();
 }
 ?>
 

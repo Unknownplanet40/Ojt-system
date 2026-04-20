@@ -53,17 +53,6 @@
                 </div>
               </a>
             </li>
-            <li>
-              <a class="dropdown-item" href="javascript:void(0)">
-                <div class="hstack">
-                  <div class="vstack">
-                    <span>All Users</span>
-                    <small class="text-muted" style="font-size: 0.7em">View and manage all user accounts</small>
-                  </div>
-                  <span class="badge bg-danger rounded-pill ms-auto" id="totalUsersBadge">0</span>
-                </div>
-              </a>
-            </li>
           </ul>
         </li>
         <li class="nav-item">

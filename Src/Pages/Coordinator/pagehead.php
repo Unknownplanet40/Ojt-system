@@ -3,6 +3,33 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
     header('Location: ../ErrorPage.php?error=403');
     exit('Direct access not allowed');
 }
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once "../../../config/db.php";
+require_once "../../../functions/auth_functions.php";
+
+if (empty($_SESSION['user_uuid']) || ($_SESSION['user_role'] ?? '') !== 'coordinator') {
+    header('Location: ../Login');
+    exit;
+}
+
+if ((int)($_SESSION['must_change_password'] ?? 0) === 1) {
+    header('Location: ../ChangePassword');
+    exit;
+}
+
+$currentPage = pathinfo($_SERVER['PHP_SELF'] ?? '', PATHINFO_FILENAME);
+$allowWithoutCompletedProfile = ['Coordinator_Profile'];
+$isProfileDone = isUserProfileCompleted($conn, $_SESSION['user_uuid'], 'coordinator');
+$_SESSION['is_profile_done'] = $isProfileDone ? 1 : 0;
+
+if (!$isProfileDone && !in_array($currentPage, $allowWithoutCompletedProfile, true)) {
+    header('Location: ./Coordinator_Profile');
+    exit;
+}
 ?>
 
 <meta charset="UTF-8" />

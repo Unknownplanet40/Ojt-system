@@ -186,7 +186,8 @@ function saveAdminProfile($conn, string $userUuid, array $data, ?string $base64I
                     middle_name  = ?,
                     contact_number= ?,
                     profile_path = ?,
-                    profile_name = ?
+                       profile_name = ?,
+                       isProfileDone = 1
                 WHERE user_uuid = ?
             ");
             $stmt->bind_param('sssssss', $firstName, $lastName, $middleName, $mobile, $profilePath, $profileName, $userUuid);
@@ -196,7 +197,8 @@ function saveAdminProfile($conn, string $userUuid, array $data, ?string $base64I
                 SET first_name  = ?,
                     last_name   = ?,
                     middle_name = ?,
-                    contact_number= ?
+                       contact_number= ?,
+                       isProfileDone = 1
                 WHERE user_uuid = ?
             ");
             $stmt->bind_param('sssss', $firstName, $lastName, $middleName, $mobile, $userUuid);
@@ -205,9 +207,9 @@ function saveAdminProfile($conn, string $userUuid, array $data, ?string $base64I
         // INSERT
         $profileUuid = generateUuid();
         $stmt = $conn->prepare("
-            INSERT INTO admin_profiles
-              (uuid, user_uuid, first_name, last_name, middle_name, contact_number, profile_path, profile_name)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO admin_profiles
+                            (uuid, user_uuid, first_name, last_name, middle_name, contact_number, profile_path, profile_name, isProfileDone)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
         ");
         $stmt->bind_param(
             'ssssssss',
@@ -229,6 +231,7 @@ function saveAdminProfile($conn, string $userUuid, array $data, ?string $base64I
     $_SESSION['user_name']       = trim($firstName . ' ' . $lastName);
     $_SESSION['user_first_name'] = $firstName;
     $_SESSION['user_initials']   = strtoupper(substr($firstName, 0, 1) . substr($lastName, 0, 1));
+        $_SESSION['is_profile_done'] = 1;
 
     logActivity(
         conn: $conn,
@@ -307,7 +310,8 @@ function saveCoordinatorProfile($conn, string $userUuid, array $data, ?string $b
                     mobile       = ?,
                     department   = ?,
                     profile_path = ?,
-                    profile_name = ?
+                       profile_name = ?,
+                       isProfileDone = 1
                 WHERE user_uuid = ?
             ");
             $stmt->bind_param('ssssssss', $firstName, $lastName, $middleName, $mobile, $department, $profilePath, $profileName, $userUuid);
@@ -318,7 +322,8 @@ function saveCoordinatorProfile($conn, string $userUuid, array $data, ?string $b
                     last_name   = ?,
                     middle_name = ?,
                     mobile      = ?,
-                    department  = ?
+                       department  = ?,
+                       isProfileDone = 1
                 WHERE user_uuid = ?
             ");
             $stmt->bind_param('ssssss', $firstName, $lastName, $middleName, $mobile, $department, $userUuid);
@@ -326,10 +331,10 @@ function saveCoordinatorProfile($conn, string $userUuid, array $data, ?string $b
     } else {
         $profileUuid = generateUuid();
         $stmt = $conn->prepare("
-            INSERT INTO coordinator_profiles
-              (uuid, user_uuid, first_name, last_name, middle_name,
-               mobile, department, employee_id, profile_path, profile_name)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO coordinator_profiles
+                            (uuid, user_uuid, first_name, last_name, middle_name,
+                             mobile, department, employee_id, profile_path, profile_name, isProfileDone)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
         ");
         $stmt->bind_param(
             'ssssssssss',
@@ -352,6 +357,7 @@ function saveCoordinatorProfile($conn, string $userUuid, array $data, ?string $b
     $_SESSION['user_name']       = trim($firstName . ' ' . $lastName);
     $_SESSION['user_first_name'] = $firstName;
     $_SESSION['user_initials']   = strtoupper(substr($firstName, 0, 1) . substr($lastName, 0, 1));
+        $_SESSION['is_profile_done'] = 1;
 
     logActivity(
         conn: $conn,
@@ -440,7 +446,8 @@ function saveStudentProfile($conn, string $userUuid, array $data, ?string $base6
                     emergency_phone   = ?,
                     profile_path      = ?,
                     profile_name      = ?,
-                    section           = ?
+                       section           = ?,
+                       isProfileDone     = 1
                 WHERE user_uuid = ?
             ");
             $stmt->bind_param(
@@ -467,7 +474,8 @@ function saveStudentProfile($conn, string $userUuid, array $data, ?string $base6
                     home_address      = ?,
                     emergency_contact = ?,
                     emergency_phone   = ?,
-                    section           = ?
+                       section           = ?,
+                       isProfileDone     = 1
                 WHERE user_uuid = ?
             ");
             $stmt->bind_param(
@@ -493,6 +501,7 @@ function saveStudentProfile($conn, string $userUuid, array $data, ?string $base6
     $_SESSION['user_name']       = trim($firstName . ' ' . $lastName);
     $_SESSION['user_first_name'] = $firstName;
     $_SESSION['user_initials']   = strtoupper(substr($firstName, 0, 1) . substr($lastName, 0, 1));
+        $_SESSION['is_profile_done'] = 1;
 
     logActivity(
         conn: $conn,
@@ -573,7 +582,8 @@ function saveSupervisorProfile($conn, string $userUuid, array $data, ?string $ba
                     position     = ?,
                     department   = ?,
                     profile_path = ?,
-                    profile_name = ?
+                       profile_name = ?,
+                       isProfileDone = 1
                 WHERE user_uuid = ?
             ");
             $stmt->bind_param(
@@ -594,7 +604,8 @@ function saveSupervisorProfile($conn, string $userUuid, array $data, ?string $ba
                     last_name   = ?,
                     mobile      = ?,
                     position    = ?,
-                    department  = ?
+                       department  = ?,
+                       isProfileDone = 1
                 WHERE user_uuid = ?
             ");
             $stmt->bind_param(
@@ -616,6 +627,7 @@ function saveSupervisorProfile($conn, string $userUuid, array $data, ?string $ba
     $_SESSION['user_name']       = trim($firstName . ' ' . $lastName);
     $_SESSION['user_first_name'] = $firstName;
     $_SESSION['user_initials']   = strtoupper(substr($firstName, 0, 1) . substr($lastName, 0, 1));
+        $_SESSION['is_profile_done'] = 1;
 
     logActivity(
         conn: $conn,

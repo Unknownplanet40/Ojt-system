@@ -60,11 +60,26 @@ function resetCreateCoordinatorForm() {
   $("#coordinatorMobile").val("");
 }
 
-function exportCoordinatorCredentialsPdf(exportData, defaultFileName = "Coordinator_Account_Details.pdf") {
+function exportCoordinatorCredentialsPdf(exportData, defaultFileName = "Coordinator_Account_Details.pdf", $triggerButton = null) {
   if (!exportData || !exportData.full_name || !exportData.temp_password) {
     ToastVersion(swalTheme, "Missing data for PDF export.", "error", 3000, "top-end");
     return;
   }
+
+  const hasButton = $triggerButton && $triggerButton.length;
+  const originalButtonHtml = hasButton ? $triggerButton.html() : "";
+
+  if (hasButton) {
+    if ($triggerButton.prop("disabled")) {
+      return;
+    }
+
+    $triggerButton
+      .prop("disabled", true)
+      .html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Generating PDF...');
+  }
+
+  ToastVersion(swalTheme, "Generating PDF, please wait...", "info", 1800, "top-end");
 
   $.ajax({
     url: "../../../process/coordinators/export_coordinator_pdf",
@@ -108,9 +123,16 @@ function exportCoordinatorCredentialsPdf(exportData, defaultFileName = "Coordina
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
+
+      ToastVersion(swalTheme, "Download started.", "success", 1800, "top-end");
     },
     error: function (xhr, status, error) {
       Errors(xhr, status, error);
+    },
+    complete: function () {
+      if (hasButton) {
+        $triggerButton.prop("disabled", false).html(originalButtonHtml);
+      }
     },
   });
 }
@@ -700,7 +722,7 @@ $(document).ready(function () {
     }
 
     const fileName = `${String(payload.full_name || "Coordinator").replace(/\s+/g, "_")}_Coordinator_Account_Details.pdf`;
-    exportCoordinatorCredentialsPdf(payload, fileName);
+    exportCoordinatorCredentialsPdf(payload, fileName, $(this));
   });
 
   $("#exportResetCoordinatorPdfBtn").on("click", function () {
@@ -712,6 +734,6 @@ $(document).ready(function () {
     }
 
     const fileName = `${String(payload.full_name || "Coordinator").replace(/\s+/g, "_")}_Coordinator_Reset_Password_Details.pdf`;
-    exportCoordinatorCredentialsPdf(payload, fileName);
+    exportCoordinatorCredentialsPdf(payload, fileName, $(this));
   });
 });
