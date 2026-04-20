@@ -1,7 +1,7 @@
 {
   "name": "Internship Management System",
   "short_name": "OJTMS",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "A web-based application designed to streamline the management of internship programs, providing tools for students, supervisors, and administrators to efficiently handle tasks such as application processing, progress tracking, and communication.",
   "lang": "en-US",
   "dir": "ltr",
