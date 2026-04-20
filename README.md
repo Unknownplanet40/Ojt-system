@@ -67,6 +67,9 @@ All frontend libraries are bundled locally inside `/libs`, so the project does n
 - **Batches** — create and manage academic batches, set OJT hours, and activate or close batches with confirmation safeguards
 - **Companies** — accredit partner companies, manage slots per batch, track MOA validity, and handle document uploads
 - **Programs** — manage academic programs with per-program required hour overrides
+- **Students** — create/edit/view students, reset passwords, activate/deactivate accounts, and run bulk import with validation preview + credentials export
+- **Coordinator Accounts** — create/edit/view coordinator accounts, reset passwords, activate/deactivate accounts, and monitor assigned student counts
+- **Audit Logs** — read-only unified activity trail from `activity_log` and `login_audit_log` with date/user/action/module/source filters, search, CSV export, and detailed log inspector modal
 - **Dashboard** — stat cards, recent activity, and needs-attention alerts
 
 ### Coordinator
@@ -114,6 +117,9 @@ Typical request flow:
 - Password reset flow: handlers under `process/auth/`
 - Batch lifecycle endpoints: `process/batches/` with logic in `functions/batch_functions.php`
 - Program lifecycle endpoints: `process/programs/` with logic in `functions/program_functions.php`
+- Student lifecycle endpoints: `process/students/` with logic in `functions/student_functions.php` and `functions/bulk_student_functions.php`
+- Coordinator account lifecycle endpoints: `process/coordinators/` with logic in `functions/coordinator_functions.php`
+- Audit log listing/export endpoints: `process/audit_logs/` with logic in `functions/audit_log_functions.php`
 - Profile fetch/save endpoints: `process/profile/` with logic in `functions/profile_functions.php`
 - Secure file delivery: `file_serve.php`
 - DB connection: `config/db.php` (MySQLi, `utf8mb4`)
@@ -181,12 +187,19 @@ Ojt-system/
 ├── functions/
 │   ├── auth_functions.php
 │   ├── batch_functions.php
+│   ├── bulk_student_functions.php
+│   ├── coordinator_functions.php
+│   ├── audit_log_functions.php
 │   ├── program_functions.php
+│   ├── student_functions.php
 │   └── profile_functions.php
 ├── process/
 │   ├── auth/
+│   ├── audit_logs/
 │   ├── batches/
+│   ├── coordinators/
 │   ├── programs/
+│   ├── students/
 │   └── profile/
 ├── Src/
 │   ├── Components/
@@ -217,6 +230,56 @@ Ojt-system/
 ### Unreleased — Working tree summary *(April 2026)*
 
 This summary is based on the current local git working tree.
+
+- **Student bulk import flow (enhanced)**
+  - Added complete validate-and-preview workflow before account creation
+  - Added coordinator-aware parsing/validation/creation/export in bulk helpers
+  - Added re-upload and re-validate UX for fixing CSV/XLSX data quickly
+  - Added bulk success summary with created vs failed rows and detail toggle
+  - Added credential exports for bulk-created accounts:
+    - CSV: `process/students/bulk_export_csv.php`
+    - PDF: `process/students/bulk_export_pdf.php`
+  - Added active-batch header metadata in student listing endpoint and UI binding for:
+    - `#activeBatchLabel`
+    - `#activeBatchCount`
+
+- **Admin Coordinator Accounts module (new)**
+  - Added page: `Src/Pages/Admin/Coordinators.php`
+  - Added script: `Assets/Script/AdminScripts/CoordinatorAccounts.js`
+  - Added coordinator logic layer: `functions/coordinator_functions.php`
+  - Added coordinator process handlers under `process/coordinators/`:
+    - `get_coordinators.php`
+    - `get_coordinator.php`
+    - `create_coordinator.php`
+    - `update_coordinator.php`
+    - `deactivate_coordinator.php`
+    - `reset_coordinator_password.php`
+    - `export_coordinator_pdf.php`
+  - Updated `Src/Components/Header.php` Accounts dropdown to route to the new Coordinators module
+
+- **Admin Audit Logs module (new)**
+  - Added page: `Src/Pages/Admin/AuditLogs.php`
+  - Added script: `Assets/Script/AdminScripts/AuditLogs.js`
+  - Added style layer: `Assets/style/admin/AuditLogsStyles.css`
+  - Added audit logic layer: `functions/audit_log_functions.php`
+  - Added audit process handlers under `process/audit_logs/`:
+    - `get_audit_logs.php`
+    - `export_audit_logs_csv.php`
+  - Implemented a unified, read-only feed combining:
+    - `activity_log`
+    - `login_audit_log`
+  - Added filter set for date range, user, action type, module, source, and text search
+  - Added pagination with rows-per-page control
+  - Added CSV export for the currently filtered result set
+  - Added details modal with structured meta rendering (key/value cards), auth context, and source-aware field handling
+  - Added row-level badges for quick visibility:
+    - `Meta: Yes/No/N/A`
+    - `UA: Yes/No/N/A`
+  - Updated header dropdown route to `../Admin/AuditLogs`
+
+- **Audit logging data-quality fixes**
+  - Updated `functions/auth_functions.php` login audit insertions to persist `user_agent` for both successful and failed login attempts
+  - Hardened audit meta decoding in `functions/audit_log_functions.php` to parse both normal JSON and double-encoded JSON strings
 
 - **Student management module (new)**
   - Added `Src/Pages/Admin/Students.php`

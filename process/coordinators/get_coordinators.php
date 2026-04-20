@@ -21,9 +21,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
-require_once dirname(__DIR__, 2) . '/functions/student_functions.php';
-require_once dirname(__DIR__, 2) . '/functions/program_functions.php';
-require_once dirname(__DIR__, 2) . '/functions/batch_functions.php';
+require_once dirname(__DIR__, 2) . '/functions/coordinator_functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -50,41 +48,26 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
-$batchUuid = trim($_POST['batch_uuid'] ?? '');
-$filters   = [];
-
-// coordinators only see their own students
-if ($_SESSION['user_role'] === 'coordinator') {
-    $filters['coordinator_uuid'] = $_SESSION['profile_uuid'];
+$filters = [];
+if (!empty($_POST['status'])) {
+    $filters['status'] = trim($_POST['status']);
+}
+if (!empty($_POST['department'])) {
+    $filters['department'] = trim($_POST['department']);
+}
+if (!empty($_POST['search'])) {
+    $filters['search'] = trim($_POST['search']);
 }
 
-// optional filters from request
-if (!empty($_POST['program_uuid'])) $filters['program_uuid'] = $_POST['program_uuid'];
-if (!empty($_POST['year_level']))   $filters['year_level']   = $_POST['year_level'];
-if (!empty($_POST['status']))       $filters['status']       = $_POST['status'];
-if (!empty($_POST['search']))       $filters['search']       = $_POST['search'];
-
-$students = getAllStudents($conn, $batchUuid ?: null, $filters);
-$coordinators = getCoordinatorsForDropdown($conn);
-$programs = getProgramsForDropdown($conn);
-$activeBatch = getActiveBatch($conn);
-$activeBatchCount = 0;
-
-if ($activeBatch && !empty($activeBatch['uuid'])) {
-    $activeBatchData = getBatch($conn, $activeBatch['uuid']);
-    $activeBatchCount = (int)($activeBatchData['student_count'] ?? 0);
-}
+$coordinators = getAllCoordinators($conn, $filters);
+$departments = getCoordinatorDepartments($conn);
 
 response([
-    'status'   => 'success',
-    'students' => $students,
+    'status' => 'success',
     'coordinators' => $coordinators,
-    'programs' => $programs,
-    'active_batch' => $activeBatch,
-    'active_batch_count' => $activeBatchCount,
-    'selectedProgram' => $filters['program_uuid'] ?? '',
-    'selectedYearLevel' => $filters['year_level'] ?? '',
+    'departments' => $departments,
     'selectedStatus' => $filters['status'] ?? '',
+    'selectedDepartment' => $filters['department'] ?? '',
     'searchQuery' => $filters['search'] ?? '',
-    'total'    => count($students),
+    'total' => count($coordinators),
 ]);

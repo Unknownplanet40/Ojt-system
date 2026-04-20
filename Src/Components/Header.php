@@ -21,7 +21,7 @@
           <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
             <li><span class="dropdown-item-text text-nowrap text-success text-center text-capitalize">User Management</span></li>
             <li>
-              <a class="dropdown-item" href="javascript:void(0)">
+              <a class="dropdown-item <?= $CurrentPage === 'Coordinators' ? 'nav-active' : '' ?>" href="../Admin/Coordinators">
                 <div class="hstack">
                   <i class="bi bi-person-badge me-2"></i>
                   <div class="vstack">
@@ -128,7 +128,7 @@
               </a>
             </li>
             <li>
-              <a class="dropdown-item" href="javascript:void(0)">
+              <a class="dropdown-item <?= $CurrentPage === 'AuditLogs' ? 'nav-active' : '' ?>" href="../Admin/AuditLogs">
                 <div class="hstack">
                   <i class="bi bi-file-earmark me-2"></i>
                   <div class="vstack">

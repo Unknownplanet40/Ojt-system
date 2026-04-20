@@ -256,12 +256,13 @@ function logoutUser($conn): void
 function logLoginAudit($conn, string $userUuid, bool $success, string $reason = ''): void
 {
     $ip         = $_SERVER['REMOTE_ADDR'] ?? null;
+    $userAgent  = $_SERVER['HTTP_USER_AGENT'] ?? null;
     $successInt = $success ? 1 : 0;
     $stmt = $conn->prepare("
-        INSERT INTO login_audit_log (user_uuid, ip_address, success, fail_reason)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO login_audit_log (user_uuid, ip_address, user_agent, success, fail_reason)
+        VALUES (?, ?, ?, ?, ?)
     ");
-    $stmt->bind_param('ssis', $userUuid, $ip, $successInt, $reason);
+    $stmt->bind_param('sssis', $userUuid, $ip, $userAgent, $successInt, $reason);
     $stmt->execute();
     $stmt->close();
 }
@@ -269,11 +270,12 @@ function logLoginAudit($conn, string $userUuid, bool $success, string $reason = 
 function logFailedLogin($conn, string $email, string $reason, string $userUuid = null): void
 {
     $ip   = $_SERVER['REMOTE_ADDR'] ?? null;
+    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
     $stmt = $conn->prepare("
-        INSERT INTO login_audit_log (user_uuid, ip_address, success, fail_reason)
-        VALUES (?, ?, 0, ?)
+        INSERT INTO login_audit_log (user_uuid, ip_address, user_agent, success, fail_reason)
+        VALUES (?, ?, ?, 0, ?)
     ");
-    $stmt->bind_param('sss', $userUuid, $ip, $reason);
+    $stmt->bind_param('ssss', $userUuid, $ip, $userAgent, $reason);
     $stmt->execute();
     $stmt->close();
 }

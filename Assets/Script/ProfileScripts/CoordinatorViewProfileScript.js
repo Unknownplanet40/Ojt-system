@@ -15,6 +15,9 @@ if (!csrfToken || !userRole || userRole !== "coordinator") {
   window.location.href = "../../../Src/Pages/Login";
 }
 
+function viewCoordinatorProfile() {
+}
+
 $(document).ready(function () {
   $("#editprofileBtn").on("click", function () {
     window.location.href = "../../../Src/Pages/Coordinator/Coordinator_Profile?action=edit";
