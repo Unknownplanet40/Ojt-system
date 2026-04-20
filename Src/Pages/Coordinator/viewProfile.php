@@ -23,9 +23,7 @@ $CurrentPage = "viewProfile";
     <script type="module" src="../../../Assets/Script/ProfileScripts/CoordinatorViewProfileScript.js"></script>
 </head>
 
-<body class="login-page"
-    data-role="<?= $_SESSION['user_role'] ?>"
-    data-uuid="<?= $_SESSION['user_uuid'] ?>">
+<body class="login-page">
     <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
         <div class="circle circle1" data-speed="fast"></div>
         <div class="circle circle2" data-speed="normal"></div>
