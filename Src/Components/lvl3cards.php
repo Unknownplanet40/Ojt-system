@@ -79,7 +79,7 @@
       <div class="card-header border-bottom-0 bg-transparent">
         <div class="hstack">
           <h5 class="card-title">Recent Accounts</h5>
-          <a href="javascript:void(0)" class="ms-auto text-decoration-none text-success fw-medium">View all</a>
+          <a href="../Admin/Students" class="ms-auto text-decoration-none text-success fw-medium">View all</a>
         </div>
       </div>  
     <div class="card-body">
@@ -93,7 +93,7 @@
       <div class="card-header border-bottom-0 bg-transparent">
         <div class="hstack">
           <h5 class="card-title">Recent Activity - (<small class="text-muted" id="activityCount">0</small>)</h5>
-          <a href="javascript:void(0)" class="ms-auto text-decoration-none text-success fw-medium">View all</a>
+          <a href="../Admin/AuditLogs" class="ms-auto text-decoration-none text-success fw-medium">View all</a>
         </div>
       </div>
     <div class="card-body">

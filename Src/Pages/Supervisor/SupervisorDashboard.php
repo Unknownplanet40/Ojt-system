@@ -1,11 +1,27 @@
-<!DOCTYPE html>
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+date_default_timezone_set('Asia/Manila');
+require_once "../../../Assets/SystemInfo.php";
+
+$CurrentPage = "SupervisorDashboard";
+?>
+
+<!doctype html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <?php require_once "pagehead.php"; ?>
+    <title><?= $ShortTitle ?></title>
 </head>
-<body>
-    Supervisor Dashboard
+
+<body class="login-page">
+    <div class="container py-5">
+        <h4>Supervisor Dashboard</h4>
+        <p class="text-muted mb-0">Dashboard is being prepared.</p>
+    </div>
 </body>
+
 </html>

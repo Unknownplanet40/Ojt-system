@@ -11,6 +11,54 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 
 require_once __DIR__ . '/../helpers/helpers.php';
 
+function getRoleProfileConfig(string $role): ?array
+{
+    return match($role) {
+        'admin' => [
+            'table'            => 'admin_profiles',
+            'profile_redirect' => '../../Src/Pages/Admin/Admin_Profile',
+            'dashboard'        => '../../Src/Pages/Admin/AdminDashboard',
+        ],
+        'coordinator' => [
+            'table'            => 'coordinator_profiles',
+            'profile_redirect' => '../../Src/Pages/Coordinator/Coordinator_Profile',
+            'dashboard'        => '../../Src/Pages/Coordinator/CoordinatorDashboard',
+        ],
+        'student' => [
+            'table'            => 'student_profiles',
+            'profile_redirect' => '../../Src/Pages/Students/Students_Profile',
+            'dashboard'        => '../../Src/Pages/Students/StudentsDashboard',
+        ],
+        'supervisor' => [
+            'table'            => 'supervisor_profiles',
+            'profile_redirect' => '../../Src/Pages/Supervisor/Supervisor_Profile',
+            'dashboard'        => '../../Src/Pages/Supervisor/SupervisorDashboard',
+        ],
+        default => null,
+    };
+}
+
+function isUserProfileCompleted($conn, string $userUuid, string $role): bool
+{
+    $config = getRoleProfileConfig($role);
+    if (!$config || empty($userUuid)) {
+        return false;
+    }
+
+    $table = $config['table'];
+    $stmt = $conn->prepare("SELECT COALESCE(`isProfileDone`, 0) AS is_done FROM {$table} WHERE user_uuid = ? LIMIT 1");
+    $stmt->bind_param('s', $userUuid);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$row) {
+        return false;
+    }
+
+    return (int)($row['is_done'] ?? 0) === 1;
+}
+
 function loginUser($conn, string $email, string $password): array
 {
     $email = trim($email);
@@ -97,6 +145,8 @@ function buildSession($conn, array $user): void
         'supervisor'  => loadSupervisorSession($conn, $user['uuid']),
         default       => null,
     };
+
+    $_SESSION['is_profile_done'] = isUserProfileCompleted($conn, $user['uuid'], $user['role']) ? 1 : 0;
 }
 
 function loadAdminSession($conn, string $userUuid): void
@@ -188,39 +238,19 @@ function getRedirectUrl($conn, array $user): string
         return '../../Src/Pages/ChangePassword';
     }
 
-    $table = match($user['role']) {
-        'admin'       => 'admin_profiles',
-        'coordinator' => 'coordinator_profiles',
-        'student'     => 'student_profiles',
-        'supervisor'  => 'supervisor_profiles',
-        default       => null,
-    };
-
-    if ($table) {
-        $stmt = $conn->prepare("SELECT id FROM {$table} WHERE user_uuid = ? LIMIT 1");
-        $stmt->bind_param('s', $user['uuid']);
-        $stmt->execute();
-        $hasProfile = $stmt->get_result()->num_rows > 0;
-        $stmt->close();
-
-        if (!$hasProfile) {
-            return match($user['role']) {
-                'admin'       => '../../Src/Pages/Admin/Admin_Profile',
-                'coordinator' => '../../Src/Pages/Coordinator/Coordinator_Profile',
-                'student'     => '../../Src/Pages/Students/Students_Profile',
-                'supervisor'  => '../../Src/Pages/Supervisor/Supervisor_Profile',
-                default       => '../../Src/Pages/login',
-            };
-        }
+    $config = getRoleProfileConfig($user['role']);
+    if (!$config) {
+        return '../../Src/Pages/login';
     }
 
-    return match($user['role']) {
-        'admin'       => '../../Src/Pages/Admin/AdminDashboard',
-        'coordinator' => '../../Src/Pages/Coordinator/CoordinatorDashboard',
-        'student'     => '../../Src/Pages/Students/StudentsDashboard',
-        'supervisor'  => '../../Src/Pages/Supervisor/SupervisorDashboard',
-        default       => '../../Src/Pages/login',
-    };
+    $isProfileDone = isUserProfileCompleted($conn, $user['uuid'], $user['role']);
+    $_SESSION['is_profile_done'] = $isProfileDone ? 1 : 0;
+
+    if (!$isProfileDone) {
+        return $config['profile_redirect'];
+    }
+
+    return $config['dashboard'];
 }
 
 function logoutUser($conn): void
@@ -727,39 +757,19 @@ function voluntaryChangePassword($conn, string $userUuid, string $currentPasswor
 
 function getPostPasswordChangeRedirect($conn, string $userUuid, string $role): string
 {
-    $table = match($role) {
-        'admin'       => 'admin_profiles',
-        'coordinator' => 'coordinator_profiles',
-        'student'     => 'student_profiles',
-        'supervisor'  => 'supervisor_profiles',
-        default       => null,
-    };
-
-    if ($table) {
-        $stmt = $conn->prepare("SELECT id FROM {$table} WHERE user_uuid = ? LIMIT 1");
-        $stmt->bind_param('s', $userUuid);
-        $stmt->execute();
-        $hasProfile = $stmt->get_result()->num_rows > 0;
-        $stmt->close();
-
-        if (!$hasProfile) {
-            return match($role) {
-                'admin'       => '../../Src/Pages/Admin/Admin_Profile',
-                'coordinator' => '../../Src/Pages/Coordinator/Coordinator_Profile',
-                'student'     => '../../Src/Pages/Students/Student_Profile',
-                'supervisor'  => '../../Src/Pages/Supervisor/Supervisor_Profile',
-                default       => '../../Src/Pages/login',
-            };
-        }
+    $config = getRoleProfileConfig($role);
+    if (!$config) {
+        return '../../Src/Pages/login';
     }
 
-    return match($role) {
-        'admin'       => '../../Src/Pages/Admin/Dashboard',
-        'coordinator' => '../../Src/Pages/Coordinator/Dashboard',
-        'student'     => '../../Src/Pages/Students/Dashboard',
-        'supervisor'  => '../../Src/Pages/Supervisor/Dashboard',
-        default       => '../../Src/Pages/Auth/Login',
-    };
+    $isProfileDone = isUserProfileCompleted($conn, $userUuid, $role);
+    $_SESSION['is_profile_done'] = $isProfileDone ? 1 : 0;
+
+    if (!$isProfileDone) {
+        return $config['profile_redirect'];
+    }
+
+    return $config['dashboard'];
 }
 
 function sendResetLink($conn, string $email): array

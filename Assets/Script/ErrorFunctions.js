@@ -10,6 +10,16 @@ export function Errors(xhr, status, error) {
   // status: A string describing the type of error that occurred. Possible values include "timeout", "error", "abort", and "parsererror".
   // error: An optional exception object, if one occurred.
 
+  const payload = xhr?.responseJSON || null;
+
+  if (payload?.code === "PROFILE_INCOMPLETE" && payload?.redirect_url) {
+    ToastVersion(swalTheme, payload.message || "Complete your profile setup first.", "warning", 2000, "top-end");
+    setTimeout(() => {
+      window.location.href = payload.redirect_url;
+    }, 250);
+    return;
+  }
+
   if (xhr.status === 403) {
     ModalVersion(swalTheme, "Access Denied", "Your session may have expired or you do not have permission to access this resource. Please refresh the page and try again.", "error", 0, "center");
     return;
