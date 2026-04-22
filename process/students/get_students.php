@@ -60,6 +60,7 @@ if ($_SESSION['user_role'] === 'coordinator') {
 
 // optional filters from request
 if (!empty($_POST['program_uuid'])) $filters['program_uuid'] = $_POST['program_uuid'];
+if (!empty($_POST['company_uuid'])) $filters['company_uuid'] = $_POST['company_uuid'];
 if (!empty($_POST['year_level']))   $filters['year_level']   = $_POST['year_level'];
 if (!empty($_POST['status']))       $filters['status']       = $_POST['status'];
 if (!empty($_POST['search']))       $filters['search']       = $_POST['search'];
@@ -83,6 +84,7 @@ response([
     'active_batch' => $activeBatch,
     'active_batch_count' => $activeBatchCount,
     'selectedProgram' => $filters['program_uuid'] ?? '',
+    'selectedCompany' => $filters['company_uuid'] ?? '',
     'selectedYearLevel' => $filters['year_level'] ?? '',
     'selectedStatus' => $filters['status'] ?? '',
     'searchQuery' => $filters['search'] ?? '',

@@ -5,6 +5,8 @@ const driver = window.driver?.js?.driver;
 let swalTheme = SwalTheme();
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
+const studentsUrlParams = new URLSearchParams(window.location.search);
+let activeCompanyUuidFilter = $.trim(studentsUrlParams.get("company_uuid") || "");
 const STUDENTS_TOUR_KEY = "admin_students_module_tour_done";
 let studentsStatuses = [];
 let studentsStatusLabels = {
@@ -192,6 +194,7 @@ function getStudents() {
     dataType: "json",
     data: {
       csrf_token: csrfToken,
+      company_uuid: activeCompanyUuidFilter,
       program_uuid: $("#programFilter").val(),
       year_level: $("#yearlvlFilter").val(),
       status: $("#statusFilter").val(),
@@ -1421,6 +1424,12 @@ $(document).ready(function () {
     $("#yearlvlFilter").val("");
     $("#statusFilter").val("");
     $("#searchInput").val("");
+    activeCompanyUuidFilter = "";
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete("company_uuid");
+    window.history.replaceState({}, "", url);
+
     getStudents();
   });
 
@@ -1649,8 +1658,6 @@ $(document).ready(function () {
 
   $("#reuploadFixedFileBtn").click(function () {
     const $fileInput = $("#fileUploadInput");
-
-    // reset value so selecting the same file still triggers the change event
     $fileInput.val("");
 
     $fileInput

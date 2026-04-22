@@ -41,9 +41,6 @@ function getAllPrograms($conn, bool $activeOnly = false): array
 }
 
 
-// -----------------------------------------------
-// GET single program by UUID
-// -----------------------------------------------
 function getProgram($conn, string $programUuid): ?array
 {
     $stmt = $conn->prepare("
@@ -64,10 +61,6 @@ function getProgram($conn, string $programUuid): ?array
     return $row ? formatProgram($row) : null;
 }
 
-// -----------------------------------------------
-// GET programs for dropdown
-// returns minimal data — uuid, code, name, hours
-// -----------------------------------------------
 function getProgramsForDropdown($conn): array
 {
     $result = $conn->query("
@@ -91,9 +84,6 @@ function getProgramsForDropdown($conn): array
     return $programs;
 }
 
-// -----------------------------------------------
-// CREATE program
-// -----------------------------------------------
 function createProgram($conn, array $data, string $actorUuid): array
 {
     $errors = [];
@@ -167,9 +157,6 @@ function createProgram($conn, array $data, string $actorUuid): array
     return ['success' => true, 'uuid' => $programUuid];
 }
 
-// -----------------------------------------------
-// UPDATE program
-// -----------------------------------------------
 function updateProgram($conn, string $programUuid, array $data, string $actorUuid): array
 {
     $errors = [];
@@ -246,9 +233,6 @@ function updateProgram($conn, string $programUuid, array $data, string $actorUui
     return ['success' => true];
 }
 
-// -----------------------------------------------
-// TOGGLE program active / inactive
-// -----------------------------------------------
 function toggleProgram($conn, string $programUuid, string $actorUuid): array
 {
     $stmt = $conn->prepare("
@@ -287,9 +271,6 @@ function toggleProgram($conn, string $programUuid, string $actorUuid): array
     ];
 }
 
-// -----------------------------------------------
-// FORMAT program row — shared helper
-// -----------------------------------------------
 function formatProgram(array $row): array
 {
     return [

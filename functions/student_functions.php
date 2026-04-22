@@ -51,6 +51,10 @@ function getAllStudents($conn, string $batchUuid = null, array $filters = []): a
         $p = $conn->real_escape_string($filters['program_uuid']);
         $conditions[] = "sp.program_uuid = '{$p}'";
     }
+    if (!empty($filters['company_uuid'])) {
+        $company = $conn->real_escape_string($filters['company_uuid']);
+        $conditions[] = "sp.company_uuid = '{$company}'";
+    }
     if (!empty($filters['year_level'])) {
         $y = (int) $filters['year_level'];
         $conditions[] = "sp.year_level = {$y}";
@@ -86,6 +90,7 @@ function getAllStudents($conn, string $batchUuid = null, array $filters = []): a
           sp.section,
           sp.mobile,
           sp.coordinator_uuid,
+          sp.company_uuid,
           sp.program_uuid,
           sp.profile_name,
 

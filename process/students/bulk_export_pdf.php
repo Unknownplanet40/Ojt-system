@@ -63,6 +63,8 @@ $generatedAt = date('F j, Y g:i A');
 $schoolName = $SchoolName ?? 'Your School Name Here';
 $fileCreatedBy = $_SESSION['user_name'] ?? 'Admin User';
 $roleofCreator = $_SESSION['user_role'] === 'admin' ? 'Administrator' : 'User';
+$LogoPath1 = 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
+$LogoPath2 = 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
 
 $rowsHtml = '';
 foreach ($created as $index => $student) {
@@ -99,6 +101,12 @@ $html = <<<HTML
   <style>
     body { font-family: Arial, sans-serif; font-size: 11px; color: #111827; margin: 24px; }
     .header { text-align: center; border-bottom: 2px solid #0F6E56; padding-bottom: 10px; margin-bottom: 16px; }
+    .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 8px; margin-bottom: 12px; }
+    .header-table td { vertical-align: middle; }
+    .header-left { width: 20%; text-align: left; }
+    .header-center { width: 60%; text-align: center; }
+    .header-right { width: 20%; text-align: right; }
+    .header-logo { width: 52px; height: 52px; object-fit: contain; }
     .school-name { font-size: 14px; font-weight: bold; color: #0F6E56; }
     .title { font-size: 18px; font-weight: bold; margin-top: 4px; }
     .subtitle { font-size: 10px; color: #6B7280; margin-top: 3px; }
@@ -119,9 +127,22 @@ $html = <<<HTML
 </head>
 <body>
   <div class="header">
-    <div class="school-name">{$schoolName}</div>
-    <div class="title">Bulk Student Credentials Sheet</div>
-    <div class="subtitle">Generated {$generatedAt}</div>
+    <table class="header-table" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td class="header-left">
+          <img src="{$LogoPath1}" alt="Logo Left" class="header-logo" />
+        </td>
+        <td class="header-center" style="line-height:1.35;">
+          <div style="font-size: 14px; font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.04em;">{$schoolName}</div>
+          <div style="font-size: 10px; color: #475569; margin-top: 2px;">Official Digital Credential Document</div>
+          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">{$LongTitle} - Bulk Student Account Details</div>
+          <div style="font-size: 9px; color: #64748b; margin-top: 2px;">Generated on {$generatedAt}</div>
+        </td>
+        <td class="header-right">
+          <img src="{$LogoPath2}" alt="Logo Right" class="header-logo" />
+        </td>
+      </tr>
+    </table>
   </div>
 
   <div class="meta">

@@ -9,10 +9,6 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 require_once __DIR__ . '/../helpers/helpers.php';
 require_once __DIR__ . '/student_functions.php';
 
-// -----------------------------------------------
-// PARSE uploaded file (CSV or XLSX)
-// returns array of raw rows
-// -----------------------------------------------
 function parseBulkFile(array $file): array
 {
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
@@ -42,11 +38,13 @@ function parseCsvFile(string $filePath): array
 
         if ($lineNum === 1) {
             // first row is headers — normalize
-            $headers = array_map(fn($h) => strtolower(trim($h)), $data);
+            $headers = array_map(fn ($h) => strtolower(trim($h)), $data);
             continue;
         }
 
-        if (empty(array_filter($data))) continue; // skip blank rows
+        if (empty(array_filter($data))) {
+            continue;
+        } // skip blank rows
 
         $row = [];
         foreach ($headers as $i => $header) {
@@ -63,8 +61,6 @@ function parseCsvFile(string $filePath): array
 
 function parseXlsxFile(string $filePath): array
 {
-    // requires PhpSpreadsheet
-    // composer require phpoffice/phpspreadsheet
     $autoload = dirname(__DIR__, 2) . '/Libs/composer/vendor/autoload.php';
 
     if (!file_exists($autoload)) {
@@ -82,15 +78,15 @@ function parseXlsxFile(string $filePath): array
             return ['error' => 'File is empty.'];
         }
 
-        // first row is headers
-        $headers = array_map(fn($h) => strtolower(trim((string)$h)), $data[0]);
+        $headers = array_map(fn ($h) => strtolower(trim((string)$h)), $data[0]);
         $rows    = [];
 
         for ($i = 1; $i < count($data); $i++) {
             $rawRow = $data[$i];
 
-            // skip blank rows
-            if (empty(array_filter(array_map('strval', $rawRow)))) continue;
+            if (empty(array_filter(array_map('strval', $rawRow)))) {
+                continue;
+            }
 
             $row = [];
             foreach ($headers as $j => $header) {
@@ -129,22 +125,14 @@ function findCoordinatorUuidByName($conn, string $coordinatorName): ?string
     return $row['uuid'] ?? null;
 }
 
-
-// -----------------------------------------------
-// VALIDATE rows
-// checks each row without creating any accounts
-// returns valid rows and error rows separately
-// -----------------------------------------------
 function validateBulkRows($conn, array $rows, string $batchUuid, string $coordinatorUuid): array
 {
-    // fetch active programs for quick lookup
     $result   = $conn->query("SELECT uuid, code FROM programs WHERE is_active = 1");
     $programs = [];
     while ($row = $result->fetch_assoc()) {
         $programs[strtoupper($row['code'])] = $row['uuid'];
     }
 
-    // fetch all coordinators for lookup
     $coordResult = $conn->query("SELECT uuid, first_name, last_name FROM coordinator_profiles");
     $coordinatorsByName = [];
     $coordinatorNamesByUuid = [];
@@ -154,10 +142,8 @@ function validateBulkRows($conn, array $rows, string $batchUuid, string $coordin
         $coordinatorNamesByUuid[$row['uuid']] = $fullName;
     }
 
-    // fetch coordinator name for default coordinator
     $coordinatorName = $coordinatorNamesByUuid[$coordinatorUuid] ?? '';
 
-    // fetch existing emails and student numbers to check duplicates
     $existingEmails  = [];
     $existingNumbers = [];
 
@@ -174,31 +160,28 @@ function validateBulkRows($conn, array $rows, string $batchUuid, string $coordin
     $validRows  = [];
     $errorRows  = [];
 
-    // track duplicates within the file itself
     $seenEmails  = [];
     $seenNumbers = [];
 
     foreach ($rows as $row) {
         $errors = [];
 
-        $lastName      = trim($row['last_name']      ?? '');
-        $firstName     = trim($row['first_name']     ?? '');
-        $middleName    = trim($row['middle_name']    ?? '');
-        $email         = strtolower(trim($row['email']         ?? ''));
-        $studentNumber = trim($row['student_number'] ?? '');
-        $programCode   = strtoupper(trim($row['program_code']  ?? ''));
-        $yearLevel     = (int) ($row['year_level']   ?? 0);
-        $section       = trim($row['section']        ?? '');
-        $mobile        = trim($row['mobile']         ?? '');
-        $rowCoordinatorName = trim($row['coordinator_name'] ?? '');
+        $lastName      = trim($row['last_name']                 ?? '');
+        $firstName     = trim($row['first_name']                ?? '');
+        $middleName    = trim($row['middle_name']               ?? '');
+        $email         = strtolower(trim($row['email']          ?? ''));
+        $studentNumber = trim($row['student_number']            ?? '');
+        $programCode   = strtoupper(trim($row['program_code']   ?? ''));
+        $yearLevel     = (int) ($row['year_level']              ?? 0);
+        $section       = trim($row['section']                   ?? '');
+        $mobile        = trim($row['mobile']                    ?? '');
+        $rowCoordinatorName = trim($row['coordinator_name']     ?? '');
         $rowNum        = $row['_row'];
 
-        // determine which coordinator to use
         $rowCoordinatorUuid = $coordinatorUuid;
         $rowCoordinatorNameForRow = $coordinatorName;
 
         if (!empty($rowCoordinatorName)) {
-            // look up coordinator by name
             $coordNameLower = strtolower($rowCoordinatorName);
             if (isset($coordinatorsByName[$coordNameLower])) {
                 $rowCoordinatorUuid = $coordinatorsByName[$coordNameLower];
@@ -212,9 +195,20 @@ function validateBulkRows($conn, array $rows, string $batchUuid, string $coordin
             $errors[] = 'Coordinator is required. Set coordinator_name in file or provide a default coordinator.';
         }
 
-        // required field checks
-        if (empty($lastName))  $errors[] = 'Last name is required';
-        if (empty($firstName)) $errors[] = 'First name is required';
+        if (empty($lastName)) {
+            $errors[] = 'Last name is required';
+        } elseif (strlen($lastName) < 2) {
+            $errors[] = 'Last name must be at least 2 characters long';
+        } elseif (strlen($lastName) > 50) {
+            $errors[] = 'Last name cannot exceed 50 characters';
+        }
+
+
+        if (empty($firstName)) {
+            $errors[] = 'First name is required';
+        } elseif (strlen($firstName) > 50) {
+            $errors[] = 'First name cannot exceed 50 characters';
+        }
 
         if (empty($email)) {
             $errors[] = 'Email is required';
@@ -232,7 +226,20 @@ function validateBulkRows($conn, array $rows, string $batchUuid, string $coordin
             $errors[] = "Student number {$studentNumber} is already registered";
         } elseif (isset($seenNumbers[$studentNumber])) {
             $errors[] = "Duplicate student number in file (row {$seenNumbers[$studentNumber]})";
+        } elseif (!empty($studentNumber) && strlen($studentNumber) < 9) {
+            $errors[] = "Student number must be at least 9 characters long";
         }
+
+        if (!empty($mobile) && !preg_match('/^09\d{9}$/', str_replace([' ', '-', '(', ')'], '', $mobile))) {
+            $errors[] = 'Invalid mobile number format. Use 09XXXXXXXXX.';
+        } elseif (!empty($mobile) && strlen(str_replace([' ', '-', '(', ')'], '', $mobile)) != 11) {
+            $errors[] = 'Mobile number must be 11 digits long (including the leading 0).';
+        } elseif (!empty($mobile) && !preg_match('/^09\d{9}$/', str_replace([' ', '-', '(', ')'], '', $mobile))) {
+            $errors[] = 'Mobile number must start with 09 followed by 9 digits.';
+        } elseif (!empty($mobile) && preg_match('/[^0-9\s\-\(\)]/', $mobile)) {
+            $errors[] = 'Mobile number can only contain digits, spaces, dashes, and parentheses.';
+        }
+
 
         if (empty($programCode)) {
             $errors[] = 'Program code is required';
@@ -264,7 +271,6 @@ function validateBulkRows($conn, array $rows, string $batchUuid, string $coordin
         ];
 
         if (empty($errors)) {
-            // track for within-file duplicate detection
             $seenEmails[$email]          = $rowNum;
             $seenNumbers[$studentNumber] = $rowNum;
             $cleanRow['status'] = 'valid';
@@ -285,19 +291,12 @@ function validateBulkRows($conn, array $rows, string $batchUuid, string $coordin
     ];
 }
 
-
-// -----------------------------------------------
-// CREATE bulk students
-// only called after validation passes
-// runs each student in a transaction
-// -----------------------------------------------
 function createBulkStudents($conn, array $validRows, string $actorUuid): array
 {
     $created = [];
     $failed  = [];
 
     foreach ($validRows as $row) {
-        // generate credentials
         $userUuid     = generateUuid();
         $profileUuid  = generateUuid();
         $tempPassword = generateTempPassword();
@@ -306,7 +305,6 @@ function createBulkStudents($conn, array $validRows, string $actorUuid): array
         $conn->begin_transaction();
 
         try {
-            // insert user
             $stmt = $conn->prepare("
                 INSERT INTO users
                   (uuid, email, password_hash, role, is_active, must_change_password, created_by)
@@ -316,7 +314,6 @@ function createBulkStudents($conn, array $validRows, string $actorUuid): array
             $stmt->execute();
             $stmt->close();
 
-            // insert student profile
             $stmt = $conn->prepare("
                 INSERT INTO student_profiles
                   (uuid, user_uuid, student_number, last_name, first_name, middle_name,
@@ -343,7 +340,6 @@ function createBulkStudents($conn, array $validRows, string $actorUuid): array
 
             $conn->commit();
 
-            // initialize requirements
             initializeRequirements($conn, $profileUuid, $row['batch_uuid']);
 
             $created[] = [
@@ -369,7 +365,6 @@ function createBulkStudents($conn, array $validRows, string $actorUuid): array
         }
     }
 
-    // log bulk activity
     if (!empty($created)) {
         logActivity(
             conn: $conn,
@@ -388,10 +383,6 @@ function createBulkStudents($conn, array $validRows, string $actorUuid): array
     ];
 }
 
-
-// -----------------------------------------------
-// GENERATE template CSV content
-// -----------------------------------------------
 function generateBulkTemplate($conn): string
 {
     $result   = $conn->query("SELECT code FROM programs WHERE is_active = 1 ORDER BY code");
@@ -401,7 +392,6 @@ function generateBulkTemplate($conn): string
     }
     $codeList = implode('/', $codes);
 
-    // fetch coordinator names
     $coordResult = $conn->query("SELECT uuid, first_name, last_name FROM coordinator_profiles ORDER BY first_name");
     $coordinators = [];
     $coordinatorNames = [];
@@ -459,10 +449,6 @@ function generateBulkTemplate($conn): string
     return $output;
 }
 
-
-// -----------------------------------------------
-// EXPORT created accounts as CSV
-// -----------------------------------------------
 function exportCreatedAccountsCsv(array $created): string
 {
     $headers = ['#', 'Full Name', 'Email', 'Student Number', 'Program', 'Year', 'Section', 'Coordinator', 'Temporary Password'];
@@ -476,7 +462,7 @@ function exportCreatedAccountsCsv(array $created): string
             $student['student_number'],
             $student['program_code'],
             '"' . $student['year_label']     . '"',
-            $student['section']              ?: '—',
+            $student['section'] ?: '—',
             '"' . ($student['coordinator_name'] ?? '') . '"',
             $student['temp_password'],
         ];
