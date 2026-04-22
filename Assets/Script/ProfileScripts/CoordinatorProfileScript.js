@@ -14,6 +14,25 @@ if (!csrfToken || !userRole || userRole !== "coordinator") {
   window.location.href = "../../../Src/Pages/Login";
 }
 
+function showError(inputSelector, message) {
+  if (!inputSelector) {
+    ToastVersion(swalTheme, message, "info", 3000, "top");
+    return;
+  }
+
+  if (inputSelector === "#photoInput") {
+    ToastVersion(swalTheme, "Invalid file. Please select a valid image file (jpg, png, gif) that is less than 5MB.", "info", 3000, "top");
+    return;
+  } else {
+    $(inputSelector).addClass("is-invalid");
+    ToastVersion(swalTheme, message, "info", 3000, "top");
+    setTimeout(() => {
+      $(inputSelector).removeClass("is-invalid");
+    }, 3000);
+    return;
+  }
+}
+
 function startCoordinatorProfileTour() {
   if (!window.driver?.js?.driver || typeof driver !== "function") {
     ToastVersion(swalTheme, "Guided tour is currently unavailable.", "warning", 3000);

@@ -16,22 +16,22 @@ function getRoleProfileConfig(string $role): ?array
     return match($role) {
         'admin' => [
             'table'            => 'admin_profiles',
-            'profile_redirect' => '../../Src/Pages/Admin/Admin_Profile',
+            'profile_redirect' => '../../Src/Pages/Admin/Admin_Profile?action=edit',
             'dashboard'        => '../../Src/Pages/Admin/AdminDashboard',
         ],
         'coordinator' => [
             'table'            => 'coordinator_profiles',
-            'profile_redirect' => '../../Src/Pages/Coordinator/Coordinator_Profile',
+            'profile_redirect' => '../../Src/Pages/Coordinator/Coordinator_Profile?action=edit',
             'dashboard'        => '../../Src/Pages/Coordinator/CoordinatorDashboard',
         ],
         'student' => [
             'table'            => 'student_profiles',
-            'profile_redirect' => '../../Src/Pages/Students/Students_Profile',
+            'profile_redirect' => '../../Src/Pages/Students/Students_Profile?action=edit',
             'dashboard'        => '../../Src/Pages/Students/StudentsDashboard',
         ],
         'supervisor' => [
             'table'            => 'supervisor_profiles',
-            'profile_redirect' => '../../Src/Pages/Supervisor/Supervisor_Profile',
+            'profile_redirect' => '../../Src/Pages/Supervisor/Supervisor_Profile?action=edit',
             'dashboard'        => '../../Src/Pages/Supervisor/SupervisorDashboard',
         ],
         default => null,

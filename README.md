@@ -75,10 +75,12 @@ All frontend libraries are bundled locally inside `/libs`, so the project does n
 ### Coordinator
 - **Dashboard** — summary of assigned students, upcoming visits, company info, and hours progress
 - **Requirements Review** — approve or return student-submitted documents with feedback
+- **Applications Review** — review applications through `pending → approved → endorsed → active` with guarded transitions and notes
 - **Profile** — profile setup and read-only view page
 
 ### Student
 - **Requirements** — upload and track pre-OJT document submissions
+- **Applications** — apply to available companies, track timeline/status, withdraw when allowed, and download endorsement once endorsed
 - **Profile** — profile setup tied to role and program
 
 ### Security
@@ -119,6 +121,8 @@ Typical request flow:
 - Program lifecycle endpoints: `process/programs/` with logic in `functions/program_functions.php`
 - Student lifecycle endpoints: `process/students/` with logic in `functions/student_functions.php` and `functions/bulk_student_functions.php`
 - Coordinator account lifecycle endpoints: `process/coordinators/` with logic in `functions/coordinator_functions.php`
+- Requirements lifecycle endpoints: `process/requirements/` with logic in `functions/requirement_functions.php`
+- Applications lifecycle endpoints: `process/applications/` with logic in `functions/application_functions.php`
 - Audit log listing/export endpoints: `process/audit_logs/` with logic in `functions/audit_log_functions.php`
 - Profile fetch/save endpoints: `process/profile/` with logic in `functions/profile_functions.php`
 - Secure file delivery: `file_serve.php`
@@ -135,6 +139,10 @@ Example usage:
 ```text
 file_serve.php?uuid=<document-uuid>&for=companyView&action=inline
 file_serve.php?uuid=<document-uuid>&for=companyView&action=download
+
+# requirement files (student/coordinator/admin access-checked)
+file_serve.php?type=requirement&req_uuid=<requirement-uuid>
+file_serve.php?type=requirement&req_uuid=<requirement-uuid>&action=download
 ```
 
 ---
@@ -186,7 +194,9 @@ Ojt-system/
 │   └── db.php
 ├── functions/
 │   ├── auth_functions.php
+│   ├── application_functions.php
 │   ├── batch_functions.php
+│   ├── requirement_functions.php
 │   ├── bulk_student_functions.php
 │   ├── coordinator_functions.php
 │   ├── audit_log_functions.php
@@ -194,10 +204,12 @@ Ojt-system/
 │   ├── student_functions.php
 │   └── profile_functions.php
 ├── process/
+│   ├── applications/
 │   ├── auth/
 │   ├── audit_logs/
 │   ├── batches/
 │   ├── coordinators/
+│   ├── requirements/
 │   ├── programs/
 │   ├── students/
 │   └── profile/
@@ -230,6 +242,36 @@ Ojt-system/
 ### Unreleased — Working tree summary *(April 2026)*
 
 This summary is based on the current local git working tree.
+
+- **Applications module refactor and expansion (new process/functions architecture)**
+  - Migrated coordinator/student application flows to `functions/application_functions.php` + `process/applications/*`
+  - Added transition-safe coordinator actions:
+    - `approve_application.php`
+    - `return_application.php`
+    - `reject_application.php`
+    - `endorse_application.php`
+    - `confirm_start.php`
+  - Added student-side application endpoints:
+    - `get_student_application.php`
+    - `get_available_companies.php`
+    - `submit_application.php`
+    - `withdraw_application.php`
+    - `download_endorsement.php`
+  - Added status timeline logging and student-side status tracking helpers
+
+- **Pre-OJT Requirements module hardening**
+  - Added/standardized requirements handlers under `process/requirements/` for student upload and coordinator review
+  - Enforced coordinator ownership checks in requirement approval/return flows
+  - Fixed upload path resolution to project-root uploads directory
+  - Added student note persistence (`student_note`) on requirement upload and review display
+  - Preserved `canStudentApply()` gate (all 6 approved)
+
+- **Secure requirement file streaming**
+  - Extended `file_serve.php` with a dedicated `type=requirement` route
+  - Added role-aware access checks:
+    - students: own requirement files only
+    - coordinators: only assigned students
+    - admins: view allowed
 
 - **Student bulk import flow (enhanced)**
   - Added complete validate-and-preview workflow before account creation

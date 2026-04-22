@@ -27,7 +27,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
 
 <head>
     <?php require_once "pagehead.php"; ?>
-    <script type="module" src="../../../Assets/Script/DashboardScripts/CoordinatorDashboardScript.js"></script>
+    <script type="module" src="../../../Assets/Script/dashboardScripts/CoordinatorDashboardScript.js"></script>
     <title><?= $ShortTitle ?></title>
 </head>
 

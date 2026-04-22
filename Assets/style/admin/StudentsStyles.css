@@ -31,3 +31,56 @@
   position: relative;
   z-index: 1;
 }
+
+.supervisor-modal-body {
+  max-width: 100%;
+}
+
+.supervisor-modal-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(var(--bs-border-color-rgb), 0.25);
+}
+
+.supervisor-panel {
+  box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.12);
+}
+
+.supervisor-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.supervisor-meta-pill {
+  background: rgba(var(--bs-body-bg-rgb), 0.6);
+  backdrop-filter: blur(10px);
+}
+
+.supervisor-info-item {
+  background: rgba(var(--bs-body-bg-rgb), 0.35);
+  border: 1px solid rgba(var(--bs-border-color-rgb), 0.18);
+}
+
+.supervisor-action-btn {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  justify-content: flex-start;
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (max-width: 575.98px) {
+  .supervisor-modal-header h4,
+  .supervisor-modal-header .text-truncate {
+    white-space: normal;
+  }
+
+  .supervisor-action-btn {
+    white-space: normal;
+  }
+
+  .supervisor-panel .card-body {
+    padding: 1rem !important;
+  }
+}

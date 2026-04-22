@@ -81,6 +81,8 @@ $generatedAt   = date('F j, Y g:i A');
 $schoolName    = $SchoolName ?? 'Your School Name Here';
 $fileCreatedBy = $_SESSION['user_name'] ?? 'Admin User';
 $roleofCreator = $_SESSION['user_role'] === 'admin' ? 'Administrator' : 'User';
+$LogoPath1      = 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
+$LogoPath2      = 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
 
 $html = <<<HTML
 <!DOCTYPE html>
@@ -93,6 +95,12 @@ $html = <<<HTML
     .page { padding: 40px; }
 
     .header { text-align: center; border-bottom: 2px solid #0F6E56; padding-bottom: 16px; margin-bottom: 24px; }
+    .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; margin-bottom: 22px; }
+    .header-table td { vertical-align: middle; }
+    .header-left { width: 20%; text-align: left; }
+    .header-center { width: 60%; text-align: center; }
+    .header-right { width: 20%; text-align: right; }
+    .header-logo { width: 64px; height: 64px; object-fit: contain; }
     .school-name { font-size: 15px; font-weight: bold; color: #0F6E56; margin-bottom: 4px; }
     .doc-title { font-size: 20px; font-weight: bold; color: #111; margin-bottom: 4px; }
     .doc-subtitle { font-size: 11px; color: #666; }
@@ -121,11 +129,24 @@ $html = <<<HTML
 <body>
 <div class="page">
 
-  <div class="header">
-    <div class="school-name">{$schoolName}</div>
-    <div class="doc-title">Password Reset Credentials</div>
-    <div class="doc-subtitle">Official OJT System Access Document · Generated {$generatedAt}</div>
-  </div>
+    <div class="header">
+        <table class="header-table" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td class="header-left">
+                    <img src="{$LogoPath1}" alt="Logo Left" class="header-logo" />
+                </td>
+                <td class="header-center" style="line-height:1.35;">
+                    <div style="font-size: 15px; font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.04em;">{$schoolName}</div>
+                    <div style="font-size: 11px; color: #475569; margin-top: 3px;">Official Digital Credential Document</div>
+                    <div style="font-size: 10px; color: #64748b; margin-top: 2px;">{$LongTitle} - Password Reset Details</div>
+                    <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Generated on {$generatedAt}</div>
+                </td>
+                <td class="header-right">
+                    <img src="{$LogoPath2}" alt="Logo Right" class="header-logo" />
+                </td>
+            </tr>
+        </table>
+    </div>
 
   <div class="notice-box">
     <div class="notice-title">⚠ Important Notice</div>

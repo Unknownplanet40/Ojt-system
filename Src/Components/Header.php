@@ -43,12 +43,12 @@
               </a>
             </li>
             <li>
-              <a class="dropdown-item" href="javascript:void(0)">
+              <a class="dropdown-item <?= $CurrentPage === 'Supervisors' ? 'nav-active' : '' ?>" href="../Admin/Supervisors">
                 <div class="hstack">
                   <i class="bi bi-person-circle me-2"></i>
                   <div class="vstack">
                     <span>Supervisors</span>
-                    <small class="text-muted" style="font-size: 0.7em">View all supervisor accounts.</small>
+                    <small class="text-muted" style="font-size: 0.7em">Add, edit, and manage supervisor accounts.</small>
                   </div>
                 </div>
               </a>

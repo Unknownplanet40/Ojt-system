@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 date_default_timezone_set('Asia/Manila');
 
-if (empty($_SESSION['user'])) {
+if (empty($_SESSION['user_uuid']) || ($_SESSION['user_role'] ?? '') !== 'coordinator') {
     header("Location: ../Login");
     exit;
 }
@@ -32,13 +32,12 @@ if ($currentHour >= 5 && $currentHour < 12) {
 
 <head>
     <?php require_once "pagehead.php"; ?>
-    <script type="module" src="../../../Assets/Script/DashboardScripts/CoordinatorDashboardScript.js"></script>
+    <script type="module" src="../../../Assets/Script/dashboardScripts/CoordinatorDashboardScript.js"></script>
     <script type="module" src="../../../Assets/Script/CoordinatorScripts/ApplicationsScript.js"></script>
     <title><?= $ShortTitle ?></title>
 </head>
 
-<body data-role="<?= $_SESSION['user']['role'] ?>"
-    data-uuid="<?= $_SESSION['user']['uuid'] ?>">
+<body>
     <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
         <div class="circle circle1" data-speed="fast"></div>
         <div class="circle circle2" data-speed="normal"></div>
@@ -244,6 +243,8 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                         <button class="btn btn-sm bg-secondary-subtle text-secondary-emphasis border px-4 py-2 rounded-3" data-bs-toggle="modal" data-bs-target="#ReturnModal" id="returnBtn">Return for revision</button>
                                         <button class="btn btn-sm bg-secondary-subtle text-secondary-emphasis border px-4 py-2 rounded-3" data-bs-toggle="modal" data-bs-target="#RejectModal" id="rejectBtn">Reject</button>
                                         <button class="btn btn-sm bg-secondary-subtle text-secondary-emphasis border px-4 py-2 rounded-3" data-bs-toggle="modal" data-bs-target="#ApproveModal" id="approveBtn">Approve</button>
+                                        <button class="btn btn-sm bg-primary-subtle text-primary-emphasis border px-4 py-2 rounded-3" data-bs-toggle="modal" data-bs-target="#EndorseModal" id="endorseBtn">Issue Endorsement</button>
+                                        <button class="btn btn-sm bg-success-subtle text-success-emphasis border px-4 py-2 rounded-3" data-bs-toggle="modal" data-bs-target="#StartModal" id="startBtn">Confirm OJT Start</button>
                                     </div>
                                 </div>
                             </div>
@@ -359,8 +360,8 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                         <small class="fw-medium"><i class="bi bi-exclamation-circle me-2"></i>The application status will change to <strong>Needs Revision</strong>. The student can then update and re-submit.</small>
                                     </div>
                                     <div class="mb-4">
-                                        <label for="revisionReason" class="form-label fw-medium mb-2">Reason for Return <span class="text-danger">*</span></label>
-                                        <textarea class="form-control shadow-none" id="revisionReason" rows="3"
+                                        <label for="returnReason" class="form-label fw-medium mb-2">Reason for Return <span class="text-danger">*</span></label>
+                                        <textarea class="form-control shadow-none" id="returnReason" rows="3"
                                             placeholder="Explain why the application needs revision..." style="resize: vertical;"></textarea>
                                         <small class="text-muted d-block mt-2">Be specific to help the student improve their application.</small>
                                     </div>
@@ -369,6 +370,72 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                         <button class="btn btn-sm bg-warning-subtle text-warning-emphasis border-0 px-4 py-2 rounded-3 fw-medium" id="confirmReturnBtn">Return for Revision</button>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="EndorseModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" data-application-uuid="">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-blur-5 bg-semi-transparent border"
+                style="--blur-lvl: <?= $opacitylvl ?>">
+                <div class="modal-header border-0">
+                    <div>
+                        <h5 class="modal-title">Issue Endorsement</h5>
+                        <small class="text-muted">This moves the application from <strong>Approved</strong> to <strong>Endorsed</strong>.</small>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="card g-blur-5 bg-semi-transparent rounded-3 border shadow-sm"
+                        style="--blur-lvl: <?= $opacitylvl ?>">
+                        <div class="card-body p-4">
+                            <div class="mb-4">
+                                <h6 class="card-title mb-2 fw-semibold text-uppercase letter-spacing" style="font-size: 0.875rem;">Endorsement Note</h6>
+                                <p class="text-muted small mb-0">Add an optional note that will be stored with the endorsement transition.</p>
+                            </div>
+                            <div class="mb-3">
+                                <label for="endorsementNote" class="form-label fw-medium mb-2">Coordinator Note</label>
+                                <textarea class="form-control shadow-none" id="endorsementNote" rows="3" placeholder="Optional endorsement note..."></textarea>
+                            </div>
+                            <div class="d-flex gap-2 justify-content-end flex-wrap">
+                                <button class="btn bg-secondary-subtle text-secondary-emphasis border-0 px-4 py-2 rounded-3" data-bs-toggle="modal" data-bs-target="#ReviewModal">Back</button>
+                                <button class="btn btn-sm bg-primary-subtle text-primary-emphasis border-0 px-4 py-2 rounded-3 fw-medium" id="confirmEndorseBtn">Issue Endorsement</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="StartModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" data-application-uuid="">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-blur-5 bg-semi-transparent border"
+                style="--blur-lvl: <?= $opacitylvl ?>">
+                <div class="modal-header border-0">
+                    <div>
+                        <h5 class="modal-title">Confirm OJT Start</h5>
+                        <small class="text-muted">This moves the application from <strong>Endorsed</strong> to <strong>Active</strong>.</small>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="card g-blur-5 bg-semi-transparent rounded-3 border shadow-sm"
+                        style="--blur-lvl: <?= $opacitylvl ?>">
+                        <div class="card-body p-4">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="startDate" class="form-label fw-medium mb-2">Official Start Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control shadow-none" id="startDate">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="startNote" class="form-label fw-medium mb-2">Coordinator Note</label>
+                                <textarea class="form-control shadow-none" id="startNote" rows="3" placeholder="Optional start confirmation note..."></textarea>
+                            </div>
+                            <div class="d-flex gap-2 justify-content-end flex-wrap">
+                                <button class="btn bg-secondary-subtle text-secondary-emphasis border-0 px-4 py-2 rounded-3" data-bs-toggle="modal" data-bs-target="#ReviewModal">Back</button>
+                                <button class="btn btn-sm bg-success-subtle text-success-emphasis border-0 px-4 py-2 rounded-3 fw-medium" id="confirmStartBtn">Confirm Start</button>
                             </div>
                         </div>
                     </div>
@@ -408,8 +475,8 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                     </div>
                                     
                                     <div class="mb-4">
-                                        <label for="revisionReason" class="form-label fw-semibold mb-2" style="font-size: 0.95rem;">Reason for Rejection <span class="text-danger">*</span></label>
-                                        <textarea class="form-control shadow-none border-secondary-subtle" id="revisionReason" rows="4"
+                                        <label for="rejectionReason" class="form-label fw-semibold mb-2" style="font-size: 0.95rem;">Reason for Rejection <span class="text-danger">*</span></label>
+                                        <textarea class="form-control shadow-none border-secondary-subtle" id="rejectionReason" rows="4"
                                             placeholder="Explain why the application is being rejected..." style="resize: vertical; min-height: 110px;"></textarea>
                                         <small class="text-muted d-block mt-2">Be specific and constructive to help the student improve for future applications.</small>
                                     </div>

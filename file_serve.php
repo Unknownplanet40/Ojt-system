@@ -17,7 +17,7 @@ if (!in_array($_SESSION['user_role'], $allowedRoles)) {
 }
 
 try {
-    $conn = new mysqli($servername, $username, $password, $dbname);
+    $conn = new mysqli($host, $username, $password, $dbname);
 } catch (Exception $e) {
     http_response_code(500);
     header('Location: Src/Pages/ErrorPage.php?error=500');
@@ -41,6 +41,94 @@ function UUID_convert_Student($conn, $uuid): ?string
     }
 
     return $studentProfileUuid;
+}
+
+function serveFile(string $absolutePath, string $contentType = 'application/octet-stream', bool $download = false, string $downloadName = 'document'): void
+{
+    $realPath   = realpath($absolutePath);
+    $uploadRoot = realpath(__DIR__ . '/uploads/');
+
+    if (!$realPath || !$uploadRoot || !str_starts_with($realPath, $uploadRoot)) {
+        http_response_code(403);
+        exit('Access denied');
+    }
+
+    if (!file_exists($realPath)) {
+        http_response_code(404);
+        exit('File not found on server');
+    }
+
+    $fileSize = filesize($realPath);
+
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+
+    header('Content-Type: ' . $contentType);
+    header('Content-Length: ' . $fileSize);
+    header('Cache-Control: private, max-age=3600, must-revalidate');
+    header('Pragma: public');
+    header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
+    header(
+        'Content-Disposition: ' .
+        ($download ? 'attachment' : 'inline') .
+        '; filename="' . addslashes($downloadName) . '"'
+    );
+
+    readfile($realPath);
+    exit;
+}
+
+$resourceType = trim($_GET['type'] ?? '');
+$role = $_SESSION['user_role'] ?? '';
+
+if ($resourceType === 'requirement') {
+    $reqUuid = trim($_GET['req_uuid'] ?? '');
+
+    if ($reqUuid === '') {
+        http_response_code(400);
+        exit('Missing requirement UUID.');
+    }
+
+    $stmt = $conn->prepare("\n        SELECT sr.file_path, sr.file_name, sr.student_uuid\n        FROM student_requirements sr\n        WHERE sr.uuid = ? LIMIT 1\n    ");
+    $stmt->bind_param('s', $reqUuid);
+    $stmt->execute();
+    $req = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$req || empty($req['file_path'])) {
+        http_response_code(404);
+        exit('File not found.');
+    }
+
+    if ($role === 'student' && $req['student_uuid'] !== ($_SESSION['profile_uuid'] ?? '')) {
+        http_response_code(403);
+        exit('Access denied.');
+    }
+
+    if ($role === 'coordinator') {
+        $stmt = $conn->prepare("\n            SELECT id FROM student_profiles\n            WHERE uuid = ? AND coordinator_uuid = ? LIMIT 1\n        ");
+        $stmt->bind_param('ss', $req['student_uuid'], $_SESSION['profile_uuid']);
+        $stmt->execute();
+        $allowed = $stmt->get_result()->num_rows > 0;
+        $stmt->close();
+
+        if (!$allowed) {
+            http_response_code(403);
+            exit('Access denied.');
+        }
+    }
+
+    if (!in_array($role, ['student', 'coordinator', 'admin'], true)) {
+        http_response_code(403);
+        exit('Access denied.');
+    }
+
+    $absolutePath = __DIR__ . '/' . $req['file_path'];
+    $download = (($_GET['action'] ?? 'inline') === 'download');
+    $downloadName = basename($req['file_name'] ?? 'requirement.pdf');
+
+    serveFile($absolutePath, 'application/pdf', $download, $downloadName);
 }
 
 if (empty($documentUuid)) {

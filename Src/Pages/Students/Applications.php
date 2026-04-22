@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 date_default_timezone_set('Asia/Manila');
 
-if (empty($_SESSION['user'])) {
+if (empty($_SESSION['user_uuid']) || ($_SESSION['user_role'] ?? '') !== 'student') {
     header("Location: ../Login");
     exit;
 }
@@ -32,14 +32,14 @@ if ($currentHour >= 5 && $currentHour < 12) {
 
 <head>
     <?php require_once "pagehead.php"; ?>
-    <script type="module" src="../../../Assets/Script/DashboardScripts/StudentDashboard.js"></script>
+    <script type="module" src="../../../Assets/Script/dashboardScripts/StudentDashboard.js"></script>
     <script type="module" src="../../../Assets/Script/StudentsScripts/ApplicationsScript.js"></script>
     <title><?= $ShortTitle ?></title>
 </head>
 
 <body class="login-page"
-    data-role="<?= $_SESSION['user']['role'] ?>"
-    data-uuid="<?= $_SESSION['user']['uuid'] ?>">
+    data-role="<?= $_SESSION['user_role'] ?>"
+    data-uuid="<?= $_SESSION['user_uuid'] ?>">
     <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
         <div class="circle circle1" data-speed="fast"></div>
         <div class="circle circle2" data-speed="normal"></div>
@@ -725,9 +725,14 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                         </div>
                                     </div>
                                     <hr class="my-4">
-                                    <div class="d-flex justify-content-end">
+                                    <div class="d-flex justify-content-end gap-2 flex-wrap">
                                         <button type="button"
-                                            class="btn btn-outline-danger rounded-3 px-4 py-2 shadow-sm"
+                                            class="btn btn-outline-primary rounded-3 px-4 py-2 shadow-sm d-none"
+                                            id="downloadEndorsementBtn">
+                                            <i class="bi bi-download me-1"></i> Download endorsement
+                                        </button>
+                                        <button type="button"
+                                            class="btn btn-outline-danger rounded-3 px-4 py-2 shadow-sm d-none"
                                             id="withdrawApplicationBtn">
                                             <i class="bi bi-x-lg me-1"></i> Withdraw application
                                         </button>
