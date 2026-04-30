@@ -20,14 +20,25 @@ const statusColors = {
   withdrawn: { bg: "bg-secondary-subtle", text: "text-secondary-emphasis" },
 };
 
+function escapeHtml(value) {
+  return (value || "")
+    .toString()
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function getNoDataState(message = "No applications found.") {
+  const safeMessage = escapeHtml(message);
   return `
         <div class=col>
             <div class="card bg-blur-5 bg-semi-transparent border-1 border-secondary-subtle rounded-4">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center justify-content-center gap-3">
                         <i class="bi bi-inbox fs-1 text-muted"></i>
-                        <p class="text-muted mb-0">${message}</p>
+                        <p class="text-muted mb-0">${safeMessage}</p>
                     </div>
                 </div>
             </div>
