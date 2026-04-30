@@ -43,35 +43,43 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
-if (!in_array($_SESSION['user_role'], ['admin', 'coordinator'])) {
+if (!isset($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'student') {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
 
-$batchUuid = trim($_POST['batch_uuid'] ?? '');
-
-if (empty($batchUuid)) {
-    $result    = $conn->query("SELECT uuid FROM batches WHERE status = 'active' LIMIT 1");
-    $row       = $result->fetch_assoc();
-    $batchUuid = $row['uuid'] ?? null;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    response(['status' => 'error', 'message' => 'Method not allowed.']);
 }
 
-if (empty($batchUuid)) {
-    response(['status' => 'error', 'message' => 'No active batch found.']);
+$appUuid     = trim($_POST['application_uuid'] ?? '');
+$coverLetter = trim($_POST['cover_letter']     ?? '');
+$companyUuid = trim($_POST['company_uuid']     ?? '');
+$preferredDept = trim($_POST['preferred_department'] ?? '');
+
+if (empty($appUuid)) {
+    response(['status' => 'error', 'message' => 'Application UUID is required.']);
 }
 
-$coordinatorUuid = $_SESSION['user_role'] === 'coordinator'
-    ? $_SESSION['profile_uuid']
-    : null;
+if (empty($coverLetter)) {
+    response(['status' => 'error', 'message' => 'Cover letter is required.']);
+}
 
-$filters = [];
-if (!empty($_POST['status'])) $filters['status'] = $_POST['status'];
-if (!empty($_POST['search'])) $filters['search'] = $_POST['search'];
+$result = resubmitApplication(
+    $conn,
+    $appUuid,
+    $_SESSION['user_uuid'],
+    $_SESSION['profile_uuid'],
+    $coverLetter,
+    $companyUuid,
+    $preferredDept
+);
 
-$applications = getAllApplications($conn, $batchUuid, $coordinatorUuid, $filters);
+if (!$result['success']) {
+    response(['status' => 'error', 'message' => $result['error']]);
+}
 
 response([
-    'status'       => 'success',
-    'applications' => $applications,
-    'total'        => count($applications),
+    'status'  => 'success',
+    'message' => 'Application resubmitted. Your coordinator will review it.',
 ]);

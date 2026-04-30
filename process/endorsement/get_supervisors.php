@@ -21,6 +21,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
+require_once dirname(__DIR__, 2) . '/functions/endorsement_functions.php';
 require_once dirname(__DIR__, 2) . '/functions/application_functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -34,28 +35,35 @@ if (empty($_POST['csrf_token']) ||
     response(['status' => 'error', 'message' => 'Invalid request.']);
 }
 
-if (!isset($_SESSION['user_uuid']) || ($_SESSION['user_role'] ?? '') !== 'coordinator') {
-    http_response_code(403);
-    response(['status' => 'error', 'message' => 'Unauthorized.']);
-}
-
 if (!$conn || $conn->connect_error) {
     response([
         'status'       => 'critical',
         'message'      => 'Database connection failed.',
-        'details'      => $conn->connect_error ?? 'Unknown error',
-        'suggestion'   => 'Please try again later or contact support if the issue persists.'
+        'Details'      => $conn->connect_error ?? 'Unknown error',
+        'Suggestion'   => 'Please try again later or contact support if the issue persists.'
     ]);
 }
 
-$appUuid = trim($_POST['application_uuid'] ?? '');
-$note = trim($_POST['note'] ?? '');
-if ($appUuid === '') {
-    response(['status' => 'error', 'message' => 'Application UUID is required.'], 422);
+if (!isset($_SESSION['user_uuid'])) {
+    http_response_code(401);
+    response(['status' => 'error', 'message' => 'Unauthenticated.']);
 }
 
-$result = endorseApplication($conn, $appUuid, $note, $_SESSION['user_uuid']);
-response($result['success']
-    ? ['status' => 'success', 'message' => $result['message']]
-    : ['status' => 'error', 'message' => $result['error']]
-);
+if (!in_array($_SESSION['user_role'], ['admin', 'coordinator'])) {
+    http_response_code(403);
+    response(['status' => 'error', 'message' => 'Unauthorized.']);
+}
+
+$companyUuid = trim($_POST['company_uuid'] ?? '');
+
+if (empty($companyUuid)) {
+    response(['status' => 'error', 'message' => 'Company UUID is required.']);
+}
+
+$supervisors = getSupervisorsForCompany($conn, $companyUuid);
+
+response([
+    'status'      => 'success',
+    'supervisors' => $supervisors,
+    'total'       => count($supervisors),
+]);

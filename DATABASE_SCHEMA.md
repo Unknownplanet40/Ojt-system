@@ -77,6 +77,7 @@ Shared account table for all roles.
 - `emergency_contact`
 - `emergency_phone`
 - `coordinator_uuid` → `coordinator_profiles.uuid`
+- `supervisor_uuid` (nullable) → `supervisor_profiles.uuid`
 - `batch_uuid` → `batches.uuid`
 - `company_uuid` → `companies.uuid`
 - `isProfileDone`
@@ -151,16 +152,18 @@ Bridge table between companies and programs.
 - unique composite: `(company_uuid, program_uuid)`
 
 ### `ojt_applications`
-- `uuid` (PK, unique)
+- `id` (PK, auto-increment)
+- `uuid` (unique)
 - `student_uuid` → `student_profiles.uuid`
-- `company_uuid` → `companies.uuid`
 - `batch_uuid` → `batches.uuid`
-- `status` enum: `pending`, `approved`, `endorsed`, `active`, `needs_revision`, `rejected`, `withdrawn`
-- `preferred_dept`
+- `company_uuid` → `companies.uuid`
 - `cover_letter`
-- `coordinator_note`
-- `reviewed_by` → `users.uuid`
-- `reviewed_at`
+- `status` enum: `pending`, `approved`, `endorsed`, `active`, `needs_revision`, `rejected`, `withdrawn` (default: `pending`)
+- `revision_reason`
+- `rejection_reason`
+- `created_at`
+- `updated_at`
+- unique composite: `(student_uuid, batch_uuid)` (`uq_student_batch_active`)
 
 ### `student_requirements`
 - `uuid` (PK, unique)
@@ -210,6 +213,37 @@ Bridge table between companies and programs.
 - `changed_by` → `users.uuid`
 - `note`
 - `created_at`
+- `id` (PK, auto-increment)
+- `uuid` (unique)
+- `application_uuid` → `ojt_applications.uuid`
+- `from_status`
+- `to_status`
+- `reason`
+- `actor_uuid` → `users.uuid`
+- `created_at` (default: `NOW()`)
+## OJT activation documents
+
+### `endorsement_letters`
+- `id` (PK, auto-increment)
+- `uuid` (unique)
+- `application_uuid` (unique) → `ojt_applications.uuid`
+- `student_uuid` → `student_profiles.uuid`
+- `file_path`
+- `file_name`
+- `generated_by` (nullable)
+- `generated_at` (default: `NOW()`)
+
+### `ojt_start_confirmations`
+- `id` (PK, auto-increment)
+- `uuid` (unique)
+- `application_uuid` (unique) → `ojt_applications.uuid`
+- `student_uuid` → `student_profiles.uuid`
+- `supervisor_uuid` → `supervisor_profiles.uuid`
+- `start_date`
+- `expected_end_date` (nullable)
+- `working_hours_per_day` (default: `8`)
+- `confirmed_by` (nullable)
+- `confirmed_at` (default: `NOW()`)
 
 ## Key relationships
 - One `users` row can have one profile row in the matching profile table.

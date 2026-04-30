@@ -213,7 +213,11 @@ function getAuditLogFilterOptions(mysqli $conn): array
     $moduleResult = $conn->query("SELECT DISTINCT module FROM activity_log WHERE module IS NOT NULL AND module <> '' ORDER BY module ASC");
     if ($moduleResult) {
         while ($row = $moduleResult->fetch_assoc()) {
-            $modules[] = strtolower(trim((string)$row['module']));
+            $m = strtolower(trim((string)$row['module']));
+            if ($m === 'authentication') {
+                $m = 'auth';
+            }
+            $modules[] = $m;
         }
     }
     $modules = array_values(array_unique(array_filter($modules, static fn($v) => $v !== '')));
@@ -311,13 +315,11 @@ function decodeAuditMeta($metaRaw): ?array
 
     $raw = (string)$metaRaw;
 
-    // First pass: standard JSON object/array decode
     $decoded = json_decode($raw, true);
     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
         return $decoded;
     }
 
-    // Second pass: handles double-encoded JSON (e.g. "{\"key\":\"value\"}")
     if (json_last_error() === JSON_ERROR_NONE && is_string($decoded)) {
         $decodedNested = json_decode($decoded, true);
         if (json_last_error() === JSON_ERROR_NONE && is_array($decodedNested)) {
@@ -325,7 +327,6 @@ function decodeAuditMeta($metaRaw): ?array
         }
     }
 
-    // Fallback: occasionally stored with wrapped quotes without valid JSON-string escaping
     $trimmed = trim($raw);
     if (strlen($trimmed) >= 2 && $trimmed[0] === '"' && $trimmed[strlen($trimmed) - 1] === '"') {
         $unwrapped = stripslashes(substr($trimmed, 1, -1));
@@ -429,9 +430,13 @@ function buildActivityLogSelect(mysqli $conn, array $filters): array
     }
 
     if (!empty($filters['module'])) {
-        $conditions[] = 'LOWER(al.module) = LOWER(?)';
-        $types .= 's';
-        $params[] = $filters['module'];
+        if ($filters['module'] === 'auth') {
+            $conditions[] = '(LOWER(al.module) = "auth" OR LOWER(al.module) = "authentication")';
+        } else {
+            $conditions[] = 'LOWER(al.module) = LOWER(?)';
+            $types .= 's';
+            $params[] = $filters['module'];
+        }
     }
 
     if (!empty($filters['search'])) {

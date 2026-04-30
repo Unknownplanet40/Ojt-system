@@ -172,11 +172,16 @@ if ($currentHour >= 5 && $currentHour < 12) {
                             <div class="card g-blur-5 bg-semi-transparent rounded-3 border shadow-sm"
                                 style="--blur-lvl: <?= $opacitylvl ?>">
                                 <div class="card-body p-4">
-                                    <div class="mb-4">
-                                        <h6 class="card-title mb-1 fw-semibold text-uppercase letter-spacing">Pre-OJT
-                                            Requirements</h6>
-                                        <small class="text-muted">All must be approved before approving the
-                                            application</small>
+                                    <div class="d-flex justify-content-between align-items-start mb-4">
+                                        <div>
+                                            <h6 class="card-title mb-1 fw-semibold text-uppercase letter-spacing">Pre-OJT
+                                                Requirements</h6>
+                                            <small class="text-muted">All must be approved before approving the
+                                                application</small>
+                                        </div>
+                                        <a href="#" id="manageRequirementsLink" class="btn btn-sm btn-link text-primary text-decoration-none fw-medium">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i> Manage
+                                        </a>
                                     </div>
 
                                     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-6 g-3 mb-4" id="requirementsStatusc4">

@@ -43,7 +43,12 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
-if (!isset($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'student') {
+if (!isset($_SESSION['user_uuid'])) {
+    http_response_code(401);
+    response(['status' => 'error', 'message' => 'Unauthenticated.']);
+}
+
+if (!in_array($_SESSION['user_role'], ['admin', 'coordinator', 'student'])) {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
@@ -52,46 +57,45 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     response(['status' => 'error', 'message' => 'Method not allowed.']);
 }
 
-$companyUuid = trim($_POST['company_uuid']  ?? '');
-$coverLetter = trim($_POST['cover_letter']  ?? '');
-$batchUuid   = $_SESSION['active_batch_uuid']    ?? '';
-$studentUuid = $_SESSION['profile_uuid'];
-$programUuid = $_SESSION['student_program_uuid'] ?? '';
+$appUuid   = trim($_POST['application_uuid'] ?? '');
+$newStatus = trim($_POST['new_status']       ?? '');
+$reason    = trim($_POST['reason']           ?? '');
 
-if (empty($companyUuid)) {
-    response(['status' => 'error', 'message' => 'Company is required.']);
+if (empty($appUuid) || empty($newStatus)) {
+    response(['status' => 'error', 'message' => 'Application UUID and new status are required.']);
 }
 
-if (empty($coverLetter)) {
-    response(['status' => 'error', 'message' => 'Cover letter / note is required.']);
+$allowed = ['approved', 'needs_revision', 'rejected', 'withdrawn', 'endorsed', 'active'];
+if (!in_array($newStatus, $allowed)) {
+    response(['status' => 'error', 'message' => 'Invalid status.']);
 }
 
-if (empty($batchUuid) || empty($programUuid)) {
-    response([
-        'status'  => 'error',
-        'message' => 'No active batch or program assigned. Contact your coordinator.',
-    ]);
-}
-
-$preferredDept = trim($_POST['preferred_department'] ?? '');
-
-$result = submitApplication(
+$result = transitionApplication(
     $conn,
-    $studentUuid,
-    $batchUuid,
-    $companyUuid,
-    $coverLetter,
-    $programUuid,
+    $appUuid,
+    $newStatus,
     $_SESSION['user_uuid'],
-    $preferredDept
+    $_SESSION['profile_uuid'],
+    $_SESSION['user_role'],
+    $reason,
+    $_POST
 );
 
 if (!$result['success']) {
     response(['status' => 'error', 'message' => $result['error']]);
 }
 
+$messages = [
+    'approved'       => 'Application approved. Endorsement letter is being generated.',
+    'needs_revision' => 'Application returned for revision.',
+    'rejected'       => 'Application rejected.',
+    'withdrawn'      => 'Application withdrawn.',
+    'endorsed'       => 'Application marked as endorsed.',
+    'active'         => 'OJT Start Confirmed. Application is now active.',
+];
+
 response([
-    'status'  => 'success',
-    'message' => 'Application submitted successfully. Your coordinator will review it shortly.',
-    'uuid'    => $result['uuid'],
+    'status'     => 'success',
+    'message'    => $messages[$newStatus] ?? 'Application updated.',
+    'new_status' => $newStatus,
 ]);

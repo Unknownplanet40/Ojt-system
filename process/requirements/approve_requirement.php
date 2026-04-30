@@ -72,7 +72,7 @@ if (($_SESSION['user_role'] ?? '') === 'coordinator') {
     $stmt->close();
 }
 
-$result = approveRequirement($conn, $reqUuid, $_SESSION['profile_uuid']);
+$result = approveRequirement($conn, $reqUuid, $_SESSION['user_uuid'], $_SESSION['profile_uuid']);
 
 if (!$result['success']) {
     response(['status' => 'error', 'message' => $result['error']]);

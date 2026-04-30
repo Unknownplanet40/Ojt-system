@@ -21,6 +21,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
+require_once dirname(__DIR__, 2) . '/functions/endorsement_functions.php';
 require_once dirname(__DIR__, 2) . '/functions/application_functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -43,35 +44,47 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
+if (!isset($_SESSION['user_uuid'])) {
+    http_response_code(401);
+    response(['status' => 'error', 'message' => 'Unauthenticated.']);
+}
+
 if (!in_array($_SESSION['user_role'], ['admin', 'coordinator'])) {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
 
-$batchUuid = trim($_POST['batch_uuid'] ?? '');
-
-if (empty($batchUuid)) {
-    $result    = $conn->query("SELECT uuid FROM batches WHERE status = 'active' LIMIT 1");
-    $row       = $result->fetch_assoc();
-    $batchUuid = $row['uuid'] ?? null;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    response(['status' => 'error', 'message' => 'Method not allowed.']);
 }
 
-if (empty($batchUuid)) {
-    response(['status' => 'error', 'message' => 'No active batch found.']);
+$appUuid = trim($_POST['application_uuid'] ?? '');
+
+if (empty($appUuid)) {
+    response(['status' => 'error', 'message' => 'Application UUID is required.']);
 }
 
-$coordinatorUuid = $_SESSION['user_role'] === 'coordinator'
-    ? $_SESSION['profile_uuid']
-    : null;
+$result = confirmOjtStart(
+    $conn,
+    $appUuid,
+    $_POST,
+    $_SESSION['profile_uuid']
+);
 
-$filters = [];
-if (!empty($_POST['status'])) $filters['status'] = $_POST['status'];
-if (!empty($_POST['search'])) $filters['search'] = $_POST['search'];
-
-$applications = getAllApplications($conn, $batchUuid, $coordinatorUuid, $filters);
+if (!$result['success']) {
+    if (isset($result['errors'])) {
+        response([
+            'status'  => 'error',
+            'errors'  => $result['errors'],
+            'message' => reset($result['errors']),
+        ]);
+    }
+    response(['status' => 'error', 'message' => $result['error']]);
+}
 
 response([
-    'status'       => 'success',
-    'applications' => $applications,
-    'total'        => count($applications),
+    'status'      => 'success',
+    'message'     => 'OJT start confirmed. DTR and journal are now unlocked for the student.',
+    'start_date'  => $result['start_date'],
+    'expected_end'=> $result['expected_end'],
 ]);

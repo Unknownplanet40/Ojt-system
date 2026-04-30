@@ -7,6 +7,143 @@ let swalTheme = SwalTheme();
 BGcircleTheme(true, "default", "fast");
 let letPageLoad = true;
 let latestNeedsAttention = [];
+const ADMIN_DASHBOARD_TOUR_KEY = "admin_dashboard_tour_done";
+
+function startDashboardTour() {
+  const driverFn = window.driver?.js?.driver || window.driver || (typeof driver === "function" ? driver : null);
+  if (!driverFn) {
+    ToastVersion(swalTheme, "Guided tour is currently unavailable.", "warning", 3000, "top-end");
+    return;
+  }
+
+  const dashboardTour = driverFn({
+    showProgress: true,
+    animate: true,
+    smoothScroll: true,
+    allowClose: true,
+    doneBtnText: "Finish",
+    nextBtnText: "&#187;",
+    prevBtnText: "&#171;",
+    popoverClass: "bg-blur-10 bg-semi-transparent text-body",
+    overlayColor: "rgba(0, 0, 0, 0.80)",
+    steps: [
+      {
+        element: "#dashboardTitle",
+        popover: {
+          title: "Dashboard Overview",
+          description: "Welcome to your OJT Management System Dashboard. This page gives you a bird's-eye view of everything happening this semester.",
+          side: "bottom",
+          align: "start"
+        }
+      },
+      {
+        element: ".totalusercard",
+        popover: {
+          title: "Total Users",
+          description: "See the total number of active users across all roles in the system.",
+          side: "bottom",
+          align: "center"
+        }
+      },
+      {
+        element: ".studentcard",
+        popover: {
+          title: "Students",
+          description: "Track the number of active students in the current batch.",
+          side: "bottom",
+          align: "center"
+        }
+      },
+      {
+        element: ".coordinatorcard",
+        popover: {
+          title: "Coordinators",
+          description: "Track the number of active coordinators in the current batch.",
+          side: "bottom",
+          align: "center"
+        }
+      },
+      {
+        element: ".companiescard",
+        popover: {
+          title: "Companies",
+          description: "Track the number of active companies in the current batch.",
+          side: "bottom",
+          align: "end"
+        }
+      },
+      {
+        element: ".needsattention",
+        popover: {
+          title: "Needs Attention",
+          description: "Critical alerts and tasks requiring your review will appear here.",
+          side: "top",
+          align: "start"
+        }
+      },
+      {
+        element: ".quickactions",
+        popover: {
+          title: "Quick Actions",
+          description: "Quick actions for the admin.",
+          side: "top",
+          align: "start"
+        }
+      },
+      {
+        element: "#recentAccountsList",
+        popover: {
+          title: "Recent Accounts",
+          description: "A quick view of the latest accounts created in the system.",
+          side: "top",
+          align: "start"
+        }
+      },
+      {
+        element: ".usersbyroles",
+        popover: {
+          title: "Users by Roles",
+          description: "See the distribution of users across different roles in the system.",
+          side: "top",
+          align: "start"
+        }
+      }, 
+      {
+        element: ".accounts",
+        popover: {
+          title: "Recent Accounts",
+          description: "A quick view of the latest accounts created in the system.",
+          side: "top",
+          align: "start"
+        }
+      },
+      {
+        element: "#dashboardnewCoordinatorBtn",
+        popover: {
+          title: "Add Coordinator",
+          description: "Click here to quickly create a new faculty coordinator account.",
+          side: "bottom",
+          align: "end"
+        }
+      },
+      {
+        element: "#startDashboardTourLink",
+        popover: {
+          title: "Replay Tour",
+          description: "You can click here anytime to take this tour again.",
+          side: "bottom",
+          align: "start"
+        }
+      }
+    ],
+    onDestroyStarted: () => {
+      localStorage.setItem(ADMIN_DASHBOARD_TOUR_KEY, "1");
+      dashboardTour.destroy();
+    }
+  });
+
+  dashboardTour.drive();
+}
 
 function formatLastUpdated(date = new Date()) {
   return date.toLocaleString("en-PH", {
@@ -692,6 +829,11 @@ function wireAdminDashboardQuickActions() {
     window.location.href = "../../../Src/Pages/Admin/AuditLogs";
   });
 
+  $("#startDashboardTourLink").on("click", function (e) {
+    e.preventDefault();
+    startDashboardTour();
+  });
+
   $("#quickExportSemReports").on("click", function (e) {
     e.preventDefault();
     window.location.href = "../../../Src/Pages/Admin/Reports";
@@ -740,5 +882,12 @@ $(document).ready(function () {
       e.preventDefault();
       window.location.href = "../../../Src/Pages/Admin/Batches?action=create";
     });
+
+    const hasSeenTour = localStorage.getItem(ADMIN_DASHBOARD_TOUR_KEY) === "1";
+    if (!hasSeenTour) {
+      setTimeout(() => {
+        startDashboardTour();
+      }, 800);
+    }
   }
 });

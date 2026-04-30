@@ -7,631 +7,106 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once __DIR__ . '/../helpers/helpers.php';
+require_once __DIR__ . '/requirement_functions.php';
 
-const APPLICATION_VALID_TRANSITIONS = [
-    'pending'        => ['approved', 'needs_revision', 'rejected'],
+const VALID_TRANSITIONS = [
+    'pending'       => ['approved', 'needs_revision', 'rejected', 'withdrawn'],
+    'approved'      => ['endorsed'],
+    'endorsed'      => ['active'],
     'needs_revision' => ['pending', 'withdrawn'],
-    'approved'       => ['endorsed'],
-    'endorsed'       => ['active'],
-    'active'         => [],
-    'rejected'       => [],
-    'withdrawn'      => [],
+    'rejected'      => [],
+    'withdrawn'     => [],
+    'active'        => [],
 ];
 
-function getAllowedApplicationStatuses(): array
-{
-    return ['pending', 'approved', 'endorsed', 'active', 'needs_revision', 'rejected', 'withdrawn'];
-}
+const TRANSITION_ACTOR = [
+    'pending'    => 'coordinator',
+    'approved'   => 'coordinator',
+    'endorsed'   => 'system',
+    'active'     => 'coordinator',
+    'needs_revision' => 'coordinator',
+    'rejected'   => 'coordinator',
+    'withdrawn'  => 'student',
+];
 
-function getApplicationStatusLabel(string $status): string
-{
-    return match ($status) {
-        'pending'        => 'Pending review',
-        'approved'       => 'Approved',
-        'endorsed'       => 'Endorsed',
-        'active'         => 'Active',
-        'needs_revision' => 'Needs revision',
-        'rejected'       => 'Rejected',
-        'withdrawn'      => 'Withdrawn',
-        default          => 'Unknown',
-    };
-}
+function getAvailableCompaniesForStudent(
+    $conn,
+    string $programUuid,
+    string $batchUuid
+): array {
+    $safeProgram = $conn->real_escape_string($programUuid);
+    $safeBatch   = $conn->real_escape_string($batchUuid);
 
-function logApplicationStatus($conn, string $applicationUuid, ?string $fromStatus, string $toStatus, string $changedByUuid, string $note = ''): void
-{
-    $stmt = $conn->prepare("
-        INSERT INTO application_status_logs
-        (uuid, application_uuid, from_status, to_status, changed_by, note)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ");
-    $uuid = generateUuid();
-    $stmt->bind_param('ssssss', $uuid, $applicationUuid, $fromStatus, $toStatus, $changedByUuid, $note);
-    $stmt->execute();
-    $stmt->close();
-}
-
-function getRequirementMap($conn, string $studentUuid, string $batchUuid): array
-{
-    $stmt = $conn->prepare("
-        SELECT req_type, status
-        FROM student_requirements
-        WHERE student_uuid = ? AND batch_uuid = ?
-        ORDER BY FIELD(req_type, 'medical_certificate', 'parental_consent', 'insurance', 'nbi_clearance', 'resume', 'guardian_form')
-    ");
-    $stmt->bind_param('ss', $studentUuid, $batchUuid);
-    $stmt->execute();
-    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-
-    $requirements = [];
-    foreach ($rows as $row) {
-        $requirements[$row['req_type']] = $row['status'];
-    }
-
-    return $requirements;
-}
-
-function getCompanyPrograms($conn, string $companyUuid): array
-{
-    $stmt = $conn->prepare("
-    SELECT p.code
-        FROM company_accepted_programs cap
-        JOIN programs p ON cap.program_uuid = p.uuid
-        WHERE cap.company_uuid = ? AND p.is_active = 1
-        ORDER BY p.code ASC
-    ");
-    $stmt->bind_param('s', $companyUuid);
-    $stmt->execute();
-    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-
-    return array_values(array_map(fn ($row) => $row['code'], $rows));
-}
-
-function getCompanySlotSummary($conn, string $companyUuid, string $batchUuid): array
-{
-    $stmt = $conn->prepare("
-        SELECT total_slots
-        FROM company_slots
-        WHERE company_uuid = ? AND batch_uuid = ?
-        LIMIT 1
-    ");
-    $stmt->bind_param('ss', $companyUuid, $batchUuid);
-    $stmt->execute();
-    $slotRow = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    $totalSlots = (int) ($slotRow['total_slots'] ?? 0);
-
-    $stmt = $conn->prepare("
-        SELECT COUNT(*) AS total
-        FROM student_profiles
-        WHERE company_uuid = ? AND batch_uuid = ?
-    ");
-    $stmt->bind_param('ss', $companyUuid, $batchUuid);
-    $stmt->execute();
-    $filledRow = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    $filledSlots = (int) ($filledRow['total'] ?? 0);
-
-    return [
-        'total_slots'  => $totalSlots,
-        'filled_slots' => $filledSlots,
-        'remaining'    => max(0, $totalSlots - $filledSlots),
-    ];
-}
-
-function areStudentRequirementsApproved($conn, string $studentUuid, string $batchUuid): bool
-{
-    $stmt = $conn->prepare("
+    $result = $conn->query("
         SELECT
-          COUNT(*) AS total,
-          SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) AS approved_count
-        FROM student_requirements
-        WHERE student_uuid = ? AND batch_uuid = ?
-    ");
-    $stmt->bind_param('ss', $studentUuid, $batchUuid);
-    $stmt->execute();
-    $row = $stmt->get_result()->fetch_assoc() ?: [];
-    $stmt->close();
+          c.uuid,
+          c.name,
+          c.industry,
+          c.city,
+          c.address,
+          c.work_setup,
+          c.website,
+          c.email      AS company_email,
+          c.phone      AS company_phone,
 
-    $total = (int) ($row['total'] ?? 0);
-    $approvedCount = (int) ($row['approved_count'] ?? 0);
+          cs.total_slots,
+          COUNT(DISTINCT sp.id) AS filled_slots,
+          (cs.total_slots - COUNT(DISTINCT sp.id)) AS remaining_slots,
 
-    return $total > 0 && $total === $approvedCount;
-}
+          cc.name     AS contact_name,
+          cc.position AS contact_position,
 
-function getApplicationStatusCounts($conn, string $coordinatorUuid, string $batchUuid): array
-{
-    $counts = [
-        'pending'        => 0,
-        'approved'       => 0,
-        'endorsed'       => 0,
-        'active'         => 0,
-        'needs_revision' => 0,
-        'rejected'       => 0,
-        'withdrawn'      => 0,
-    ];
+          GROUP_CONCAT(
+            DISTINCT p2.code ORDER BY p2.code SEPARATOR ', '
+          ) AS accepted_programs
 
-    $stmt = $conn->prepare("
-        SELECT a.status, COUNT(*) AS total
-        FROM ojt_applications a
-        JOIN student_profiles sp ON a.student_uuid = sp.uuid
-        WHERE sp.coordinator_uuid = ? AND a.batch_uuid = ?
-        GROUP BY a.status
-    ");
-    $stmt->bind_param('ss', $coordinatorUuid, $batchUuid);
-    $stmt->execute();
-    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-
-    foreach ($rows as $row) {
-        if (array_key_exists($row['status'], $counts)) {
-            $counts[$row['status']] = (int) $row['total'];
-        }
-    }
-
-    return $counts;
-}
-
-function getApplicationsForCoordinator($conn, string $coordinatorUuid, string $batchUuid, array $filters = []): array
-{
-    $statusFilter = $filters['status'] ?? [];
-    if (is_string($statusFilter)) {
-        $statusFilter = [$statusFilter];
-    }
-
-    $allowedStatuses = getAllowedApplicationStatuses();
-    $statusFilter = array_values(array_intersect($allowedStatuses, array_map('trim', $statusFilter)));
-
-    $sql = "
-        SELECT
-            a.uuid AS application_uuid,
-            a.status,
-            a.preferred_dept,
-            a.cover_letter,
-            a.coordinator_note,
-            a.reviewed_at,
-            a.created_at,
-            a.student_uuid,
-            a.company_uuid,
-            sp.student_number,
-            sp.first_name,
-            sp.last_name,
-            sp.section,
-            sp.year_level,
-            sp.mobile,
-            u.email,
-            p.code AS program_code,
-            p.name AS program_name,
-            c.name AS company_name,
-            c.industry,
-            c.city,
-            c.work_setup,
-            b.school_year,
-            b.semester
-        FROM ojt_applications a
-        JOIN student_profiles sp ON a.student_uuid = sp.uuid
-        JOIN users u ON sp.user_uuid = u.uuid
-        LEFT JOIN programs p ON sp.program_uuid = p.uuid
-        LEFT JOIN companies c ON a.company_uuid = c.uuid
-        LEFT JOIN batches b ON a.batch_uuid = b.uuid
-        WHERE sp.coordinator_uuid = ? AND a.batch_uuid = ?";
-
-    $types = 'ss';
-    $params = [$coordinatorUuid, $batchUuid];
-
-    if (!empty($statusFilter)) {
-        $placeholders = implode(',', array_fill(0, count($statusFilter), '?'));
-        $sql .= " AND a.status IN ({$placeholders})";
-        $types .= str_repeat('s', count($statusFilter));
-        $params = array_merge($params, $statusFilter);
-    }
-
-    $sql .= "\n        ORDER BY FIELD(a.status, 'pending', 'needs_revision', 'approved', 'endorsed', 'active', 'rejected', 'withdrawn'), a.created_at DESC";
-
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param($types, ...$params);
-    $stmt->execute();
-    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-
-    $applications = [];
-    foreach ($rows as $row) {
-        $requirements = getRequirementMap($conn, $row['student_uuid'], $batchUuid);
-        $acceptedPrograms = getCompanyPrograms($conn, $row['company_uuid']);
-        $slotSummary = getCompanySlotSummary($conn, $row['company_uuid'], $batchUuid);
-
-        $applications[] = [
-            'uuid'             => $row['application_uuid'],
-            'status'           => $row['status'],
-            'status_label'     => getApplicationStatusLabel($row['status']),
-            'student_uuid'     => $row['student_uuid'],
-            'full_name'        => trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? '')),
-            'initials'         => strtoupper(substr($row['first_name'] ?? 'S', 0, 1) . substr($row['last_name'] ?? 'T', 0, 1)),
-            'student_number'   => $row['student_number'] ?? '—',
-            'program_code'     => $row['program_code'] ?? '—',
-            'year_label'       => ordinal((int) ($row['year_level'] ?? 1)) . ' Year',
-            'section'          => $row['section'] ?? '—',
-            'mobile'           => $row['mobile'] ?? '—',
-            'email'            => $row['email'] ?? '—',
-            'company_uuid'     => $row['company_uuid'],
-            'company_name'     => $row['company_name'] ?? '—',
-            'industry'         => $row['industry'] ?? '—',
-            'city'             => $row['city'] ?? '—',
-            'work_setup'       => $row['work_setup'] ?? '—',
-            'submitted_at'     => $row['created_at'] ? date('M j, Y g:i A', strtotime($row['created_at'])) : '—',
-            'reviewed_at'      => $row['reviewed_at'] ? date('M j, Y g:i A', strtotime($row['reviewed_at'])) : null,
-            'preferred_dept'   => $row['preferred_dept'] ?? '—',
-            'cover_letter'     => $row['cover_letter'] ?? '—',
-            'coordinator_note' => $row['coordinator_note'] ?? null,
-            'accepted_programs' => $acceptedPrograms,
-            'slots_info'       => $slotSummary['remaining'] . ' of ' . $slotSummary['total_slots'] . ' slots remaining',
-            'requirements'     => $requirements,
-            'can_approve'      => in_array('approved', APPLICATION_VALID_TRANSITIONS[$row['status']] ?? [], true),
-            'can_return'       => in_array('needs_revision', APPLICATION_VALID_TRANSITIONS[$row['status']] ?? [], true),
-            'can_reject'       => in_array('rejected', APPLICATION_VALID_TRANSITIONS[$row['status']] ?? [], true),
-            'can_endorse'      => in_array('endorsed', APPLICATION_VALID_TRANSITIONS[$row['status']] ?? [], true),
-            'can_confirm_start' => in_array('active', APPLICATION_VALID_TRANSITIONS[$row['status']] ?? [], true),
-            'card_one'         => [
-                'student_name'   => trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? '')),
-                'student_No'     => $row['student_number'] ?? '—',
-                'program'        => $row['program_code'] ?? '—',
-                'course_Section' => trim(($row['year_level'] ?? '') . ' ' . ($row['section'] ?? '')),
-                'mobile'         => $row['mobile'] ?? '—',
-                'email'          => $row['email'] ?? '—',
-            ],
-            'card_two'         => [
-                'company_name'      => $row['company_name'] ?? '—',
-                'work_setup'        => $row['work_setup'] ?? '—',
-                'city'              => $row['city'] ?? '—',
-                'industry'          => $row['industry'] ?? '—',
-                'slots_info'        => $slotSummary['remaining'] . ' of ' . $slotSummary['total_slots'] . ' slots remaining',
-                'accepted_programs' => $acceptedPrograms,
-            ],
-            'card_three'       => [
-                'submitted_at'     => $row['created_at'] ? date('M j, Y g:i A', strtotime($row['created_at'])) : '—',
-                'preferred_dept'   => $row['preferred_dept'] ?? '—',
-                'cover_letter'     => $row['cover_letter'] ?? '—',
-                'coordinator_note' => $row['coordinator_note'] ?? null,
-            ],
-            'card_four'        => [
-                'requirements' => $requirements,
-            ],
-        ];
-    }
-
-    return $applications;
-}
-
-function approveApplication($conn, string $appUuid, string $note, string $actorUuid): array
-{
-    $stmt = $conn->prepare("\n        SELECT a.uuid, a.student_uuid, a.company_uuid, a.batch_uuid, a.status, sp.program_uuid\n        FROM ojt_applications a\n        JOIN student_profiles sp ON a.student_uuid = sp.uuid\n        WHERE a.uuid = ?\n        LIMIT 1\n    ");
-    $stmt->bind_param('s', $appUuid);
-    $stmt->execute();
-    $app = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    if (!$app) {
-        return ['success' => false, 'error' => 'Application not found.'];
-    }
-
-    if (!in_array('approved', APPLICATION_VALID_TRANSITIONS[$app['status']] ?? [], true)) {
-        return ['success' => false, 'error' => "Cannot approve from status: {$app['status']}."];
-    }
-
-    if (!areStudentRequirementsApproved($conn, $app['student_uuid'], $app['batch_uuid'])) {
-        return ['success' => false, 'error' => 'All pre-OJT requirements must be approved before approval.'];
-    }
-
-    $stmt = $conn->prepare("\n        SELECT c.accreditation_status\n        FROM companies c\n        WHERE c.uuid = ?\n        LIMIT 1\n    ");
-    $stmt->bind_param('s', $app['company_uuid']);
-    $stmt->execute();
-    $company = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    if (($company['accreditation_status'] ?? '') !== 'active') {
-        return ['success' => false, 'error' => 'The company is not actively accredited.'];
-    }
-
-    $stmt = $conn->prepare("\n        SELECT 1\n        FROM company_accepted_programs\n        WHERE company_uuid = ? AND program_uuid = ?\n        LIMIT 1\n    ");
-    $stmt->bind_param('ss', $app['company_uuid'], $app['program_uuid']);
-    $stmt->execute();
-    $programAccepted = $stmt->get_result()->fetch_row();
-    $stmt->close();
-
-    if (!$programAccepted) {
-        return ['success' => false, 'error' => 'The company no longer accepts the student program.'];
-    }
-
-    $stmt = $conn->prepare("\n        SELECT total_slots\n        FROM company_slots\n        WHERE company_uuid = ? AND batch_uuid = ?\n        LIMIT 1\n    ");
-    $stmt->bind_param('ss', $app['company_uuid'], $app['batch_uuid']);
-    $stmt->execute();
-    $slotRow = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    $totalSlots = (int) ($slotRow['total_slots'] ?? 0);
-    $stmt = $conn->prepare("\n        SELECT COUNT(*) AS total\n        FROM student_profiles\n        WHERE company_uuid = ? AND batch_uuid = ?\n    ");
-    $stmt->bind_param('ss', $app['company_uuid'], $app['batch_uuid']);
-    $stmt->execute();
-    $filledRow = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    if ($totalSlots > 0 && (int) ($filledRow['total'] ?? 0) >= $totalSlots) {
-        return ['success' => false, 'error' => 'This company has no remaining slots.'];
-    }
-
-    $stmt = $conn->prepare("\n        UPDATE ojt_applications\n        SET status = 'approved', coordinator_note = ?, reviewed_by = ?, reviewed_at = NOW()\n        WHERE uuid = ?\n    ");
-    $stmt->bind_param('sss', $note, $actorUuid, $appUuid);
-    $stmt->execute();
-    $stmt->close();
-
-    $stmt = $conn->prepare("\n        UPDATE student_profiles\n        SET company_uuid = ?\n        WHERE uuid = ?\n    ");
-    $stmt->bind_param('ss', $app['company_uuid'], $app['student_uuid']);
-    $stmt->execute();
-    $stmt->close();
-
-    logApplicationStatus($conn, $appUuid, $app['status'], 'approved', $actorUuid, $note);
-    logActivity($conn, 'application_approved', 'Coordinator approved OJT application', 'applications', $actorUuid, $appUuid);
-
-    return ['success' => true, 'message' => 'Application approved successfully.'];
-}
-
-function endorseApplication($conn, string $appUuid, string $note, string $actorUuid): array
-{
-    $stmt = $conn->prepare("
-        SELECT a.uuid, a.student_uuid, a.company_uuid, a.batch_uuid, a.status
-            FROM ojt_applications a
-            WHERE a.uuid = ?
-            LIMIT 1
-        ");
-    $stmt->bind_param('s', $appUuid);
-    $stmt->execute();
-    $app = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    if (!$app) {
-        return ['success' => false, 'error' => 'Application not found.'];
-    }
-
-    if (!in_array('endorsed', APPLICATION_VALID_TRANSITIONS[$app['status']] ?? [], true)) {
-        return ['success' => false, 'error' => "Cannot endorse from status: {$app['status']}."];
-    }
-
-    $stmt = $conn->prepare("
-        UPDATE ojt_applications
-        SET status = 'endorsed', coordinator_note = ?, reviewed_by = ?, reviewed_at = NOW()
-        WHERE uuid = ?
-    ");
-    $stmt->bind_param('sss', $note, $actorUuid, $appUuid);
-    $stmt->execute();
-    $stmt->close();
-
-    logApplicationStatus($conn, $appUuid, $app['status'], 'endorsed', $actorUuid, $note);
-    logActivity($conn, 'application_endorsed', 'Coordinator endorsed OJT application', 'applications', $actorUuid, $appUuid);
-
-    return ['success' => true, 'message' => 'Endorsement issued successfully.'];
-}
-
-function confirmOjtStart($conn, string $appUuid, string $startDate, string $note, string $actorUuid): array
-{
-    $startDate = trim($startDate);
-    if ($startDate === '') {
-        return ['success' => false, 'error' => 'Start date is required.'];
-    }
-
-    $date = DateTime::createFromFormat('Y-m-d', $startDate);
-    if (!$date || $date->format('Y-m-d') !== $startDate) {
-        return ['success' => false, 'error' => 'Start date format is invalid.'];
-    }
-
-    $stmt = $conn->prepare("
-        SELECT a.uuid, a.student_uuid, a.company_uuid, a.batch_uuid, a.status
-            FROM ojt_applications a
-            WHERE a.uuid = ?
-            LIMIT 1
-        ");
-    $stmt->bind_param('s', $appUuid);
-    $stmt->execute();
-    $app = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    if (!$app) {
-        return ['success' => false, 'error' => 'Application not found.'];
-    }
-
-    if (!in_array('active', APPLICATION_VALID_TRANSITIONS[$app['status']] ?? [], true)) {
-        return ['success' => false, 'error' => "Cannot confirm start from status: {$app['status']}."];
-    }
-
-    $composedNote = trim("Start Date: {$startDate}" . (trim($note) !== '' ? "\n" . trim($note) : ''));
-
-    $stmt = $conn->prepare("
-        UPDATE ojt_applications
-        SET status = 'active', coordinator_note = ?, reviewed_by = ?, reviewed_at = NOW()
-        WHERE uuid = ?
-    ");
-    $stmt->bind_param('sss', $composedNote, $actorUuid, $appUuid);
-    $stmt->execute();
-    $stmt->close();
-
-    logApplicationStatus($conn, $appUuid, $app['status'], 'active', $actorUuid, $composedNote);
-    logActivity($conn, 'application_started', 'Coordinator confirmed OJT start', 'applications', $actorUuid, $appUuid);
-
-    return ['success' => true, 'message' => 'OJT start confirmed successfully.'];
-}
-
-function returnApplication($conn, string $appUuid, string $note, string $actorUuid): array
-{
-    if (trim($note) === '') {
-        return ['success' => false, 'error' => 'A note is required when returning an application.'];
-    }
-
-    $stmt = $conn->prepare("
-        SELECT uuid, student_uuid, status
-        FROM ojt_applications
-        WHERE uuid = ?
-        LIMIT 1
-    ");
-    $stmt->bind_param('s', $appUuid);
-    $stmt->execute();
-    $app = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    if (!$app) {
-        return ['success' => false, 'error' => 'Application not found.'];
-    }
-
-    if (!in_array('needs_revision', APPLICATION_VALID_TRANSITIONS[$app['status']] ?? [], true)) {
-        return ['success' => false, 'error' => "Cannot return from status: {$app['status']}."];
-    }
-
-    $stmt = $conn->prepare("
-        UPDATE ojt_applications
-        SET status = 'needs_revision', coordinator_note = ?, reviewed_by = ?, reviewed_at = NOW()
-        WHERE uuid = ?
-    ");
-    $stmt->bind_param('sss', $note, $actorUuid, $appUuid);
-    $stmt->execute();
-    $stmt->close();
-
-    logApplicationStatus($conn, $appUuid, $app['status'], 'needs_revision', $actorUuid, $note);
-    logActivity($conn, 'application_returned', 'Coordinator returned OJT application for revision', 'applications', $actorUuid, $appUuid);
-
-    return ['success' => true, 'message' => 'Application returned for revision.'];
-}
-
-function rejectApplication($conn, string $appUuid, string $note, string $actorUuid): array
-{
-    if (trim($note) === '') {
-        return ['success' => false, 'error' => 'A note is required when rejecting an application.'];
-    }
-
-    $stmt = $conn->prepare("
-        SELECT a.uuid, a.student_uuid, a.company_uuid, a.status
-        FROM ojt_applications a
-        WHERE a.uuid = ?
-        LIMIT 1
-    ");
-    $stmt->bind_param('s', $appUuid);
-    $stmt->execute();
-    $app = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    if (!$app) {
-        return ['success' => false, 'error' => 'Application not found.'];
-    }
-
-    if (!in_array('rejected', APPLICATION_VALID_TRANSITIONS[$app['status']] ?? [], true)) {
-        return ['success' => false, 'error' => "Cannot reject from status: {$app['status']}."];
-    }
-
-    $stmt = $conn->prepare("\n        UPDATE ojt_applications\n        SET status = 'rejected', coordinator_note = ?, reviewed_by = ?, reviewed_at = NOW()\n        WHERE uuid = ?\n    ");
-    $stmt->bind_param('sss', $note, $actorUuid, $appUuid);
-    $stmt->execute();
-    $stmt->close();
-
-    $stmt = $conn->prepare("\n        UPDATE student_profiles\n        SET company_uuid = NULL\n        WHERE uuid = ? AND company_uuid = ?\n    ");
-    $stmt->bind_param('ss', $app['student_uuid'], $app['company_uuid']);
-    $stmt->execute();
-    $stmt->close();
-
-    logApplicationStatus($conn, $appUuid, $app['status'], 'rejected', $actorUuid, $note);
-    logActivity($conn, 'application_rejected', 'Coordinator rejected OJT application', 'applications', $actorUuid, $appUuid);
-
-    return ['success' => true, 'message' => 'Application rejected.'];
-}
-
-function getAvailableCompaniesForStudent($conn, string $batchUuid, string $programUuid): array
-{
-    $stmt = $conn->prepare("
-        SELECT
-        c.uuid,
-        c.name,
-        c.industry,
-        c.city,
-        c.work_setup,
-        c.address,\
-        
-        cs.total_slots,
-        COUNT(DISTINCT sp.id) AS filled_slots
         FROM companies c
         JOIN company_accepted_programs cap
-        ON c.uuid = cap.company_uuid
-        AND cap.program_uuid = ?
+          ON cap.company_uuid  = c.uuid
+          AND cap.program_uuid = '{$safeProgram}'
         JOIN company_slots cs
-        ON c.uuid = cs.company_uuid
-        AND cs.batch_uuid = ?
+          ON cs.company_uuid = c.uuid
+          AND cs.batch_uuid  = '{$safeBatch}'
         LEFT JOIN student_profiles sp
-        ON c.uuid = sp.company_uuid
-        AND sp.batch_uuid = ?
+          ON sp.company_uuid = c.uuid
+          AND sp.batch_uuid  = '{$safeBatch}'
+        LEFT JOIN company_contacts cc
+          ON cc.company_uuid = c.uuid
+          AND cc.is_primary  = 1
+        LEFT JOIN company_accepted_programs cap2
+          ON cap2.company_uuid = c.uuid
+        LEFT JOIN programs p2
+          ON cap2.program_uuid = p2.uuid
+          AND p2.is_active = 1
         WHERE c.accreditation_status = 'active'
-        GROUP BY c.uuid, c.name, c.industry, c.city, c.work_setup, c.address, cs.total_slots
-        HAVING filled_slots < cs.total_slots
+        GROUP BY c.id
+        HAVING remaining_slots > 0
         ORDER BY c.name ASC
     ");
-    $stmt->bind_param('sss', $programUuid, $batchUuid, $batchUuid);
-    $stmt->execute();
-    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
 
     $companies = [];
-    foreach ($rows as $row) {
-        $companyPrograms = getCompanyPrograms($conn, $row['uuid']);
+    while ($row = $result->fetch_assoc()) {
         $companies[] = [
-            'uuid' => $row['uuid'],
-            'name' => $row['name'],
-            'industry' => $row['industry'] ?? '—',
-            'city' => $row['city'] ?? '—',
-            'work_setup' => $row['work_setup'] ?? '—',
-            'address' => $row['address'] ?? '—',
-            'total_slots' => (int) ($row['total_slots'] ?? 0),
-            'filled_slots' => (int) ($row['filled_slots'] ?? 0),
-            'remaining_slots' => max(0, (int) ($row['total_slots'] ?? 0) - (int) ($row['filled_slots'] ?? 0)),
-            'accepted_programs' => $companyPrograms,
+            'uuid'              => $row['uuid'],
+            'name'              => $row['name'],
+            'industry'          => $row['industry']         ?? '—',
+            'city'              => $row['city']             ?? '—',
+            'address'           => $row['address']          ?? '—',
+            'work_setup'        => $row['work_setup'],
+            'work_setup_label'  => ucfirst($row['work_setup']),
+            'website'           => $row['website']          ?? null,
+            'company_email'     => $row['company_email']    ?? null,
+            'company_phone'     => $row['company_phone']    ?? null,
+            'contact_name'      => $row['contact_name']     ?? '—',
+            'contact_position'  => $row['contact_position'] ?? '—',
+            'total_slots'       => (int) $row['total_slots'],
+            'filled_slots'      => (int) $row['filled_slots'],
+            'remaining_slots'   => (int) $row['remaining_slots'],
+            'accepted_programs' => $row['accepted_programs'] ?? '—',
         ];
     }
 
     return $companies;
-}
-
-function getApplicationStatusLog($conn, string $applicationUuid): array
-{
-    $stmt = $conn->prepare("
-        SELECT
-          asl.from_status,
-          asl.to_status,
-          asl.note,
-          asl.created_at,
-          u.role AS changed_by_role,
-          CASE u.role
-            WHEN 'student' THEN CONCAT(sp.first_name, ' ', sp.last_name)
-            WHEN 'coordinator' THEN CONCAT(cp.first_name, ' ', cp.last_name)
-            WHEN 'admin' THEN CONCAT(ap.first_name, ' ', ap.last_name)
-            ELSE 'System'
-          END AS changed_by_name
-        FROM application_status_logs asl
-        LEFT JOIN users u ON asl.changed_by = u.uuid
-        LEFT JOIN student_profiles sp ON u.uuid = sp.user_uuid AND u.role = 'student'
-        LEFT JOIN coordinator_profiles cp ON u.uuid = cp.user_uuid AND u.role = 'coordinator'
-        LEFT JOIN admin_profiles ap ON u.uuid = ap.user_uuid AND u.role = 'admin'
-        WHERE asl.application_uuid = ?
-        ORDER BY asl.created_at ASC
-    ");
-    $stmt->bind_param('s', $applicationUuid);
-    $stmt->execute();
-    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-
-    return array_map(static fn ($row) => [
-        'from_status' => $row['from_status'],
-        'to_status' => $row['to_status'],
-        'note' => $row['note'] ?? '',
-        'changed_by' => $row['changed_by_name'] ?: 'System',
-        'changed_by_role' => $row['changed_by_role'] ?? '',
-        'date' => date('M j, Y g:i A', strtotime($row['created_at'])),
-    ], $rows);
 }
 
 function getStudentApplication($conn, string $studentUuid, string $batchUuid): ?array
@@ -640,19 +115,32 @@ function getStudentApplication($conn, string $studentUuid, string $batchUuid): ?
         SELECT
           a.uuid,
           a.status,
-          a.preferred_dept,
           a.cover_letter,
-          a.coordinator_note,
-          a.reviewed_at,
+          a.rejection_reason,
+          a.revision_reason,
+          a.preferred_department,
           a.created_at,
+          a.updated_at,
+
+          c.uuid AS company_uuid,
           c.name AS company_name,
-          c.industry,
           c.city,
           c.work_setup,
-          c.address
+          c.industry,
+          
+          sp.mobile,
+          u.email AS student_email,
+          
+          (SELECT total_slots FROM company_slots WHERE company_uuid = c.uuid AND batch_uuid = a.batch_uuid LIMIT 1) AS total_slots,
+          (SELECT COUNT(*) FROM student_profiles WHERE company_uuid = c.uuid AND batch_uuid = a.batch_uuid) AS filled_slots,
+          (SELECT GROUP_CONCAT(p.code SEPARATOR ', ') FROM company_accepted_programs cap JOIN programs p ON cap.program_uuid = p.uuid WHERE cap.company_uuid = c.uuid) AS accepted_programs
+
         FROM ojt_applications a
-        JOIN companies c ON a.company_uuid = c.uuid
-        WHERE a.student_uuid = ? AND a.batch_uuid = ?
+        JOIN companies c         ON a.company_uuid = c.uuid
+        JOIN student_profiles sp ON a.student_uuid = sp.uuid
+        JOIN users u             ON sp.user_uuid    = u.uuid
+        WHERE a.student_uuid = ?
+          AND a.batch_uuid   = ?
         ORDER BY a.created_at DESC
         LIMIT 1
     ");
@@ -661,61 +149,153 @@ function getStudentApplication($conn, string $studentUuid, string $batchUuid): ?
     $row = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 
-    if (!$row) {
-        return null;
-    }
-
-    $status = $row['status'];
-
-    return [
-        'uuid' => $row['uuid'],
-        'status' => $status,
-        'status_label' => getApplicationStatusLabel($status),
-        'company_name' => $row['company_name'] ?? '—',
-        'industry' => $row['industry'] ?? '—',
-        'city' => $row['city'] ?? '—',
-        'work_setup' => $row['work_setup'] ?? '—',
-        'address' => $row['address'] ?? '—',
-        'preferred_dept' => $row['preferred_dept'] ?? '—',
-        'cover_letter' => $row['cover_letter'] ?? '',
-        'coordinator_note' => $row['coordinator_note'] ?? null,
-        'reviewed_at' => $row['reviewed_at'] ? date('M j, Y g:i A', strtotime($row['reviewed_at'])) : null,
-        'submitted_at' => $row['created_at'] ? date('M j, Y g:i A', strtotime($row['created_at'])) : null,
-        'can_withdraw' => in_array('withdrawn', APPLICATION_VALID_TRANSITIONS[$status] ?? [], true),
-        'can_download_endorsement' => in_array($status, ['endorsed', 'active'], true),
-    ];
+    return $row ? formatApplication($row) : null;
 }
 
-function submitStudentApplication($conn, string $studentUuid, string $batchUuid, string $companyUuid, string $preferredDept, string $coverLetter, string $actorUuid): array
+function getApplicationHistory($conn, string $applicationUuid): array
 {
-    if ($companyUuid === '') {
-        return ['success' => false, 'error' => 'Select a company first.'];
-    }
-
-    if (!areStudentRequirementsApproved($conn, $studentUuid, $batchUuid)) {
-        return ['success' => false, 'error' => 'All pre-OJT requirements must be approved before applying.'];
-    }
-
     $stmt = $conn->prepare("
-    SELECT program_uuid
-        FROM student_profiles
-        WHERE uuid = ?
-        LIMIT 1
+        SELECT
+          asl.uuid,
+          asl.from_status,
+          asl.to_status,
+          asl.reason,
+          asl.created_at,
+
+          CASE u.role
+            WHEN 'coordinator' THEN CONCAT(cp.first_name, ' ', cp.last_name)
+            WHEN 'student'     THEN CONCAT(sp.first_name, ' ', sp.last_name)
+            ELSE 'System'
+          END AS actor_name,
+          u.role AS actor_role
+
+        FROM application_status_logs asl
+        LEFT JOIN users u ON asl.actor_uuid = u.uuid
+        LEFT JOIN coordinator_profiles cp ON u.uuid = cp.user_uuid AND u.role = 'coordinator'
+        LEFT JOIN student_profiles sp     ON u.uuid = sp.user_uuid AND u.role = 'student'
+        WHERE asl.application_uuid = ?
+        ORDER BY asl.created_at ASC
     ");
-    $stmt->bind_param('s', $studentUuid);
+    $stmt->bind_param('s', $applicationUuid);
     $stmt->execute();
-    $profile = $stmt->get_result()->fetch_assoc();
+    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
-    if (!$profile || empty($profile['program_uuid'])) {
-        return ['success' => false, 'error' => 'Student profile is missing a program.'];
+    return array_map(fn ($row) => [
+        'from_status' => $row['from_status'] ?? null,
+        'to_status'   => $row['to_status'],
+        'reason'      => $row['reason']      ?? null,
+        'actor_name'  => trim($row['actor_name']),
+        'actor_role'  => $row['actor_role']  ?? 'system',
+        'created_at'  => date('M j, Y g:i A', strtotime($row['created_at'])),
+        'time_ago'    => timeAgo($row['created_at']),
+    ], $rows);
+}
+
+function getAllApplications(
+    $conn,
+    string $batchUuid,
+    string $coordinatorUuid = null,
+    array  $filters = []
+): array {
+    $safeBatch = $conn->real_escape_string($batchUuid);
+    $conditions = ["a.batch_uuid = '{$safeBatch}'"];
+
+    if ($coordinatorUuid) {
+        $safeCoord    = $conn->real_escape_string($coordinatorUuid);
+        $conditions[] = "sp.coordinator_uuid = '{$safeCoord}'";
     }
 
-    $stmt = $conn->prepare("
-        SELECT a.uuid, a.status
+    if (!empty($filters['status'])) {
+        $safeStatus   = $conn->real_escape_string($filters['status']);
+        $conditions[] = "a.status = '{$safeStatus}'";
+    }
+
+    if (!empty($filters['search'])) {
+        $s            = $conn->real_escape_string($filters['search']);
+        $conditions[] = "(sp.first_name LIKE '%{$s}%' OR sp.last_name LIKE '%{$s}%' OR c.name LIKE '%{$s}%')";
+    }
+
+    $where  = implode(' AND ', $conditions);
+    $result = $conn->query("
+        SELECT
+          a.uuid,
+          a.status,
+          a.cover_letter,
+          a.rejection_reason,
+          a.revision_reason,
+          a.preferred_department,
+          a.created_at,
+          a.updated_at,
+
+          sp.uuid       AS student_uuid,
+          sp.first_name,
+          sp.last_name,
+          sp.student_number,
+          sp.year_level,
+
+          p.code        AS program_code,
+
+          c.uuid        AS company_uuid,
+          c.name        AS company_name,
+          c.city,
+          c.work_setup,
+          c.industry,
+
+          sp.mobile,
+          u.email       AS student_email,
+
+          (SELECT total_slots FROM company_slots WHERE company_uuid = c.uuid AND batch_uuid = a.batch_uuid LIMIT 1) AS total_slots,
+          (SELECT COUNT(*) FROM student_profiles WHERE company_uuid = c.uuid AND batch_uuid = a.batch_uuid) AS filled_slots,
+          (SELECT GROUP_CONCAT(p.code SEPARATOR ', ') FROM company_accepted_programs cap JOIN programs p ON cap.program_uuid = p.uuid WHERE cap.company_uuid = c.uuid) AS accepted_programs
+
         FROM ojt_applications a
-        WHERE a.student_uuid = ? AND a.batch_uuid = ?
-        ORDER BY a.created_at DESC
+        JOIN student_profiles sp ON a.student_uuid  = sp.uuid
+        JOIN users u             ON sp.user_uuid     = u.uuid
+        JOIN companies c         ON a.company_uuid  = c.uuid
+        LEFT JOIN programs p     ON sp.program_uuid = p.uuid
+        WHERE {$where}
+        ORDER BY
+          FIELD(a.status,'pending','needs_revision','approved','endorsed','active','rejected','withdrawn'),
+          a.updated_at DESC
+    ");
+
+    $applications = [];
+    while ($row = $result->fetch_assoc()) {
+        $app                    = formatApplication($row);
+        $app['student_uuid']    = $row['student_uuid'];
+        $app['full_name']       = $row['first_name'] . ' ' . $row['last_name'];
+        $app['initials']        = strtoupper(substr($row['first_name'], 0, 1) . substr($row['last_name'], 0, 1));
+        $app['student_number']  = $row['student_number'];
+        $app['year_label']      = ordinal((int)$row['year_level']) . ' Year';
+        $app['program_code']    = $row['program_code'] ?? '—';
+        $app['preferred_department'] = $row['preferred_department'] ?? '—';
+        $applications[]         = $app;
+    }
+
+    return $applications;
+}
+
+function submitApplication(
+    $conn,
+    string $studentUuid,
+    string $batchUuid,
+    string $companyUuid,
+    string $coverLetter,
+    string $programUuid,
+    string $actorUserUuid,
+    string $preferredDepartment = ''
+): array {
+    if (!canStudentApply($conn, $studentUuid, $batchUuid)) {
+        return [
+            'success' => false,
+            'error'   => 'All 6 pre-OJT requirements must be approved before applying.',
+        ];
+    }
+    $stmt = $conn->prepare("
+        SELECT uuid, status FROM ojt_applications
+        WHERE student_uuid = ? AND batch_uuid = ?
+          AND status NOT IN ('rejected','withdrawn')
         LIMIT 1
     ");
     $stmt->bind_param('ss', $studentUuid, $batchUuid);
@@ -723,71 +303,94 @@ function submitStudentApplication($conn, string $studentUuid, string $batchUuid,
     $existing = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 
-    if ($existing && in_array($existing['status'], ['pending', 'approved', 'endorsed', 'active'], true)) {
-        return ['success' => false, 'error' => 'You already have an active application for this batch.'];
+    if ($existing) {
+        return [
+            'success' => false,
+            'error'   => 'You already have an active application (' . $existing['status'] . '). Withdraw it before applying elsewhere.',
+        ];
     }
 
-    $stmt = $conn->prepare("
-    SELECT 1
-        FROM company_accepted_programs
-        WHERE company_uuid = ? AND program_uuid = ?
+    $safeBatch   = $conn->real_escape_string($batchUuid);
+    $safeCompany = $conn->real_escape_string($companyUuid);
+    $safeProgram = $conn->real_escape_string($programUuid);
+
+    $result = $conn->query("
+        SELECT
+          cs.total_slots,
+          COUNT(DISTINCT sp.id) AS filled_slots
+        FROM companies c
+        JOIN company_slots cs
+          ON cs.company_uuid = c.uuid AND cs.batch_uuid = '{$safeBatch}'
+        JOIN company_accepted_programs cap
+          ON cap.company_uuid = c.uuid AND cap.program_uuid = '{$safeProgram}'
+        LEFT JOIN student_profiles sp
+          ON sp.company_uuid = c.uuid AND sp.batch_uuid = '{$safeBatch}'
+        WHERE c.uuid = '{$safeCompany}'
+          AND c.accreditation_status = 'active'
+        GROUP BY c.id
+        HAVING filled_slots < cs.total_slots
         LIMIT 1
     ");
-    $stmt->bind_param('ss', $companyUuid, $profile['program_uuid']);
-    $stmt->execute();
-    $acceptsProgram = $stmt->get_result()->fetch_row();
-    $stmt->close();
 
-    if (!$acceptsProgram) {
-        return ['success' => false, 'error' => 'Selected company does not accept your program.'];
+    if ($result->num_rows === 0) {
+        return [
+            'success' => false,
+            'error'   => 'This company is no longer available. It may be full or no longer accredited.',
+        ];
     }
 
-    $slotSummary = getCompanySlotSummary($conn, $companyUuid, $batchUuid);
-    if (($slotSummary['total_slots'] ?? 0) <= 0 || ($slotSummary['remaining'] ?? 0) <= 0) {
-        return ['success' => false, 'error' => 'Selected company has no remaining slots.'];
-    }
+    $appUuid    = generateUuid();
+    $coverLetter = trim($coverLetter);
 
-    if ($existing && $existing['status'] === 'needs_revision') {
-        $stmt = $conn->prepare("
-            UPDATE ojt_applications
-            SET company_uuid = ?, preferred_dept = ?, cover_letter = ?, status = 'pending', coordinator_note = NULL, reviewed_by = NULL, reviewed_at = NULL
-            WHERE uuid = ?
-        ");
-        $stmt->bind_param('ssss', $companyUuid, $preferredDept, $coverLetter, $existing['uuid']);
-        $stmt->execute();
-        $stmt->close();
-
-        logApplicationStatus($conn, $existing['uuid'], 'needs_revision', 'pending', $actorUuid, 'Student re-submitted application after revision');
-        logActivity($conn, 'application_submitted', 'Student re-submitted OJT application', 'applications', $actorUuid, $existing['uuid']);
-
-        return ['success' => true, 'message' => 'Application re-submitted successfully.', 'application_uuid' => $existing['uuid']];
-    }
-
-    $appUuid = generateUuid();
     $stmt = $conn->prepare("
         INSERT INTO ojt_applications
-          (uuid, student_uuid, company_uuid, batch_uuid, status, preferred_dept, cover_letter)
-        VALUES (?, ?, ?, ?, 'pending', ?, ?)
+          (uuid, student_uuid, batch_uuid, company_uuid, cover_letter, preferred_department, status)
+        VALUES (?, ?, ?, ?, ?, ?, 'pending')
     ");
-    $stmt->bind_param('ssssss', $appUuid, $studentUuid, $companyUuid, $batchUuid, $preferredDept, $coverLetter);
+    $stmt->bind_param(
+        'ssssss',
+        $appUuid,
+        $studentUuid,
+        $batchUuid,
+        $companyUuid,
+        $coverLetter,
+        $preferredDepartment
+    );
     $stmt->execute();
     $stmt->close();
 
-    logApplicationStatus($conn, $appUuid, null, 'pending', $actorUuid, 'Student submitted application');
-    logActivity($conn, 'application_submitted', 'Student submitted OJT application', 'applications', $actorUuid, $appUuid);
+    logApplicationStatus($conn, $appUuid, null, 'pending', null, $actorUserUuid);
 
-    return ['success' => true, 'message' => 'Application submitted successfully.', 'application_uuid' => $appUuid];
+    logActivity(
+        conn: $conn,
+        eventType: 'application_submitted',
+        description: 'Student submitted OJT application',
+        module: 'applications',
+        actorUuid: $actorUserUuid,
+        targetUuid: $appUuid
+    );
+
+    return ['success' => true, 'uuid' => $appUuid];
 }
 
-function withdrawStudentApplication($conn, string $applicationUuid, string $studentUuid, string $actorUuid): array
-{
+function transitionApplication(
+    $conn,
+    string $appUuid,
+    string $newStatus,
+    string $actorUserUuid,
+    string $actorProfileUuid,
+    string $actorRole,
+    string $reason = '',
+    array  $meta = []
+): array {
     $stmt = $conn->prepare("
-        SELECT uuid, status, company_uuid
-        FROM ojt_applications
-        WHERE uuid = ? AND student_uuid = ?
-        LIMIT 1
+        SELECT a.uuid, a.status, a.student_uuid, a.company_uuid, a.batch_uuid,
+               sp.coordinator_uuid
+        FROM ojt_applications a
+        JOIN student_profiles sp ON a.student_uuid = sp.uuid
+        WHERE a.uuid = ? LIMIT 1
     ");
-    $stmt->bind_param('ss', $applicationUuid, $studentUuid);
+    $stmt->bind_param('s', $appUuid);
     $stmt->execute();
     $app = $stmt->get_result()->fetch_assoc();
     $stmt->close();
@@ -796,30 +399,234 @@ function withdrawStudentApplication($conn, string $applicationUuid, string $stud
         return ['success' => false, 'error' => 'Application not found.'];
     }
 
-    if (!in_array('withdrawn', APPLICATION_VALID_TRANSITIONS[$app['status']] ?? [], true)) {
-        return ['success' => false, 'error' => "Application cannot be withdrawn from status: {$app['status']}."];
+    $currentStatus = $app['status'];
+
+    // validate transition is allowed
+    $allowed = VALID_TRANSITIONS[$currentStatus] ?? [];
+    if (!in_array($newStatus, $allowed)) {
+        return [
+            'success' => false,
+            'error'   => "Cannot transition from {$currentStatus} to {$newStatus}.",
+        ];
     }
+
+    // validate actor role
+    $expectedActor = TRANSITION_ACTOR[$newStatus] ?? null;
+    if ($expectedActor && $expectedActor !== 'system' && $expectedActor !== $actorRole) {
+        return [
+            'success' => false,
+            'error'   => "Only a {$expectedActor} can perform this action.",
+        ];
+    }
+
+    // coordinator scope — can only act on own students
+    if ($actorRole === 'coordinator' && $app['coordinator_uuid'] !== $actorProfileUuid) {
+        return ['success' => false, 'error' => 'Unauthorized.'];
+    }
+
+    // student scope — can only act on own application
+    if ($actorRole === 'student' && $app['student_uuid'] !== $actorProfileUuid) {
+        return ['success' => false, 'error' => 'Unauthorized.'];
+    }
+
+    // require reason for certain transitions
+    if (in_array($newStatus, ['needs_revision', 'rejected', 'withdrawn']) && empty($reason)) {
+        return ['success' => false, 'error' => 'A reason is required for this action.'];
+    }
+
+    // build update fields
+    $reasonFields = '';
+    if ($newStatus === 'needs_revision') {
+        $safeReason   = $conn->real_escape_string($reason);
+        $reasonFields = ", revision_reason = '{$safeReason}', rejection_reason = NULL";
+    } elseif ($newStatus === 'rejected') {
+        $safeReason   = $conn->real_escape_string($reason);
+        $reasonFields = ", rejection_reason = '{$safeReason}', revision_reason = NULL";
+    }
+
+    $safeStatus = $conn->real_escape_string($newStatus);
+    $conn->query("
+        UPDATE ojt_applications
+        SET status = '{$safeStatus}', updated_at = NOW() {$reasonFields}
+        WHERE uuid = '{$appUuid}'
+    ");
+
+    // handle side effects
+    if ($newStatus === 'approved') {
+        // Gate: ensure requirements are approved
+        if (!canStudentApply($conn, $app['student_uuid'], $app['batch_uuid'])) {
+            return [
+                'success' => false,
+                'error'   => 'Cannot approve application: Student has not finished all 6 requirements.',
+            ];
+        }
+
+        // reserve slot — set company_uuid on student profile
+        $stmt = $conn->prepare("
+            UPDATE student_profiles
+            SET company_uuid = ?
+            WHERE uuid = ?
+        ");
+        $stmt->bind_param('ss', $app['company_uuid'], $app['student_uuid']);
+        $stmt->execute();
+        $stmt->close();
+    }
+    
+    if ($newStatus === 'active') {
+        // Handle active side effects: Insert to ojt_start_confirmations
+        $startUuid = generateUuid();
+        $startDate = $meta['start_date'] ?? date('Y-m-d');
+        // Supervisor might be null initially
+        $stmt = $conn->prepare("
+            INSERT INTO ojt_start_confirmations (uuid, application_uuid, student_uuid, start_date, confirmed_by, confirmed_at)
+            VALUES (?, ?, ?, ?, ?, NOW())
+        ");
+        $stmt->bind_param('sssss', $startUuid, $appUuid, $app['student_uuid'], $startDate, $actorUserUuid);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    if (in_array($newStatus, ['rejected', 'withdrawn'])) {
+        // release slot — clear company_uuid
+        $stmt = $conn->prepare("
+            UPDATE student_profiles SET company_uuid = NULL WHERE uuid = ?
+        ");
+        $stmt->bind_param('s', $app['student_uuid']);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    // log status history
+    logApplicationStatus($conn, $appUuid, $currentStatus, $newStatus, $reason, $actorUserUuid);
+
+    logActivity(
+        conn: $conn,
+        eventType: 'application_' . $newStatus,
+        description: "Application status changed: {$currentStatus} → {$newStatus}" . ($reason ? " — {$reason}" : ''),
+        module: 'applications',
+        actorUuid: $actorUserUuid,
+        targetUuid: $appUuid
+    );
+
+    return ['success' => true, 'new_status' => $newStatus];
+}
+
+function resubmitApplication(
+    $conn,
+    string $appUuid,
+    string $actorUserUuid,
+    string $studentUuid,
+    string $coverLetter,
+    string $companyUuid = '',
+    string $preferredDepartment = ''
+): array {
+    $stmt = $conn->prepare("
+        SELECT uuid, status, student_uuid, company_uuid FROM ojt_applications
+        WHERE uuid = ? LIMIT 1
+    ");
+    $stmt->bind_param('s', $appUuid);
+    $stmt->execute();
+    $app = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$app) {
+        return ['success' => false, 'error' => 'Application not found.'];
+    }
+
+    if ($app['student_uuid'] !== $studentUuid) {
+        return ['success' => false, 'error' => 'Unauthorized.'];
+    }
+
+    if ($app['status'] !== 'needs_revision') {
+        return [
+            'success' => false,
+            'error'   => 'Only applications with needs_revision status can be resubmitted.',
+        ];
+    }
+
+    $coverLetter = trim($coverLetter);
+    $finalCompanyUuid = !empty($companyUuid) ? $companyUuid : $app['company_uuid'];
 
     $stmt = $conn->prepare("
         UPDATE ojt_applications
-        SET status = 'withdrawn', reviewed_by = ?, reviewed_at = NOW()
+        SET status               = 'pending',
+            cover_letter         = ?,
+            company_uuid         = ?,
+            preferred_department = ?,
+            revision_reason      = NULL,
+            updated_at           = NOW()
         WHERE uuid = ?
     ");
-    $stmt->bind_param('ss', $actorUuid, $applicationUuid);
+    $stmt->bind_param('ssss', $coverLetter, $finalCompanyUuid, $preferredDepartment, $appUuid);
     $stmt->execute();
     $stmt->close();
 
+    logApplicationStatus($conn, $appUuid, 'needs_revision', 'pending', 'Student resubmitted', $actorUserUuid);
+
+    return ['success' => true];
+}
+
+function logApplicationStatus(
+    $conn,
+    string  $appUuid,
+    ?string $fromStatus,
+    string  $toStatus,
+    ?string $reason,
+    string  $actorUuid
+): void {
+    $uuid = generateUuid();
     $stmt = $conn->prepare("
-        UPDATE student_profiles
-        SET company_uuid = NULL
-        WHERE uuid = ? AND company_uuid = ?
+        INSERT INTO application_status_logs
+          (uuid, application_uuid, from_status, to_status, reason, actor_uuid)
+        VALUES (?, ?, ?, ?, ?, ?)
     ");
-    $stmt->bind_param('ss', $studentUuid, $app['company_uuid']);
+    $stmt->bind_param('ssssss', $uuid, $appUuid, $fromStatus, $toStatus, $reason, $actorUuid);
     $stmt->execute();
     $stmt->close();
+}
 
-    logApplicationStatus($conn, $applicationUuid, $app['status'], 'withdrawn', $actorUuid, 'Student withdrew application');
-    logActivity($conn, 'application_withdrawn', 'Student withdrew OJT application', 'applications', $actorUuid, $applicationUuid);
+function formatApplication(array $row): array
+{
+    $statusColors = [
+        'pending'        => ['bg' => '#EFF6FF', 'text' => '#185FA5'],
+        'approved'       => ['bg' => '#E1F5EE', 'text' => '#0F6E56'],
+        'endorsed'       => ['bg' => '#E1F5EE', 'text' => '#0F6E56'],
+        'active'         => ['bg' => '#E1F5EE', 'text' => '#0F6E56'],
+        'needs_revision' => ['bg' => '#FEF9EE', 'text' => '#BA7517'],
+        'rejected'       => ['bg' => '#FEF2F2', 'text' => '#DC2626'],
+        'withdrawn'      => ['bg' => '#F3F4F6', 'text' => '#6B7280'],
+    ];
 
-    return ['success' => true, 'message' => 'Application withdrawn successfully.'];
+    $status = $row['status'];
+    $colors = $statusColors[$status] ?? ['bg' => '#F3F4F6', 'text' => '#6B7280'];
+
+    return [
+        'uuid'              => $row['uuid'],
+        'status'            => $status,
+        'status_label'      => ucwords(str_replace('_', ' ', $status)),
+        'status_bg'         => $colors['bg'],
+        'status_text'       => $colors['text'],
+        'cover_letter'      => $row['cover_letter']      ?? '',
+        'preferred_department' => $row['preferred_department'] ?? '—',
+        'rejection_reason'  => $row['rejection_reason']  ?? null,
+        'revision_reason'   => $row['revision_reason']   ?? null,
+        'company_uuid'      => $row['company_uuid'],
+        'company_name'      => $row['company_name'],
+        'company_city'      => $row['city']              ?? '—',
+        'work_setup'        => $row['work_setup']        ?? '—',
+        'industry'          => $row['industry']          ?? '—',
+        'student_email'     => $row['student_email']     ?? '—',
+        'student_mobile'    => $row['mobile']            ?? '—',
+        'total_slots'       => $row['total_slots']       ?? 0,
+        'filled_slots'      => $row['filled_slots']      ?? 0,
+        'remaining_slots'   => ($row['total_slots'] ?? 0) - ($row['filled_slots'] ?? 0),
+        'accepted_programs' => $row['accepted_programs'] ?? '—',
+        'created_at'        => date('M j, Y', strtotime($row['created_at'])),
+        'updated_at'        => date('M j, Y g:i A', strtotime($row['updated_at'] ?? $row['created_at'])),
+        'time_ago'          => timeAgo($row['updated_at'] ?? $row['created_at']),
+        // what actions are available — used by JS to show/hide buttons
+        'can_withdraw'      => in_array($status, ['pending', 'needs_revision']),
+        'can_resubmit'      => $status === 'needs_revision',
+        'is_terminal'       => in_array($status, ['rejected', 'withdrawn', 'active']),
+    ];
 }

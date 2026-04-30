@@ -43,35 +43,47 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
-if (!in_array($_SESSION['user_role'], ['admin', 'coordinator'])) {
+if (!isset($_SESSION['user_uuid'])) {
+    http_response_code(401);
+    response(['status' => 'error', 'message' => 'Unauthenticated.']);
+}
+
+$role = $_SESSION['user_role'];
+
+if ($role === 'student') {
+    $studentUuid = $_SESSION['profile_uuid'];
+    $batchUuid   = $_SESSION['active_batch_uuid'] ?? '';
+} elseif (in_array($role, ['coordinator', 'admin'])) {
+    $studentUuid = trim($_POST['student_uuid'] ?? '');
+    $batchUuid   = trim($_POST['batch_uuid']   ?? '');
+} else {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
 
-$batchUuid = trim($_POST['batch_uuid'] ?? '');
-
-if (empty($batchUuid)) {
-    $result    = $conn->query("SELECT uuid FROM batches WHERE status = 'active' LIMIT 1");
-    $row       = $result->fetch_assoc();
-    $batchUuid = $row['uuid'] ?? null;
+if (empty($studentUuid) || empty($batchUuid)) {
+    response(['status' => 'error', 'message' => 'Student UUID and batch UUID are required.']);
 }
 
-if (empty($batchUuid)) {
-    response(['status' => 'error', 'message' => 'No active batch found.']);
+$application = getStudentApplication($conn, $studentUuid, $batchUuid);
+$history     = $application
+    ? getApplicationHistory($conn, $application['uuid'])
+    : [];
+
+$requirementsComplete = false;
+$requirementsStatus   = [];
+if ($role === 'student') {
+    $requirementsComplete = canStudentApply($conn, $studentUuid, $batchUuid);
+    if (!$requirementsComplete) {
+        $requirementsStatus = getStudentRequirements($conn, $studentUuid, $batchUuid);
+    }
 }
-
-$coordinatorUuid = $_SESSION['user_role'] === 'coordinator'
-    ? $_SESSION['profile_uuid']
-    : null;
-
-$filters = [];
-if (!empty($_POST['status'])) $filters['status'] = $_POST['status'];
-if (!empty($_POST['search'])) $filters['search'] = $_POST['search'];
-
-$applications = getAllApplications($conn, $batchUuid, $coordinatorUuid, $filters);
 
 response([
-    'status'       => 'success',
-    'applications' => $applications,
-    'total'        => count($applications),
+    'status'      => 'success',
+    'application' => $application,
+    'history'     => $history,
+    'has_application' => $application !== null,
+    'requirements_complete' => $requirementsComplete,
+    'requirements' => $requirementsStatus
 ]);

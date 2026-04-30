@@ -86,6 +86,7 @@ $result = returnRequirement(
     $conn,
     $reqUuid,
     $returnReason,
+    $_SESSION['user_uuid'],
     $_SESSION['profile_uuid']
 );
 
