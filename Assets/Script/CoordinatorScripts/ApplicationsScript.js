@@ -56,7 +56,20 @@ function renderApplications(applications, noDataMessage = "No applications found
   list.empty();
 
   if (!Array.isArray(applications) || applications.length === 0) {
-    list.append(getNoDataState(noDataMessage));
+    const noDataNode = $(`
+      <div class="col">
+        <div class="card bg-blur-5 bg-semi-transparent border-1 border-secondary-subtle rounded-4">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center justify-content-center gap-3">
+              <i class="bi bi-inbox fs-1 text-muted"></i>
+              <p class="text-muted mb-0"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `);
+    noDataNode.find("p.text-muted.mb-0").text(noDataMessage);
+    list.append(noDataNode);
     return;
   }
 
