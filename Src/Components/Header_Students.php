@@ -32,13 +32,34 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
                 <div class="vstack">
                   <div class="hstack gap-3">
                     <span>Requirements</span>
-                    <span class="badge bg-danger-subtle text-danger-emphasis ms-auto rounded-pill" id="requirementsBadge">1111</span>
+                    <span class="badge rounded-pill ms-auto d-none" id="requirementsBadge">0</span>
                   </div>
                   <small class="text-muted" style="font-size: 0.7em">manage and track submission status.</small>
                 </div>
               </div>
             </a>
           </li>
+
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              fetch('../../../process/requirements/get_requirements_count')
+                .then(response => response.json())
+                .then(data => {
+                  const badge = document.getElementById('requirementsBadge');
+                  if (data.count > 0 || data.type === 'success') {
+                    badge.textContent = data.count;
+                    badge.classList.remove('d-none', 'bg-danger-subtle', 'text-danger-emphasis', 'bg-success-subtle', 'text-success-emphasis');
+                    
+                    if (data.type === 'danger') {
+                      badge.classList.add('bg-danger-subtle', 'text-danger-emphasis');
+                    } else {
+                      badge.classList.add('bg-success-subtle', 'text-success-emphasis');
+                    }
+                    badge.classList.remove('d-none');
+                  }
+                });
+            });
+          </script>
           <li>
             <a class="dropdown-item <?= $CurrentPage === 'Applications' ? 'nav-active' : '' ?>" href="../../Pages/Students/Applications">
               <div class="hstack">

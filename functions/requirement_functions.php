@@ -22,7 +22,7 @@ const REQ_VALID_TRANSITIONS = [
     'not_submitted' => ['submitted'],
     'returned'      => ['submitted'],
     'submitted'     => ['approved', 'returned'],
-    'approved'      => [], // locked — no transitions from approved
+    'approved'      => [],
 ];
 
 
@@ -41,10 +41,11 @@ function getStudentRequirements($conn, string $studentUuid, string $batchUuid): 
           sr.submitted_at,
           sr.reviewed_at,
           sr.reviewed_by,
-
+          CONCAT(sp.first_name, ' ', sp.last_name) AS student_name,
           CONCAT(cp.first_name, ' ', cp.last_name) AS reviewer_name
 
         FROM student_requirements sr
+        JOIN student_profiles sp ON sr.student_uuid = sp.uuid
         LEFT JOIN coordinator_profiles cp ON sr.reviewed_by = cp.uuid
         WHERE sr.student_uuid = ?
           AND sr.batch_uuid   = ?
@@ -242,6 +243,7 @@ function uploadRequirement(
 function approveRequirement(
     $conn,
     string $reqUuid,
+    string $actorUserUuid,
     string $coordinatorUuid
 ): array {
     $stmt = $conn->prepare("
@@ -271,7 +273,7 @@ function approveRequirement(
             reviewed_by = ?
         WHERE uuid = ?
     ");
-    $stmt->bind_param('ss', $coordinatorUuid, $reqUuid);
+    $stmt->bind_param('ss', $actorUserUuid, $reqUuid);
     $stmt->execute();
     $stmt->close();
 
@@ -280,7 +282,7 @@ function approveRequirement(
         eventType: 'requirement_approved',
         description: REQUIREMENT_TYPES[$req['req_type']] . ' approved for student',
         module: 'requirements',
-        actorUuid: $coordinatorUuid,
+        actorUuid: $actorUserUuid,
         targetUuid: $req['student_uuid']
     );
 
@@ -292,6 +294,7 @@ function approveAllRequirements(
     $conn,
     string $studentUuid,
     string $batchUuid,
+    string $actorUserUuid,
     string $coordinatorUuid
 ): array {
     $stmt = $conn->prepare("
@@ -318,7 +321,7 @@ function approveAllRequirements(
           AND batch_uuid   = ?
           AND status       = 'submitted'
     ");
-    $stmt->bind_param('sss', $coordinatorUuid, $studentUuid, $batchUuid);
+    $stmt->bind_param('sss', $actorUserUuid, $studentUuid, $batchUuid);
     $stmt->execute();
     $approvedCount = $stmt->affected_rows;
     $stmt->close();
@@ -328,7 +331,7 @@ function approveAllRequirements(
         eventType: 'requirement_approved',
         description: "{$approvedCount} requirement(s) approved in bulk",
         module: 'requirements',
-        actorUuid: $coordinatorUuid,
+        actorUuid: $actorUserUuid,
         targetUuid: $studentUuid
     );
 
@@ -343,6 +346,7 @@ function returnRequirement(
     $conn,
     string $reqUuid,
     string $returnReason,
+    string $actorUserUuid,
     string $coordinatorUuid
 ): array {
     $returnReason = trim($returnReason);
@@ -379,7 +383,7 @@ function returnRequirement(
             reviewed_by   = ?
         WHERE uuid = ?
     ");
-    $stmt->bind_param('sss', $returnReason, $coordinatorUuid, $reqUuid);
+    $stmt->bind_param('sss', $returnReason, $actorUserUuid, $reqUuid);
     $stmt->execute();
     $stmt->close();
 
@@ -388,7 +392,7 @@ function returnRequirement(
         eventType: 'requirement_returned',
         description: REQUIREMENT_TYPES[$req['req_type']] . ' returned: ' . $returnReason,
         module: 'requirements',
-        actorUuid: $coordinatorUuid,
+        actorUuid: $actorUserUuid,
         targetUuid: $req['student_uuid']
     );
 
@@ -439,6 +443,7 @@ function formatRequirement(array $row): array
                              ? date('M j, Y g:i A', strtotime($row['reviewed_at']))
                              : null,
         'reviewer_name' => $row['reviewer_name'] ?? null,
+        'student_name'  => $row['student_name']  ?? null,
         'can_upload'    => in_array($row['status'], ['not_submitted', 'returned']),
         'can_view'      => in_array($row['status'], ['submitted', 'approved', 'returned']),
     ];

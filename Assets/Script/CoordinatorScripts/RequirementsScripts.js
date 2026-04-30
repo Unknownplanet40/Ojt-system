@@ -1,234 +1,283 @@
-import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
-import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "../SystemTheme.js";
+import { ToastVersion } from "../CustomSweetAlert.js";
+import { SwalTheme } from "../SystemTheme.js";
 import { Errors } from "../ErrorFunctions.js";
 
 let swalTheme = SwalTheme();
-
-const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 
 const ENDPOINTS = {
-  getOverview: '../../../process/requirements/get_requirements_overview',
-  getRequirements: '../../../process/requirements/get_requirements',
-  approveRequirement: '../../../process/requirements/approve_requirement',
-  returnRequirement: '../../../process/requirements/return_requirement',
+    getOverview: '../../../process/requirements/get_requirements_overview',
+    getRequirements: '../../../process/requirements/get_requirements',
+    approveRequirement: '../../../process/requirements/approve_requirement',
+    returnRequirement: '../../../process/requirements/return_requirement',
 };
 
 let state = {
-  selectedStudentUuid: null,
-  selectedBatchUuid: null,
-  selectedRequirement: null,
+    selectedStudentUuid: null,
+    selectedBatchUuid: null,
+    selectedRequirement: null,
+    studentRequirements: []
 };
 
-function toast(icon, title) {
-  if (!window.Swal) return;
-  ToastVersion(swalTheme, title, icon, 3000, 'top-end', '8');
-}
+const loadingRow = `
+    <div class="col-12 text-center py-5">
+        <div class="spinner-border text-secondary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading students...</p>
+    </div>`;
 
-async function postForm(url, payload = {}) {
-  return new Promise((resolve, reject) => {
-    $.ajax({
-      url,
-      method: 'POST',
-      data: { csrf_token: csrfToken, ...payload },
-      dataType: 'json',
-      timeout: 10000,
-      success: (json) => {
-        if (json?.status === 'success') {
-          resolve(json);
-          return;
-        }
-        reject(new Error(json?.message || 'Request failed.'));
-      },
-      error: (xhr) => {
-        const message = xhr?.responseJSON?.message || 'Request failed.';
-        reject(new Error(message));
-      },
-    });
-  });
-}
+const emptyRow = `
+    <div class="col-12 text-center py-5">
+        <i class="bi bi-people display-4 text-muted"></i>
+        <p class="mt-2 text-muted">No students assigned to you in this batch.</p>
+    </div>`;
 
 function dotClass(status) {
-  switch (status) {
-    case 'approved': return 'text-success-emphasis';
-    case 'submitted': return 'text-warning-emphasis';
-    case 'returned': return 'text-danger-emphasis';
-    default: return 'text-secondary-emphasis';
-  }
+    switch (status) {
+        case 'approved': return 'text-success-emphasis';
+        case 'submitted': return 'text-warning-emphasis';
+        case 'returned': return 'text-danger-emphasis';
+        default: return 'text-secondary-emphasis';
+    }
 }
 
 function getBadgeStatus(student) {
-  if (student.all_approved) {
-    return { text: 'Ready to Apply', cls: 'bg-success-subtle text-success-emphasis' };
-  }
-  if (student.has_pending) {
-    return { text: 'Pending Review', cls: 'bg-warning-subtle text-warning-emphasis' };
-  }
-  if (student.has_returned) {
-    return { text: 'Returned Docs', cls: 'bg-danger-subtle text-danger-emphasis' };
-  }
-  return { text: 'Not Ready', cls: 'bg-secondary-subtle text-secondary-emphasis' };
+    if (student.all_approved) {
+        return { text: 'Ready to Apply', cls: 'bg-success-subtle text-success-emphasis' };
+    }
+    if (student.has_pending) {
+        return { text: 'Pending Review', cls: 'bg-warning-subtle text-warning-emphasis' };
+    }
+    if (student.has_returned) {
+        return { text: 'Returned Docs', cls: 'bg-danger-subtle text-danger-emphasis' };
+    }
+    return { text: 'Not Ready', cls: 'bg-secondary-subtle text-secondary-emphasis' };
 }
 
-function renderStudents(students = []) {
-  const container = document.getElementById('requirementsContainer');
-  if (!container) return;
-
-  if (!students.length) {
-    container.innerHTML = '<div class="col"><div class="alert alert-secondary mb-0">No students found in this batch.</div></div>';
-    return;
-  }
-
-  container.innerHTML = students.map((student) => {
-    const statuses = student.doc_statuses || {};
-    const badge = getBadgeStatus(student);
-
-    const dots = [
-      statuses.resume,
-      statuses.guardian_form,
-      statuses.parental_consent,
-      statuses.medical_certificate,
-      statuses.insurance,
-      statuses.nbi_clearance,
-    ].map((s) => `<span class="${dotClass(s)}">&#11044;</span>`).join('');
-
-    const canReview = Number(student.submitted_count || 0) > 0;
-
-    return `
-      <div class="col">
-        <div class="card bg-blur-5 bg-semi-transparent border-0 rounded-4">
-          <div class="card-body">
-            <div class="hstack">
-              <img src="https://placehold.co/64x64/483a0f/c7993d/png?text=${student.initials || 'ST'}&font=poppins"
-                alt="profile picture" class="rounded-circle m-2 mx-3 me-3" style="width: 26px; height: 26px;">
-              <div class="vstack">
-                <h6 class="card-title mb-0">${student.full_name || 'Student'}</h6>
-                <p class="card-text mb-0">${student.program_code || '—'} - ${student.year_label || '—'}</p>
-                <div class="hstack gap-1">${dots}</div>
-              </div>
-              <span class="badge ${badge.cls} rounded-pill ms-auto">${badge.text}</span>
-              <button class="btn btn-sm ms-3 px-4 py-2 rounded-2 ${canReview ? 'btn-outline-secondary text-light' : 'btn-outline-dark text-secondary disabled'}"
-                data-student-uuid="${student.student_uuid}" data-action="review" ${canReview ? '' : 'disabled'}>
-                ${canReview ? 'Review' : 'No Pending'}
-              </button>
-            </div>
-          </div>
-        </div>
-        <hr>
-      </div>
-    `;
-  }).join('');
-
-  container.querySelectorAll('[data-action="review"]').forEach((btn) => {
-    btn.addEventListener('click', () => openReviewModal(btn.getAttribute('data-student-uuid')));
-  });
-}
-
-function fillModal(req, studentUuid) {
-  state.selectedRequirement = req;
-  state.selectedStudentUuid = studentUuid;
-
-  document.getElementById('modalDocType').textContent = req.req_label || 'Requirement';
-  document.getElementById('modalStudentName').textContent = req.student_name || 'Student';
-  document.getElementById('modalStudentDocumentName').textContent = req.file_name || 'No file';
-  document.getElementById('modalStudentDocumentStatus').textContent = req.status_label || req.status || 'Unknown';
-  document.getElementById('documentFileName').textContent = req.file_name || 'No file submitted';
-  document.getElementById('documentdate').textContent = req.submitted_at ? `Submitted on: ${req.submitted_at}` : 'No submission date';
-  document.getElementById('studentNotesContent').textContent = req.student_note || 'No notes provided by the student.';
-  document.getElementById('reviewNote').value = '';
-
-  const fileURL = `../../../file_serve.php?type=requirement&req_uuid=${encodeURIComponent(req.uuid)}`;
-  document.getElementById('viewDocumentBtn').onclick = () => window.open(fileURL, '_blank');
-  document.getElementById('downloadDocumentBtn').onclick = () => window.open(`${fileURL}&action=download`, '_blank');
-}
-
-async function openReviewModal(studentUuid) {
-  try {
-    const data = await postForm(ENDPOINTS.getRequirements, {
-      student_uuid: studentUuid,
-      batch_uuid: state.selectedBatchUuid || '',
+function getOverview() {
+    const container = $("#requirementsContainer");
+    $.ajax({
+        url: ENDPOINTS.getOverview,
+        method: "POST",
+        dataType: "json",
+        data: { csrf_token: csrfToken },
+        beforeSend: function () {
+            container.html(loadingRow);
+        },
+        success: function (response) {
+            if (response.status === "success") {
+                renderStudents(response.overview);
+                $("#StudentCount").text(`Total Students: ${response.total || 0}`);
+                $("#CurrentBatch").text('Active Batch');
+            } else {
+                container.html(emptyRow);
+            }
+        },
+        error: function (xhr, status, error) {
+            container.html(emptyRow);
+            Errors(xhr, status, error);
+        }
     });
+}
 
-    const submitted = (data.requirements || []).filter((r) => r.status === 'submitted');
-    if (!submitted.length) {
-      toast('info', 'No submitted document to review for this student.');
-      await loadOverview();
-      return;
+function renderStudents(students) {
+    const container = $("#requirementsContainer");
+    container.empty();
+
+    if (!students || students.length === 0) {
+        container.html(emptyRow);
+        return;
     }
 
-    const req = submitted[0];
-    req.student_name = document.querySelector(`[data-action="review"][data-student-uuid="${studentUuid}"]`)?.closest('.hstack')?.querySelector('.card-title')?.textContent?.trim() || 'Student';
-    fillModal(req, studentUuid);
+    students.forEach(student => {
+        const statuses = student.doc_statuses || {};
+        const badge = getBadgeStatus(student);
+        const canReview = Number(student.submitted_count || 0) > 0;
 
-    const modalEl = document.getElementById('requirementReviewModal');
-    bootstrap.Modal.getOrCreateInstance(modalEl).show();
-  } catch (error) {
-    toast('error', error.message);
-  }
-}
+        const dots = [
+            statuses.resume,
+            statuses.guardian_form,
+            statuses.parental_consent,
+            statuses.medical_certificate,
+            statuses.insurance,
+            statuses.nbi_clearance,
+        ].map((s) => `<span class="${dotClass(s)}">&#11044;</span>`).join('');
 
-async function loadOverview() {
-  const data = await postForm(ENDPOINTS.getOverview);
-  renderStudents(data.overview || []);
+        const studentRow = `
+            <div class="col-12">
+            <div class="card border-0 rounded-4 mb-3 shadow-sm bg-blur-5 bg-semi-transparent">
+                <div class="card-body p-3 p-md-4">
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex align-items-start align-items-sm-center gap-3">
+                    <div class="rounded-circle overflow-hidden border border-secondary-subtle flex-shrink-0 shadow-sm" style="width: 44px; height: 44px;">
+                        <img src="https://placehold.co/64x64/483a0f/c7993d/png?text=${student.initials || 'ST'}&font=poppins" class="img-fluid" alt="${student.full_name}">
+                    </div>
 
-  const studentCount = document.getElementById('StudentCount');
-  if (studentCount) studentCount.textContent = `Total Students: ${data.total || 0}`;
+                    <div class="flex-grow-1 min-w-0">
+                        <h6 class="mb-1 fw-semibold text-truncate">${student.full_name}</h6>
+                        <small class="text-muted d-block">${student.program_code} - ${student.year_label}</small>
+                    </div>
 
-  const currentBatch = document.getElementById('CurrentBatch');
-  if (currentBatch) currentBatch.textContent = 'Active Batch';
-}
+                    <div class="d-none d-md-flex align-items-center gap-1 ms-2" aria-label="Document status indicators">
+                        ${dots}
+                    </div>
+                    </div>
 
-async function handleApprove() {
-  if (!state.selectedRequirement?.uuid) return;
+                    <div class="d-flex d-md-none align-items-center gap-1 ps-1" aria-label="Document status indicators">
+                    ${dots}
+                    </div>
 
-  await postForm(ENDPOINTS.approveRequirement, { req_uuid: state.selectedRequirement.uuid });
-  toast('success', 'Document approved.');
-
-  const modalEl = document.getElementById('requirementReviewModal');
-  bootstrap.Modal.getOrCreateInstance(modalEl).hide();
-  await loadOverview();
-}
-
-async function handleReturn() {
-  if (!state.selectedRequirement?.uuid) return;
-
-  const reason = (document.getElementById('reviewNote').value || '').trim();
-  if (!reason) {
-    toast('warning', 'Return reason is required.');
-    return;
-  }
-
-  await postForm(ENDPOINTS.returnRequirement, {
-    req_uuid: state.selectedRequirement.uuid,
-    return_reason: reason,
-  });
-
-  toast('success', 'Document returned to student.');
-  const modalEl = document.getElementById('requirementReviewModal');
-  bootstrap.Modal.getOrCreateInstance(modalEl).hide();
-  await loadOverview();
-}
-
-function bindEvents() {
-  document.getElementById('approveBtn')?.addEventListener('click', () => {
-    handleApprove().catch((error) => toast('error', error.message));
-  });
-
-  document.getElementById('returnBtn')?.addEventListener('click', () => {
-    handleReturn().catch((error) => toast('error', error.message));
-  });
-
-  document.getElementById('closeModalBtn')?.addEventListener('click', () => {
-    state.selectedRequirement = null;
-    document.getElementById('reviewNote').value = '';
-  });
-}
-
-(function init() {
-  bindEvents();
-  loadOverview()
-    .catch((error) => toast('error', error.message || 'Failed to load overview.'))
-    .finally(() => {
-      const loader = document.getElementById('pageLoader');
-      if (loader) loader.classList.add('d-none');
+                    <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-sm-end gap-2 gap-sm-3 pt-1">
+                    <span class="badge ${badge.cls} rounded-pill px-3 py-2 text-wrap text-center">${badge.text}</span>
+                    <button class="btn btn-sm ${canReview ? 'btn-outline-secondary text-light' : 'btn-outline-dark text-secondary disabled'} rounded-3 js-review-btn px-3"
+                        data-student-uuid="${student.student_uuid}" 
+                        data-student-name="${student.full_name}"
+                        ${canReview ? '' : 'disabled'}>
+                        ${canReview ? `Review (${student.submitted_count})` : student.all_approved ? 'All Approved' : 'No Submissions'}
+                    </button>
+                    </div>
+                </div>
+                </div>
+            </div>
+            </div>
+        `;
+        container.append(studentRow);
     });
-})();
+
+    $(".js-review-btn").on("click", function() {
+        const studentUuid = $(this).data("student-uuid");
+        const studentName = $(this).data("student-name");
+        openReviewModal(studentUuid, studentName);
+    });
+}
+
+function openReviewModal(studentUuid, studentName) {
+    state.selectedStudentUuid = studentUuid;
+    $.ajax({
+        url: ENDPOINTS.getRequirements,
+        method: "POST",
+        dataType: "json",
+        data: {
+            csrf_token: csrfToken,
+            student_uuid: studentUuid
+        },
+        success: function (response) {
+            if (response.status === "success") {
+                state.studentRequirements = response.requirements || [];
+                const submitted = state.studentRequirements.filter(r => r.status === 'submitted');
+                
+                if (submitted.length === 0) {
+                    ToastVersion(swalTheme, "No documents pending review for this student.", "info", 3000, "top-end");
+                    getOverview();
+                    return;
+                }
+                setupReviewUI(submitted, studentName);
+            }
+        },
+        error: function (xhr, status, error) {
+            Errors(xhr, status, error);
+        }
+    });
+}
+
+function setupReviewUI(submittedReqs, studentName) {
+    const req = submittedReqs[0];
+    state.selectedRequirement = req;
+
+    $("#modalDocType").text(req.req_label);
+    $("#modalStudentName").text(studentName);
+    $("#modalStudentDocumentName").text(req.file_name);
+    $("#modalStudentDocumentStatus").text(req.status_label);
+    $("#documentFileName").text(req.file_name);
+    $("#documentdate").text(req.submitted_at ? `Submitted on: ${req.submitted_at}` : "N/A");
+    $("#studentNotesContent").text(req.student_note || "No notes provided.");
+    $("#reviewNote").val("");
+
+    const fileURL = `../../../file_serve.php?type=requirement&req_uuid=${encodeURIComponent(req.uuid)}`;
+    $("#viewDocumentBtn").off("click").on("click", () => window.open(fileURL, '_blank'));
+    $("#downloadDocumentBtn").off("click").on("click", () => window.open(`${fileURL}&action=download`, '_blank'));
+
+    $("#requirementReviewModal").modal("show");
+}
+
+function handleApprove() {
+    if (!state.selectedRequirement) return;
+
+    $.ajax({
+        url: ENDPOINTS.approveRequirement,
+        method: "POST",
+        dataType: "json",
+        data: {
+            csrf_token: csrfToken,
+            req_uuid: state.selectedRequirement.uuid
+        },
+        beforeSend: function() {
+            $("#approveBtn").prop("disabled", true);
+        },
+        success: function (response) {
+            if (response.status === "success") {
+                ToastVersion(swalTheme, response.message || "Document approved.", "success", 3000, "top-end");
+                $("#requirementReviewModal").modal("hide");
+                getOverview();
+            } else {
+                ToastVersion(swalTheme, response.message, "error", 3000, "top-end");
+            }
+        },
+        error: function (xhr, status, error) {
+            Errors(xhr, status, error);
+        },
+        complete: function() {
+            $("#approveBtn").prop("disabled", false);
+        }
+    });
+}
+
+function handleReturn() {
+    if (!state.selectedRequirement) return;
+
+    const reason = $("#reviewNote").val().trim();
+    if (!reason) {
+        ToastVersion(swalTheme, "Please provide a reason for returning the document.", "warning", 3000, "top-end");
+        return;
+    }
+
+    $.ajax({
+        url: ENDPOINTS.returnRequirement,
+        method: "POST",
+        dataType: "json",
+        data: {
+            csrf_token: csrfToken,
+            req_uuid: state.selectedRequirement.uuid,
+            return_reason: reason
+        },
+        beforeSend: function() {
+            $("#returnBtn").prop("disabled", true);
+        },
+        success: function (response) {
+            if (response.status === "success") {
+                ToastVersion(swalTheme, response.message || "Document returned to student.", "success", 3000, "top-end");
+                $("#requirementReviewModal").modal("hide");
+                getOverview();
+            } else {
+                ToastVersion(swalTheme, response.message, "error", 3000, "top-end");
+            }
+        },
+        error: function (xhr, status, error) {
+            Errors(xhr, status, error);
+        },
+        complete: function() {
+            $("#returnBtn").prop("disabled", false);
+        }
+    });
+}
+
+$(document).ready(function () {
+    getOverview();
+
+    $("#approveBtn").on("click", handleApprove);
+    $("#returnBtn").on("click", handleReturn);
+
+    const loader = document.getElementById('pageLoader');
+    if (loader) loader.classList.add('d-none');
+});

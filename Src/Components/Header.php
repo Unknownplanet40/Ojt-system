@@ -43,6 +43,17 @@
               </a>
             </li>
             <li>
+              <a class="dropdown-item <?= $CurrentPage === 'Requirements' ? 'nav-active' : '' ?>" href="../Admin/Requirements">
+                <div class="hstack">
+                  <i class="bi bi-file-earmark-check me-2"></i>
+                  <div class="vstack">
+                    <span>Requirements</span>
+                    <small class="text-muted" style="font-size: 0.7em">View student document status</small>
+                  </div>
+                </div>
+              </a>
+            </li>
+            <li>
               <a class="dropdown-item <?= $CurrentPage === 'Supervisors' ? 'nav-active' : '' ?>" href="../Admin/Supervisors">
                 <div class="hstack">
                   <i class="bi bi-person-circle me-2"></i>

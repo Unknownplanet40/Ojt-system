@@ -217,3 +217,26 @@ export function ModalVersion(theme = "bootstrap-5-light", title = "This is a mod
 
   processModalQueue();
 }
+
+export function ConfirmVersion(theme = "bootstrap-5-light", title = "Are you sure?", text = "You won't be able to revert this!", icon = "warning", confirmText = "Yes, proceed", cancelText = "Cancel") {
+  const themeToApply = normalize(theme, VALID.themes, "bootstrap-5-light");
+  const iconToApply = normalize(icon, VALID.icons, "warning");
+
+  return Swal.fire({
+    title,
+    text,
+    icon: iconToApply,
+    showCancelButton: true,
+    confirmButtonText: confirmText,
+    cancelButtonText: cancelText,
+    customClass: {
+      popup: "bg-blur-5 bg-semi-transparent border-1 rounded-3 shadow-lg",
+      container: "overflow-hidden",
+      confirmButton: "btn btn-success px-4 py-2 rounded-3 me-2",
+      cancelButton: "btn btn-outline-secondary px-4 py-2 rounded-3"
+    },
+    buttonsStyling: false,
+    showClass: { popup: "bounce-in-fwd" },
+    hideClass: { popup: "slide-out-blurred-bottom" }
+  });
+}

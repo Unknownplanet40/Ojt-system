@@ -34,31 +34,35 @@ if (empty($_POST['csrf_token']) ||
     response(['status' => 'error', 'message' => 'Invalid request.']);
 }
 
-if (!isset($_SESSION['user_uuid']) || ($_SESSION['user_role'] ?? '') !== 'student') {
-    http_response_code(403);
-    response(['status' => 'error', 'message' => 'Unauthorized.']);
-}
-
 if (!$conn || $conn->connect_error) {
     response([
         'status'       => 'critical',
         'message'      => 'Database connection failed.',
-        'details'      => $conn->connect_error ?? 'Unknown error',
-        'suggestion'   => 'Please try again later or contact support if the issue persists.'
+        'Details'      => $conn->connect_error ?? 'Unknown error',
+        'Suggestion'   => 'Please try again later or contact support if the issue persists.'
     ]);
 }
 
-$batchUuid = $_SESSION['active_batch_uuid'] ?? '';
-$programUuid = $_SESSION['student_program_uuid'] ?? '';
-
-if ($batchUuid === '' || $programUuid === '') {
-    response(['status' => 'error', 'message' => 'Batch and program are required.'], 422);
+if (!isset($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'student') {
+    http_response_code(403);
+    response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
 
-$companies = getAvailableCompaniesForStudent($conn, $batchUuid, $programUuid);
+$programUuid = $_SESSION['student_program_uuid'] ?? '';
+$batchUuid   = $_SESSION['active_batch_uuid']    ?? '';
+
+if (empty($programUuid) || empty($batchUuid)) {
+    response([
+        'status'  => 'error',
+        'message' => 'No active batch or program assigned. Contact your coordinator.',
+    ]);
+}
+
+
+$companies = getAvailableCompaniesForStudent($conn, $programUuid, $batchUuid);
 
 response([
-    'status' => 'success',
+    'status'    => 'success',
     'companies' => $companies,
-    'total' => count($companies),
+    'total'     => count($companies),
 ]);

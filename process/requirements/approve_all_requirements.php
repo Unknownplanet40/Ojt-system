@@ -80,6 +80,7 @@ $result = approveAllRequirements(
     $conn,
     $studentUuid,
     $batchUuid,
+    $_SESSION['user_uuid'],
     $_SESSION['profile_uuid']
 );
 

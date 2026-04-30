@@ -607,7 +607,8 @@ function isStrongPassword(string $password): bool
         && preg_match('/[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]/', $password);
 }
 
-function forcedChangePassword($conn, string $userUuid, string $tempPassword, string $newPassword, string $confirmPassword): array {
+function forcedChangePassword($conn, string $userUuid, string $tempPassword, string $newPassword, string $confirmPassword): array
+{
     $errors = [];
 
     if (empty($tempPassword)) {
@@ -683,7 +684,8 @@ function forcedChangePassword($conn, string $userUuid, string $tempPassword, str
     return ['success' => true, 'mode' => 'forced'];
 }
 
-function voluntaryChangePassword($conn, string $userUuid, string $currentPassword, string $newPassword, string $confirmPassword): array {
+function voluntaryChangePassword($conn, string $userUuid, string $currentPassword, string $newPassword, string $confirmPassword): array
+{
 
     $errors = [];
 
@@ -792,7 +794,6 @@ function sendResetLink($conn, string $email): array
         ];
     }
 
-    // check if email exists
     $stmt = $conn->prepare("
         SELECT uuid, is_active FROM users WHERE email = ? LIMIT 1
     ");
@@ -891,7 +892,6 @@ function validateResetToken($conn, string $token): array
         ];
     }
 
-    // check if already used
     if ((int) $row['used'] === 1) {
         return [
             'success' => false,
@@ -900,12 +900,10 @@ function validateResetToken($conn, string $token): array
         ];
     }
 
-    // check expiry
     $expiresAt   = strtotime($row['expires_at']);
     $currentTime = time();
 
     if ($currentTime > $expiresAt) {
-        // clean up expired token
         $stmt = $conn->prepare("DELETE FROM password_reset_tokens WHERE token_hash = ?");
         $stmt->bind_param('s', $token);
         $stmt->execute();
@@ -921,8 +919,8 @@ function validateResetToken($conn, string $token): array
     return [
         'success'    => true,
         'user_uuid'  => $row['user_uuid'],
-        'expires_at' => $row['expires_at'], // datetime string — JS converts to Date object
-        'expires_ts' => $expiresAt,         // unix timestamp
+        'expires_at' => $row['expires_at'],
+        'expires_ts' => $expiresAt,
     ];
 }
 
@@ -938,7 +936,6 @@ function resetPassword($conn, string $token, string $newPassword, string $confir
         ];
     }
 
-    // validate inputs
     if (empty($newPassword)) {
         return [
             'success' => false,
@@ -963,7 +960,6 @@ function resetPassword($conn, string $token, string $newPassword, string $confir
         ];
     }
 
-    // validate token
     $tokenResult = validateResetToken($conn, $token);
 
     if (!$tokenResult['success']) {
@@ -976,7 +972,6 @@ function resetPassword($conn, string $token, string $newPassword, string $confir
     try {
         $conn->begin_transaction();
 
-        // update password
         $stmt = $conn->prepare("
             UPDATE users
             SET password_hash        = ?,
@@ -1003,7 +998,6 @@ function resetPassword($conn, string $token, string $newPassword, string $confir
             ];
         }
 
-        // mark token as used — never delete, keep for audit
         $stmt = $conn->prepare("
             UPDATE password_reset_tokens
             SET used = 1
@@ -1111,17 +1105,14 @@ function buildResetEmailHtml(string $resetLink, string $expiresAt): string
                 <tr>
                     <td align="center">
                         <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
-                            <!-- header -->
                              <tr>
                                 <td style="background-color:#0F6E56;padding:32px 40px;text-align:center;">
                                     <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:600;letter-spacing:-0.3px;">On-the-Job Training (OJT)</h1>
                                     <p style="margin:6px 0 0;color:#9FE1CB;font-size:13px;">{$SchoolName}</p>
                                 </td>
                             </tr>
-                            <!-- body -->
                              <tr>
                                 <td style="padding:40px 40px 32px;">
-                                    <!-- icon -->
                                      <div style="text-align:center;margin-bottom:28px; display:none;">
                                         <div style="display:inline-block;background-color:#E1F5EE;border-radius:50%;width:64px;height:64px;line-height:64px;text-align:center;">
                                             <span style="font-size:28px;">&#128274;</span>
@@ -1129,31 +1120,26 @@ function buildResetEmailHtml(string $resetLink, string $expiresAt): string
                                     </div>
                                     <h2 style="margin:0 0 8px;color:#111827;font-size:20px;font-weight:600;text-align:center;">Reset your password</h2>
                                     <p style="margin:0 0 28px;color:#6b7280;font-size:14px;line-height:1.6;text-align:center;">We received a request to reset your password. Click the button below to choose a new one.</p>
-                                    <!-- button -->
                                      <div style="text-align:center;margin-bottom:28px;">
                                         <a href="{$resetLink}"
                                         style="display:inline-block;background-color:#0F6E56;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 36px;border-radius:8px;letter-spacing:0.1px;">Reset Password</a>
                                     </div>
-                                    <!-- or copy link -->
                                      <p style="margin:0 0 8px;color:#6b7280;font-size:13px;text-align:center;">Or copy this link into your browser:</p>
                                      <div style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px 14px;margin-bottom:28px;word-break:break-all;">
                                         <a href="{$resetLink}" style="color:#0F6E56;font-size:12px;text-decoration:none;">
                                             {$resetLink}</a>
                                         </div>
-                                        <!-- expiry notice -->
                                          <div style="background-color:#FEF9EE;border:1px solid #FDE68A;border-radius:8px;padding:14px 16px;margin-bottom:28px;">
                                             <p style="margin:0;color:#92400E;font-size:13px;line-height:1.5;">
                                                 ⏱ This link expires on <strong>{$expiryFormatted} (Philippine Time)</strong>.
                                                 If it expires, you can request a new one from the login page.
                                             </p>
                                         </div>
-                                        <!-- security note -->
                                          <p style="margin:0;color:#9ca3af;font-size:13px;line-height:1.6;">
                                             If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.
                                         </p>
                                     </td>
                                 </tr>
-                                <!-- footer -->
                                  <tr>
                                     <td style="background-color:#f9fafb;border-top:1px solid #f3f4f6;padding:20px 40px;text-align:center;">
                                         <p style="margin:0;color:#9ca3af;font-size:12px;line-height:1.6;">

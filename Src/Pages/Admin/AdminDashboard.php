@@ -16,7 +16,7 @@ $CurrentPage = "AdminDashboard";
 
 <head>
     <?php require_once "pagehead.php" ?>
-    <script type="module" src="../../../Assets/Script/dashboardScripts/AdminDashboard.js"></script>
+    <script type="module" src="../../../Assets/Script/dashboardScripts/AdminDashboard.js?v=<?= time() ?>"></script>
     <title><?= $ShortTitle ?></title>
 </head>
 
@@ -38,7 +38,12 @@ $CurrentPage = "AdminDashboard";
             <div class="container-fluid p-4 w-100" id="dashboardContent">
                 <div class="hstack">
                     <div>
-                        <h4 class="" id="dashboardTitle">Dashboard</h4>
+                        <div class="hstack gap-2">
+                            <h4 class="" id="dashboardTitle">Dashboard</h4>
+                            <a href="javascript:void(0)" class="small text-decoration-none" id="startDashboardTourLink">
+                                <i class="bi bi-signpost-split me-1"></i>Start quick tour
+                            </a>
+                        </div>
                         <p class="blockquote-footer pt-2 fs-6">Welcome back, <strong id="welcomeUserName"></strong>! Here's what's happening this semester.</p>
                     </div>
                     <button class="btn btn-sm btn-outline-secondary ms-auto text-nowrap"

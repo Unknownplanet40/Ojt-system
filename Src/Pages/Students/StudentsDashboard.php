@@ -202,14 +202,17 @@ if ($currentHour >= 5 && $currentHour < 12) {
                             style="--blur-lvl: <?= $opacitylvl ?>;">
                             <div class="card-body p-3 p-lg-4 d-flex flex-column gap-3">
                                 <div class="d-flex align-items-center justify-content-between">
-                                    <p class="mb-0 text-muted small fw-semibold text-uppercase">Current grade</p>
-                                    <i class="bi bi-award text-success fs-5"></i>
+                                    <p class="mb-0 text-muted small fw-semibold text-uppercase">Requirements</p>
+                                    <i class="bi bi-file-earmark-check text-success fs-5"></i>
                                 </div>
                                 <div>
-                                    <h3 class="mb-1 fw-bold">&mdash;</h3>
-                                    <small class="text-muted">Not yet computed</small>
+                                    <h3 class="mb-1 fw-bold" id="reqApprovedCount">—</h3>
+                                    <small class="text-muted" id="reqTotalCount">of 6 approved</small>
                                 </div>
-                                <small class="text-muted mt-auto">Visible after coordinator evaluation.</small>
+                                <div class="progress mt-auto" style="height: 8px;">
+                                    <div class="progress-bar bg-success rounded-pill" role="progressbar"
+                                        style="width: 0%;" id="reqProgressBar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -379,15 +382,6 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                 </div>
                             </div>
                             <?php
-                            $requirements = [
-                                ['name' => 'Medical certificate', 'status' => 'Approved'],
-                                ['name' => 'Parental consent', 'status' => 'Returned'],
-                                ['name' => 'Insurance', 'status' => 'Approved'],
-                                ['name' => 'NBI clearance', 'status' => 'Approved'],
-                                ['name' => 'Resume / CV', 'status' => 'Submitted'],
-                                ['name' => 'Guardian form', 'status' => 'Not submitted'],
-                            ];
-
                             $statusStyles = [
                                 'Approved'      => ['badge' => 'bg-success-subtle text-success-emphasis', 'dot' => 'text-success'],
                                 'Returned'      => ['badge' => 'bg-danger-subtle text-danger-emphasis', 'dot' => 'text-danger'],
@@ -397,23 +391,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                             ?>
 
                             <ul class="list-group list-group-flush" id="requirementsList" style="max-height: 400px; overflow-y: auto;">
-                                <?php foreach ($requirements as $req): ?>
-                                    <?php
-                                    $status = $req['status'];
-                                    $style = $statusStyles[$status] ?? ['badge' => 'bg-light text-dark', 'dot' => 'text-muted'];
-                                    ?>
-                                    <li class="list-group-item bg-transparent px-2 px-sm-3 py-3 border-secondary-subtle">
-                                        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 w-100">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="<?= $style['dot'] ?>" style="font-size: 0.70rem;">&#11044;</span>
-                                                <span class="fw-semibold"><?= htmlspecialchars($req['name']) ?></span>
-                                            </div>
-                                            <span class="badge rounded-pill px-3 py-2 ms-sm-auto <?= $style['badge'] ?>">
-                                                <?= htmlspecialchars($status) ?>
-                                            </span>
-                                        </div>
-                                    </li>
-                                <?php endforeach; ?>
+                                <!-- Dynamic Requirements List -->
                             </ul>
                         </div>
                     </div>

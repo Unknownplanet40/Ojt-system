@@ -161,7 +161,9 @@ function renderAuditRows(logs = []) {
     const description = escapeHtml(fullDescription.length > 160 ? `${fullDescription.slice(0, 157)}...` : fullDescription);
     const source = escapeHtml(log.source || "activity");
     const targetUuid = escapeHtml(log.target_uuid || "");
-    const ipAddress = escapeHtml(log.ip_address || "");
+    let rawIp = log.ip_address || "";
+    if (rawIp === "::1" || rawIp === "127.0.0.1") rawIp = "localhost";
+    const ipAddress = escapeHtml(rawIp);
     const failReason = escapeHtml(log.fail_reason || "");
     const isActivitySource = String(log.source || "") === "activity";
     const isLoginSource = String(log.source || "") === "login";
@@ -251,7 +253,9 @@ function openAuditDetailModal(log) {
   const isLoginSource = String(log.source || "") === "login";
   const isActivitySource = String(log.source || "") === "activity";
 
-  const ipAddress = isLoginSource ? log.ip_address || "—" : "Not applicable for activity logs";
+  let rawDetailIp = log.ip_address || "—";
+  if (rawDetailIp === "::1" || rawDetailIp === "127.0.0.1") rawDetailIp = "localhost";
+  const ipAddress = isLoginSource ? rawDetailIp : "Not applicable for activity logs";
   const loginResult =
     !isLoginSource || log.login_success === null || typeof log.login_success === "undefined"
       ? "Not applicable for activity logs"

@@ -37,9 +37,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
     <title><?= $ShortTitle ?></title>
 </head>
 
-<body class="login-page"
-    data-role="<?= $_SESSION['user_role'] ?>"
-    data-uuid="<?= $_SESSION['user_uuid'] ?>">
+<body class="login-page">
     <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
         <div class="circle circle1" data-speed="fast"></div>
         <div class="circle circle2" data-speed="normal"></div>
@@ -604,6 +602,40 @@ if ($currentHour >= 5 && $currentHour < 12) {
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-md-12 d-none" id="requirementsIncompleteContainer">
+                        <div class="card border shadow-sm rounded-4 bg-blur-5 bg-semi-transparent overflow-hidden h-100"
+                            style="--blur-lvl: <?= $opacitylvl ?>;">
+                            <div class="card-body py-4 py-md-5 px-3 px-sm-4 px-lg-5">
+                                <div class="mx-auto text-center" style="max-width: 760px;">
+                                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning-subtle text-warning shadow-sm mb-3 mb-md-4"
+                                        style="width: 72px; height: 72px;">
+                                        <i class="bi bi-shield-lock fs-3"></i>
+                                    </div>
+
+                                    <h4 class="fw-semibold mb-2 text-body">
+                                        Application Locked
+                                    </h4>
+
+                                    <p class="text-muted mb-4 mx-auto px-5">
+                                        You must complete and have all 6 pre-OJT requirements approved by your coordinator before you can view available companies and submit an application.
+                                    </p>
+
+                                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                                        <a href="Requirements.php"
+                                            class="btn bg-primary-subtle text-body border rounded-3 px-4 py-2 shadow-sm text-nowrap">
+                                            <i class="bi bi-file-earmark-text me-2"></i> View My Requirements
+                                        </a>
+                                        <button type="button"
+                                            class="btn bg-body-tertiary text-body border-dark-subtle rounded-3 px-4 py-2 text-nowrap"
+                                            id="viewReqStatusBtn">
+                                            <i class="bi bi-info-circle me-2"></i> Check Status
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                         <div class="col-12 d-none" id="applicationStatusContainer">
                             <div class="card h-100 border shadow-sm rounded-4 bg-blur-5 bg-semi-transparent overflow-hidden"
                                 style="--blur-lvl: <?= $opacitylvl ?>;">
@@ -730,6 +762,11 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                             class="btn btn-outline-primary rounded-3 px-4 py-2 shadow-sm d-none"
                                             id="downloadEndorsementBtn">
                                             <i class="bi bi-download me-1"></i> Download endorsement
+                                        </button>
+                                        <button type="button"
+                                            class="btn btn-outline-warning rounded-3 px-4 py-2 shadow-sm d-none"
+                                            id="resubmitApplicationBtn">
+                                            <i class="bi bi-pencil-square me-1"></i> Edit & Resubmit
                                         </button>
                                         <button type="button"
                                             class="btn btn-outline-danger rounded-3 px-4 py-2 shadow-sm d-none"

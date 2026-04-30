@@ -36,12 +36,36 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
                 <div class="hstack">
                   <i class="bi bi-person me-2"></i>
                   <div class="vstack">
-                    <span>Requirements</span>
+                    <div class="hstack gap-3">
+                      <span>Requirements</span>
+                      <span class="badge rounded-pill ms-auto d-none" id="requirementsBadge">0</span>
+                    </div>
                     <small class="text-muted" style="font-size: 0.7em">View and manage student requirements and submissions.</small>
                   </div>
                 </div>
               </a>
             </li>
+
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                fetch('../../../process/requirements/get_requirements_count')
+                  .then(response => response.json())
+                  .then(data => {
+                    const badge = document.getElementById('requirementsBadge');
+                    if (data.count > 0 || data.type === 'success') {
+                      badge.textContent = data.count;
+                      badge.classList.remove('d-none', 'bg-warning-subtle', 'text-warning-emphasis', 'bg-success-subtle', 'text-success-emphasis');
+                      
+                      if (data.type === 'warning') {
+                        badge.classList.add('bg-warning-subtle', 'text-warning-emphasis');
+                      } else {
+                        badge.classList.add('bg-success-subtle', 'text-success-emphasis');
+                      }
+                      badge.classList.remove('d-none');
+                    }
+                  });
+              });
+            </script>
             <li>
           </ul>
         </li>

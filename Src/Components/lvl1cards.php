@@ -1,6 +1,6 @@
 <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-4">
   <!-- Total Users -->
-  <div class="col">
+  <div class="col totalusercard">
     <div class="card h-100 border-0 shadow-sm rounded-4 bg-blur-5 bg-semi-transparent position-relative overflow-hidden"
          style="--blur-lvl: <?= $opacitylvl ?>;">
       <div class="position-absolute top-0 start-0 w-100" style="height: 4px; background: linear-gradient(90deg, #0d6efd, #6ea8fe);"></div>
@@ -18,7 +18,7 @@
   </div>
 
   <!-- Students -->
-  <div class="col">
+  <div class="col studentcard">
     <div class="card h-100 border-0 shadow-sm rounded-4 bg-blur-5 bg-semi-transparent position-relative overflow-hidden"
          style="--blur-lvl: <?= $opacitylvl ?>;">
       <div class="position-absolute top-0 start-0 w-100" style="height: 4px; background: linear-gradient(90deg, #ffc107, #ffda6a);"></div>
@@ -36,7 +36,7 @@
   </div>
 
   <!-- Coordinators -->
-  <div class="col">
+  <div class="col coordinatorcard">
     <div class="card h-100 border-0 shadow-sm rounded-4 bg-blur-5 bg-semi-transparent position-relative overflow-hidden"
          style="--blur-lvl: <?= $opacitylvl ?>;">
       <div class="position-absolute top-0 start-0 w-100" style="height: 4px; background: linear-gradient(90deg, #198754, #75b798);"></div>
@@ -54,7 +54,7 @@
   </div>
 
   <!-- Companies -->
-  <div class="col">
+  <div class="col companiescard">
     <div class="card h-100 border-0 shadow-sm rounded-4 bg-blur-5 bg-semi-transparent position-relative overflow-hidden"
          style="--blur-lvl: <?= $opacitylvl ?>;">
       <div class="position-absolute top-0 start-0 w-100" style="height: 4px; background: linear-gradient(90deg, #fd7e14, #ffb37a);"></div>
