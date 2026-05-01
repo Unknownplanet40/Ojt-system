@@ -167,7 +167,12 @@ function getApplicationHistory($conn, string $applicationUuid): array
             WHEN 'student'     THEN CONCAT(sp.first_name, ' ', sp.last_name)
             ELSE 'System'
           END AS actor_name,
-          u.role AS actor_role
+          u.role AS actor_role,
+          CASE u.role
+            WHEN 'coordinator' THEN cp.profile_name
+            WHEN 'student'     THEN sp.profile_name
+            ELSE NULL
+          END AS profile_pic
 
         FROM application_status_logs asl
         LEFT JOIN users u ON asl.actor_uuid = u.uuid
@@ -187,6 +192,7 @@ function getApplicationHistory($conn, string $applicationUuid): array
         'reason'      => $row['reason']      ?? null,
         'actor_name'  => trim($row['actor_name']),
         'actor_role'  => $row['actor_role']  ?? 'system',
+        'profile_pic' => $row['profile_pic'] ?? null,
         'created_at'  => date('M j, Y g:i A', strtotime($row['created_at'])),
         'time_ago'    => timeAgo($row['created_at']),
     ], $rows);
@@ -434,79 +440,85 @@ function transitionApplication(
         return ['success' => false, 'error' => 'A reason is required for this action.'];
     }
 
-    // build update fields
-    $reasonFields = '';
-    if ($newStatus === 'needs_revision') {
-        $safeReason   = $conn->real_escape_string($reason);
-        $reasonFields = ", revision_reason = '{$safeReason}', rejection_reason = NULL";
-    } elseif ($newStatus === 'rejected') {
-        $safeReason   = $conn->real_escape_string($reason);
-        $reasonFields = ", rejection_reason = '{$safeReason}', revision_reason = NULL";
+    if ($newStatus === 'approved' && !canStudentApply($conn, $app['student_uuid'], $app['batch_uuid'])) {
+        return [
+            'success' => false,
+            'error'   => 'Cannot approve application: Student has not finished all 6 requirements.',
+        ];
     }
 
-    $safeStatus = $conn->real_escape_string($newStatus);
-    $conn->query("
-        UPDATE ojt_applications
-        SET status = '{$safeStatus}', updated_at = NOW() {$reasonFields}
-        WHERE uuid = '{$appUuid}'
-    ");
+    $conn->begin_transaction();
 
-    // handle side effects
-    if ($newStatus === 'approved') {
-        // Gate: ensure requirements are approved
-        if (!canStudentApply($conn, $app['student_uuid'], $app['batch_uuid'])) {
-            return [
-                'success' => false,
-                'error'   => 'Cannot approve application: Student has not finished all 6 requirements.',
-            ];
-        }
-
-        // reserve slot — set company_uuid on student profile
-        $stmt = $conn->prepare("
-            UPDATE student_profiles
-            SET company_uuid = ?
+    try {
+        $stmt = $conn->prepare(" 
+            UPDATE ojt_applications
+            SET status = ?,
+                revision_reason = CASE WHEN ? = 'needs_revision' THEN ? ELSE NULL END,
+                rejection_reason = CASE WHEN ? = 'rejected' THEN ? ELSE NULL END,
+                updated_at = NOW()
             WHERE uuid = ?
         ");
-        $stmt->bind_param('ss', $app['company_uuid'], $app['student_uuid']);
+        $stmt->bind_param(
+            'ssssss',
+            $newStatus,
+            $newStatus,
+            $reason,
+            $newStatus,
+            $reason,
+            $appUuid
+        );
         $stmt->execute();
         $stmt->close();
-    }
-    
-    if ($newStatus === 'active') {
-        // Handle active side effects: Insert to ojt_start_confirmations
-        $startUuid = generateUuid();
-        $startDate = $meta['start_date'] ?? date('Y-m-d');
-        // Supervisor might be null initially
-        $stmt = $conn->prepare("
-            INSERT INTO ojt_start_confirmations (uuid, application_uuid, student_uuid, start_date, confirmed_by, confirmed_at)
-            VALUES (?, ?, ?, ?, ?, NOW())
-        ");
-        $stmt->bind_param('sssss', $startUuid, $appUuid, $app['student_uuid'], $startDate, $actorUserUuid);
-        $stmt->execute();
-        $stmt->close();
-    }
 
-    if (in_array($newStatus, ['rejected', 'withdrawn'])) {
-        // release slot — clear company_uuid
-        $stmt = $conn->prepare("
-            UPDATE student_profiles SET company_uuid = NULL WHERE uuid = ?
-        ");
-        $stmt->bind_param('s', $app['student_uuid']);
-        $stmt->execute();
-        $stmt->close();
+        if ($newStatus === 'approved') {
+            // reserve slot — set company_uuid on student profile
+            $stmt = $conn->prepare(" 
+                UPDATE student_profiles
+                SET company_uuid = ?
+                WHERE uuid = ?
+            ");
+            $stmt->bind_param('ss', $app['company_uuid'], $app['student_uuid']);
+            $stmt->execute();
+            $stmt->close();
+
+            // auto-generate endorsement letter on approval
+            require_once __DIR__ . '/endorsement_functions.php';
+            $letter = generateEndorsementLetter($conn, $appUuid, $actorUserUuid);
+            if (!$letter['success']) {
+                throw new Exception($letter['error'] ?? 'Failed to generate endorsement letter.');
+            }
+        }
+
+        if (in_array($newStatus, ['rejected', 'withdrawn'])) {
+            // release slot and supervisor assignment
+            $stmt = $conn->prepare(" 
+                UPDATE student_profiles
+                SET company_uuid = NULL,
+                    supervisor_uuid = NULL
+                WHERE uuid = ?
+            ");
+            $stmt->bind_param('s', $app['student_uuid']);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        // log status history
+        logApplicationStatus($conn, $appUuid, $currentStatus, $newStatus, $reason, $actorUserUuid);
+
+        logActivity(
+            conn: $conn,
+            eventType: 'application_' . $newStatus,
+            description: "Application status changed: {$currentStatus} → {$newStatus}" . ($reason ? " — {$reason}" : ''),
+            module: 'applications',
+            actorUuid: $actorUserUuid,
+            targetUuid: $appUuid
+        );
+
+        $conn->commit();
+    } catch (Exception $e) {
+        $conn->rollback();
+        return ['success' => false, 'error' => $e->getMessage()];
     }
-
-    // log status history
-    logApplicationStatus($conn, $appUuid, $currentStatus, $newStatus, $reason, $actorUserUuid);
-
-    logActivity(
-        conn: $conn,
-        eventType: 'application_' . $newStatus,
-        description: "Application status changed: {$currentStatus} → {$newStatus}" . ($reason ? " — {$reason}" : ''),
-        module: 'applications',
-        actorUuid: $actorUserUuid,
-        targetUuid: $appUuid
-    );
 
     return ['success' => true, 'new_status' => $newStatus];
 }

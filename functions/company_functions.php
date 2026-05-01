@@ -7,6 +7,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once __DIR__ . '/../helpers/helpers.php';
+require_once __DIR__ . '/supervisor_functions.php';
 
 // -----------------------------------------------
 // GET all companies
@@ -147,6 +148,8 @@ function getCompany($conn, string $companyUuid, string $batchUuid = null): ?arra
     $documents = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
+    $supervisors = getAllSupervisors($conn, ['company_uuid' => $companyUuid]);
+
     // slots per batch
     $safeBatch = $conn->real_escape_string($batchUuid ?? '');
     $stmt = $conn->prepare("
@@ -184,6 +187,7 @@ function getCompany($conn, string $companyUuid, string $batchUuid = null): ?arra
         'accepted_programs'=> $programs,
         'program_uuids'    => array_column($programs, 'uuid'),
         'documents'        => $documents,
+        'supervisors'      => $supervisors,
         'total_slots'      => (int) ($slots['total_slots']  ?? 0),
         'filled_slots'     => (int) ($slots['filled_slots'] ?? 0),
         'remaining_slots'  => max(0, (int)($slots['total_slots'] ?? 0) - (int)($slots['filled_slots'] ?? 0)),
@@ -201,6 +205,12 @@ function createCompany($conn, array $data, string $actorUuid): array
     $email  = trim($data['email']      ?? '');
     $setup  = trim($data['work_setup'] ?? '');
     $status = trim($data['accreditation_status'] ?? 'pending');
+    $supervisorFirstName = trim($data['supervisor_first_name'] ?? '');
+    $supervisorLastName  = trim($data['supervisor_last_name'] ?? '');
+    $supervisorEmail     = trim($data['supervisor_email'] ?? '');
+    $supervisorPosition  = trim($data['supervisor_position'] ?? '');
+    $supervisorDepartment = trim($data['supervisor_department'] ?? '');
+    $supervisorMobile    = trim($data['supervisor_mobile'] ?? '');
 
     if (empty($name)) {
         $errors['name'] = 'Company name is required.';
@@ -216,6 +226,26 @@ function createCompany($conn, array $data, string $actorUuid): array
     }
     if ($status === 'blacklisted' && empty($data['blacklist_reason'])) {
         $errors['blacklist_reason'] = 'Blacklist reason is required.';
+    }
+    if (empty($supervisorFirstName)) {
+        $errors['supervisor_first_name'] = 'Supervisor first name is required.';
+    }
+    if (empty($supervisorLastName)) {
+        $errors['supervisor_last_name'] = 'Supervisor last name is required.';
+    }
+    if (empty($supervisorEmail)) {
+        $errors['supervisor_email'] = 'Supervisor email is required.';
+    } elseif (!filter_var($supervisorEmail, FILTER_VALIDATE_EMAIL)) {
+        $errors['supervisor_email'] = 'Enter a valid supervisor email address.';
+    }
+    if (empty($supervisorPosition)) {
+        $errors['supervisor_position'] = 'Supervisor position is required.';
+    }
+    if (empty($supervisorDepartment)) {
+        $errors['supervisor_department'] = 'Supervisor department is required.';
+    }
+    if (empty($supervisorMobile)) {
+        $errors['supervisor_mobile'] = 'Supervisor mobile number is required.';
     }
 
     if (!empty($errors)) {
@@ -241,52 +271,89 @@ function createCompany($conn, array $data, string $actorUuid): array
     $website         = trim($data['website']          ?? '');
     $blacklistReason = trim($data['blacklist_reason'] ?? '');
 
-    $stmt = $conn->prepare("
-        INSERT INTO companies
-          (uuid, name, industry, address, city, email, phone,
-           website, work_setup, accreditation_status, blacklist_reason, created_by)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ");
-    $stmt->bind_param(
-        'ssssssssssss',
-        $uuid, $name, $industry, $address, $city,
-        $email, $phone, $website, $setup, $status,
-        $blacklistReason, $actorUuid
-    );
-    $stmt->execute();
-    $stmt->close();
+    $conn->begin_transaction();
 
-    // primary contact
-    if (!empty($data['contact_name'])) {
-        addCompanyContact($conn, $uuid, [
-            'name'       => $data['contact_name'],
-            'position'   => $data['contact_position'] ?? '',
-            'email'      => $data['contact_email']    ?? '',
-            'phone'      => $data['contact_phone']    ?? '',
-            'is_primary' => 1,
-        ]);
+    try {
+        $stmt = $conn->prepare("\n        INSERT INTO companies\n          (uuid, name, industry, address, city, email, phone,\n           website, work_setup, accreditation_status, blacklist_reason, created_by)\n        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n    ");
+        $stmt->bind_param(
+            'ssssssssssss',
+            $uuid, $name, $industry, $address, $city,
+            $email, $phone, $website, $setup, $status,
+            $blacklistReason, $actorUuid
+        );
+        $stmt->execute();
+        $stmt->close();
+
+        // primary contact
+        if (!empty($data['contact_name'])) {
+            $contactResult = addCompanyContact($conn, $uuid, [
+                'name'       => $data['contact_name'],
+                'position'   => $data['contact_position'] ?? '',
+                'email'      => $data['contact_email']    ?? '',
+                'phone'      => $data['contact_phone']    ?? '',
+                'is_primary' => 1,
+            ]);
+
+            if (!$contactResult['success']) {
+                throw new RuntimeException($contactResult['error'] ?? 'Failed to add company contact.');
+            }
+        }
+
+        // slots for active batch
+        if (!empty($data['total_slots']) && !empty($data['batch_uuid'])) {
+            setCompanySlots($conn, $uuid, $data['batch_uuid'], (int)$data['total_slots']);
+        }
+
+        // accepted programs
+        if (!empty($data['program_uuids']) && is_array($data['program_uuids'])) {
+            setAcceptedPrograms($conn, $uuid, $data['program_uuids']);
+        }
+
+        $supervisorResult = createSupervisor($conn, [
+            'email'            => $supervisorEmail,
+            'company_uuid'     => $uuid,
+            'last_name'        => $supervisorLastName,
+            'first_name'       => $supervisorFirstName,
+            'position'         => $supervisorPosition,
+            'department'       => $supervisorDepartment,
+            'mobile'           => $supervisorMobile,
+        ], $actorUuid, false);
+
+        if (!$supervisorResult['success']) {
+            throw new RuntimeException(reset($supervisorResult['errors']) ?: 'Failed to create supervisor account.');
+        }
+
+        $conn->commit();
+
+        logActivity(
+            conn: $conn,
+            eventType: 'company_added',
+            description: "Added company: {$name}",
+            module: 'companies',
+            actorUuid: $actorUuid,
+            targetUuid: $uuid
+        );
+
+        return [
+            'success' => true,
+            'uuid' => $uuid,
+            'supervisor_uuid' => $supervisorResult['user_uuid'] ?? null,
+            'supervisor_profile_uuid' => $supervisorResult['profile_uuid'] ?? null,
+            'supervisor_full_name' => $supervisorResult['full_name'] ?? trim("{$supervisorFirstName} {$supervisorLastName}"),
+            'supervisor_email' => $supervisorEmail,
+            'supervisor_temp_password' => $supervisorResult['temp_password'] ?? null,
+        ];
+    } catch (Throwable $e) {
+        $conn->rollback();
+
+        return [
+            'success' => false,
+            'errors' => [
+                'general' => 'Failed to create company. Please try again.',
+                'details' => $e->getMessage(),
+            ],
+        ];
     }
-
-    // slots for active batch
-    if (!empty($data['total_slots']) && !empty($data['batch_uuid'])) {
-        setCompanySlots($conn, $uuid, $data['batch_uuid'], (int)$data['total_slots']);
-    }
-
-    // accepted programs
-    if (!empty($data['program_uuids']) && is_array($data['program_uuids'])) {
-        setAcceptedPrograms($conn, $uuid, $data['program_uuids']);
-    }
-
-    logActivity(
-        conn: $conn,
-        eventType: 'company_added',
-        description: "Added company: {$name}",
-        module: 'companies',
-        actorUuid: $actorUuid,
-        targetUuid: $uuid
-    );
-
-    return ['success' => true, 'uuid' => $uuid];
 }
 
 // -----------------------------------------------
@@ -317,6 +384,35 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
         $errors['blacklist_reason'] = 'Blacklist reason is required when blacklisting.';
     }
 
+    $supervisorProfileUuid = trim($data['supervisor_profile_uuid'] ?? '');
+    $supervisorFirstName   = trim($data['supervisor_first_name'] ?? '');
+    $supervisorLastName    = trim($data['supervisor_last_name'] ?? '');
+    $supervisorEmail       = trim($data['supervisor_email'] ?? '');
+    $supervisorPosition    = trim($data['supervisor_position'] ?? '');
+    $supervisorDepartment  = trim($data['supervisor_department'] ?? '');
+    $supervisorMobile      = trim($data['supervisor_mobile'] ?? '');
+
+    if (empty($supervisorFirstName)) {
+        $errors['supervisor_first_name'] = 'Supervisor first name is required.';
+    }
+    if (empty($supervisorLastName)) {
+        $errors['supervisor_last_name'] = 'Supervisor last name is required.';
+    }
+    if (empty($supervisorEmail)) {
+        $errors['supervisor_email'] = 'Supervisor email is required.';
+    } elseif (!filter_var($supervisorEmail, FILTER_VALIDATE_EMAIL)) {
+        $errors['supervisor_email'] = 'Enter a valid supervisor email address.';
+    }
+    if (empty($supervisorPosition)) {
+        $errors['supervisor_position'] = 'Supervisor position is required.';
+    }
+    if (empty($supervisorDepartment)) {
+        $errors['supervisor_department'] = 'Supervisor department is required.';
+    }
+    if (empty($supervisorMobile)) {
+        $errors['supervisor_mobile'] = 'Supervisor mobile number is required.';
+    }
+
     if (!empty($errors)) {
         return ['success' => false, 'errors' => $errors];
     }
@@ -339,67 +435,92 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
     $website         = trim($data['website']          ?? '');
     $blacklistReason = trim($data['blacklist_reason'] ?? '');
 
-    $stmt = $conn->prepare("
-        UPDATE companies
-        SET name                 = ?,
-            industry             = ?,
-            address              = ?,
-            city                 = ?,
-            email                = ?,
-            phone                = ?,
-            website              = ?,
-            work_setup           = ?,
-            accreditation_status = ?,
-            blacklist_reason     = ?
-        WHERE uuid = ?
-    ");
-    $stmt->bind_param(
-        'sssssssssss',
-        $name, $industry, $address, $city,
-        $email, $phone, $website, $setup,
-        $status, $blacklistReason, $companyUuid
-    );
-    $stmt->execute();
-    $stmt->close();
+    $conn->begin_transaction();
 
-    // update accepted programs
-    if (isset($data['program_uuids'])) {
-        $uuids = is_array($data['program_uuids'])
-            ? $data['program_uuids']
-            : [];
-        setAcceptedPrograms($conn, $companyUuid, $uuids);
-    }
+    try {
+        $stmt = $conn->prepare("\n        UPDATE companies\n        SET name                 = ?,\n            industry             = ?,\n            address              = ?,\n            city                 = ?,\n            email                = ?,\n            phone                = ?,\n            website              = ?,\n            work_setup           = ?,\n            accreditation_status = ?,\n            blacklist_reason     = ?\n        WHERE uuid = ?\n    ");
+        $stmt->bind_param(
+            'sssssssssss',
+            $name, $industry, $address, $city,
+            $email, $phone, $website, $setup,
+            $status, $blacklistReason, $companyUuid
+        );
+        $stmt->execute();
+        $stmt->close();
 
-    // update slots if provided
-    if (isset($data['total_slots']) && !empty($data['batch_uuid'])) {
-        setCompanySlots($conn, $companyUuid, $data['batch_uuid'], (int)$data['total_slots']);
-    }
+        // update accepted programs
+        if (isset($data['program_uuids'])) {
+            $uuids = is_array($data['program_uuids'])
+                ? $data['program_uuids']
+                : [];
+            setAcceptedPrograms($conn, $companyUuid, $uuids);
+        }
 
-    if (!empty($data['contacts']) && is_array($data['contacts'])) {
-        foreach ($data['contacts'] as $contact) {
-            $contactUuid = trim($contact['uuid'] ?? '');
+        // update slots if provided
+        if (isset($data['total_slots']) && !empty($data['batch_uuid'])) {
+            setCompanySlots($conn, $companyUuid, $data['batch_uuid'], (int)$data['total_slots']);
+        }
 
-            if (empty($contactUuid)) {
-                // new contact — add it
-                addCompanyContact($conn, $companyUuid, $contact);
-            } else {
-                // existing contact — update it
-                updateCompanyContact($conn, $contactUuid, $contact, $companyUuid);
+        if (!empty($data['contacts']) && is_array($data['contacts'])) {
+            foreach ($data['contacts'] as $contact) {
+                $contactUuid = trim($contact['uuid'] ?? '');
+
+                if (empty($contactUuid)) {
+                    // new contact — add it
+                    addCompanyContact($conn, $companyUuid, $contact);
+                } else {
+                    // existing contact — update it
+                    updateCompanyContact($conn, $contactUuid, $contact, $companyUuid);
+                }
             }
         }
+
+        $supervisorData = [
+            'email'      => $supervisorEmail,
+            'company_uuid' => $companyUuid,
+            'last_name'  => $supervisorLastName,
+            'first_name' => $supervisorFirstName,
+            'position'   => $supervisorPosition,
+            'department' => $supervisorDepartment,
+            'mobile'     => $supervisorMobile,
+        ];
+
+        if (!empty($supervisorProfileUuid)) {
+            $supervisorResult = updateSupervisor($conn, $supervisorProfileUuid, $supervisorData, $actorUuid, false);
+        } else {
+            $supervisorResult = createSupervisor($conn, $supervisorData, $actorUuid, false);
+        }
+
+        if (!$supervisorResult['success']) {
+            throw new RuntimeException(reset($supervisorResult['errors']) ?: 'Failed to save supervisor account.');
+        }
+
+        $conn->commit();
+
+        logActivity(
+            conn: $conn,
+            eventType: 'company_updated',
+            description: "Updated company: {$name}",
+            module: 'companies',
+            actorUuid: $actorUuid,
+            targetUuid: $companyUuid
+        );
+
+        return [
+            'success' => true,
+            'supervisor_profile_uuid' => $supervisorResult['profile_uuid'] ?? $supervisorProfileUuid,
+        ];
+    } catch (Throwable $e) {
+        $conn->rollback();
+
+        return [
+            'success' => false,
+            'errors' => [
+                'general' => 'Failed to update company. Please try again.',
+                'details' => $e->getMessage(),
+            ],
+        ];
     }
-
-
-    logActivity(
-        conn: $conn,
-        eventType: 'company_updated',
-        description: "Updated company: {$name}",
-        module: 'companies',
-        actorUuid: $actorUuid,
-        targetUuid: $companyUuid
-    );
-
-    return ['success' => true];
 }
 
 function updateCompanyContact($conn, string $contactUuid, array $data, string $companyUuid): array

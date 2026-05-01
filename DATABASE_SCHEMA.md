@@ -245,6 +245,41 @@ Bridge table between companies and programs.
 - `confirmed_by` (nullable)
 - `confirmed_at` (default: `NOW()`)
 
+## Daily Time Records
+
+### `dtr_entries`
+- `id` (PK, auto-increment)
+- `uuid` (unique)
+- `student_uuid` → `student_profiles.uuid`
+- `application_uuid` → `ojt_applications.uuid`
+- `batch_uuid` → `batches.uuid`
+- `entry_date`
+- `time_in`
+- `time_out`
+- `lunch_break_minutes` (default: `60`)
+- `hours_rendered` (default: `0.00`)
+- `activities` (nullable)
+- `is_backdated` (default: `0`)
+- `backdate_reason` (nullable)
+- `status` enum: `pending`, `approved`, `rejected` (default: `pending`)
+- `rejection_reason` (nullable)
+- `approved_by` (nullable) → `supervisor_profiles.uuid`
+- `approved_at` (nullable, default: `NOW()`)
+- `approved_by_role` (nullable) - `supervisor` or `coordinator`
+- `submitted_at` (default: `NOW()`)
+- `updated_at` (default: `NOW()` on update)
+- UNIQUE: `(student_uuid, entry_date)`
+
+### `dtr_audit_log`
+- `id` (PK, auto-increment)
+- `uuid` (unique)
+- `dtr_uuid` → `dtr_entries.uuid`
+- `action` - `submitted`, `approved`, `rejected`, `backdated`, `edited`
+- `actor_uuid` → `users.uuid`
+- `actor_role`
+- `details` (nullable) - JSON formatted
+- `created_at` (default: `NOW()`)
+
 ## Key relationships
 - One `users` row can have one profile row in the matching profile table.
 - `companies` can have many supervisors, contacts, documents, slots, and students.

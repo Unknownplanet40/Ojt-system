@@ -123,23 +123,7 @@ $html = <<<HTML
 </head>
 <body>
 <div class="page">
-
-  <!-- header -->
-<!-- <div class="header">
-    <div style="text-align:center; margin-bottom:12px;">
-        <img src="{$LogoPath1}" alt="School Logo" style="height:80px; width:auto; margin-bottom:8px;">
-    </div>
-    <div style="text-align:center; margin-bottom:8px;">
-        <div class="school-name">{$schoolName}</div>
-    </div>
-    <div class="doc-title">Student Account Credentials</div>
-    <div class="doc-subtitle">Official OJT System Access Document</div>
-    <div class="doc-subtitle" style="margin-top:8px; font-size:10px; color:#999;">Generated on {$generatedAt}</div>
-    <div style="text-align:center; margin-top:12px;">
-        <img src="{$LogoPath2}" alt="School Logo" style="height:60px; width:auto; opacity:0.5;">
-    </div>
-</div>
- -->
+    
 <div class="header">
         <table class="header-table" cellpadding="0" cellspacing="0" border="0">
             <tr>

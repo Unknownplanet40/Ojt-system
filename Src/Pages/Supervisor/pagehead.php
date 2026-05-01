@@ -35,6 +35,7 @@ if (!$isProfileDone && !in_array($currentPage, $allowWithoutCompletedProfile, tr
 <meta charset="UTF-8" />
 <meta name="csrf-token" content="<?= isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : '' ?>">
 <meta name="user-UUID" content="<?= isset($_SESSION['user_uuid']) ? $_SESSION['user_uuid'] : '' ?>">
+<meta name="user-Role" content="<?= isset($_SESSION['user_role']) ? $_SESSION['user_role'] : '' ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="../../../libs/bootstrap/css/bootstrap.css" />
 <link rel="stylesheet" href="../../../libs/aos/css/aos.css" />

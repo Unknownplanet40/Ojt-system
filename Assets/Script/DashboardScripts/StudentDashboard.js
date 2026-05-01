@@ -79,13 +79,24 @@ function fetchProfile() {
           const initials = profile.initials || "NA";
           $("#navProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
           $("#dropdownProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
+          $("#DashboardProfilePhotoS").attr("src", `https://placehold.co/40x40/483a0f/c6983d/png?text=${initials}&font=poppins`);
         } else {
           $("#navProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
           $("#dropdownProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
+          $("#DashboardProfilePhotoS").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
         }
 
         $("#userName").text(profile.first_name + " " + profile.last_name);
         $("#welcomeUserName").text(profile.first_name);
+
+        const activebatches = response.activeBatch;
+        if (activebatches) {
+          $("#currentyearSem").text(`${activebatches.semester} Semester`);
+          $("#currentSchoolYear").text(activebatches.school_year);
+        } else {
+          $("#currentyearSem").text("No active batch");
+          $("#currentSchoolYear").text("No active batch");
+        }
       } else {
         ToastVersion(swalTheme, response.message, "error", 3000, "top-end");
       }

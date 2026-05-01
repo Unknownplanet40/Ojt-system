@@ -49,7 +49,7 @@ if (!isset($_SESSION['user_uuid'])) {
     response(['status' => 'error', 'message' => 'Unauthenticated.']);
 }
 
-if (!in_array($_SESSION['user_role'], ['admin', 'coordinator'])) {
+if ($_SESSION['user_role'] !== 'coordinator') {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
@@ -68,6 +68,7 @@ $result = confirmOjtStart(
     $conn,
     $appUuid,
     $_POST,
+    $_SESSION['user_uuid'],
     $_SESSION['profile_uuid']
 );
 

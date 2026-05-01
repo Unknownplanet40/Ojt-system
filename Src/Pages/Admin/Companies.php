@@ -248,6 +248,56 @@ $CurrentPage = "Companies";
                             </div>
                         </div>
 
+                        <!-- Supervisor Account Card -->
+                        <div class="card bg-blur-5 bg-semi-transparent border-0 shadow-sm mb-4 rounded-4 overflow-hidden"
+                            style="--blur-lvl: 0.70">
+                            <div class="card-body p-4">
+                                <div class="mb-4">
+                                    <h6 class="mb-1 fw-600 text-uppercase small letter-spacing">Supervisor Account</h6>
+                                    <small class="text-muted d-block">This account will be linked to the company and used for coordinator assignments.</small>
+                                </div>
+                                <hr class="my-3 opacity-25">
+                                <div class="row row-cols-1 row-cols-md-2 g-3">
+                                    <div class="col">
+                                        <div>
+                                            <label for="supervisorfirstname" class="form-label fw-medium small">Supervisor First Name<span class="text-danger ms-1">*</span></label>
+                                            <input type="text" class="form-control border rounded-3" id="supervisorfirstname" placeholder="e.g. Juan" required>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="supervisorlastname" class="form-label fw-medium small">Supervisor Last Name<span class="text-danger ms-1">*</span></label>
+                                            <input type="text" class="form-control border rounded-3" id="supervisorlastname" placeholder="e.g. Dela Cruz" required>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="supervisoremail" class="form-label fw-medium small">Supervisor Email<span class="text-danger ms-1">*</span></label>
+                                            <input type="email" class="form-control border rounded-3" id="supervisoremail" placeholder="e.g. supervisor@example.com" required>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="supervisormobile" class="form-label fw-medium small">Supervisor Mobile<span class="text-danger ms-1">*</span></label>
+                                            <input type="tel" class="form-control border rounded-3" id="supervisormobile" placeholder="e.g. 09XX XXX XXXX" required>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="supervisorposition" class="form-label fw-medium small">Supervisor Position<span class="text-danger ms-1">*</span></label>
+                                            <input type="text" class="form-control border rounded-3" id="supervisorposition" placeholder="e.g. OJT Supervisor" required>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="supervisordepartment" class="form-label fw-medium small">Supervisor Department<span class="text-danger ms-1">*</span></label>
+                                            <input type="text" class="form-control border rounded-3" id="supervisordepartment" placeholder="e.g. Human Resources" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Action Buttons -->
                         <div
                             class="d-flex flex-column-reverse flex-sm-row gap-2 gap-sm-3 pt-3 border-top border-secondary border-opacity-25">
@@ -470,6 +520,57 @@ $CurrentPage = "Companies";
                                                 class="form-label fw-medium small">Contact Person Number</label>
                                             <input type="tel" class="form-control border rounded-3"
                                                 id="Editcompanycontactnumber" placeholder="e.g. 09XX XXX XXXX">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Supervisor Account Card -->
+                        <div class="card bg-blur-5 bg-semi-transparent border-0 shadow-sm mb-4 rounded-4 overflow-hidden"
+                            style="--blur-lvl: 0.70">
+                            <div class="card-body p-4">
+                                <div class="mb-4">
+                                    <h6 class="mb-1 fw-600 text-uppercase small letter-spacing">Supervisor Account</h6>
+                                    <small class="text-muted d-block">This supervisor will be linked to the company for coordinator assignment.</small>
+                                </div>
+                                <input type="hidden" id="EditsupervisorProfileUuid" value="">
+                                <hr class="my-3 opacity-25">
+                                <div class="row row-cols-1 row-cols-md-2 g-3">
+                                    <div class="col">
+                                        <div>
+                                            <label for="Editsupervisorfirstname" class="form-label fw-medium small">Supervisor First Name<span class="text-danger ms-1">*</span></label>
+                                            <input type="text" class="form-control border rounded-3" id="Editsupervisorfirstname" placeholder="e.g. Juan" required>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="Editsupervisorlastname" class="form-label fw-medium small">Supervisor Last Name<span class="text-danger ms-1">*</span></label>
+                                            <input type="text" class="form-control border rounded-3" id="Editsupervisorlastname" placeholder="e.g. Dela Cruz" required>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="Editsupervisoremail" class="form-label fw-medium small">Supervisor Email<span class="text-danger ms-1">*</span></label>
+                                            <input type="email" class="form-control border rounded-3" id="Editsupervisoremail" placeholder="e.g. supervisor@example.com" required>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="Editsupervisormobile" class="form-label fw-medium small">Supervisor Mobile<span class="text-danger ms-1">*</span></label>
+                                            <input type="tel" class="form-control border rounded-3" id="Editsupervisormobile" placeholder="e.g. 09XX XXX XXXX" required>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="Editsupervisorposition" class="form-label fw-medium small">Supervisor Position<span class="text-danger ms-1">*</span></label>
+                                            <input type="text" class="form-control border rounded-3" id="Editsupervisorposition" placeholder="e.g. OJT Supervisor" required>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="Editsupervisordepartment" class="form-label fw-medium small">Supervisor Department<span class="text-danger ms-1">*</span></label>
+                                            <input type="text" class="form-control border rounded-3" id="Editsupervisordepartment" placeholder="e.g. Human Resources" required>
                                         </div>
                                     </div>
                                 </div>

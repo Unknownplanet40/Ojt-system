@@ -190,7 +190,7 @@ function getSupervisor($conn, string $profileUuid): ?array
     return $supervisor;
 }
 
-function createSupervisor($conn, array $data, string $actorUuid): array
+function createSupervisor($conn, array $data, string $actorUuid, bool $useTransaction = true): array
 {
     $errors = [];
 
@@ -255,7 +255,11 @@ function createSupervisor($conn, array $data, string $actorUuid): array
     $tempPassword = generateSupervisorTempPassword();
     $passwordHash = password_hash($tempPassword, PASSWORD_BCRYPT);
 
-    $conn->begin_transaction();
+    $startedTransaction = false;
+    if ($useTransaction) {
+        $conn->begin_transaction();
+        $startedTransaction = true;
+    }
 
     try {
         $stmt = $conn->prepare("\n            INSERT INTO users\n              (uuid, email, password_hash, role, is_active, must_change_password, created_by)\n            VALUES (?, ?, ?, 'supervisor', 1, 1, ?)\n        ");
@@ -278,9 +282,13 @@ function createSupervisor($conn, array $data, string $actorUuid): array
         $stmt->execute();
         $stmt->close();
 
-        $conn->commit();
+        if ($startedTransaction) {
+            $conn->commit();
+        }
     } catch (Throwable $e) {
-        $conn->rollback();
+        if ($startedTransaction) {
+            $conn->rollback();
+        }
 
         return [
             'success' => false,
@@ -309,16 +317,21 @@ function createSupervisor($conn, array $data, string $actorUuid): array
     ];
 }
 
-function updateSupervisor($conn, string $profileUuid, array $data, string $actorUuid): array
+function updateSupervisor($conn, string $profileUuid, array $data, string $actorUuid, bool $useTransaction = true): array
 {
     $errors = [];
 
+    $email       = trim($data['email'] ?? '');
     $companyUuid = trim($data['company_uuid'] ?? '');
     $lastName    = trim($data['last_name'] ?? '');
     $firstName   = trim($data['first_name'] ?? '');
     $position    = trim($data['position'] ?? '');
     $department  = trim($data['department'] ?? '');
     $mobile      = trim($data['mobile'] ?? '');
+
+    if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors['email'] = 'Enter a valid email address.';
+    }
 
     if (empty($companyUuid)) {
         $errors['company_uuid'] = 'Company is required.';
@@ -349,19 +362,58 @@ function updateSupervisor($conn, string $profileUuid, array $data, string $actor
     }
     $stmt->close();
 
-    $stmt = $conn->prepare("\n        UPDATE supervisor_profiles\n        SET company_uuid = ?,\n            last_name = ?,\n            first_name = ?,\n            position = ?,\n            department = ?,\n            mobile = ?\n        WHERE uuid = ?\n    ");
-    $stmt->bind_param(
-        'sssssss',
-        $companyUuid,
-        $lastName,
-        $firstName,
-        $position,
-        $department,
-        $mobile,
-        $profileUuid
-    );
-    $stmt->execute();
-    $stmt->close();
+    $startedTransaction = false;
+    if ($useTransaction) {
+        $conn->begin_transaction();
+        $startedTransaction = true;
+    }
+
+    try {
+        if (!empty($email)) {
+            $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? AND uuid != (SELECT user_uuid FROM supervisor_profiles WHERE uuid = ? LIMIT 1) LIMIT 1");
+            $stmt->bind_param('ss', $email, $profileUuid);
+            $stmt->execute();
+            if ($stmt->get_result()->num_rows > 0) {
+                $stmt->close();
+                if ($startedTransaction) {
+                    $conn->rollback();
+                }
+                return ['success' => false, 'errors' => ['email' => 'This email is already registered.']];
+            }
+            $stmt->close();
+        }
+
+        if (!empty($email)) {
+            $stmt = $conn->prepare("\n                UPDATE users\n                SET email = ?\n                WHERE uuid = (SELECT user_uuid FROM supervisor_profiles WHERE uuid = ? LIMIT 1)\n            ");
+            $stmt->bind_param('ss', $email, $profileUuid);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        $stmt = $conn->prepare("\n        UPDATE supervisor_profiles\n        SET company_uuid = ?,\n            last_name = ?,\n            first_name = ?,\n            position = ?,\n            department = ?,\n            mobile = ?\n        WHERE uuid = ?\n    ");
+        $stmt->bind_param(
+            'sssssss',
+            $companyUuid,
+            $lastName,
+            $firstName,
+            $position,
+            $department,
+            $mobile,
+            $profileUuid
+        );
+        $stmt->execute();
+        $stmt->close();
+
+        if ($startedTransaction) {
+            $conn->commit();
+        }
+    } catch (Throwable $e) {
+        if ($startedTransaction) {
+            $conn->rollback();
+        }
+
+        return ['success' => false, 'errors' => ['general' => 'Failed to update supervisor account.', 'details' => $e->getMessage()]];
+    }
 
     logActivity(
         conn: $conn,
@@ -372,7 +424,7 @@ function updateSupervisor($conn, string $profileUuid, array $data, string $actor
         targetUuid: $profileUuid
     );
 
-    return ['success' => true];
+    return ['success' => true, 'profile_uuid' => $profileUuid];
 }
 
 function deactivateSupervisor($conn, string $userUuid, string $actorUuid): array

@@ -21,8 +21,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
-require_once dirname(__DIR__, 2) . '/functions/endorsement_functions.php';
-require_once dirname(__DIR__, 2) . '/functions/application_functions.php';
+require_once dirname(__DIR__, 2) . '/functions/dtr_functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -44,42 +43,30 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
-if (!isset($_SESSION['user_uuid'])) {
-    http_response_code(401);
-    response(['status' => 'error', 'message' => 'Unauthenticated.']);
-}
-
-if ($_SESSION['user_role'] !== 'coordinator') {
+if (!isset($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'student') {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
 
-$companyUuid = trim($_POST['company_uuid'] ?? '');
-$applicationUuid = trim($_POST['application_uuid'] ?? '');
+$dtrUuid     = trim($_POST['dtr_uuid'] ?? '');
+$studentUuid = $_SESSION['profile_uuid'];
 
-if (empty($companyUuid) && !empty($applicationUuid)) {
-    $stmt = $conn->prepare(" 
-        SELECT company_uuid
-        FROM ojt_applications
-        WHERE uuid = ?
-        LIMIT 1
-    ");
-    $stmt->bind_param('s', $applicationUuid);
-    $stmt->execute();
-    $appRow = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    $companyUuid = $appRow['company_uuid'] ?? '';
+if (empty($dtrUuid)) {
+    response(['status' => 'error', 'message' => 'DTR UUID is required.']);
 }
 
-if (empty($companyUuid)) {
-    response(['status' => 'error', 'message' => 'Company UUID is required.']);
-}
+$result = editDtrEntry($conn, $dtrUuid, $studentUuid, $_POST, $_SESSION['user_uuid']);
 
-$supervisors = getSupervisorsForCompany($conn, $companyUuid);
+if (!$result['success']) {
+    response([
+        'status'  => 'error',
+        'errors'  => $result['errors'] ?? [],
+        'message' => $result['error'] ?? reset($result['errors'] ?? ['Failed to edit entry.']),
+    ]);
+}
 
 response([
-    'status'      => 'success',
-    'supervisors' => $supervisors,
-    'total'       => count($supervisors),
+    'status'         => 'success',
+    'message'        => 'DTR entry updated.',
+    'hours_rendered' => $result['hours_rendered'],
 ]);
