@@ -388,25 +388,18 @@ if ($currentHour >= 5 && $currentHour < 12) {
                 style="--blur-lvl: <?= $opacitylvl ?>">
                 <div class="modal-header border-0">
                     <div>
-                        <h5 class="modal-title">Issue Endorsement</h5>
-                        <small class="text-muted">This moves the application from <strong>Approved</strong> to <strong>Endorsed</strong>.</small>
+                        <h5 class="modal-title">Download Endorsement Letter</h5>
+                        <small class="text-muted">The first successful download marks the application as <strong>Endorsed</strong>.</small>
                     </div>
                 </div>
                 <div class="modal-body">
                     <div class="card g-blur-5 bg-semi-transparent rounded-3 border shadow-sm"
                         style="--blur-lvl: <?= $opacitylvl ?>">
                         <div class="card-body p-4">
-                            <div class="mb-4">
-                                <h6 class="card-title mb-2 fw-semibold text-uppercase letter-spacing" style="font-size: 0.875rem;">Endorsement Note</h6>
-                                <p class="text-muted small mb-0">Add an optional note that will be stored with the endorsement transition.</p>
-                            </div>
-                            <div class="mb-3">
-                                <label for="endorsementNote" class="form-label fw-medium mb-2">Coordinator Note</label>
-                                <textarea class="form-control shadow-none" id="endorsementNote" rows="3" placeholder="Optional endorsement note..."></textarea>
-                            </div>
+                            <p class="text-muted mb-0">Click <strong>Download Letter</strong> to open the endorsement PDF. Once downloaded, the application status will move from <strong>Approved</strong> to <strong>Endorsed</strong>.</p>
                             <div class="d-flex gap-2 justify-content-end flex-wrap">
                                 <button class="btn bg-secondary-subtle text-secondary-emphasis border-0 px-4 py-2 rounded-3" data-bs-toggle="modal" data-bs-target="#ReviewModal">Back</button>
-                                <button class="btn btn-sm bg-primary-subtle text-primary-emphasis border-0 px-4 py-2 rounded-3 fw-medium" id="confirmEndorseBtn">Issue Endorsement</button>
+                                <button class="btn btn-sm bg-primary-subtle text-primary-emphasis border-0 px-4 py-2 rounded-3 fw-medium" id="confirmEndorseBtn">Download Letter</button>
                             </div>
                         </div>
                     </div>
@@ -433,10 +426,20 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                     <label for="startDate" class="form-label fw-medium mb-2">Official Start Date <span class="text-danger">*</span></label>
                                     <input type="date" class="form-control shadow-none" id="startDate">
                                 </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="startNote" class="form-label fw-medium mb-2">Coordinator Note</label>
-                                <textarea class="form-control shadow-none" id="startNote" rows="3" placeholder="Optional start confirmation note..."></textarea>
+                                <div class="col-md-6">
+                                    <label for="startSupervisorSelect" class="form-label fw-medium mb-2">Assigned Supervisor <span class="text-danger">*</span></label>
+                                    <select class="form-select shadow-none" id="startSupervisorSelect">
+                                        <option value="">Select supervisor</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="startWorkingHours" class="form-label fw-medium mb-2">Working Hours per Day</label>
+                                    <input type="number" min="1" max="12" class="form-control shadow-none" id="startWorkingHours" value="8">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="expectedEndDate" class="form-label fw-medium mb-2">Expected End Date (Optional)</label>
+                                    <input type="date" class="form-control shadow-none" id="expectedEndDate">
+                                </div>
                             </div>
                             <div class="d-flex gap-2 justify-content-end flex-wrap">
                                 <button class="btn bg-secondary-subtle text-secondary-emphasis border-0 px-4 py-2 rounded-3" data-bs-toggle="modal" data-bs-target="#ReviewModal">Back</button>

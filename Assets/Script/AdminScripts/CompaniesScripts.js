@@ -403,6 +403,10 @@ function editCompany(uuid, batchUuid) {
     success: function (response) {
       if (response.status === "success") {
         $("#EditCompanyModal").modal("show");
+        const supervisor = (response.data.supervisors && response.data.supervisors.length > 0)
+          ? response.data.supervisors[0]
+          : null;
+
         $("#EditcompanyName").val(response.data.company.name);
         $("#Editcompanyindustry").val(response.data.company.industry);
         $("#Editcompanyemail").val(response.data.company.email);
@@ -413,11 +417,19 @@ function editCompany(uuid, batchUuid) {
         $("#Editcompanyworksetup").val(response.data.company.work_setup);
         $("#Editcompanyaccreditationstatus").val(response.data.company.accreditation_status);
         $("#Editcompanytotalslots").val(response.data.total_slots);
-        $("#Editcompanycontactname").val(response.data.contacts[0].name);
-        $("#Editcompanycontactemail").val(response.data.contacts[0].email);
-        $("#Editcompanycontactnumber").val(response.data.contacts[0].phone);
-        $("#Editcompanyposition").val(response.data.contacts[0].position);
+        const primaryContact = (response.data.contacts && response.data.contacts.length > 0) ? response.data.contacts[0] : null;
+        $("#Editcompanycontactname").val(primaryContact ? primaryContact.name : "");
+        $("#Editcompanycontactemail").val(primaryContact ? primaryContact.email : "");
+        $("#Editcompanycontactnumber").val(primaryContact ? primaryContact.phone : "");
+        $("#Editcompanyposition").val(primaryContact ? primaryContact.position : "");
         $("#Editcompanyblocklistedreason").val(response.data.company.blacklist_reason);
+        $("#EditsupervisorProfileUuid").val(supervisor ? supervisor.profile_uuid : "");
+        $("#Editsupervisorfirstname").val(supervisor ? supervisor.first_name : "");
+        $("#Editsupervisorlastname").val(supervisor ? supervisor.last_name : "");
+        $("#Editsupervisoremail").val(supervisor ? supervisor.email : "");
+        $("#Editsupervisormobile").val(supervisor ? supervisor.mobile : "");
+        $("#Editsupervisorposition").val(supervisor ? supervisor.position : "");
+        $("#Editsupervisordepartment").val(supervisor ? supervisor.department : "");
         if (response.data.company.accreditation_status === "blacklisted") {
           $("#Editcompanyblocklistedreason").closest(".mb-3").removeClass("d-none");
         } else {
@@ -480,14 +492,17 @@ function editCompany(uuid, batchUuid) {
               total_slots: $("#Editcompanytotalslots").val(),
             };
 
-            const companyContacts = {
-              name: $("#Editcompanycontactname").val().trim(),
-              email: $("#Editcompanycontactemail").val().trim(),
-              phone: $("#Editcompanycontactnumber").val().trim(),
-              position: $("#Editcompanyposition").val().trim(),
+            const supervisorData = {
+              supervisor_profile_uuid: $("#EditsupervisorProfileUuid").val().trim(),
+              supervisor_first_name: $("#Editsupervisorfirstname").val().trim(),
+              supervisor_last_name: $("#Editsupervisorlastname").val().trim(),
+              supervisor_email: $("#Editsupervisoremail").val().trim(),
+              supervisor_mobile: $("#Editsupervisormobile").val().trim(),
+              supervisor_position: $("#Editsupervisorposition").val().trim(),
+              supervisor_department: $("#Editsupervisordepartment").val().trim(),
             };
 
-            SaveChanges(uuid, batchUuid, companyData, "update");
+            SaveChanges(uuid, batchUuid, { ...companyData, ...supervisorData }, "update");
           });
       } else if (response.status === "critical") {
         ToastVersion(swalTheme, response.Details, "error", 3000, "top-end", "8");
@@ -531,6 +546,13 @@ function SaveChanges(uuid, batchUuid, data, type = "update") {
       blacklist_reason: data.blacklist_reason,
       program_uuids: data.program_uuids,
       total_slots: data.total_slots,
+      supervisor_profile_uuid: data.supervisor_profile_uuid,
+      supervisor_first_name: data.supervisor_first_name,
+      supervisor_last_name: data.supervisor_last_name,
+      supervisor_email: data.supervisor_email,
+      supervisor_mobile: data.supervisor_mobile,
+      supervisor_position: data.supervisor_position,
+      supervisor_department: data.supervisor_department,
     },
     dataType: "json",
     timeout: 5000,
@@ -564,7 +586,6 @@ function viewCompanydetails(uuid, batchUuid, batchLabel) {
 
   if (!batchUuid) {
     ToastVersion(swalTheme, "No active batch found. Please set an active batch to view company details.", "warning", 3000, "top-end", "8");
-    return;
   }
 
   $.ajax({
@@ -808,6 +829,18 @@ $(document).ready(function () {
   bindCompanyFilterEvents();
   getCompanies();
 
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>'\"]/g, function (char) {
+      return ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;",
+      })[char];
+    });
+  }
+
   $("#saveCompanyBtn").click(function () {
     const batchUuid = $("#activeBatchLabel").attr("data-batch-uuid");
     if (!batchUuid) {
@@ -834,9 +867,20 @@ $(document).ready(function () {
     const contactPosition = $("#companyposition").val().trim();
     const contactEmail = $("#companycontactemail").val().trim();
     const contactPhone = $("#companycontactnumber").val().trim();
+    const supervisorFirstName = $("#supervisorfirstname").val().trim();
+    const supervisorLastName = $("#supervisorlastname").val().trim();
+    const supervisorEmail = $("#supervisoremail").val().trim();
+    const supervisorMobile = $("#supervisormobile").val().trim();
+    const supervisorPosition = $("#supervisorposition").val().trim();
+    const supervisorDepartment = $("#supervisordepartment").val().trim();
 
     if (!name || !industry || !email || !phone || !address || !city || !website || !workSetup || !accreditationStatus || !totalSlots) {
       ToastVersion(swalTheme, "Please fill in all required fields.", "warning", 3000, "top-end", "8");
+      return;
+    }
+
+    if (!supervisorFirstName || !supervisorLastName || !supervisorEmail || !supervisorMobile || !supervisorPosition || !supervisorDepartment) {
+      ToastVersion(swalTheme, "Please complete the supervisor account details.", "warning", 3000, "top-end", "8");
       return;
     }
 
@@ -862,6 +906,12 @@ $(document).ready(function () {
       contact_position: contactPosition,
       contact_email: contactEmail,
       contact_phone: contactPhone,
+      supervisor_first_name: supervisorFirstName,
+      supervisor_last_name: supervisorLastName,
+      supervisor_email: supervisorEmail,
+      supervisor_mobile: supervisorMobile,
+      supervisor_position: supervisorPosition,
+      supervisor_department: supervisorDepartment,
     };
 
     $.ajax({
@@ -880,10 +930,35 @@ $(document).ready(function () {
       success: function (response) {
         $("#saveCompanyBtn").prop("disabled", false).text("Save Company");
         if (response.status === "success") {
-          ToastVersion(swalTheme, response.message, "success", 3000, "top-end", "8");
           $("#NewCompanyModal").modal("hide");
           getCompanies();
           viewCompanydetails(response.uuid, batchUuid, $("#activeBatchLabel").text());
+
+          const tempPassword = escapeHtml(response.supervisor_temp_password || "—");
+          const supervisorName = escapeHtml(response.supervisor_full_name || "—");
+          const supervisorEmailSafe = escapeHtml(response.supervisor_email || "—");
+
+          Swal.fire({
+            icon: "success",
+            title: "Company and supervisor created",
+            html: `
+              <div class="text-start">
+                <p class="mb-2"><strong>Supervisor:</strong> ${supervisorName}</p>
+                <p class="mb-2"><strong>Email:</strong> ${supervisorEmailSafe}</p>
+                <p class="mb-0"><strong>Temporary password:</strong> <code>${tempPassword}</code></p>
+              </div>
+            `,
+            confirmButtonText: "Got it",
+            customClass: {
+              popup: "bg-blur-5 bg-semi-transparent border-1 rounded-3 shadow-lg",
+              container: "overflow-hidden",
+              confirmButton: "btn btn-success px-4 py-2 rounded-3"
+            },
+            buttonsStyling: false,
+            showClass: { popup: "bounce-in-fwd" },
+            hideClass: { popup: "slide-out-blurred-bottom" },
+          });
+          ToastVersion(swalTheme, response.message, "success", 3000, "top-end", "8");
         } else if (response.status === "critical") {
           ToastVersion(swalTheme, response.Details, "error", 3000, "top-end", "8");
         } else {

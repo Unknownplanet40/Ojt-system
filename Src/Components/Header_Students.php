@@ -74,7 +74,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
             </a>
           </li>
           <li>
-            <a class="dropdown-item <?= $CurrentPage === 'DTR' ? 'nav-active' : '' ?>" href="javascript:void(0)">
+            <a class="dropdown-item <?= $CurrentPage === 'DTR' ? 'nav-active' : '' ?>" href="../Students/DTR">
               <div class="hstack">
                 <i class="bi bi-clock me-2"></i>
                 <div class="vstack">

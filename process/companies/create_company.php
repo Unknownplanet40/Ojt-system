@@ -70,6 +70,11 @@ if (!$result['success']) {
 
 response([
     'status'  => 'success',
-    'message' => 'Company created successfully.',
+    'message' => 'Company and supervisor account created successfully.',
     'uuid'    => $result['uuid'],
+    'supervisor_uuid' => $result['supervisor_uuid'] ?? null,
+    'supervisor_profile_uuid' => $result['supervisor_profile_uuid'] ?? null,
+    'supervisor_full_name' => $result['supervisor_full_name'] ?? null,
+    'supervisor_email' => $result['supervisor_email'] ?? null,
+    'supervisor_temp_password' => $result['supervisor_temp_password'] ?? null,
 ]);

@@ -137,7 +137,7 @@ $(document).ready(function() {
                         <hr class="my-3">
                         <div class="d-flex justify-content-end gap-2 flex-wrap">
                             <button class="btn btn-sm bg-secondary-subtle text-body border px-3 py-2 rounded-3 view-details-btn" data-uuid="${app.uuid}">View Details</button>
-                            ${app.status === 'approved' ? `<button class="btn btn-sm bg-primary-subtle text-primary-emphasis border px-3 py-2 rounded-3 btn-endorse" data-uuid="${app.uuid}">Generate Endorsement</button>` : ''}
+                            ${app.status === 'approved' ? `<button class="btn btn-sm bg-primary-subtle text-primary-emphasis border px-3 py-2 rounded-3 btn-endorse" data-uuid="${app.uuid}">Download Endorsement</button>` : ''}
                             ${app.status === 'endorsed' ? `<button class="btn btn-sm bg-success-subtle text-success-emphasis border px-3 py-2 rounded-3 btn-start" data-uuid="${app.uuid}">Confirm OJT Start</button>` : ''}
                         </div>
                     </div>
@@ -196,21 +196,83 @@ $(document).ready(function() {
         
         // Set UUID to all modals
         $('#ReviewModal, #ApproveModal, #ReturnModal, #RejectModal, #EndorseModal, #StartModal').data('application-uuid', uuid);
+        $('#StartModal').data('company-uuid', app.company_uuid);
 
         $('#ReviewModal').modal('show');
     });
 
     $(document).on('click', '.btn-endorse', function() {
         let uuid = $(this).data('uuid');
-        $('#ReviewModal').modal('hide');
-        $('#EndorseModal').data('application-uuid', uuid).modal('show');
+        downloadEndorsementLetter(uuid);
     });
     
     $(document).on('click', '.btn-start', function() {
         let uuid = $(this).data('uuid');
+        let app = applicationsCache.find(a => a.uuid === uuid);
         $('#ReviewModal').modal('hide');
-        $('#StartModal').data('application-uuid', uuid).modal('show');
+        $('#StartModal').data('application-uuid', uuid);
+
+        if (app) {
+            $('#StartModal').data('company-uuid', app.company_uuid);
+            loadSupervisorsForStartModal(app.company_uuid, uuid);
+        }
+
+        $('#startDate').val('');
+        $('#expectedEndDate').val('');
+        $('#startWorkingHours').val('8');
+        $('#StartModal').modal('show');
     });
+
+    function downloadEndorsementLetter(appUuid) {
+        if (!appUuid) {
+            ToastVersion(swalTheme, 'Application not found.', 'error');
+            return;
+        }
+
+        const url = `../../../process/endorsement/download_letter.php?application_uuid=${encodeURIComponent(appUuid)}`;
+        window.open(url, '_blank');
+        ToastVersion(swalTheme, 'Opening endorsement letter...', 'success');
+
+        setTimeout(function() {
+            loadApplications();
+        }, 800);
+    }
+
+    function loadSupervisorsForStartModal(companyUuid, applicationUuid = '') {
+        $('#startSupervisorSelect').html('<option value="">Loading supervisors...</option>');
+
+        $.ajax({
+            url: '../../../process/endorsement/get_supervisors',
+            type: 'POST',
+            data: {
+                csrf_token: csrfToken,
+                company_uuid: companyUuid,
+                application_uuid: applicationUuid
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status !== 'success') {
+                    $('#startSupervisorSelect').html('<option value="">No supervisors found</option>');
+                    return;
+                }
+
+                const supervisors = response.supervisors || [];
+                if (!supervisors.length) {
+                    $('#startSupervisorSelect').html('<option value="">No active supervisors for this company</option>');
+                    return;
+                }
+
+                let options = '<option value="">Select supervisor</option>';
+                supervisors.forEach((sup) => {
+                    options += `<option value="${sup.uuid}">${sup.full_name} — ${sup.position || 'Supervisor'}</option>`;
+                });
+                $('#startSupervisorSelect').html(options);
+            },
+            error: function() {
+                $('#startSupervisorSelect').html('<option value="">Failed to load supervisors</option>');
+            }
+        });
+    }
 
     // Helper for Actions
     function updateApplicationStatus(modalId, newStatus, reasonOrNote = '', additionalData = {}) {
@@ -237,9 +299,6 @@ $(document).ready(function() {
                 if (response.status === 'success') {
                     $(modalId).modal('hide');
                     ToastVersion(swalTheme, response.message, 'success');
-                    
-                    // Note: If testing confirms we need start_ojt.php for 'active', we'll create it later. 
-                    // Right now we use update_application.php for most transitions.
                     loadApplications();
                 } else {
                     Errors(response.message, 'error');
@@ -271,15 +330,59 @@ $(document).ready(function() {
     });
 
     $('#confirmEndorseBtn').click(function() {
-        updateApplicationStatus('#EndorseModal', 'endorsed', $('#endorsementNote').val());
+        const uuid = $('#EndorseModal').data('application-uuid');
+        $('#EndorseModal').modal('hide');
+        downloadEndorsementLetter(uuid);
     });
 
     $('#confirmStartBtn').click(function() {
-        // Warning: active is not handled correctly by update_application.php unless we added it or make a new script
-        // Let's assume it works or we will modify update_application.php next!
-        let sDate = $('#startDate').val();
-        if(!sDate) { ToastVersion(swalTheme, 'Start date required', 'error'); return; }
-        updateApplicationStatus('#StartModal', 'active', $('#startNote').val(), { start_date: sDate });
+        let uuid = $('#StartModal').data('application-uuid');
+        let startDate = $('#startDate').val();
+        let supervisorUuid = $('#startSupervisorSelect').val();
+        let hoursPerDay = $('#startWorkingHours').val();
+        let expectedEndDate = $('#expectedEndDate').val();
+
+        if (!startDate) {
+            ToastVersion(swalTheme, 'Start date is required.', 'error');
+            return;
+        }
+        if (!supervisorUuid) {
+            ToastVersion(swalTheme, 'Please select a supervisor.', 'error');
+            return;
+        }
+
+        let btn = $(this);
+        let original = btn.text();
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Confirming...');
+
+        $.ajax({
+            url: '../../../Process/endorsement/confirm_start',
+            type: 'POST',
+            data: {
+                csrf_token: csrfToken,
+                application_uuid: uuid,
+                start_date: startDate,
+                supervisor_uuid: supervisorUuid,
+                working_hours_per_day: hoursPerDay,
+                expected_end_date: expectedEndDate
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#StartModal').modal('hide');
+                    ToastVersion(swalTheme, response.message, 'success');
+                    loadApplications();
+                } else {
+                    Errors(response.message, 'error');
+                }
+            },
+            error: function() {
+                Errors('Server error while confirming OJT start.', 'error');
+            },
+            complete: function() {
+                btn.prop('disabled', false).text(original);
+            }
+        });
     });
 
     function loadStudentRequirements(studentUuid) {

@@ -5,26 +5,13 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     header("Location: $base/Src/Pages/ErrorPage.php?error=403");
     exit;
 }
-
-// functions/endorsement_functions.php
-// -----------------------------------------------
-// Module:    Endorsement Letter + OJT Start
-// Primary:   Coordinator
-// Secondary: Student (download only)
-// -----------------------------------------------
 require_once __DIR__ . '/../helpers/helpers.php';
 
-
-// -----------------------------------------------
-// GENERATE endorsement letter PDF
-// called automatically when coordinator approves
-// -----------------------------------------------
 function generateEndorsementLetter(
     $conn,
     string $applicationUuid,
     string $actorUuid
 ): array {
-    // fetch all data needed for the letter
     $stmt = $conn->prepare("
         SELECT
           a.uuid          AS app_uuid,
@@ -79,14 +66,12 @@ function generateEndorsementLetter(
         return ['success' => false, 'error' => 'Application not found.'];
     }
 
-    // build PDF
     $pdfResult = buildEndorsementPdf($data);
 
     if (!$pdfResult['success']) {
         return $pdfResult;
     }
 
-    // save record to DB
     $uuid        = generateUuid();
     $relativePath = $pdfResult['relative_path'];
     $fileName    = $pdfResult['file_name'];
@@ -103,8 +88,12 @@ function generateEndorsementLetter(
     ");
     $stmt->bind_param(
         'ssssss',
-        $uuid, $applicationUuid, $data['student_uuid'],
-        $relativePath, $fileName, $actorUuid
+        $uuid,
+        $applicationUuid,
+        $data['student_uuid'],
+        $relativePath,
+        $fileName,
+        $actorUuid
     );
     $stmt->execute();
     $stmt->close();
@@ -126,12 +115,9 @@ function generateEndorsementLetter(
     ];
 }
 
-
-// -----------------------------------------------
-// BUILD endorsement letter HTML → PDF
-// -----------------------------------------------
 function buildEndorsementPdf(array $data): array
 {
+    require_once __DIR__ . '/../Assets/SystemInfo.php';
     $studentName   = trim($data['first_name'] . ' ' . ($data['middle_name'] ? $data['middle_name'][0] . '. ' : '') . $data['last_name']);
     $coordName     = 'Dr./Prof. ' . $data['coord_first_name'] . ' ' . $data['coord_last_name'];
     $batchLabel    = "AY {$data['school_year']} {$data['semester']} Semester";
@@ -139,10 +125,16 @@ function buildEndorsementPdf(array $data): array
     $yearLabel     = ordinal((int)$data['year_level']);
     $contactName   = $data['contact_name']    ?? 'The Supervisor';
     $contactPos    = $data['contact_position'] ?? '';
-    $companyAddr   = $data['company_address'] . ', ' . $data['company_city'];
+    $companyAddr   = trim(($data['company_address'] ?? '') . ', ' . ($data['company_city'] ?? ''), " ,");
     $requiredHours = $data['required_hours'];
     $department    = $data['coord_department'] ?? 'College of Computer Studies';
     $coordEmail    = $data['coord_email'];
+
+    $schoolName = $SchoolName ?? 'Your School Name Here';
+    $LongTitle   = $LongTitle ?? 'Your System Long Title Here';
+    $LogoPath1      = 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
+    $LogoPath2      = 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
+    $generatedAt = $dateToday;
 
     $html = <<<HTML
 <!DOCTYPE html>
@@ -150,78 +142,102 @@ function buildEndorsementPdf(array $data): array
 <head>
 <meta charset="UTF-8">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: Arial, sans-serif; font-size: 12px; color: #111; padding: 0; }
-  .page { padding: 60px; }
-  .header { text-align: center; margin-bottom: 32px; }
-  .school-name { font-size: 16px; font-weight: bold; color: #0F6E56; margin-bottom: 4px; }
-  .school-sub { font-size: 11px; color: #555; margin-bottom: 8px; }
-  .header-line { border-top: 2px solid #0F6E56; border-bottom: 0.5px solid #0F6E56; padding: 4px 0; margin: 8px 0; }
-  .doc-title { font-size: 13px; font-weight: bold; text-align: center; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 28px; }
-  .date-line { text-align: right; margin-bottom: 24px; font-size: 12px; }
-  .addressee { margin-bottom: 20px; }
-  .addressee strong { font-size: 12px; }
-  .addressee p { font-size: 12px; color: #444; }
-  .salutation { margin-bottom: 16px; }
-  .body-text { margin-bottom: 14px; line-height: 1.7; text-align: justify; }
-  .highlight { font-weight: bold; }
-  .closing { margin-top: 32px; }
-  .sig-block { margin-top: 48px; }
-  .sig-name { font-weight: bold; font-size: 12px; text-transform: uppercase; border-top: 1px solid #111; padding-top: 4px; display: inline-block; min-width: 220px; }
-  .sig-title { font-size: 11px; color: #444; }
-  .footer { margin-top: 48px; border-top: 0.5px solid #ccc; padding-top: 10px; text-align: center; font-size: 10px; color: #888; }
-  .ref-box { background: #F0FDF4; border: 1px solid #A7F3D0; border-radius: 6px; padding: 10px 14px; margin: 20px 0; font-size: 11px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.55; color: #111827; background: #fff; padding: 0; }
+    .page { padding: 44px 50px 38px; }
+
+    .header { text-align: center; border-bottom: 2px solid #0F6E56; padding-bottom: 16px; margin-bottom: 22px; }
+    .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 8px; margin-bottom: 18px; }
+    .header-table td { vertical-align: middle; }
+    .header-left { width: 20%; text-align: left; }
+    .header-center { width: 60%; text-align: center; }
+    .header-right { width: 20%; text-align: right; }
+    .header-logo { width: 60px; height: 60px; object-fit: contain; }
+    .school-name { font-size: 15px; font-weight: 700; color: #0F6E56; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+    .doc-title { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 4px; letter-spacing: .01em; }
+    .doc-subtitle { font-size: 11px; color: #6b7280; }
+    .doc-meta { font-size: 10px; color: #64748b; margin-top: 2px; }
+
+    .date-line { text-align: right; margin-bottom: 18px; font-size: 12px; color: #374151; }
+    .addressee { margin-bottom: 18px; }
+    .addressee-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #6b7280; margin-bottom: 2px; }
+    .addressee strong { font-size: 13px; color: #111827; }
+    .addressee p { font-size: 12px; color: #374151; margin-top: 2px; }
+    .salutation { margin-bottom: 14px; font-size: 12px; }
+    .body-text { margin-bottom: 12px; text-align: justify; }
+    .highlight { font-weight: 700; color: #111827; }
+    .ref-box { background: #f8fafc; border: 1px solid #dbe3ea; border-left: 4px solid #0F6E56; border-radius: 6px; padding: 10px 14px; margin: 18px 0 16px; font-size: 11px; color: #334155; }
+    .closing { margin-top: 18px; margin-bottom: 36px; }
+    .sig-block { margin-top: 8px; }
+    .sig-name { font-size: 12px; font-weight: 700; color: #111827; margin-bottom: 2px; }
+    .sig-title { font-size: 11px; color: #374151; line-height: 1.45; }
+    .footer { margin-top: 24px; padding-top: 10px; border-top: 1px solid #cbd5e1; text-align: center; font-size: 9.5px; color: #64748b; line-height: 1.5; }
+    .footer strong { color: #334155; }
 </style>
 </head>
 <body>
 <div class="page">
+    
+<div class="header">
+                <table class="header-table" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                                <td class="header-left">
+                                        <img src="{$LogoPath1}" alt="Logo Left" class="header-logo" />
+                                </td>
+                                <td class="header-center" style="line-height:1.35;">
+                                <div class="school-name">{$schoolName}</div>
+                                <div class="doc-subtitle">Official Digital Credential Document</div>
+                                <div class="doc-meta">{$LongTitle} · Endorsement Letter</div>
+                                <div class="doc-meta">Issued on {$generatedAt}</div>
+                                </td>
+                                <td class="header-right">
+                                        <img src="{$LogoPath2}" alt="Logo Right" class="header-logo" />
+                                </td>
+                        </tr>
+                </table>
+        </div>
 
-  <div class="header">
-    <div class="school-name">Philippine College — OJT System</div>
-    <div class="school-sub">Office of Internship and Industry Affairs</div>
-    <div class="header-line"></div>
-    <div style="font-size:10px;color:#888;">{$department}</div>
-  </div>
+                <div class="doc-title">Letter of Endorsement for On-the-Job Training</div>
+                <div class="doc-meta" style="margin-bottom: 14px;">Reference: Academic endorsement for internship placement</div>
 
-  <div class="doc-title">Letter of Endorsement for On-the-Job Training</div>
+    <div class="date-line">{$dateToday}</div>
 
-  <div class="date-line">{$dateToday}</div>
+    <div class="addressee">
+                <div class="addressee-label">To:</div>
+                <strong>{$contactName}</strong><br>
+        <p>{$contactPos}</p>
+        <p>{$data['company_name']}</p>
+        <p>{$companyAddr}</p>
+    </div>
 
-  <div class="addressee">
-    <strong>{$contactName}</strong><br>
-    <p>{$contactPos}</p>
-    <p>{$data['company_name']}</p>
-    <p>{$companyAddr}</p>
-  </div>
+                <div class="salutation">Dear {$contactName},</div>
 
-  <div class="salutation">Dear {$contactName},</div>
+    <p class="body-text">
+                We respectfully endorse <span class="highlight">{$studentName}</span>,
+                a <span class="highlight">{$yearLabel} Year {$data['program_name']} ({$data['program_code']})</span>
+                student with student number <span class="highlight">{$data['student_number']}</span>,
+                for On-the-Job Training (OJT) at your organization for the
+                <span class="highlight">{$batchLabel}</span>.
+    </p>
 
   <p class="body-text">
-    We are pleased to endorse <span class="highlight">{$studentName}</span>,
-    a <span class="highlight">{$yearLabel} Year {$data['program_name']} ({$data['program_code']})</span>
-    student with student number <span class="highlight">{$data['student_number']}</span>,
-    for On-the-Job Training (OJT) at your esteemed organization for the
-    <span class="highlight">{$batchLabel}</span>.
+                In partial fulfillment of the requirements for the degree
+                <span class="highlight">{$data['program_name']}</span>, the student is required to complete
+                <span class="highlight">{$requiredHours} hours</span> of supervised on-the-job training.
+                We trust that the student will benefit from meaningful industry exposure aligned with
+                their academic preparation.
   </p>
 
   <p class="body-text">
-    In partial fulfillment of the requirements for the degree
-    <span class="highlight">{$data['program_name']}</span>, the student is required to complete
-    <span class="highlight">{$requiredHours} hours</span> of supervised on-the-job training.
-    We believe that exposure to your organization's professional environment will provide
-    invaluable practical experience aligned with the student's academic preparation.
+                The student has completed the required pre-OJT requirements and is now cleared to begin
+                training. We kindly request your acceptance and support as they undertake tasks relevant
+                to their field of study.
   </p>
 
   <p class="body-text">
-    We assure you that the student has met all pre-OJT requirements set by the institution
-    and is ready to begin training. We respectfully request your kind acceptance of the
-    student and ask that they be given meaningful tasks relevant to their field of study.
-  </p>
-
-  <p class="body-text">
-    For inquiries or coordination, please do not hesitate to contact the undersigned at
-    <span class="highlight">{$coordEmail}</span>.
-    Your continued support for our internship program is greatly appreciated.
+                For coordination or verification, please contact the undersigned at
+                <span class="highlight">{$coordEmail}</span>.
+                We sincerely appreciate your continued support for our internship program.
   </p>
 
   <div class="ref-box">
@@ -232,7 +248,7 @@ function buildEndorsementPdf(array $data): array
     Batch: {$batchLabel}
   </div>
 
-  <p class="body-text">Thank you for your continued support of our academic programs.</p>
+    <p class="body-text">Thank you for your continued support of our academic programs.</p>
 
   <div class="closing">Respectfully yours,</div>
 
@@ -244,8 +260,8 @@ function buildEndorsementPdf(array $data): array
   </div>
 
   <div class="footer">
-    This letter is officially issued by the OJT Coordinator Management System.
-    Generated on {$dateToday}.
+        <strong>Official Issuance Notice:</strong> This endorsement is generated and issued by the OJT Coordinator Management System.<br>
+        Document generated on {$dateToday} · Please verify authenticity through the coordinator's office.
   </div>
 
 </div>
@@ -256,15 +272,20 @@ HTML;
     // save PDF
     $studentUuid = $data['student_uuid'];
     $fileName    = 'Endorsement_' . $data['student_number'] . '_' . date('Ymd') . '.pdf';
-    $absoluteDir = dirname(__DIR__, 2) . '/uploads/endorsements/' . $studentUuid . '/';
+
+    // compute project root and upload paths (use one level up from functions/)
+    $projectRoot  = dirname(__DIR__);
+    $absoluteDir  = $projectRoot . '/uploads/endorsements/' . $studentUuid . '/';
     $relativePath = 'uploads/endorsements/' . $studentUuid . '/' . $fileName;
 
     if (!is_dir($absoluteDir)) {
-        mkdir($absoluteDir, 0755, true);
+        if (!mkdir($absoluteDir, 0755, true) && !is_dir($absoluteDir)) {
+            return ['success' => false, 'error' => 'Failed to create uploads directory.'];
+        }
     }
 
     // use mPDF if available
-    $autoload = dirname(__DIR__, 2) . '/Libs/composer/vendor/autoload.php';
+    $autoload = $projectRoot . '/libs/composer/vendor/autoload.php';
     if (file_exists($autoload)) {
         require_once $autoload;
         try {
@@ -297,10 +318,6 @@ HTML;
     ];
 }
 
-
-// -----------------------------------------------
-// GET endorsement letter record
-// -----------------------------------------------
 function getEndorsementLetter($conn, string $applicationUuid): ?array
 {
     $stmt = $conn->prepare("
@@ -314,7 +331,9 @@ function getEndorsementLetter($conn, string $applicationUuid): ?array
     $row = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 
-    if (!$row) return null;
+    if (!$row) {
+        return null;
+    }
 
     return [
         'uuid'         => $row['uuid'],
@@ -324,17 +343,12 @@ function getEndorsementLetter($conn, string $applicationUuid): ?array
     ];
 }
 
-
-// -----------------------------------------------
-// CONFIRM OJT START
-// coordinator sets start date, links supervisor
-// unlocks DTR and journal for the student
-// -----------------------------------------------
 function confirmOjtStart(
     $conn,
     string $applicationUuid,
     array  $data,
-    string $coordinatorUuid
+    string $coordinatorUserUuid,
+    string $coordinatorProfileUuid
 ): array {
     $startDate      = trim($data['start_date']          ?? '');
     $expectedEnd    = trim($data['expected_end_date']   ?? '');
@@ -360,7 +374,7 @@ function confirmOjtStart(
 
     // fetch application
     $stmt = $conn->prepare("
-        SELECT a.uuid, a.status, a.student_uuid, a.batch_uuid,
+        SELECT a.uuid, a.status, a.student_uuid, a.batch_uuid, a.company_uuid,
                sp.coordinator_uuid
         FROM ojt_applications a
         JOIN student_profiles sp ON a.student_uuid = sp.uuid
@@ -375,14 +389,14 @@ function confirmOjtStart(
         return ['success' => false, 'error' => 'Application not found.'];
     }
 
-    if ($app['coordinator_uuid'] !== $coordinatorUuid) {
+    if ($app['coordinator_uuid'] !== $coordinatorProfileUuid) {
         return ['success' => false, 'error' => 'Unauthorized.'];
     }
 
-    if (!in_array($app['status'], ['approved', 'endorsed'])) {
+    if ($app['status'] !== 'endorsed') {
         return [
             'success' => false,
-            'error'   => 'OJT start can only be confirmed for approved or endorsed applications.',
+            'error'   => 'OJT start can only be confirmed for endorsed applications.',
         ];
     }
 
@@ -391,10 +405,12 @@ function confirmOjtStart(
         SELECT svp.uuid, svp.company_uuid
         FROM supervisor_profiles svp
         JOIN users u ON svp.user_uuid = u.uuid
-        WHERE svp.uuid = ? AND u.is_active = 1
+        WHERE svp.uuid = ?
+          AND svp.company_uuid = ?
+          AND u.is_active = 1
         LIMIT 1
     ");
-    $stmt->bind_param('s', $supervisorUuid);
+    $stmt->bind_param('ss', $supervisorUuid, $app['company_uuid']);
     $stmt->execute();
     $supervisor = $stmt->get_result()->fetch_assoc();
     $stmt->close();
@@ -425,17 +441,6 @@ function confirmOjtStart(
     $conn->begin_transaction();
 
     try {
-        // update application to active
-        $stmt = $conn->prepare("
-            UPDATE ojt_applications
-            SET status     = 'active',
-                updated_at = NOW()
-            WHERE uuid = ?
-        ");
-        $stmt->bind_param('s', $applicationUuid);
-        $stmt->execute();
-        $stmt->close();
-
         // save OJT start record
         $startUuid = generateUuid();
         $stmt = $conn->prepare("
@@ -452,10 +457,27 @@ function confirmOjtStart(
               confirmed_at          = NOW()
         ");
         $stmt->bind_param(
-            'ssssssiss',
-            $startUuid, $applicationUuid, $app['student_uuid'], $supervisorUuid,
-            $startDate, $expectedEnd, $hoursPerDay, $coordinatorUuid
+            'ssssssis',
+            $startUuid,
+            $applicationUuid,
+            $app['student_uuid'],
+            $supervisorUuid,
+            $startDate,
+            $expectedEnd,
+            $hoursPerDay,
+            $coordinatorProfileUuid
         );
+        $stmt->execute();
+        $stmt->close();
+
+        // update application to active after start details are saved
+        $stmt = $conn->prepare(" 
+            UPDATE ojt_applications
+            SET status = 'active',
+                updated_at = NOW()
+            WHERE uuid = ?
+        ");
+        $stmt->bind_param('s', $applicationUuid);
         $stmt->execute();
         $stmt->close();
 
@@ -478,10 +500,12 @@ function confirmOjtStart(
 
     // log status history
     logApplicationStatus(
-        $conn, $applicationUuid,
-        $app['status'], 'active',
+        $conn,
+        $applicationUuid,
+        $app['status'],
+        'active',
         'OJT start confirmed by coordinator',
-        $coordinatorUuid
+        $coordinatorUserUuid
     );
 
     logActivity(
@@ -489,7 +513,7 @@ function confirmOjtStart(
         eventType: 'ojt_started',
         description: "OJT start confirmed — starts {$startDate}",
         module: 'endorsement',
-        actorUuid: $coordinatorUuid,
+        actorUuid: $coordinatorUserUuid,
         targetUuid: $app['student_uuid']
     );
 
@@ -501,10 +525,6 @@ function confirmOjtStart(
     ];
 }
 
-
-// -----------------------------------------------
-// GET OJT start confirmation details
-// -----------------------------------------------
 function getOjtStartConfirmation($conn, string $applicationUuid): ?array
 {
     $stmt = $conn->prepare("
@@ -535,7 +555,9 @@ function getOjtStartConfirmation($conn, string $applicationUuid): ?array
     $row = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 
-    if (!$row) return null;
+    if (!$row) {
+        return null;
+    }
 
     return [
         'uuid'                  => $row['uuid'],
@@ -552,11 +574,6 @@ function getOjtStartConfirmation($conn, string $applicationUuid): ?array
     ];
 }
 
-
-// -----------------------------------------------
-// GET supervisors for a company — dropdown
-// called when coordinator picks supervisor
-// -----------------------------------------------
 function getSupervisorsForCompany($conn, string $companyUuid): array
 {
     $stmt = $conn->prepare("
@@ -571,7 +588,7 @@ function getSupervisorsForCompany($conn, string $companyUuid): array
     $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
-    return array_map(fn($row) => [
+    return array_map(fn ($row) => [
         'uuid'       => $row['uuid'],
         'full_name'  => $row['first_name'] . ' ' . $row['last_name'],
         'position'   => $row['position']   ?? '—',

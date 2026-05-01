@@ -39,15 +39,23 @@ $(document).ready(function() {
                         $('#currentStatusBadge').text(app.status_label);
                         $('#currentStatusBadge').css({
                             'background-color': app.status_bg,
-                            'color': app.status_text
+                            'color': app.status_text,
+                            'border': '1px solid rgba(0,0,0,0.04)'
                         });
-                        
-                        // Status Icon
+
+                        $('#statusIconWrap').css({
+                            'background-color': app.status_bg,
+                            'color': app.status_text,
+                            'border': '1px solid rgba(0,0,0,0.04)'
+                        });
+
                         let icon = 'bi-clock-history';
                         if(app.status === 'approved' || app.status === 'endorsed' || app.status === 'active') icon = 'bi-check-circle';
                         if(app.status === 'rejected') icon = 'bi-x-circle';
                         if(app.status === 'needs_revision') icon = 'bi-pencil-square';
                         $('#statusIcon').html(`<i class="bi ${icon} fs-5"></i>`);
+
+                        renderStatusStepper(app.status);
                         
                         if (app.status === 'needs_revision') {
                             $('#resubmitApplicationBtn').removeClass('d-none').data('uuid', app.uuid).data('cover-letter', app.cover_letter);
@@ -60,30 +68,68 @@ $(document).ready(function() {
                         } else {
                             $('#withdrawApplicationBtn').addClass('d-none');
                         }
+
+                        if (['approved', 'endorsed', 'active'].includes(app.status)) {
+                            $('#downloadEndorsementBtn').removeClass('d-none').data('uuid', app.uuid);
+                        } else {
+                            $('#downloadEndorsementBtn').addClass('d-none').removeData('uuid');
+                        }
                         
-                        // Timeline
+                        // Timeline - Tracker UI
                         $('#applicationStatusTimeline').empty();
                         if (response.history) {
                             response.history.forEach((hist, index) => {
                                 let statusColors = getStatusColors(hist.to_status);
                                 let isLast = index === response.history.length - 1;
+                                let isFirst = index === 0;
+                                
+                                let initials = hist.actor_name
+                                    .split(' ')
+                                    .slice(0, 2)
+                                    .map(word => word.charAt(0).toUpperCase())
+                                    .join('');
+                                
+                                
+
+                                let profileContent = '';
+                                let path = '../../../Assets/Images/profiles/' + hist.profile_pic;
+                                if (hist.profile_pic) {
+                                    profileContent = `<img src="${path}" alt="${hist.actor_name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                                } else {
+                                    profileContent = `<span style="font-size:14px;font-weight:600;color:${statusColors.text};">${initials}</span>`;
+                                }
                                 
                                 let html = `
-                                <div class="position-relative ps-5">
-                                    <div class="position-absolute top-0 start-0 translate-middle-x mt-1 d-none d-sm-flex align-items-center justify-content-center rounded-circle" style="width: 24px; height: 24px; background-color: ${statusColors.bg}; color: ${statusColors.text}; left: 24px !important; z-index: 2;">
-                                        <i class="bi bi-circle-fill" style="font-size: 8px;"></i>
+                                <div class="position-relative ps-sm-5">
+                                    <!-- Vertical connector line -->
+                                    ${!isLast ? `<div class="position-absolute d-none d-sm-block" style="left:17px;top:60px;width:2px;height:calc(100% + 30px);background:${statusColors.bg};opacity:0.3;"></div>` : ''}
+                                    
+                                    <!-- Step circle marker with profile -->
+                                    <div class="position-absolute d-none d-sm-flex align-items-center justify-content-center rounded-circle overflow-hidden" style="width: 36px; height: 36px; background-color: ${statusColors.bg}; color: ${statusColors.text}; left: 0px; top: 0px; z-index: 2; border: 3px solid white; font-weight: 600; font-size: 12px; flex-shrink:0;">
+                                        ${profileContent}
                                     </div>
-                                    <div class="p-3 border rounded-4 ${isLast ? 'bg-body bg-opacity-50' : 'opacity-75'}">
-                                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="badge rounded-pill fw-medium" style="background-color: ${statusColors.bg}; color: ${statusColors.text};">
-                                                    ${formatStatus(hist.to_status)}
-                                                </span>
-                                                <small class="text-muted">${hist.actor_name} (${hist.actor_role})</small>
-                                            </div>
-                                            <small class="text-muted fw-medium">${hist.time_ago}</small>
+                                    
+                                    <!-- Content card -->
+                                    <div class="p-4 border rounded-4 ${isLast ? 'bg-body bg-opacity-50 border-3' : 'bg-body-tertiary opacity-75'} h-100" style="transition: all 0.3s ease;">
+                                        <!-- Status title -->
+                                        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 mb-3">
+                                            <h6 class="mb-0 fw-semibold text-body" style="font-size:16px;">${formatStatus(hist.to_status)}</h6>
+                                            <small class="text-muted fw-medium text-nowrap">${hist.time_ago}</small>
                                         </div>
-                                        ${hist.reason ? `<p class="mb-0 text-body small mt-2 bg-body-secondary p-2 rounded-3">${hist.reason}</p>` : ''}
+                                        
+                                        <!-- Actor info -->
+                                        <div class="d-flex align-items-center gap-3 mb-3 bg-blur-5 bg-semi-transparent p-3 rounded-3 border">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 overflow-hidden" style="width:40px;height:40px;background:${statusColors.bg};color:${statusColors.text};font-weight:600;font-size:13px;border: 2px solid rgba(0,0,0,0.05);flex-shrink:0;">
+                                                ${hist.profile_pic ? `<img src="${path}" alt="${hist.actor_name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : `<span>${initials}</span>`}
+                                            </div>
+                                            <div>
+                                                <small class="text-body fw-medium d-block">${hist.actor_name}</small>
+                                                <small class="text-muted d-block">${hist.actor_role}</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Reason/description -->
+                                        ${hist.reason ? `<div class="bg-body-secondary p-3 rounded-3 border-start border-4" style="border-color:${statusColors.bg}!important;"><small class="text-body">${hist.reason}</small></div>` : '<p class="mb-0 text-muted small"><em>No additional notes</em></p>'}
                                     </div>
                                 </div>
                                 `;
@@ -244,7 +290,6 @@ $(document).ready(function() {
         });
     }
 
-    // Modal navigation
     $('#applyNowBtn').click(function() {
         $('#ApplyFormsModal').attr('data-mode', 'new');
         $('#ApplyFormsModal h5').text('Apply for OJT');
@@ -322,7 +367,6 @@ $(document).ready(function() {
                 if (response.status === 'success') {
                     $('#ApplyFormsModal').modal('hide');
                     
-                    // Reset modal
                     $('#step-3').addClass('d-none');
                     $('#step-1').removeClass('d-none');
                     $('#step1ProgressBar, #step2ProgressBar').css('width', '0%');
@@ -417,6 +461,65 @@ $(document).ready(function() {
             }
         });
     });
+
+    $('#downloadEndorsementBtn').click(function() {
+        let uuid = $(this).data('uuid');
+        if (!uuid) {
+            Errors('Application not found.', 'error');
+            return;
+        }
+
+        const url = `../../../process/endorsement/download_letter?application_uuid=${encodeURIComponent(uuid)}`;
+        window.open(url, '_blank');
+
+        setTimeout(function() {
+            loadApplication();
+        }, 800);
+    });
+
+    function renderStatusStepper(currentStatus) {
+        const steps = [
+            { key: 'pending', label: 'Pending', icon: 'bi-clock-history' },
+            { key: 'approved', label: 'Approved', icon: 'bi-check2' },
+            { key: 'endorsed', label: 'Endorsed', icon: 'bi-file-earmark-text' },
+            { key: 'active', label: 'Active', icon: 'bi-play-circle' }
+        ];
+
+        const container = $('#statusStepper');
+        if (!container.length) return;
+        container.empty();
+
+        const currentIndex = steps.findIndex(s => s.key === currentStatus);
+
+        const stepperWrapper = $('<div class="d-flex flex-row gap-2 gap-sm-3 overflow-x-auto overflow-y-hidden pb-2" style="flex-wrap:nowrap;align-items:flex-start;"></div>');
+
+        steps.forEach((step, idx) => {
+            const colors = getStatusColors(step.key);
+            const isComplete = idx < currentIndex;
+            const isActive = idx === currentIndex;
+            const bgColor = (isActive || isComplete) ? colors.bg : '#f3f4f6';
+            const textColor = (isActive || isComplete) ? colors.text : '#6b7280';
+
+            if (idx > 0) {
+                const connectorBg = idx <= currentIndex ? getStatusColors(steps[Math.min(idx, currentIndex)].key).bg : '#e9ecef';
+                const connector = $(`<div style="flex:0 0 20px;height:2px;background:${connectorBg};align-self:center;margin:0 -4px;"></div>`);
+                stepperWrapper.append(connector);
+            }
+
+            const stepEl = $(`
+                <div class="d-flex flex-column align-items-center flex-shrink-0" data-step="${step.key}">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center mb-2" style="width:44px;height:44px;min-width:44px;background:${bgColor};color:${textColor};border:1px solid rgba(0,0,0,0.04);transition:all 0.3s ease;">
+                        <i class="bi ${step.icon}" style="font-size:18px;"></i>
+                    </div>
+                    <small style="font-size:11px;font-weight:${isActive ? 700 : 600};color:${textColor};text-align:center;white-space:nowrap;width:60px;">${step.label}</small>
+                </div>
+            `);
+
+            stepperWrapper.append(stepEl);
+        });
+
+        container.append(stepperWrapper);
+    }
 
     function getStatusColors(status) {
         const colors = {

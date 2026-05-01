@@ -524,7 +524,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                 <div
                                     class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3">
                                     <img src="https://placehold.co/40x40?text=No+Photo" alt="Profile"
-                                        id="DashboardProfilePhoto" class="rounded-circle mx-3"
+                                        id="DashboardProfilePhotoS" class="rounded-circle mx-3"
                                         style="width: 40px; height: 40px; object-fit: cover" />
                                     <div class="flex-grow-1 min-w-0">
                                         <h4 class="mb-1 fw-semibold text-break">
@@ -652,9 +652,8 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                             Latest updates
                                         </span>
                                     </div>
-                                    <div class="position-relative">
-                                        <div class="position-absolute top-0 bottom-0 start-0 ms-4 translate-middle-x d-none d-sm-block" style="width: 2px);"></div>
-                                        <div class="vstack gap-2 gap-sm-3" id="applicationStatusTimeline">
+                                    <div class="position-relative mt-3">
+                                        <div id="applicationStatusTimeline" class="d-flex flex-column gap-4">
                                         </div>
                                     </div>
                                 </div>
@@ -738,20 +737,21 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                                     Application status
                                                 </small>
 
-                                                <div
-                                                    class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <span
-                                                            class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning-subtle text-warning flex-shrink-0"
-                                                            style="width: 36px; height: 36px;" id="statusIcon">
-                                                        </span>
-                                                        <div>
-                                                            <p class="mb-0 text-body fw-semibold" id="statusText"></p>
-                                                            <small class="text-muted" id="statusLastUpdated"></small>
+                                                <div class="d-flex flex-column gap-3">
+                                                    <div id="statusStepper" class="d-flex flex-row gap-2 gap-sm-3 overflow-x-auto overflow-y-hidden pb-2" style="flex-wrap:nowrap;align-items:flex-start;"></div>
+                                                    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <div id="statusIconWrap" class="d-inline-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style="width:36px;height:36px;">
+                                                                <span id="statusIcon"></span>
+                                                            </div>
+                                                            <div>
+                                                                <p class="mb-0 text-body fw-semibold" id="statusText"></p>
+                                                                <small class="text-muted" id="statusLastUpdated"></small>
+                                                            </div>
                                                         </div>
-                                                    </div>
 
-                                                    <span class="badge rounded-pill bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 fw-medium" id="currentStatusBadge"></span>
+                                                        <span class="badge rounded-pill px-3 py-2 fw-medium text-nowrap" id="currentStatusBadge"></span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

@@ -21,8 +21,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
-require_once dirname(__DIR__, 2) . '/functions/endorsement_functions.php';
-require_once dirname(__DIR__, 2) . '/functions/application_functions.php';
+require_once dirname(__DIR__, 2) . '/functions/dtr_functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -44,52 +43,61 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
-if (!isset($_SESSION['user_uuid'])) {
-    http_response_code(401);
-    response(['status' => 'error', 'message' => 'Unauthenticated.']);
-}
-
-if ($_SESSION['user_role'] !== 'coordinator') {
+if (!isset($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'student') {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    response(['status' => 'error', 'message' => 'Method not allowed.']);
+$studentUuid     = $_SESSION['profile_uuid'];
+$batchUuid       = $_SESSION['active_batch_uuid'] ?? '';
+
+if (empty($batchUuid)) {
+    response(['status' => 'error', 'message' => 'No active batch found.']);
 }
 
-$appUuid = trim($_POST['application_uuid'] ?? '');
-
-if (empty($appUuid)) {
-    response(['status' => 'error', 'message' => 'Application UUID is required.']);
-}
-
-$stmt = $conn->prepare(" 
-    SELECT a.uuid
-    FROM ojt_applications a
-    JOIN student_profiles sp ON a.student_uuid = sp.uuid
-    WHERE a.uuid = ?
-      AND sp.coordinator_uuid = ?
+// get active application UUID
+$stmt = $conn->prepare("
+    SELECT uuid FROM ojt_applications
+    WHERE student_uuid = ? AND batch_uuid = ? AND status = 'active'
     LIMIT 1
 ");
-$stmt->bind_param('ss', $appUuid, $_SESSION['profile_uuid']);
+$stmt->bind_param('ss', $studentUuid, $batchUuid);
 $stmt->execute();
-$appRow = $stmt->get_result()->fetch_assoc();
+$app = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-if (!$appRow) {
-    response(['status' => 'error', 'message' => 'Unauthorized.']);
+if (!$app) {
+    response([
+        'status'  => 'error',
+        'message' => 'No active OJT found. OJT must be confirmed by your coordinator first.',
+    ]);
 }
 
-$result = generateEndorsementLetter($conn, $appUuid, $_SESSION['user_uuid']);
+$result = submitDtrEntry(
+    $conn,
+    $studentUuid,
+    $app['uuid'],
+    $batchUuid,
+    $_POST,
+    $_SESSION['user_uuid']
+);
 
 if (!$result['success']) {
-    response(['status' => 'error', 'message' => $result['error']]);
+    response([
+        'status'  => 'error',
+        'errors'  => $result['errors'] ?? [],
+        'message' => isset($result['errors'])
+            ? reset($result['errors'])
+            : ($result['error'] ?? 'Failed to submit DTR entry.'),
+    ]);
 }
 
 response([
-    'status'    => 'success',
-    'message'   => 'Endorsement letter generated successfully.',
-    'file_name' => $result['file_name'],
-    'file_path' => $result['file_path'],
+    'status'         => 'success',
+    'message'        => $result['is_backdated']
+        ? 'Backdated DTR entry submitted. Awaiting coordinator review.'
+        : 'DTR entry submitted. Awaiting supervisor approval.',
+    'uuid'           => $result['uuid'],
+    'hours_rendered' => $result['hours_rendered'],
+    'is_backdated'   => $result['is_backdated'],
 ]);

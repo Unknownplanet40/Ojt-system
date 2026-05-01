@@ -48,7 +48,7 @@ if (!isset($_SESSION['user_uuid'])) {
     response(['status' => 'error', 'message' => 'Unauthenticated.']);
 }
 
-if (!in_array($_SESSION['user_role'], ['admin', 'coordinator', 'student'])) {
+if (!in_array($_SESSION['user_role'], ['coordinator', 'student'])) {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
@@ -65,7 +65,7 @@ if (empty($appUuid) || empty($newStatus)) {
     response(['status' => 'error', 'message' => 'Application UUID and new status are required.']);
 }
 
-$allowed = ['approved', 'needs_revision', 'rejected', 'withdrawn', 'endorsed', 'active'];
+$allowed = ['approved', 'needs_revision', 'rejected', 'withdrawn'];
 if (!in_array($newStatus, $allowed)) {
     response(['status' => 'error', 'message' => 'Invalid status.']);
 }
@@ -90,8 +90,6 @@ $messages = [
     'needs_revision' => 'Application returned for revision.',
     'rejected'       => 'Application rejected.',
     'withdrawn'      => 'Application withdrawn.',
-    'endorsed'       => 'Application marked as endorsed.',
-    'active'         => 'OJT Start Confirmed. Application is now active.',
 ];
 
 response([

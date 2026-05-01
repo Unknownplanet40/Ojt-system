@@ -254,7 +254,15 @@ function fetchProfileData() {
         $("#section").val(profile.section);
         $("#yearLevel").val(profile.year_level);
         if (profile.program_name) {
-          const programOption = $("<option>").val(profile.program_id).text(profile.program_name).addClass("CustomOption").prop("selected", true).prop("disabled", true);
+          const programLabel = profile.program_code
+            ? `${profile.program_code} — ${profile.program_name}`
+            : profile.program_name;
+          const programOption = $("<option>")
+            .val(profile.program_uuid)
+            .text(programLabel)
+            .addClass("CustomOption")
+            .prop("selected", true)
+            .prop("disabled", true);
           $("#program").append(programOption);
         }
         setTimeout(() => ProfileProgressBar(), 100);
