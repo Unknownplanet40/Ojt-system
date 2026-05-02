@@ -76,8 +76,45 @@ function checkServer() {
     });
 }
 
+// detecting host environment
+function detectHostingEnvironment() {
+  const hostname = window.location.hostname;
+
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'local';
+  }
+
+  if (hostname.includes('ngrok')) {
+    return 'ngrok';
+  }
+
+  if (hostname.includes('vercel')) {
+    return 'vercel';
+  }
+
+  if (hostname.includes('github.io')) {
+    return 'github';
+  }
+
+  return 'production';
+}
+
 $(document).ready(function () {
-  checkServer();
+
+  const hostingEnvironment = detectHostingEnvironment();
+  if (hostingEnvironment === 'github') {
+    $("#status").text("It seems you are running this application on GitHub Pages, which does not support server-side functionality. Please run this application on a local server or a hosting service that supports PHP.");
+    $("#dot").addClass("d-none");
+    BGcircleTheme(true, "warning", "fast");
+  } else if (hostingEnvironment === 'ngrok' || hostingEnvironment === 'vercel') {
+    $("#status").text("It seems you are running this application on a hosting service that may have restrictions on server-side functionality. Please ensure that your hosting service supports PHP and that the server is properly configured.");
+    $("#dot").addClass("d-none");
+    BGcircleTheme(true, "warning", "fast");
+  } else if (hostingEnvironment === 'local') {
+    window.location.href = "./Src/Pages/Login";
+  } else {
+    checkServer();
+  }
 
   $(window).on("resize", function () {
     if ($(window).width() < 360) {
