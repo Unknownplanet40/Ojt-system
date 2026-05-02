@@ -107,21 +107,8 @@ $CurrentPage = "AuditLogs";
                         <small class="text-muted">Showing <span class="fw-semibold text-body" id="auditLogCount">0</span> records</small>
                     </div>
 
-                    <div class="table-responsive table-scroll-10 rounded-3 audit-table-wrapper">
-                        <table class="table table-sm table-borderless table-hover table-striped align-middle mb-0" id="auditLogsTable">
-                            <thead class="bg-blur-5 bg-semi-transparent border-0">
-                                <tr class="text-muted border-0">
-                                    <th scope="col" class="py-3 fw-bold text-uppercase text-secondary-emphasis bg-blur-5 bg-semi-transparent border-0" style="font-size: 0.70rem; letter-spacing: 0.6px;">Date / Time</th>
-                                    <th scope="col" class="py-3 fw-bold text-uppercase text-secondary-emphasis bg-blur-5 bg-semi-transparent border-0">User</th>
-                                    <th scope="col" class="py-3 fw-bold text-uppercase text-secondary-emphasis bg-blur-5 bg-semi-transparent border-0 d-none d-lg-table-cell">Action</th>
-                                    <th scope="col" class="py-3 fw-bold text-uppercase text-secondary-emphasis bg-blur-5 bg-semi-transparent border-0 d-none d-xl-table-cell">Module</th>
-                                    <th scope="col" class="py-3 fw-bold text-uppercase text-secondary-emphasis bg-blur-5 bg-semi-transparent border-0">Description</th>
-                                    <th scope="col" class="py-3 fw-bold text-uppercase text-secondary-emphasis bg-blur-5 bg-semi-transparent border-0 text-center d-none d-md-table-cell">Source</th>
-                                    <th scope="col" class="py-3 fw-bold text-uppercase text-secondary-emphasis bg-blur-5 bg-semi-transparent border-0 text-center" style="width: 90px;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="border-0"></tbody>
-                        </table>
+                    <div class="row g-3" id="auditLogsContainer">
+                        <!-- Audit Log Cards will be appended here -->
                     </div>
 
                     <div class="hstack gap-2 justify-content-end mt-3">
@@ -149,69 +136,98 @@ $CurrentPage = "AuditLogs";
 
     <div class="modal fade" id="auditLogDetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-            <div class="modal-content bg-blur-5 bg-semi-transparent border-0 shadow" style="--blur-lvl: <?= $opacitylvl ?>;">
+            <div class="modal-content bg-blur-5 bg-semi-transparent border-0 shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>;">
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-1"><i class="bi bi-file-earmark-text me-2 text-primary"></i>Audit Entry Details</h5>
+                        <p class="text-muted small mb-0" id="auditDetailOccurredAt">—</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
                 <div class="modal-body p-4">
-                    <div class="hstack align-items-start mb-3">
-                        <div>
-                            <h5 class="mb-1 fw-bold">Audit Log Details</h5>
-                            <small class="text-muted" id="auditDetailOccurredAt">—</small>
+                    <div class="row g-4">
+                        <div class="col-12 col-md-6">
+                            <h6 class="fw-semibold text-muted small text-uppercase mb-3">User Information</h6>
+                            <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body h-100">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-person text-secondary me-2"></i>
+                                    <span class="text-muted me-2 small">Actor:</span>
+                                    <span id="auditDetailActor" class="fw-medium">—</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-shield-check text-secondary me-2"></i>
+                                    <span class="text-muted me-2 small">Role:</span>
+                                    <span id="auditDetailRole" class="fw-medium">—</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-globe text-secondary me-2"></i>
+                                    <span class="text-muted me-2 small">IP:</span>
+                                    <code id="auditDetailIp" class="bg-transparent p-0 text-primary">—</code>
+                                </div>
+                            </div>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" data-bs-dismiss="modal">Close</button>
-                    </div>
 
-                    <div class="row g-3">
                         <div class="col-12 col-md-6">
-                            <div class="card bg-blur-5 bg-semi-transparent border-0 shadow-sm h-100" style="--blur-lvl: <?= $opacitylvl ?>;">
-                                <div class="card-body">
-                                    <small class="text-muted text-uppercase fw-semibold d-block mb-2">Summary</small>
-                                    <ul class="list-unstyled mb-0 small">
-                                        <li class="mb-2"><span class="text-muted">User:</span> <span id="auditDetailActor">—</span></li>
-                                        <li class="mb-2"><span class="text-muted">Role:</span> <span id="auditDetailRole">—</span></li>
-                                        <li class="mb-2"><span class="text-muted">Event:</span> <span id="auditDetailEvent">—</span></li>
-                                        <li class="mb-2"><span class="text-muted">Module:</span> <span id="auditDetailModule">—</span></li>
-                                        <li class="mb-2"><span class="text-muted">Source:</span> <span id="auditDetailSource">—</span></li>
-                                        <li class="mb-0"><span class="text-muted">Target UUID:</span> <code id="auditDetailTarget">—</code></li>
-                                    </ul>
+                            <h6 class="fw-semibold text-muted small text-uppercase mb-3">Event Details</h6>
+                            <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body h-100">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-activity text-secondary me-2"></i>
+                                    <span class="text-muted me-2 small">Action:</span>
+                                    <span id="auditDetailEvent" class="fw-medium">—</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-box text-secondary me-2"></i>
+                                    <span class="text-muted me-2 small">Module:</span>
+                                    <span id="auditDetailModule" class="fw-medium">—</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-hdd-network text-secondary me-2"></i>
+                                    <span class="text-muted me-2 small">Source:</span>
+                                    <span id="auditDetailSource" class="fw-medium">—</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-crosshair text-secondary me-2"></i>
+                                    <span class="text-muted me-2 small">Target:</span>
+                                    <code id="auditDetailTarget" class="bg-transparent p-0">—</code>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-12 col-md-6">
-                            <div class="card bg-blur-5 bg-semi-transparent border-0 shadow-sm h-100" style="--blur-lvl: <?= $opacitylvl ?>;">
-                                <div class="card-body">
-                                    <small class="text-muted text-uppercase fw-semibold d-block mb-2">Authentication Context</small>
-                                    <ul class="list-unstyled mb-0 small">
-                                        <li class="mb-2"><span class="text-muted">IP Address:</span> <code id="auditDetailIp">—</code></li>
-                                        <li class="mb-2"><span class="text-muted">Login Result:</span> <span id="auditDetailLoginResult">—</span></li>
-                                        <li class="mb-0"><span class="text-muted">Fail Reason:</span> <span id="auditDetailFailReason">—</span></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+
                         <div class="col-12">
-                            <div class="card bg-blur-5 bg-semi-transparent border-0 shadow-sm" style="--blur-lvl: <?= $opacitylvl ?>;">
-                                <div class="card-body">
-                                    <small class="text-muted text-uppercase fw-semibold d-block mb-2">Description</small>
-                                    <p class="mb-0" id="auditDetailDescription">—</p>
+                            <h6 class="fw-semibold text-muted small text-uppercase mb-3">Description</h6>
+                            <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body">
+                                <p class="mb-0" id="auditDetailDescription">—</p>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <h6 class="fw-semibold text-muted small text-uppercase mb-3">Authentication Context</h6>
+                            <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="text-muted me-2 small">Login Result:</span>
+                                    <span id="auditDetailLoginResult" class="fw-medium">—</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="text-muted me-2 small">Fail Reason:</span>
+                                    <span id="auditDetailFailReason" class="text-danger fw-medium">—</span>
+                                </div>
+                                <div class="d-flex align-items-start">
+                                    <span class="text-muted me-2 small text-nowrap">User Agent:</span>
+                                    <span id="auditDetailUserAgent" class="small text-break">—</span>
                                 </div>
                             </div>
                         </div>
+
                         <div class="col-12">
-                            <div class="card bg-blur-5 bg-semi-transparent border-0 shadow-sm" style="--blur-lvl: <?= $opacitylvl ?>;">
-                                <div class="card-body">
-                                    <small class="text-muted text-uppercase fw-semibold d-block mb-2">User Agent</small>
-                                    <pre class="mb-0 small text-wrap" id="auditDetailUserAgent">—</pre>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="card bg-blur-5 bg-semi-transparent border-0 shadow-sm" style="--blur-lvl: <?= $opacitylvl ?>;">
-                                <div class="card-body">
-                                    <small class="text-muted text-uppercase fw-semibold d-block mb-2">Meta Details</small>
-                                    <div id="auditDetailMeta" class="small"></div>
-                                </div>
+                            <h6 class="fw-semibold text-muted small text-uppercase mb-3">Metadata</h6>
+                            <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body">
+                                <div id="auditDetailMeta" class="small"></div>
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

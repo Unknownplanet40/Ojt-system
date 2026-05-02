@@ -14,32 +14,28 @@ const paginationState = {
 const auditLogCache = new Map();
 
 const loadingRow = `
-<tr class="border-0">
-  <td colspan="7" class="text-center py-4 bg-transparent border-0" style="cursor: wait;">
-    <div class="d-flex flex-column align-items-center gap-2">
-      <div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>
-      <div>
-        <p class="mb-2 text-body fw-semibold">Loading audit logs...</p>
-        <small class="text-muted d-block" style="font-size: 0.875rem;">Please wait while we fetch audit entries.</small>
-      </div>
+<div class="col-12 text-center py-5">
+  <div class="d-flex flex-column align-items-center gap-2">
+    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+    <div>
+      <p class="mb-2 text-body fw-semibold">Loading audit logs...</p>
+      <small class="text-muted d-block" style="font-size: 0.875rem;">Please wait while we fetch audit entries.</small>
     </div>
-  </td>
-</tr>`;
+  </div>
+</div>`;
 
 const emptyRow = `
-<tr class="border-0">
-  <td colspan="7" class="text-center py-4 bg-transparent border-0" style="cursor: default;">
-    <div class="d-flex flex-column align-items-center gap-2">
-      <div class="rounded-circle bg-secondary-subtle text-secondary-emphasis d-flex justify-content-center align-items-center" style="width: 48px; height: 48px;">
-        <i class="bi bi-journal-x fa-lg"></i>
-      </div>
-      <div>
-        <p class="mb-2 text-body fw-semibold">No audit logs found</p>
-        <small class="text-muted d-block" style="font-size: 0.875rem;">Try adjusting your filters to see more activity.</small>
-      </div>
+<div class="col-12 text-center py-5">
+  <div class="d-flex flex-column align-items-center gap-2">
+    <div class="rounded-circle bg-secondary-subtle text-secondary-emphasis d-flex justify-content-center align-items-center" style="width: 64px; height: 64px;">
+      <i class="bi bi-journal-x fs-1"></i>
     </div>
-  </td>
-</tr>`;
+    <div>
+      <p class="mb-2 text-body fw-semibold">No audit logs found</p>
+      <small class="text-muted d-block" style="font-size: 0.875rem;">Try adjusting your filters to see more activity.</small>
+    </div>
+  </div>
+</div>`;
 
 function escapeHtml(value = "") {
   return String(value)
@@ -135,12 +131,12 @@ function renderMetaDetails(log) {
 }
 
 function renderAuditRows(logs = []) {
-  const $tbody = $("#auditLogsTable tbody");
-  $tbody.empty();
+  const $container = $("#auditLogsContainer");
+  $container.empty();
   auditLogCache.clear();
 
   if (!Array.isArray(logs) || logs.length === 0) {
-    $tbody.html(emptyRow);
+    $container.html(emptyRow);
     return;
   }
 
@@ -167,72 +163,45 @@ function renderAuditRows(logs = []) {
     const failReason = escapeHtml(log.fail_reason || "");
     const isActivitySource = String(log.source || "") === "activity";
     const isLoginSource = String(log.source || "") === "login";
-    const hasMeta =
-      isActivitySource &&
-      ((log.meta && typeof log.meta === "object" && Object.keys(log.meta).length > 0) ||
-        (typeof log.meta_raw === "string" && log.meta_raw.trim() !== ""));
-    const hasUserAgent = isLoginSource && typeof log.user_agent === "string" && log.user_agent.trim() !== "";
+    
+    // Icons
+    let moduleIcon = 'bi-box';
+    let moduleColor = 'text-primary';
+    if(log.module_label === 'auth') { moduleIcon = 'bi-shield-lock'; moduleColor = 'text-danger'; }
+    if(log.module_label === 'users') { moduleIcon = 'bi-people'; moduleColor = 'text-info'; }
 
-    const metaBadge = isActivitySource
-      ? `<span class="badge rounded-pill ${hasMeta ? "bg-success-subtle text-success" : "bg-secondary-subtle text-secondary"}">Meta: ${hasMeta ? "Yes" : "No"}</span>`
-      : '<span class="badge rounded-pill bg-light-subtle text-muted">Meta: N/A</span>';
-
-    const userAgentBadge = isLoginSource
-      ? `<span class="badge rounded-pill ${hasUserAgent ? "bg-success-subtle text-success" : "bg-secondary-subtle text-secondary"}">UA: ${hasUserAgent ? "Yes" : "No"}</span>`
-      : '<span class="badge rounded-pill bg-light-subtle text-muted">UA: N/A</span>';
-
-    const detailItems = [];
-    if (targetUuid) {
-      detailItems.push(`<small class="text-muted d-block">Target: <code>${targetUuid}</code></small>`);
-    }
-    if (ipAddress) {
-      detailItems.push(`<small class="text-muted d-block">IP: <code>${ipAddress}</code></small>`);
-    }
-    if (failReason) {
-      detailItems.push(`<small class="text-danger-emphasis d-block">Reason: ${failReason}</small>`);
-    }
-
-    const extraDetails = detailItems.join("");
-
-    $tbody.append(`
-      <tr>
-        <td class="bg-blur-5 bg-semi-transparent border-0">
-          <div class="vstack gap-0">
-            <span class="fw-semibold">${occurredAt}</span>
-            <small class="text-muted">${timeAgo}</small>
-          </div>
-        </td>
-        <td class="bg-blur-5 bg-semi-transparent border-0">
-          <div class="vstack gap-0">
-            <span class="fw-semibold">${actorName}</span>
-            <small class="text-muted">${actorEmail || actorRole}</small>
-            <small class="text-muted d-lg-none">${eventLabel} • ${moduleLabel}</small>
-          </div>
-        </td>
-        <td class="bg-blur-5 bg-semi-transparent border-0 d-none d-lg-table-cell">
-          <span class="badge rounded-pill ${actionBadgeClass(log.event_type)}">${eventLabel}</span>
-        </td>
-        <td class="bg-blur-5 bg-semi-transparent border-0 d-none d-xl-table-cell">${moduleLabel}</td>
-        <td class="bg-blur-5 bg-semi-transparent border-0">
-          <div class="vstack gap-0">
-            <span class="audit-description-text">${description}</span>
-            <div class="hstack gap-2 mt-1 flex-wrap">
-              ${metaBadge}
-              ${userAgentBadge}
-              <span class="badge rounded-pill ${sourceBadgeClass(log.source)} d-inline-flex d-md-none">Source: ${source}</span>
+    $container.append(`
+      <div class="col-12 col-xl-6">
+        <div class="card h-100 bg-blur-5 bg-semi-transparent border-1 rounded-4 position-relative border-secondary-subtle">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar avatar-md rounded-circle bg-body-tertiary bg-opacity-50 d-flex justify-content-center align-items-center flex-shrink-0" style="width: 48px; height: 48px;">
+                  <span class="fs-5 ${moduleColor}"><i class="bi ${moduleIcon}"></i></span>
+                </div>
+                <div>
+                  <h6 class="mb-0 fw-bold text-body">${moduleLabel} <span class="badge rounded-pill fw-normal ms-1 ${actionBadgeClass(log.event_type)}">${eventLabel}</span></h6>
+                  <p class="text-muted small mb-0">${actorName} (${actorRole})</p>
+                </div>
+              </div>
+              <span class="badge rounded-pill ${sourceBadgeClass(log.source)}">${source}</span>
             </div>
-            ${extraDetails}
+            
+            <div class="bg-body-tertiary bg-opacity-50 rounded-3 p-3 mb-3">
+              <p class="small text-body-secondary mb-0" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                ${description}
+              </p>
+              ${failReason ? `<p class="small text-danger mt-2 mb-0">Reason: ${failReason}</p>` : ''}
+              ${targetUuid ? `<small class="text-muted d-block mt-2">Target: <code>${targetUuid}</code></small>` : ''}
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted"><i class="bi bi-clock me-1"></i>${occurredAt} <span class="ms-1">(${timeAgo})</span></small>
+              <button class="btn btn-sm btn-light border rounded-pill px-3 py-1 js-audit-detail-btn" data-row-id="${escapeHtml(rowId)}">Details</button>
+            </div>
           </div>
-        </td>
-        <td class="bg-blur-5 bg-semi-transparent border-0 text-center d-none d-md-table-cell">
-          <span class="badge rounded-pill ${sourceBadgeClass(log.source)}">${source}</span>
-        </td>
-        <td class="bg-blur-5 bg-semi-transparent border-0 text-center">
-          <button class="btn btn-sm btn-outline-secondary js-audit-detail-btn px-2 px-lg-3" data-row-id="${escapeHtml(rowId)}" title="View details">
-            <i class="bi bi-eye"></i><span class="ms-1 d-none d-lg-inline">View</span>
-          </button>
-        </td>
-      </tr>
+        </div>
+      </div>
     `);
   });
 }
@@ -417,7 +386,7 @@ function renderPagination(pagination = {}) {
 }
 
 function loadAuditLogs(page = 1) {
-  const $tbody = $("#auditLogsTable tbody");
+  const $container = $("#auditLogsContainer");
   const filters = collectFilters();
 
   $.ajax({
@@ -431,7 +400,7 @@ function loadAuditLogs(page = 1) {
       ...filters,
     },
     beforeSend: function () {
-      $tbody.html(loadingRow);
+      $container.html(loadingRow);
     },
     success: function (response) {
       if (response.status !== "success") {
@@ -451,13 +420,13 @@ function loadAuditLogs(page = 1) {
       $("#auditDateFrom").val(selectedFilters.date_from || "");
       $("#auditDateTo").val(selectedFilters.date_to || "");
       $("#auditSearchInput").val(selectedFilters.search || "");
-
       renderAuditRows(response.logs || []);
       renderPagination(response.pagination || {});
       toggleClearFilters(selectedFilters);
     },
     error: function (xhr, status, error) {
-      $tbody.html(emptyRow);
+      const $container = $("#auditLogsContainer");
+      $container.html(emptyRow);
       Errors(xhr, status, error);
     },
   });

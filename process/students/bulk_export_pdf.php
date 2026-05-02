@@ -61,10 +61,18 @@ if (empty($created)) {
 
 $generatedAt = date('F j, Y g:i A');
 $schoolName = $SchoolName ?? 'Your School Name Here';
+$longTitle = $LongTitle ?? 'Your System Long Title Here';
+$schoolMotto = $SchoolMotto ?? '';
+$schoolAddress = $SchoolAddress ?? '';
+$schoolWebsite = $SchoolWebsite ?? '';
+$schoolEmail = $SchoolEmail ?? '';
+$schoolPhone = $SchoolPhone ?? '';
+$documentFooterNote = $DocumentFooterNote ?? 'Officially issued by the OJT Coordinator Management System';
+$documentVerificationNote = $DocumentVerificationNote ?? 'Please verify document authenticity with the coordinator\'s office.';
 $fileCreatedBy = $_SESSION['user_name'] ?? 'Admin User';
 $roleofCreator = $_SESSION['user_role'] === 'admin' ? 'Administrator' : 'User';
-$LogoPath1 = 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
-$LogoPath2 = 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
+$LogoPath1 = $SchoolLogoLeft ?? 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
+$LogoPath2 = $SchoolLogoRight ?? 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
 
 $rowsHtml = '';
 foreach ($created as $index => $student) {
@@ -108,6 +116,7 @@ $html = <<<HTML
     .header-right { width: 20%; text-align: right; }
     .header-logo { width: 52px; height: 52px; object-fit: contain; }
     .school-name { font-size: 14px; font-weight: bold; color: #0F6E56; }
+    .school-meta { font-size: 10px; color: #64748b; margin-top: 2px; }
     .title { font-size: 18px; font-weight: bold; margin-top: 4px; }
     .subtitle { font-size: 10px; color: #6B7280; margin-top: 3px; }
 
@@ -123,6 +132,7 @@ $html = <<<HTML
     td.password { font-family: "Courier New", monospace; font-weight: bold; color: #065F46; }
 
     .footer { margin-top: 14px; border-top: 1px solid #E5E7EB; padding-top: 8px; font-size: 9px; color: #6B7280; text-align: right; }
+    .footer-contact { margin-top: 5px; font-size: 8px; color: #64748b; line-height: 1.4; text-align: left; }
   </style>
 </head>
 <body>
@@ -134,8 +144,9 @@ $html = <<<HTML
         </td>
         <td class="header-center" style="line-height:1.35;">
           <div style="font-size: 14px; font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.04em;">{$schoolName}</div>
+          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">{$schoolMotto}</div>
           <div style="font-size: 10px; color: #475569; margin-top: 2px;">Official Digital Credential Document</div>
-          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">{$LongTitle} - Bulk Student Account Details</div>
+          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">{$longTitle} - Bulk Student Account Details</div>
           <div style="font-size: 9px; color: #64748b; margin-top: 2px;">Generated on {$generatedAt}</div>
         </td>
         <td class="header-right">
@@ -171,7 +182,8 @@ $html = <<<HTML
   </table>
 
   <div class="footer">
-    Document created by {$fileCreatedBy} ({$roleofCreator}) · {$LongTitle}
+    Document created by {$fileCreatedBy} ({$roleofCreator}) · {$longTitle}
+    <div class="footer-contact">{$documentFooterNote}<br>{$documentVerificationNote}<br>{$schoolName} · {$schoolAddress} · {$schoolWebsite} · {$schoolEmail} · {$schoolPhone}</div>
   </div>
 </body>
 </html>

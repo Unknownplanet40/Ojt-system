@@ -683,12 +683,15 @@ function viewCompanydetails(uuid, batchUuid, batchLabel) {
         viewCompanyStudentsContainer.empty();
         if (response.students && response.students.length > 0) {
           response.students.forEach((student) => {
+            const studentName = student.full_name || student.name || [student.first_name, student.last_name].filter(Boolean).join(" ") || "—";
+            const studentProgram = student.program || "—";
+            const studentYearLevel = student.year_level || "—";
             const studentElement = `
                   <div class="alert bg-blur-5 bg-semi-transparent bg-secondary-subtle text-body d-flex align-items-center gap-2 mb-2 py-2 px-3" role="alert">
                     <i class="bi bi-person flex-shrink-0"></i>
                     <div class="d-flex flex-column flex-grow-1 min-w-0">
-                      <span class="fw-medium small">${student.name}</span>
-                      <small class="text-muted">${student.program} - ${student.year_level}</small>
+                      <span class="fw-medium small">${studentName}</span>
+                      <small class="text-muted">${studentProgram} - ${studentYearLevel}</small>
                     </div>
                   </div>
                 `;

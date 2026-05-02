@@ -70,7 +70,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
           </ul>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle text-capitalize <?= in_array($CurrentPage, ['Applications', 'DTR_Approvals', 'journals', 'evaluations']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> OJT Process</a>
+          <a class="nav-link dropdown-toggle text-capitalize <?= in_array($CurrentPage, ['Applications', 'DTR_Approvals', 'Journal', 'evaluations']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> OJT Process</a>
           <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
             <li>
               <a class="dropdown-item <?= $CurrentPage === 'Applications' ? 'nav-active' : '' ?>" href="../Coordinator/Applications">
@@ -95,7 +95,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
               </a>
             </li>
             <li>
-              <a class="dropdown-item <?= $CurrentPage === 'journals' ? 'nav-active' : '' ?>" href="javascript:void(0)">
+              <a class="dropdown-item <?= $CurrentPage === 'Journal' ? 'nav-active' : '' ?>" href="../Coordinator/Journal">
                  <div class="hstack">
                   <i class="bi bi-journal-text me-2"></i>
                   <div class="vstack">
@@ -106,12 +106,12 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
               </a>
             </li>
             <li>
-              <a class="dropdown-item <?= $CurrentPage === 'evaluations' ? 'nav-active' : '' ?>" href="javascript:void(0)">
+              <a class="dropdown-item <?= $CurrentPage === 'Evaluations' ? 'nav-active' : '' ?>" href="../Coordinator/Evaluations">
                  <div class="hstack">
-                  <i class="bi bi-clipboard-check me-2"></i>
+                  <i class="bi bi-star-half me-2"></i>
                   <div class="vstack">
                     <span>Evaluations</span>
-                    <small class="text-muted" style="font-size: 0.7em">View and manage student performance evaluations and feedback.</small>
+                    <small class="text-muted" style="font-size: 0.7em">View student performance evaluations and grading.</small>
                   </div>
                 </div>
               </a>

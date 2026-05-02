@@ -880,6 +880,11 @@ function getCompanyStudents($conn, string $companyUuid, string $batchUuid): arra
     $students = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
+    foreach ($students as &$student) {
+        $student['full_name'] = trim(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? ''));
+    }
+    unset($student);
+
     return $students;
 }
 

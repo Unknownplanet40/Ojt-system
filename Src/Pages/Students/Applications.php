@@ -69,65 +69,65 @@ if ($currentHour >= 5 && $currentHour < 12) {
                             <div class="row row-cols-1 row-cols-md-2 g-2">
                                 <div class="col">
                                     <div class="d-flex align-items-center gap-2 p-2 border rounded-3 h-100">
-                                        <i class="bi text-warning fs-6 flex-shrink-0" id="resumeIcon"></i>
+                                        <i class="bi text-danger fs-6 flex-shrink-0" id="resumeIcon"></i>
                                         <span class="text-body small fw-medium flex-grow-1">Resume / CV</span>
                                         <span
-                                            class="badge rounded-pill bg-warning-subtle text-warning flex-shrink-0 text-nowrap"
-                                            id="resumeStatus">Submitted</span>
+                                            class="badge rounded-pill bg-danger-subtle text-danger flex-shrink-0 text-nowrap"
+                                            id="resumeStatus">Not submitted</span>
                                     </div>
                                 </div>
 
                                 <div class="col">
                                     <div class="d-flex align-items-center gap-2 p-2 border rounded-3 h-100">
-                                        <i class="bi text-warning fs-6 flex-shrink-0" id="paiIcon"></i>
+                                        <i class="bi text-danger fs-6 flex-shrink-0" id="insuranceIcon"></i>
                                         <span class="text-body small fw-medium flex-grow-1">Personal Accident
                                             Insurance</span>
                                         <span
-                                            class="badge rounded-pill bg-warning-subtle text-warning flex-shrink-0 text-nowrap"
-                                            id="paiStatus">Submitted</span>
+                                            class="badge rounded-pill bg-danger-subtle text-danger flex-shrink-0 text-nowrap"
+                                            id="insuranceStatus">Not submitted</span>
                                     </div>
                                 </div>
 
                                 <div class="col">
                                     <div class="d-flex align-items-center gap-2 p-2 border rounded-3 h-100">
-                                        <i class="bi text-danger fs-6 flex-shrink-0" id="waiverIcon"></i>
+                                        <i class="bi text-danger fs-6 flex-shrink-0" id="parental_consentIcon"></i>
                                         <span class="text-body small fw-medium flex-grow-1">Parental consent /
                                             Waiver</span>
                                         <span
                                             class="badge rounded-pill bg-danger-subtle text-danger flex-shrink-0 text-nowrap"
-                                            id="waiverStatus">Not submitted</span>
+                                            id="parental_consentStatus">Not submitted</span>
                                     </div>
                                 </div>
 
                                 <div class="col">
                                     <div class="d-flex align-items-center gap-2 p-2 border rounded-3 h-100">
-                                        <i class="bi text-warning fs-6 flex-shrink-0" id="guardianInfoIcon"></i>
+                                        <i class="bi text-danger fs-6 flex-shrink-0" id="guardian_formIcon"></i>
                                         <span class="text-body small fw-medium flex-grow-1">Parent / Guardian
                                             Information</span>
                                         <span
-                                            class="badge rounded-pill bg-warning-subtle text-warning flex-shrink-0 text-nowrap"
-                                            id="guardianInfoStatus">Submitted</span>
+                                            class="badge rounded-pill bg-danger-subtle text-danger flex-shrink-0 text-nowrap"
+                                            id="guardian_formStatus">Not submitted</span>
                                     </div>
                                 </div>
 
                                 <div class="col">
                                     <div class="d-flex align-items-center gap-2 p-2 border rounded-3 h-100">
-                                        <i class="bi bi-check-circle-fill text-success fs-6 flex-shrink-0"
-                                            id="medicalCertIcon"></i>
+                                        <i class="bi text-danger fs-6 flex-shrink-0"
+                                            id="medical_certificateIcon"></i>
                                         <span class="text-body small fw-medium flex-grow-1">Medical certificate</span>
                                         <span
-                                            class="badge rounded-pill bg-success-subtle text-success flex-shrink-0 text-nowrap"
-                                            id="medicalCertStatus">Approved</span>
+                                            class="badge rounded-pill bg-danger-subtle text-danger flex-shrink-0 text-nowrap"
+                                            id="medical_certificateStatus">Not submitted</span>
                                     </div>
                                 </div>
 
                                 <div class="col">
                                     <div class="d-flex align-items-center gap-2 p-2 border rounded-3 h-100">
-                                        <i class="bi text-warning fs-6 flex-shrink-0" id="nbiIcon"></i>
+                                        <i class="bi text-danger fs-6 flex-shrink-0" id="nbi_clearanceIcon"></i>
                                         <span class="text-body small fw-medium flex-grow-1">NBI clearance</span>
                                         <span
-                                            class="badge rounded-pill bg-warning-subtle text-warning flex-shrink-0 text-nowrap"
-                                            id="nbiStatus">Submitted</span>
+                                            class="badge rounded-pill bg-danger-subtle text-danger flex-shrink-0 text-nowrap"
+                                            id="nbi_clearanceStatus">Not submitted</span>
                                     </div>
                                 </div>
                             </div>

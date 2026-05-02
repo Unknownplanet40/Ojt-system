@@ -83,7 +83,27 @@ $(document).ready(function() {
         $('#applicationsList').empty();
 
         if (filtered.length === 0) {
-            $('#applicationsList').html('<div class="col-12"><div class="alert alert-info border-info-subtle">No applications found matching your criteria.</div></div>');
+            const noDataHtml = `
+                <div class="col-12">
+                    <div class="card border-0 bg-transparent text-center py-5">
+                        <div class="mx-auto" style="max-width:480px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" fill="none" viewBox="0 0 24 24" class="mb-4 text-muted" aria-hidden="true">
+                                <path stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M8 3v4M16 3v4M21 21H3l3-8h12l3 8z" opacity=".15"/>
+                                <path stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M8 3v4M16 3v4M21 21H3l3-8h12l3 8z"/>
+                            </svg>
+                            <h5 class="mb-2 text-muted">No applications found</h5>
+                            <p class="text-muted small mb-4">We couldn't find any applications that match your filters or search. Try clearing filters or refreshing the list.</p>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button id="refreshApplicationsBtn" class="btn btn-sm btn-outline-primary">Refresh</button>
+                                <button id="clearFiltersBtn" class="btn btn-sm btn-outline-secondary">Clear filters</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('#applicationsList').html(noDataHtml);
+            $('#refreshApplicationsBtn').on('click', function () { loadApplications(); });
+            $('#clearFiltersBtn').on('click', function () { currentFilter = ''; currentSearch = ''; $('#applicationSearchInput').val(''); renderApplications(); });
             return;
         }
 
@@ -223,6 +243,62 @@ $(document).ready(function() {
         $('#StartModal').modal('show');
     });
 
+    // Ensure Back buttons that target the ReviewModal repopulate it from cache
+    $(document).on('click', '[data-bs-target="#ReviewModal"]', function (e) {
+        try {
+            // The button may live inside another modal (StartModal, ApproveModal, etc.)
+            const $srcModal = $(this).closest('.modal');
+            let uuid = $srcModal.data('application-uuid') || $('#ReviewModal').data('application-uuid');
+            if (!uuid) return;
+
+            const app = applicationsCache.find(a => a.uuid === uuid);
+            if (!app) {
+                // Attempt network fallback to fetch application details then open modal
+                fetchApplicationAndPopulate(uuid);
+                return;
+            }
+
+            // Repopulate review modal fields (same as view-details handler)
+            $('#stuName, #stuNamec1, #stuNamem2c1').text(app.full_name);
+            $('#stuNum, #stuNumc1, #stuNumm2c1').text(app.student_number);
+            $('#stuProg, #stuProgc1, #stuProgm2c1').text(app.program_code);
+            $('#stuSectionc1').text(app.year_label);
+            $('#stuMobilec1').text(app.student_mobile);
+            $('#stuEmailc1').text(app.student_email);
+
+            $('#stuCompanyc2, #stuCompanym2c2').text(app.company_name);
+            $('#stuIndustryc2').text(app.industry);
+            $('#stuLocationc2').text(app.company_city);
+            $('#stuWorkSetupc2, #stuWorkSetupm2c2').text(app.work_setup);
+            $('#stuSlotsc2, #stuSlotsm2c2').text(app.remaining_slots);
+            $('#stuAcceptsc2').text(app.accepted_programs);
+            $('#submittedAtc3').text('Submitted on: ' + app.created_at);
+            $('#stuPreferredDeptc3').text(app.preferred_department || '—');
+            $('#coverletterc3').text(app.cover_letter || 'No cover letter provided.');
+
+            // Fetch latest requirements for the student
+            loadStudentRequirements(app.student_uuid);
+
+            // Adjust action buttons
+            $('#returnBtn, #rejectBtn, #approveBtn, #endorseBtn, #startBtn').addClass('d-none');
+            if (app.status === 'pending') {
+                $('#returnBtn, #rejectBtn, #approveBtn').removeClass('d-none');
+            } else if (app.status === 'approved') {
+                $('#endorseBtn').removeClass('d-none');
+            } else if (app.status === 'endorsed') {
+                $('#startBtn').removeClass('d-none');
+            } else if (app.status === 'needs_revision') {
+                $('#rejectBtn').removeClass('d-none');
+            }
+
+            // Ensure modals have the application uuid
+            $('#ReviewModal, #ApproveModal, #ReturnModal, #RejectModal, #EndorseModal, #StartModal').data('application-uuid', uuid);
+        } catch (err) {
+            // silently ignore
+            console.error('Failed to repopulate ReviewModal from Back button', err);
+        }
+    });
+
     function downloadEndorsementLetter(appUuid) {
         if (!appUuid) {
             ToastVersion(swalTheme, 'Application not found.', 'error');
@@ -273,6 +349,64 @@ $(document).ready(function() {
             }
         });
     }
+
+        // Network fallback: fetch application details by UUID when it's not present in cache
+        function fetchApplicationAndPopulate(uuid) {
+            if (!uuid) return;
+            $.ajax({
+                url: '../../../Process/applications/get_application',
+                type: 'POST',
+                data: { csrf_token: csrfToken, student_uuid: '', batch_uuid: '', application_uuid: uuid },
+                dataType: 'json',
+                success: function (response) {
+                    if (response.status === 'success' && response.application) {
+                        const app = response.application;
+                        // add to cache if not exists
+                        if (!applicationsCache.find(a => a.uuid === app.uuid)) {
+                            applicationsCache.push(app);
+                        }
+
+                        // populate fields (same as view-details)
+                        $('#stuName, #stuNamec1, #stuNamem2c1').text(app.full_name || (app.first_name && app.last_name ? app.first_name + ' ' + app.last_name : 'N/A'));
+                        $('#stuNum, #stuNumc1, #stuNumm2c1').text(app.student_number || 'N/A');
+                        $('#stuProg, #stuProgc1, #stuProgm2c1').text(app.program_code || 'N/A');
+                        $('#stuSectionc1').text(app.year_label || 'N/A');
+                        $('#stuMobilec1').text(app.student_mobile || 'N/A');
+                        $('#stuEmailc1').text(app.student_email || 'N/A');
+
+                        $('#stuCompanyc2, #stuCompanym2c2').text(app.company_name || 'N/A');
+                        $('#stuIndustryc2').text(app.industry || 'N/A');
+                        $('#stuLocationc2').text(app.company_city || 'N/A');
+                        $('#stuWorkSetupc2, #stuWorkSetupm2c2').text(app.work_setup || 'N/A');
+                        $('#stuSlotsc2, #stuSlotsm2c2').text(app.remaining_slots || 'N/A');
+                        $('#stuAcceptsc2').text(app.accepted_programs || 'N/A');
+                        $('#submittedAtc3').text('Submitted on: ' + (app.created_at || 'N/A'));
+                        $('#stuPreferredDeptc3').text(app.preferred_department || '—');
+                        $('#coverletterc3').text(app.cover_letter || 'No cover letter provided.');
+
+                        loadStudentRequirements(app.student_uuid || app.student_uuid);
+
+                        $('#returnBtn, #rejectBtn, #approveBtn, #endorseBtn, #startBtn').addClass('d-none');
+                        if (app.status === 'pending') {
+                            $('#returnBtn, #rejectBtn, #approveBtn').removeClass('d-none');
+                        } else if (app.status === 'approved') {
+                            $('#endorseBtn').removeClass('d-none');
+                        } else if (app.status === 'endorsed') {
+                            $('#startBtn').removeClass('d-none');
+                        } else if (app.status === 'needs_revision') {
+                            $('#rejectBtn').removeClass('d-none');
+                        }
+
+                        $('#ReviewModal, #ApproveModal, #ReturnModal, #RejectModal, #EndorseModal, #StartModal').data('application-uuid', app.uuid);
+                    } else {
+                        Errors('Failed to fetch application details from server.', 'error');
+                    }
+                },
+                error: function () {
+                    Errors('Network error while fetching application details.', 'error');
+                }
+            });
+        }
 
     // Helper for Actions
     function updateApplicationStatus(modalId, newStatus, reasonOrNote = '', additionalData = {}) {

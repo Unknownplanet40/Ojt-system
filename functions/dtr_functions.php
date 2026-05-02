@@ -104,7 +104,7 @@ function submitDtrEntry(
     $timeIn         = trim($data['time_in'] ?? '');
     $timeOut        = trim($data['time_out'] ?? '');
     $lunchMinutes   = (int) ($data['lunch_break_minutes'] ?? 60);
-    $activities     = trim($data['activities'] ?? '');
+    $activities     = trim((string) ($data['activities'] ?? $data['activities_performed'] ?? ''));
     $backdateReason = trim($data['backdate_reason'] ?? '');
 
     $errors = [];
@@ -215,7 +215,7 @@ function editDtrEntry(
     $timeIn       = trim($data['time_in'] ?? $entry['time_in']);
     $timeOut      = trim($data['time_out'] ?? $entry['time_out']);
     $lunchMinutes = (int) ($data['lunch_break_minutes'] ?? $entry['lunch_break_minutes']);
-    $activities   = trim($data['activities'] ?? $entry['activities']);
+    $activities   = trim((string) ($data['activities'] ?? $data['activities_performed'] ?? $entry['activities']));
 
     $in  = strtotime("1970-01-01 {$timeIn}");
     $out = strtotime("1970-01-01 {$timeOut}");

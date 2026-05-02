@@ -162,26 +162,22 @@ $CurrentPage = "DTR_Approvals";
                     </div>
                 </div>
 
-                <div class="card bg-blur-5 bg-semi-transparent rounded-4" style="--blur-lvl: <?= $opacitylvl ?>;">
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0 table-hover">
-                                <thead>
-                                    <tr class="text-muted small text-uppercase">
-                                        <th class="ps-4" style="width: 1%;"><input class="form-check-input" type="checkbox" id="selectAllCoordinatorEntries"></th>
-                                        <th>Student</th>
-                                        <th>Date</th>
-                                        <th>Time</th>
-                                        <th>Hours</th>
-                                        <th>Activities</th>
-                                        <th>Status</th>
-                                        <th class="text-end pe-4">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="coordinatorDtrTableBody"></tbody>
-                            </table>
+                <div class="card bg-blur-5 bg-semi-transparent rounded-4 shadow-sm" style="--blur-lvl: <?= $opacitylvl ?>;">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <input class="form-check-input" type="checkbox" id="selectAllCoordinatorEntries">
+                                <div>
+                                    <h5 class="mb-1 fw-semibold">DTR records</h5>
+                                    <p class="mb-0 text-muted small">Review all entries across the batch, including pending, approved, and rejected logs.</p>
+                                </div>
+                            </div>
+                            <div class="text-muted small">
+                                <i class="bi bi-funnel me-1"></i>Filters update the list instantly
+                            </div>
                         </div>
-                        <div class="p-4 text-center d-none" id="coordinatorDtrEmptyState">
+                        <div id="coordinatorDtrList" class="dtr-list vstack gap-3"></div>
+                        <div class="p-4 text-center d-none dtr-empty-state" id="coordinatorDtrEmptyState">
                             <div class="mx-auto mb-3 d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle text-success" style="width: 64px; height: 64px;">
                                 <i class="bi bi-clipboard-data fs-4"></i>
                             </div>

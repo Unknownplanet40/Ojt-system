@@ -55,9 +55,9 @@ All frontend libraries are bundled locally inside `/libs`, so the project does n
 | View student dashboard | ❌ | ❌ | ✅ | ❌ |
 | Set up student profile | ❌ | ❌ | ✅ | ❌ |
 | Access company documents | ✅ | ✅ | ❌ | ❌ |
-| View supervisor dashboard | ❌ | ❌ | ❌ | 🔧 |
-
-> 🔧 = in progress
+| View supervisor dashboard | ❌ | ❌ | ❌ | ✅ |
+| Submit evaluations | ❌ | ❌ | ✅ | ✅ |
+| Track OJT progress (DTR/Journal) | ❌ | ❌ | ✅ | ❌ |
 
 ---
 
@@ -81,13 +81,29 @@ All frontend libraries are bundled locally inside `/libs`, so the project does n
 ### Student
 - **Requirements** — upload and track pre-OJT document submissions
 - **Applications** — apply to available companies, track timeline/status, withdraw when allowed, and download endorsement once endorsed
+- **Evaluations** — submit self-evaluation once final OJT requirements are met
+- **DTR & Journals** — log daily work hours and weekly reflections (unlocked after application approval)
 - **Profile** — profile setup tied to role and program
+
+### Supervisor
+- **Dashboard** — view assigned student list and their OJT progress
+- **Evaluations** — conduct Midterm (at 50% hours) and Final (at 100% hours) evaluations for assigned students
+- **Profile** — manage supervisor profile and company affiliation
+
+### Evaluation Module (New)
+- **Multi-role Rubric** — standardized 1-5 scale evaluation across 5 key performance criteria
+- **Hour-based Triggers** — evaluations are automatically unlocked based on student's logged DTR hours
+- **Self-Evaluation** — allows students to reflect on their own performance at the end of the OJT period
+- **Monitoring** — coordinators can view and download completed evaluations for grading purposes
 
 ### Security
 - Role-based access control across pages and endpoints
+- **OJT Process Locking** — DTR, Journals, and Evaluations are strictly locked until a student has an active/accepted application
+- **Milestone Enforcement** — Midterm/Final evaluations are locked until specific hour thresholds are met in the DTR
 - Sensitive documents are served through `file_serve.php` instead of direct static links
 - Document access is checked against the logged-in user role before files are streamed
 - Password hashing uses PHP's `password_hash()`
+- Standardized AJAX routing with clean URLs (no `.php` extensions)
 
 ---
 
@@ -228,7 +244,6 @@ Ojt-system/
 
 ## Known issues & limitations
 
-- **Supervisor module** — pages exist, but dashboard/core workflows are still incomplete
 - **Needs-attention alerts** — some criteria are still placeholder logic
 - **Dashboard activity feed** — currently limited and will expand over time
 - **Setup wizard** — planned for end-of-development; first admin account is currently seeded manually
@@ -238,6 +253,27 @@ Ojt-system/
 ---
 
 ## Changelog
+
+### Early May 2026 — Evaluation Module & UX Overhaul
+
+- **Evaluation Module Completion**
+  - Implemented full logic for Students (self-eval), Supervisors (midterm/final), and Coordinators (monitoring)
+  - Added criteria-based rubric scoring system with automatic average calculation
+  - Integrated with DTR hours for automatic "Lock/Unlock" triggers at 50% and 100% milestones
+  - Added module process guides for each role to explain evaluation triggers
+
+- **UX/UI Modernization**
+  - Replaced legacy table-based displays with responsive, high-performance card-based grids in:
+    - `Coordinator Evaluations`
+    - `Admin Audit Logs`
+  - Standardized "Glassmorphism" design language across all new dashboards
+  - Improved `Incomplete Requirements` modal with accurate real-time status indicators and danger/success color-coding
+
+- **Security & Access Control Hardening**
+  - Implemented **Active Application Lock**: DTR, Journals, and Evaluations now verify application status before allowing access
+  - Refactored student header to include a full-screen blurred security overlay for unauthorized page attempts
+  - Normalized all AJAX endpoints to use clean URLs (removed `.php` extensions) across the Student, Supervisor, and Coordinator dashboards
+  - Fixed database connection inconsistency (migrated all lingering PDO calls to the standard MySQLi `$conn` object)
 
 ### Unreleased — Working tree summary *(April 2026)*
 
