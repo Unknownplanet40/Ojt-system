@@ -64,7 +64,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label for="entryDate" class="form-label fw-medium">Entry date</label>
-                                <input type="date" class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="entryDate" name="entry_date" style="--blur-lvl: <?= $opacitylvl ?>">
+                                <input type="date" class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="entryDate" name="entry_date" value="<?= date('Y-m-d') ?>" style="--blur-lvl: <?= $opacitylvl ?>">
                                 <div class="invalid-feedback d-block small" id="entryDateError"></div>
                             </div>
                             <div class="col-md-4">

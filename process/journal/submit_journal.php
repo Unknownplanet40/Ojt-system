@@ -48,15 +48,6 @@ if (!isset($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'student') {
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
 
-$rateLimit = checkRateLimit('submit_journal', 10, 3600);
-if (!$rateLimit['allowed']) {
-    response([
-        'status'      => 'error',
-        'message'     => "Too many submissions. Try again in {$rateLimit['retry_after']} seconds.",
-        'retry_after' => $rateLimit['retry_after'],
-    ]);
-}
-
 $studentUuid = $_SESSION['profile_uuid'];
 $batchUuid   = $_SESSION['active_batch_uuid'] ?? '';
 

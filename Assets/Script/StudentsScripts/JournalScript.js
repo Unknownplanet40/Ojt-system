@@ -4,11 +4,94 @@ import { Errors } from "../ErrorFunctions.js";
 
 let swalTheme = SwalTheme();
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+const pageOjtStartDate = document.body?.dataset?.ojtStartDate || '';
+
+function pad2(n) {
+    return String(n).padStart(2, '0');
+}
+
+function formatLocalDate(date) {
+    return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+function parseDateInput(value) {
+    if (!value) return null;
+    const [year, month, day] = value.split('-').map(Number);
+    if (!year || !month || !day) return null;
+    return new Date(year, month - 1, day);
+}
+
+function clampDateString(value, minValue) {
+    if (!minValue || !value) return value;
+    return value < minValue ? minValue : value;
+}
+
+function getWeekStartDefault() {
+    const today = new Date();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+    const defaultValue = formatLocalDate(monday);
+    return clampDateString(defaultValue, pageOjtStartDate);
+}
+
+function addDays(dateValue, days) {
+    const date = parseDateInput(dateValue);
+    if (!date) return '';
+    date.setDate(date.getDate() + days);
+    return formatLocalDate(date);
+}
+
+function setJournalFieldError(field, message = '') {
+    const map = {
+        week_start: 'weekStartError',
+        week_end: 'weekEndError',
+        accomplishments: 'accomplishmentsError',
+    };
+
+    const el = document.getElementById(map[field]);
+    if (el) {
+        el.textContent = message || '';
+    }
+}
+
+function setJournalFieldError(field, message = '') {
+    const map = {
+        week_start: { errorId: 'weekStartError', inputId: 'weekStart' },
+        week_end: { errorId: 'weekEndError', inputId: 'weekEnd' },
+        accomplishments: { errorId: 'accomplishmentsError', inputId: 'accomplishments' },
+    };
+
+    const info = map[field];
+    if (!info) return;
+
+    const errEl = document.getElementById(info.errorId);
+    const inputEl = document.getElementById(info.inputId);
+
+    if (errEl) {
+        errEl.textContent = message || '';
+    }
+
+    if (inputEl) {
+        if (message) {
+            inputEl.classList.add('is-invalid');
+        } else {
+            inputEl.classList.remove('is-invalid');
+        }
+    }
+}
+
+function clearJournalFieldErrors() {
+    ['week_start', 'week_end', 'accomplishments'].forEach((field) => setJournalFieldError(field, ''));
+}
 
 $(document).ready(function () {
     let currentStatusFilter = '';
     let currentSearch = '';
     let journalsCache = [];
+
+    if (pageOjtStartDate) {
+        $('#weekStart').attr('min', pageOjtStartDate);
+    }
 
     loadJournals();
 
@@ -34,16 +117,12 @@ $(document).ready(function () {
         $('#returnFeedbackContainer').addClass('d-none');
         $('#journalEntryModalTitle').text('Weekly Journal Entry');
         $('#saveJournalEntryBtn').text('Submit Journal').data('mode', 'new');
-        
-        // Auto-select week start (Monday) and week end (Friday) for convenience (user can change it)
-        const today = new Date();
-        const monday = new Date(today);
-        monday.setDate(monday.getDate() - monday.getDay() + 1); // Get Monday
-        const friday = new Date(monday);
-        friday.setDate(friday.getDate() + 4); // Get Friday
+        clearJournalFieldErrors();
 
-        $('#weekStart').val(monday.toISOString().split('T')[0]);
-        $('#weekEnd').val(friday.toISOString().split('T')[0]);
+        const weekStart = getWeekStartDefault();
+        $('#weekStart').attr('min', pageOjtStartDate || '');
+        $('#weekStart').val(weekStart);
+        $('#weekEnd').val(addDays(weekStart, 4));
 
         $('#journalEntryModal').modal('show');
     });
@@ -53,6 +132,8 @@ $(document).ready(function () {
         let btn = $(this);
         let ogText = btn.text();
         let mode = btn.data('mode');
+
+        clearJournalFieldErrors();
         
         let data = {
             csrf_token: csrfToken,
@@ -84,12 +165,15 @@ $(document).ready(function () {
                     loadJournals();
                 } else {
                     if (response.errors) {
-                        let errorMsg = Object.values(response.errors).join('<br>');
-                        Errors(errorMsg, 'error');
-                    } else if (response.message) {
-                        Errors(response.message, 'error');
+                        Object.entries(response.errors).forEach(([field, message]) => {
+                            setJournalFieldError(field, message);
+                        });
+                    }
+
+                    if (response.message) {
+                        ToastVersion(swalTheme, response.message, 'error', 3500, 'top-end');
                     } else {
-                        Errors('Validation failed.', 'error');
+                        ToastVersion(swalTheme, 'Validation failed. Please review the highlighted fields.', 'error', 3500, 'top-end');
                     }
                 }
             },
@@ -100,6 +184,35 @@ $(document).ready(function () {
                 btn.prop('disabled', false).text(ogText);
             }
         });
+    });
+
+    $('#weekStart').on('change input', function () {
+        const weekStart = $(this).val();
+        if (!weekStart) return;
+
+        const normalizedStart = clampDateString(weekStart, pageOjtStartDate);
+        if (normalizedStart !== weekStart) {
+            $(this).val(normalizedStart);
+        }
+
+        const currentEnd = $('#weekEnd').val();
+        const minEnd = addDays(normalizedStart, 0);
+        const defaultEnd = addDays(normalizedStart, 4);
+        $('#weekEnd').attr('min', minEnd);
+
+        if (!currentEnd || currentEnd < normalizedStart) {
+            $('#weekEnd').val(defaultEnd);
+        }
+    });
+
+    $('#weekEnd').on('change input', function () {
+        const weekStart = $('#weekStart').val();
+        if (!weekStart || !$(this).val()) return;
+
+        const maxAllowedEnd = addDays(weekStart, 6);
+        if ($(this).val() > maxAllowedEnd) {
+            $(this).val(maxAllowedEnd);
+        }
     });
 
     // View Details
