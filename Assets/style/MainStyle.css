@@ -24,6 +24,69 @@ body {
   background-color: rgba(var(--bs-body-bg-rgb), var(--blur-lvl)) !important;
 }
 
+body.forgot-password-page {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+html:has(body.forgot-password-page),
+body.forgot-password-page {
+  overscroll-behavior: auto;
+  touch-action: pan-y;
+}
+
+body.forgot-password-page .container {
+  min-height: 100dvh;
+  padding-top: clamp(1rem, 3vw, 2rem);
+  padding-bottom: clamp(1rem, 3vw, 2rem);
+}
+
+@media (max-width: 767.98px) {
+  body.forgot-password-page .container {
+    align-items: flex-start;
+  }
+
+  .fp-shell {
+    width: 100%;
+    max-width: 460px;
+  }
+
+  .fp-card .card-body {
+    padding: 1.15rem !important;
+  }
+
+  .fp-icon {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+/* Forgot password / email flow */
+.fp-shell {
+  width: min(100%, 720px);
+}
+
+.fp-card {
+  border: 1px solid rgba(var(--bs-body-color-rgb), 0.08) !important;
+  border-radius: 1.25rem !important;
+}
+
+.fp-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 1rem !important;
+}
+
+.fp-input.form-control {
+  min-height: 3.25rem;
+  border-radius: 0.95rem;
+}
+
+.alert-success-subtle {
+  background: rgba(var(--bs-success-rgb), 0.08) !important;
+  color: var(--bs-success-text-emphasis) !important;
+}
+
 /* DTR list cards */
 .dtr-list {
   max-height: min(72vh, 760px);

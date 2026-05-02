@@ -56,5 +56,5 @@ if (!$result['success']) {
 response([
     'status'       => 'success',
     'message'      => $result['message'],
-    'redirect_url' => '../../Src/Pages/Auth/Login',
+    'redirect_url' => '../../Src/Pages/Login',
 ]);

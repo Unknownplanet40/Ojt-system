@@ -10,6 +10,25 @@ if (empty($_SESSION['user_uuid']) || ($_SESSION['user_role'] ?? '') !== 'student
 }
 
 require_once "../../../Assets/SystemInfo.php";
+require_once "../../../config/db.php";
+
+$ojtStartDate = null;
+$studentProfileUuid = $_SESSION['profile_uuid'] ?? '';
+$activeBatchUuid = $_SESSION['active_batch_uuid'] ?? '';
+
+if (!empty($studentProfileUuid) && !empty($activeBatchUuid) && isset($conn) && !$conn->connect_error) {
+    $stmt = $conn->prepare("\n        SELECT osc.start_date\n        FROM ojt_applications a\n        JOIN ojt_start_confirmations osc ON osc.application_uuid = a.uuid\n        WHERE a.student_uuid = ? AND a.batch_uuid = ? AND a.status = 'active'\n        LIMIT 1\n    ");
+    if ($stmt) {
+        $stmt->bind_param('ss', $studentProfileUuid, $activeBatchUuid);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $ojtStartDate = $row['start_date'] ?? null;
+    }
+}
+
+$ojtStartDateValue = $ojtStartDate ? date('Y-m-d', strtotime($ojtStartDate)) : '';
 
 $CurrentPage = "Journal";
 $greeting = "Good day";
@@ -35,7 +54,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
     <title><?= $ShortTitle ?></title>
 </head>
 
-<body class="login-page" data-role="<?= $_SESSION['user_role'] ?>" data-uuid="<?= $_SESSION['user_uuid'] ?>">
+<body class="login-page" data-role="<?= $_SESSION['user_role'] ?>" data-uuid="<?= $_SESSION['user_uuid'] ?>" data-ojt-start-date="<?= htmlspecialchars($ojtStartDateValue) ?>">
     <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
         <div class="circle circle1" data-speed="fast"></div>
         <div class="circle circle2" data-speed="normal"></div>
@@ -72,7 +91,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="weekStart" class="form-label fw-medium">Week Start Date</label>
-                                <input type="date" class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="weekStart" name="week_start" style="--blur-lvl: <?= $opacitylvl ?>">
+                                <input type="date" class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="weekStart" name="week_start" min="<?= htmlspecialchars($ojtStartDateValue) ?>" style="--blur-lvl: <?= $opacitylvl ?>">
                                 <div class="invalid-feedback d-block small" id="weekStartError"></div>
                             </div>
                             <div class="col-md-6">
@@ -227,10 +246,10 @@ if ($currentHour >= 5 && $currentHour < 12) {
                             <div class="col-12 col-md-4">
                                 <label class="form-label small fw-semibold text-uppercase text-muted" for="journalStatusFilter">Status</label>
                                 <select class="form-select bg-blur-5 bg-semi-transparent" id="journalStatusFilter" style="--blur-lvl: <?= $opacitylvl ?>;">
-                                    <option value="">All statuses</option>
-                                    <option value="submitted">Submitted</option>
-                                    <option value="approved">Approved</option>
-                                    <option value="returned">Returned</option>
+                                    <option class="CustomOption" value="">All statuses</option>
+                                    <option class="CustomOption" value="submitted">Submitted</option>
+                                    <option class="CustomOption" value="approved">Approved</option>
+                                    <option class="CustomOption" value="returned">Returned</option>
                                 </select>
                             </div>
                             <div class="col-12 col-md-4">

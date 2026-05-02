@@ -10,6 +10,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once __DIR__ . '/../helpers/helpers.php';
+require_once __DIR__ . '/../Assets/SystemInfo.php';
 
 function getRoleProfileConfig(string $role): ?array
 {
@@ -1057,9 +1058,11 @@ function sendResetEmail(string $toEmail, string $resetLink, string $expiresAt): 
     require_once dirname(__DIR__, 1) . '/Libs/composer/vendor/autoload.php';
 
     // temporary - replace with database-stored email credentials in production
-    $gmailUser = 'Your Gmail Address';
-    $gmailPass = 'Your Gmail App Password'; // your gmail password won't work, you must create an app password for this to work
+    //$gmailUser = 'your gmail address';
+    //$gmailPass = 'your gmail password'; // won't work, you must create an app password for this to work
 
+    require_once './credentials.php'; // contains $gmailUser and $gmailPass variables
+    
     try {
         $mail = new PHPMailer(true);
         $mail->isSMTP();
@@ -1091,7 +1094,16 @@ function sendResetEmail(string $toEmail, string $resetLink, string $expiresAt): 
 function buildResetEmailHtml(string $resetLink, string $expiresAt): string
 {
     $expiryFormatted = date('F j, Y g:i A', strtotime($expiresAt));
-    $SchoolName = 'Cavite State University - Imus Campus';
+    $schoolName = htmlspecialchars($SchoolName ?? 'OJT Management System', ENT_QUOTES, 'UTF-8');
+    $schoolMotto = htmlspecialchars($SchoolMotto ?? '', ENT_QUOTES, 'UTF-8');
+    $longTitle = htmlspecialchars($LongTitle ?? 'On-The-Job Training Management System', ENT_QUOTES, 'UTF-8');
+    $schoolAddress = htmlspecialchars($SchoolAddress ?? '', ENT_QUOTES, 'UTF-8');
+    $schoolWebsite = htmlspecialchars($SchoolWebsite ?? '', ENT_QUOTES, 'UTF-8');
+    $schoolEmail = htmlspecialchars($SchoolEmail ?? '', ENT_QUOTES, 'UTF-8');
+    $footerNote = htmlspecialchars($DocumentFooterNote ?? 'Officially issued by the OJT Coordinator Management System', ENT_QUOTES, 'UTF-8');
+    $verificationNote = htmlspecialchars($DocumentVerificationNote ?? 'Please verify document authenticity with the coordinator\'s office.', ENT_QUOTES, 'UTF-8');
+    $logoLeft = htmlspecialchars($SchoolLogoLeft ?? 'https://placehold.co/128x128/0F6E56/FFFFFF?text=LOGO', ENT_QUOTES, 'UTF-8');
+    $logoRight = htmlspecialchars($SchoolLogoRight ?? 'https://placehold.co/128x128/0F6E56/FFFFFF?text=LOGO', ENT_QUOTES, 'UTF-8');
     return <<<HTML
     <!DOCTYPE html>
     <html lang="en">
@@ -1100,51 +1112,77 @@ function buildResetEmailHtml(string $resetLink, string $expiresAt): string
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Reset Your Password</title>
         </head>
-        <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:40px 0;">
+        <body style="margin:0;padding:0;background-color:#eef4f1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef4f1;padding:36px 0;">
                 <tr>
                     <td align="center">
-                        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+                        <table width="640" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 12px 28px rgba(15,110,86,0.12);border:1px solid rgba(15,110,86,0.08);">
                              <tr>
-                                <td style="background-color:#0F6E56;padding:32px 40px;text-align:center;">
-                                    <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:600;letter-spacing:-0.3px;">On-the-Job Training (OJT)</h1>
-                                    <p style="margin:6px 0 0;color:#9FE1CB;font-size:13px;">{$SchoolName}</p>
+                                <td style="background:linear-gradient(135deg,#0F6E56 0%,#146b56 55%,#0d5a48 100%);padding:28px 40px;text-align:center;">
+                                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                                        <tr>
+                                            <td style="width:72px;text-align:left;vertical-align:middle;">
+                                                <img src="{$logoLeft}" alt="School logo" style="width:56px;height:56px;object-fit:contain;border-radius:14px;background:rgba(255,255,255,0.16);padding:8px;" />
+                                            </td>
+                                            <td style="text-align:center;vertical-align:middle;padding:0 10px;">
+                                                <div style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.3px;line-height:1.25;">{$schoolName}</div>
+                                                <div style="margin-top:4px;color:#D5F3E8;font-size:12px;font-weight:500;">{$schoolMotto}</div>
+                                                <div style="margin-top:8px;color:#BDE9DA;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;">{$longTitle}</div>
+                                            </td>
+                                            <td style="width:72px;text-align:right;vertical-align:middle;">
+                                                <img src="{$logoRight}" alt="School logo" style="width:56px;height:56px;object-fit:contain;border-radius:14px;background:rgba(255,255,255,0.16);padding:8px;" />
+                                            </td>
+                                        </tr>
+                                    </table>
                                 </td>
                             </tr>
                              <tr>
-                                <td style="padding:40px 40px 32px;">
-                                     <div style="text-align:center;margin-bottom:28px; display:none;">
-                                        <div style="display:inline-block;background-color:#E1F5EE;border-radius:50%;width:64px;height:64px;line-height:64px;text-align:center;">
-                                            <span style="font-size:28px;">&#128274;</span>
+                                <td style="padding:36px 40px 30px;">
+                                    <div style="background:#F5FBF8;border:1px solid #D9EFE4;border-radius:14px;padding:16px 18px;margin-bottom:24px;">
+                                        <div style="font-size:11px;font-weight:700;color:#0F6E56;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Password reset request</div>
+                                        <div style="font-size:13px;line-height:1.6;color:#475569;">We received a request to reset your password for the OJT system. Use the secure button below to create a new password.</div>
+                                    </div>
+
+                                     <div style="text-align:center;margin-bottom:22px;">
+                                        <div style="display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#E1F5EE,#F1FAF5);border:1px solid #CFE9DB;border-radius:18px;width:72px;height:72px;box-shadow:0 10px 20px rgba(15,110,86,0.08);">
+                                            <span style="font-size:30px;">&#128274;</span>
                                         </div>
                                     </div>
-                                    <h2 style="margin:0 0 8px;color:#111827;font-size:20px;font-weight:600;text-align:center;">Reset your password</h2>
-                                    <p style="margin:0 0 28px;color:#6b7280;font-size:14px;line-height:1.6;text-align:center;">We received a request to reset your password. Click the button below to choose a new one.</p>
-                                     <div style="text-align:center;margin-bottom:28px;">
+                                    <h2 style="margin:0 0 8px;color:#0f172a;font-size:22px;font-weight:700;text-align:center;">Reset your password</h2>
+                                    <p style="margin:0 0 26px;color:#64748b;font-size:14px;line-height:1.7;text-align:center;">Click the button below to open the password reset page and finish the process securely.</p>
+                                     <div style="text-align:center;margin-bottom:24px;">
                                         <a href="{$resetLink}"
-                                        style="display:inline-block;background-color:#0F6E56;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 36px;border-radius:8px;letter-spacing:0.1px;">Reset Password</a>
+                                        style="display:inline-block;background:linear-gradient(135deg,#0F6E56,#136f57);color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 34px;border-radius:10px;letter-spacing:0.2px;box-shadow:0 8px 18px rgba(15,110,86,0.22);">Reset Password</a>
                                     </div>
-                                     <p style="margin:0 0 8px;color:#6b7280;font-size:13px;text-align:center;">Or copy this link into your browser:</p>
-                                     <div style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px 14px;margin-bottom:28px;word-break:break-all;">
-                                        <a href="{$resetLink}" style="color:#0F6E56;font-size:12px;text-decoration:none;">
-                                            {$resetLink}</a>
+                                     <p style="margin:0 0 8px;color:#64748b;font-size:12px;text-align:center;">Or copy this link into your browser:</p>
+                                     <div style="background-color:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:22px;word-break:break-all;text-align:center;">
+                                        <a href="{$resetLink}" style="color:#0F6E56;font-size:12px;text-decoration:none;font-weight:600;line-height:1.5;">{$resetLink}</a>
                                         </div>
-                                         <div style="background-color:#FEF9EE;border:1px solid #FDE68A;border-radius:8px;padding:14px 16px;margin-bottom:28px;">
-                                            <p style="margin:0;color:#92400E;font-size:13px;line-height:1.5;">
-                                                ⏱ This link expires on <strong>{$expiryFormatted} (Philippine Time)</strong>.
+                                         <div style="background:linear-gradient(180deg,#FEFCEF,#FFF9E6);border:1px solid #F5D97B;border-radius:12px;padding:14px 16px;margin-bottom:22px;">
+                                            <p style="margin:0;color:#92400E;font-size:13px;line-height:1.6;text-align:center;">
+                                                This link expires on <strong>{$expiryFormatted} (Philippine Time)</strong>.
                                                 If it expires, you can request a new one from the login page.
                                             </p>
                                         </div>
-                                         <p style="margin:0;color:#9ca3af;font-size:13px;line-height:1.6;">
-                                            If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.
-                                        </p>
+                                         <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+                                            <p style="margin:0;color:#475569;font-size:12px;line-height:1.6;text-align:center;">
+                                                If you did not request a password reset, you can safely ignore this email.
+                                                Your password will remain unchanged.
+                                            </p>
+                                        </div>
+                                        <div style="border-top:1px solid #E2E8F0;padding-top:16px;color:#64748b;font-size:12px;line-height:1.7;text-align:center;">
+                                            <div><strong style="color:#0f172a;">{$schoolName}</strong> · {$schoolAddress}</div>
+                                            <div style="margin-top:3px;">{$schoolWebsite} · {$schoolEmail}</div>
+                                            <div style="margin-top:4px;">{$footerNote}</div>
+                                            <div style="margin-top:2px;">{$verificationNote}</div>
+                                        </div>
                                     </td>
                                 </tr>
                                  <tr>
-                                    <td style="background-color:#f9fafb;border-top:1px solid #f3f4f6;padding:20px 40px;text-align:center;">
-                                        <p style="margin:0;color:#9ca3af;font-size:12px;line-height:1.6;">
-                                            This email was sent by <strong style="color:#6b7280;">OJT Management System</strong>.
-                                            Do not reply to this email.
+                                    <td style="background-color:#f8fafc;border-top:1px solid #e2e8f0;padding:16px 40px;text-align:center;">
+                                        <p style="margin:0;color:#64748b;font-size:11px;line-height:1.6;">
+                                            This is an automated message from <strong style="color:#0f172a;">{$longTitle}</strong>.
+                                            Please do not reply to this email.
                                         </p>
                                     </td>
                                 </tr>
