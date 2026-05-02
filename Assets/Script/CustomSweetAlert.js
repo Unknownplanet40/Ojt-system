@@ -1,6 +1,7 @@
 // ---- config ----
 const maxVisibleToasts = 3;
 const maxActiveModals = 1;
+const useNewEffect = true;
 
 // ---- state ----
 const toastQueue = [];
@@ -98,6 +99,41 @@ function hashToast(t) {
   });
 }
 
+function attachGlassTilt(el) {
+  if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+
+  const maxTilt = 10;
+
+  function onMove(e) {
+    // ensure immediate response while moving
+    el.style.transition = "transform 0s";
+    const rect = el.getBoundingClientRect();
+
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+
+    const rx = (0.5 - py) * maxTilt;
+    const ry = (px - 0.5) * maxTilt;
+
+    el.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.02)`;
+
+    el.style.setProperty("--mx", `${px * 100}%`);
+    el.style.setProperty("--my", `${py * 100}%`);
+  }
+
+  function reset() {
+    // smooth reset so it doesn't feel instant
+    el.style.transition = "transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1)";
+    el.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)`;
+
+    el.style.setProperty("--mx", `50%`);
+    el.style.setProperty("--my", `50%`);
+  }
+
+  el.addEventListener("mousemove", onMove);
+  el.addEventListener("mouseleave", reset);
+}
+
 // ---- queue processors ----
 function processToastQueue() {
   if (activeToasts >= maxVisibleToasts) return;
@@ -153,6 +189,12 @@ export function ToastVersion(theme = "bootstrap-5-light", title = "This is a toa
     positionToApply = "top";
   }
 
+  const popupClass = useNewEffect
+    ? "glass-ui rounded-3 " + (topOffsetToApply !== "none" ? `mt-${topOffsetToApply}` : "")
+    : "bg-blur-5 bg-semi-transparent border-1 rounded-3 fade-bg " + (topOffsetToApply !== "none" ? `mt-${topOffsetToApply}` : "");
+
+  const progressClass = useNewEffect ? "rounded-3 glass-progress" : "rounded-3 bg-gradient";
+
   const entryAnimation = getEntryAnimationClass(positionToApply);
   const exitAnimation = getToastExitAnimationClass(positionToApply);
 
@@ -176,7 +218,7 @@ export function ToastVersion(theme = "bootstrap-5-light", title = "This is a toa
     showClass: { popup: "" },
     hideClass: { popup: exitAnimation },
     customClass: {
-      popup: "bg-blur-5 bg-semi-transparent border-1 rounded-3 fade-bg " + (topOffsetToApply !== "none" ? `mt-${topOffsetToApply}` : ""),
+      popup: popupClass,
       timerProgressBar: "rounded-3 bg-gradient",
       container: "overflow-hidden",
     },
@@ -184,6 +226,17 @@ export function ToastVersion(theme = "bootstrap-5-light", title = "This is a toa
       toastEl.classList.remove("bounce-in-top", "bounce-in-left", "bounce-in-right", "bounce-in-bottom", "bounce-in-fwd");
       void toastEl.offsetWidth;
       toastEl.classList.add(entryAnimation);
+
+      toastEl.addEventListener("mouseenter", () => {
+        Swal.stopTimer();
+      });
+      toastEl.addEventListener("mouseleave", () => {
+        Swal.resumeTimer();
+      });
+
+      if (useNewEffect) {
+        attachGlassTilt(toastEl);
+      }
     },
   });
 
@@ -209,16 +262,40 @@ export function ModalVersion(theme = "bootstrap-5-light", title = "This is a mod
     position: positionToApply,
     allowOutsideClick: timer === 0,
     customClass: {
-      popup: "bg-blur-5 bg-semi-transparent border-1 rounded-2",
+      popup: useNewEffect ? "glass-ui glass-ui-strong rounded-3" : "bg-blur-5 bg-semi-transparent border-1 rounded-2",
+      timerProgressBar: "rounded-3 bg-gradient",
       container: "overflow-hidden",
     },
     hideClass: { popup: exitAnimation },
+    didOpen: (modalEl) => {
+      modalEl.classList.remove("bounce-in-top", "bounce-in-left", "bounce-in-right", "bounce-in-bottom", "bounce-in-fwd");
+      void modalEl.offsetWidth;
+      modalEl.classList.add(getEntryAnimationClass(positionToApply));
+      if (useNewEffect) {
+        attachGlassTilt(modalEl);
+      }
+
+      modalEl.addEventListener("mouseenter", () => {
+        Swal.stopTimer();
+      });
+
+      modalEl.addEventListener("mouseleave", () => {
+        Swal.resumeTimer();
+      });
+    },
   });
 
   processModalQueue();
 }
 
-export function ConfirmVersion(theme = "bootstrap-5-light", title = "Are you sure?", text = "You won't be able to revert this!", icon = "warning", confirmText = "Yes, proceed", cancelText = "Cancel") {
+export function ConfirmVersion(
+  theme = "bootstrap-5-light",
+  title = "Are you sure?",
+  text = "You won't be able to revert this!",
+  icon = "warning",
+  confirmText = "Yes, proceed",
+  cancelText = "Cancel",
+) {
   const themeToApply = normalize(theme, VALID.themes, "bootstrap-5-light");
   const iconToApply = normalize(icon, VALID.icons, "warning");
 
@@ -230,13 +307,13 @@ export function ConfirmVersion(theme = "bootstrap-5-light", title = "Are you sur
     confirmButtonText: confirmText,
     cancelButtonText: cancelText,
     customClass: {
-      popup: "bg-blur-5 bg-semi-transparent border-1 rounded-3 shadow-lg",
+      popup: useNewEffect ? "glass-ui glass-ui-strong rounded-3 shadow-lg" : "bg-blur-5 bg-semi-transparent border-1 rounded-3 shadow-lg",
       container: "overflow-hidden",
       confirmButton: "btn btn-success px-4 py-2 rounded-3 me-2",
-      cancelButton: "btn btn-outline-secondary px-4 py-2 rounded-3"
+      cancelButton: "btn btn-outline-secondary px-4 py-2 rounded-3",
     },
     buttonsStyling: false,
     showClass: { popup: "bounce-in-fwd" },
-    hideClass: { popup: "slide-out-blurred-bottom" }
+    hideClass: { popup: "slide-out-blurred-bottom" },
   });
 }
