@@ -1,5 +1,6 @@
 <?php
 $status = $_SERVER['REDIRECT_STATUS'] ?? 0;
+require_once __DIR__ . '/../../Assets/SystemInfo.php';
 
 $path = '/Ojt-system/';
 ?>
@@ -15,6 +16,7 @@ $path = '/Ojt-system/';
     <link rel="stylesheet" href="<?php echo $path; ?>libs/driverjs/css/driver.css" />
     <link rel="stylesheet" href="<?php echo $path; ?>Assets/style/AniBG.css" />
     <link rel="stylesheet" href="<?php echo $path; ?>Assets/style/MainStyle.css" />
+    <title><?php echo htmlspecialchars(($ShortTitle ?? 'OJT Management System') . ' - Error'); ?></title>
 
     <script defer src="<?php echo $path; ?>libs/bootstrap/js/bootstrap.js"></script>
     <script defer src="<?php echo $path; ?>libs/sweetalert2/js/sweetalert2.all.min.js"></script>

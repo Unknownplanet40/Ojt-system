@@ -136,26 +136,22 @@ $CurrentPage = "DTR";
                     </div>
                 </div>
 
-                <div class="card bg-blur-5 bg-semi-transparent rounded-4" style="--blur-lvl: <?= $opacitylvl ?>;">
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0 table-hover">
-                                <thead>
-                                    <tr class="text-muted small text-uppercase">
-                                        <th class="ps-4" style="width: 1%;"><input class="form-check-input" type="checkbox" id="selectAllSupervisorEntries"></th>
-                                        <th>Student</th>
-                                        <th>Date</th>
-                                        <th>Time</th>
-                                        <th>Hours</th>
-                                        <th>Activity</th>
-                                        <th>Status</th>
-                                        <th class="text-end pe-4">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="supervisorDtrTableBody"></tbody>
-                            </table>
+                <div class="card bg-blur-5 bg-semi-transparent rounded-4 shadow-sm" style="--blur-lvl: <?= $opacitylvl ?>;">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <input class="form-check-input" type="checkbox" id="selectAllSupervisorEntries">
+                                <div>
+                                    <h5 class="mb-1 fw-semibold">Pending DTR reviews</h5>
+                                    <p class="mb-0 text-muted small">Approve logs, inspect activities, and flag anything that needs changes.</p>
+                                </div>
+                            </div>
+                            <div class="text-muted small">
+                                <i class="bi bi-shield-check me-1"></i>Only pending entries are shown here
+                            </div>
                         </div>
-                        <div class="p-4 text-center d-none" id="supervisorDtrEmptyState">
+                        <div id="supervisorDtrList" class="dtr-list vstack gap-3"></div>
+                        <div class="p-4 text-center d-none dtr-empty-state" id="supervisorDtrEmptyState">
                             <div class="mx-auto mb-3 d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary" style="width: 64px; height: 64px;">
                                 <i class="bi bi-clipboard-check fs-4"></i>
                             </div>

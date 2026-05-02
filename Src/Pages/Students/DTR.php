@@ -82,12 +82,12 @@ if ($currentHour >= 5 && $currentHour < 12) {
                             <div class="col-md-4">
                                 <label for="lunchBreakMinutes" class="form-label fw-medium">Lunch break</label>
                                 <select class="form-select bg-blur-5 bg-semi-transparent border shadow-none" id="lunchBreakMinutes" name="lunch_break_minutes" style="--blur-lvl: <?= $opacitylvl ?>">
-                                    <option value="0">No lunch break</option>
-                                    <option value="30">30 minutes</option>
-                                    <option value="45">45 minutes</option>
-                                    <option value="60" selected>1 hour</option>
-                                    <option value="90">1.5 hours</option>
-                                    <option value="120">2 hours</option>
+                                    <option class="CustomOption" value="0">No lunch break</option>
+                                    <option class="CustomOption" value="30">30 minutes</option>
+                                    <option class="CustomOption" value="45">45 minutes</option>
+                                    <option class="CustomOption" value="60" selected>1 hour</option>
+                                    <option class="CustomOption" value="90">1.5 hours</option>
+                                    <option class="CustomOption" value="120">2 hours</option>
                                 </select>
                                 <div class="invalid-feedback d-block small" id="lunchBreakMinutesError"></div>
                             </div>
@@ -215,30 +215,25 @@ if ($currentHour >= 5 && $currentHour < 12) {
                     </div>
                 </div>
 
-                <div class="card bg-blur-5 bg-semi-transparent rounded-4" style="--blur-lvl: <?= $opacitylvl ?>;">
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0 table-hover">
-                                <thead>
-                                    <tr class="text-muted small text-uppercase">
-                                        <th class="ps-4">Date</th>
-                                        <th>Time</th>
-                                        <th>Hours</th>
-                                        <th>Status</th>
-                                        <th>Activities</th>
-                                        <th class="text-end pe-4">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="studentDtrTableBody"></tbody>
-                            </table>
+                <div class="card bg-blur-5 bg-semi-transparent rounded-4 shadow-sm" style="--blur-lvl: <?= $opacitylvl ?>;">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
+                            <div>
+                                <h5 class="mb-1 fw-semibold">My DTR entries</h5>
+                                <p class="mb-0 text-muted small">Track submitted time logs, edit pending entries, and review your progress.</p>
+                            </div>
+                            <div class="text-muted small">
+                                <i class="bi bi-info-circle me-1"></i>Tap an action to manage an entry
+                            </div>
                         </div>
-                        <div class="p-4 text-center d-none" id="studentDtrEmptyState">
+                        <div id="studentDtrList" class="dtr-list vstack gap-3"></div>
+                        <div class="p-4 text-center d-none dtr-empty-state" id="studentDtrEmptyState">
                             <div class="mx-auto mb-3 d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary-subtle text-secondary" style="width: 64px; height: 64px;">
                                 <i class="bi bi-inboxes fs-4"></i>
                             </div>
                             <h5 class="mb-2">No DTR entries yet</h5>
                             <p class="text-muted mb-3">Your recorded time entries will appear here as soon as you submit them.</p>
-                            <button class="btn btn-success" id="emptyStateNewEntryBtn"><i class="bi bi-plus-lg me-1"></i>Log your first entry</button>
+                            <button class="btn btn-success rounded-pill px-4" id="emptyStateNewEntryBtn"><i class="bi bi-plus-lg me-1"></i>Log your first entry</button>
                         </div>
                     </div>
                 </div>

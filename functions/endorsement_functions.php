@@ -132,8 +132,15 @@ function buildEndorsementPdf(array $data): array
 
     $schoolName = $SchoolName ?? 'Your School Name Here';
     $LongTitle   = $LongTitle ?? 'Your System Long Title Here';
-    $LogoPath1      = 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
-    $LogoPath2      = 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
+    $SchoolMotto = $SchoolMotto ?? '';
+    $SchoolAddress = $SchoolAddress ?? '';
+    $SchoolWebsite = $SchoolWebsite ?? '';
+    $SchoolEmail = $SchoolEmail ?? '';
+    $SchoolPhone = $SchoolPhone ?? '';
+    $DocumentFooterNote = $DocumentFooterNote ?? 'Officially issued by the OJT Coordinator Management System';
+    $DocumentVerificationNote = $DocumentVerificationNote ?? 'Please verify document authenticity with the coordinator\'s office.';
+    $LogoPath1      = $SchoolLogoLeft ?? 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
+    $LogoPath2      = $SchoolLogoRight ?? 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
     $generatedAt = $dateToday;
 
     $html = <<<HTML
@@ -154,6 +161,7 @@ function buildEndorsementPdf(array $data): array
     .header-right { width: 20%; text-align: right; }
     .header-logo { width: 60px; height: 60px; object-fit: contain; }
     .school-name { font-size: 15px; font-weight: 700; color: #0F6E56; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+    .school-meta { font-size: 10px; color: #64748b; margin-top: 2px; }
     .doc-title { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 4px; letter-spacing: .01em; }
     .doc-subtitle { font-size: 11px; color: #6b7280; }
     .doc-meta { font-size: 10px; color: #64748b; margin-top: 2px; }
@@ -173,6 +181,7 @@ function buildEndorsementPdf(array $data): array
     .sig-title { font-size: 11px; color: #374151; line-height: 1.45; }
     .footer { margin-top: 24px; padding-top: 10px; border-top: 1px solid #cbd5e1; text-align: center; font-size: 9.5px; color: #64748b; line-height: 1.5; }
     .footer strong { color: #334155; }
+    .footer-contact { margin-top: 6px; font-size: 9px; color: #64748b; }
 </style>
 </head>
 <body>
@@ -186,6 +195,7 @@ function buildEndorsementPdf(array $data): array
                                 </td>
                                 <td class="header-center" style="line-height:1.35;">
                                 <div class="school-name">{$schoolName}</div>
+                                    <div class="school-meta">{$SchoolMotto}</div>
                                 <div class="doc-subtitle">Official Digital Credential Document</div>
                                 <div class="doc-meta">{$LongTitle} · Endorsement Letter</div>
                                 <div class="doc-meta">Issued on {$generatedAt}</div>
@@ -260,8 +270,12 @@ function buildEndorsementPdf(array $data): array
   </div>
 
   <div class="footer">
-        <strong>Official Issuance Notice:</strong> This endorsement is generated and issued by the OJT Coordinator Management System.<br>
-        Document generated on {$dateToday} · Please verify authenticity through the coordinator's office.
+        <strong>{$DocumentFooterNote}.</strong><br>
+        Document generated on {$dateToday}. {$DocumentVerificationNote}
+        <div class="footer-contact">
+            {$SchoolName} · {$SchoolAddress}<br>
+            {$SchoolWebsite} · {$SchoolEmail} · {$SchoolPhone}
+        </div>
   </div>
 
 </div>

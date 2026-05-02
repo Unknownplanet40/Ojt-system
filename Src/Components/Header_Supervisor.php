@@ -21,7 +21,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
           <a class="nav-link <?= $CurrentPage === 'SupervisorDashboard' ? 'active' : '' ?>" aria-current="page" href="../Supervisor/SupervisorDashboard">Dashboard</a>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle <?= in_array($CurrentPage, ['DTR', 'SupervisorDTR']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> OJT Process</a>
+          <a class="nav-link dropdown-toggle <?= in_array($CurrentPage, ['DTR', 'Journal', 'SupervisorDTR']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> OJT Process</a>
           <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
             <li>
               <a class="dropdown-item <?= $CurrentPage === 'DTR' ? 'nav-active' : '' ?>" href="../Supervisor/DTR">
@@ -30,6 +30,28 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
                   <div class="vstack">
                     <span>Daily Time Record</span>
                     <small class="text-muted" style="font-size: 0.7em">Review and approve student time logs.</small>
+                  </div>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item <?= $CurrentPage === 'Journal' ? 'nav-active' : '' ?>" href="../Supervisor/Journal">
+                <div class="hstack">
+                  <i class="bi bi-journal-text me-2"></i>
+                  <div class="vstack">
+                    <span>Journals</span>
+                    <small class="text-muted" style="font-size: 0.7em">View student daily journals and reflections.</small>
+                  </div>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item <?= $CurrentPage === 'Evaluation' ? 'nav-active' : '' ?>" href="../Supervisor/Evaluation">
+                <div class="hstack">
+                  <i class="bi bi-star-half me-2"></i>
+                  <div class="vstack">
+                    <span>Evaluations</span>
+                    <small class="text-muted" style="font-size: 0.7em">Evaluate student performance (Midterm/Final).</small>
                   </div>
                 </div>
               </a>

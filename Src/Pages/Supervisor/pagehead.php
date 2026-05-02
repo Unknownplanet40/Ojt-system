@@ -10,6 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once "../../../config/db.php";
 require_once "../../../functions/auth_functions.php";
+require_once "../../../Assets/SystemInfo.php";
 
 if (empty($_SESSION['user_uuid']) || ($_SESSION['user_role'] ?? '') !== 'supervisor') {
     header('Location: ../Login');
@@ -33,9 +34,12 @@ if (!$isProfileDone && !in_array($currentPage, $allowWithoutCompletedProfile, tr
 ?>
 
 <meta charset="UTF-8" />
-<meta name="csrf-token" content="<?= isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : '' ?>">
-<meta name="user-UUID" content="<?= isset($_SESSION['user_uuid']) ? $_SESSION['user_uuid'] : '' ?>">
-<meta name="user-Role" content="<?= isset($_SESSION['user_role']) ? $_SESSION['user_role'] : '' ?>">
+<meta name="csrf-token"
+	content="<?= isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : '' ?>">
+<meta name="user-UUID"
+	content="<?= isset($_SESSION['user_uuid']) ? $_SESSION['user_uuid'] : '' ?>">
+<meta name="user-Role"
+	content="<?= isset($_SESSION['user_role']) ? $_SESSION['user_role'] : '' ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="../../../libs/bootstrap/css/bootstrap.css" />
 <link rel="stylesheet" href="../../../libs/aos/css/aos.css" />
@@ -43,6 +47,7 @@ if (!$isProfileDone && !in_array($currentPage, $allowWithoutCompletedProfile, tr
 <link rel="stylesheet" href="../../../Assets/style/AniBG.css" />
 <link rel="stylesheet" href="../../../Assets/style/MainStyle.css" />
 <link rel="manifest" href="../../../Assets/manifest.json" />
+<link rel="shortcut icon" href="../../../Assets/Images/favicon.svg" type="image/x-icon">
 
 <script defer src="../../../libs/bootstrap/js/bootstrap.bundle.js"></script>
 <script defer src="../../../libs/sweetalert2/js/sweetalert2.all.min.js"></script>

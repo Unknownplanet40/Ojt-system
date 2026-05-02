@@ -43,7 +43,7 @@ function renderSummary() {
 }
 
 function renderEntries() {
-  const tbody = $('#supervisorDtrTableBody');
+  const list = $('#supervisorDtrList');
   const empty = $('#supervisorDtrEmptyState');
   const term = ($('#supervisorSearchInput').val() || '').toLowerCase();
   const status = $('#supervisorStatusFilter').val() || '';
@@ -56,7 +56,7 @@ function renderEntries() {
     return text.includes(term);
   });
 
-  tbody.empty();
+  list.empty();
   state.selected = new Set([...state.selected].filter((uuid) => filtered.some((entry) => entry.uuid === uuid)));
 
   if (!filtered.length) {
@@ -68,31 +68,52 @@ function renderEntries() {
 
   filtered.forEach((entry) => {
     const checked = state.selected.has(entry.uuid) ? 'checked' : '';
-    tbody.append(`
-      <tr>
-        <td class="ps-4"><input class="form-check-input supervisor-entry-check" type="checkbox" data-uuid="${entry.uuid}" ${checked}></td>
-        <td>
-          <div class="fw-semibold">${entry.full_name}</div>
-          <small class="text-muted">${entry.student_number || '—'} · ${entry.program_code || '—'}</small>
-        </td>
-        <td>
-          <div class="fw-semibold">${entry.entry_date_label}</div>
-          ${entry.is_backdated ? '<span class="badge rounded-pill bg-info-subtle text-info-emphasis mt-1">Backdated</span>' : ''}
-        </td>
-        <td>
-          <div class="small fw-semibold">${entry.time_in_label} - ${entry.time_out_label}</div>
-          <small class="text-muted">Lunch: ${entry.lunch_break_minutes} min</small>
-        </td>
-        <td><span class="fw-semibold">${entry.hours_label}</span></td>
-        <td><div class="text-truncate" style="max-width: 320px;">${entry.activities || '<span class="text-muted">No activities recorded</span>'}</div></td>
-        <td><span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">Pending</span></td>
-        <td class="text-end pe-4">
-          <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-success" data-action="review" data-uuid="${entry.uuid}">Review</button>
-            <button class="btn btn-outline-danger" data-action="reject" data-uuid="${entry.uuid}">Reject</button>
+    const activity = entry.activities || '<span class="text-muted">No activities recorded</span>';
+    const accent = 'info';
+    list.append(`
+      <div class="card dtr-entry-card bg-blur-5 bg-semi-transparent shadow-sm" data-accent="${accent}">
+        <div class="card-body">
+          <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 dtr-entry-header">
+            <div class="d-flex gap-3 flex-grow-1 align-items-start">
+              <div class="pt-1">
+                <input class="form-check-input supervisor-entry-check" type="checkbox" data-uuid="${entry.uuid}" ${checked}>
+              </div>
+              <div class="dtr-entry-icon bg-info-subtle text-info-emphasis">
+                <i class="bi bi-clipboard2-check fs-5"></i>
+              </div>
+              <div class="dtr-entry-title flex-grow-1">
+                <div class="dtr-chip-row mb-2">
+                  <span class="dtr-chip"><i class="bi bi-person"></i>${entry.full_name}</span>
+                  <span class="dtr-chip"><i class="bi bi-mortarboard"></i>${entry.program_code || '—'}</span>
+                  ${entry.is_backdated ? '<span class="badge rounded-pill bg-info-subtle text-info-emphasis">Backdated</span>' : ''}
+                </div>
+                <h5 class="mb-1 fw-semibold">${entry.full_name}</h5>
+                <p class="mb-0 text-muted dtr-entry-subtitle">${entry.student_number || '—'} · ${entry.program_code || '—'}</p>
+              </div>
+            </div>
+            <div class="text-lg-end">
+              <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">Pending</span>
+            </div>
           </div>
-        </td>
-      </tr>
+
+          <div class="dtr-entry-meta mt-3">
+            <div class="meta-box" data-importance="high"><span class="meta-label">Date</span><span class="meta-value">${entry.entry_date_label}</span></div>
+            <div class="meta-box"><span class="meta-label">Time</span><span class="meta-value">${entry.time_in_label} - ${entry.time_out_label}</span></div>
+            <div class="meta-box"><span class="meta-label">Hours</span><span class="meta-value">${entry.hours_label}</span></div>
+            <div class="meta-box"><span class="meta-label">Lunch break</span><span class="meta-value">${entry.lunch_break_minutes} min</span></div>
+          </div>
+
+          <div class="dtr-activity-preview mt-3">
+            <span class="meta-label mb-2">Activity</span>
+            <div class="activity-text">${activity}</div>
+          </div>
+
+          <div class="d-flex justify-content-end flex-wrap gap-2 dtr-entry-actions mt-3">
+            <button class="btn btn-sm btn-outline-success rounded-pill px-3" data-action="review" data-uuid="${entry.uuid}">Review</button>
+            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" data-action="reject" data-uuid="${entry.uuid}">Reject</button>
+          </div>
+        </div>
+      </div>
     `);
   });
 
@@ -229,25 +250,25 @@ $(document).ready(() => {
 
   $('#selectAllSupervisorEntries').on('change', function () {
     const checked = $(this).is(':checked');
-    const visible = $('#supervisorDtrTableBody .supervisor-entry-check').toArray().map((el) => $(el).data('uuid'));
+    const visible = $('#supervisorDtrList .supervisor-entry-check').toArray().map((el) => $(el).data('uuid'));
     visible.forEach((uuid) => {
       if (checked) state.selected.add(uuid); else state.selected.delete(uuid);
     });
     renderEntries();
   });
 
-  $('#supervisorDtrTableBody').on('change', '.supervisor-entry-check', function () {
+  $('#supervisorDtrList').on('change', '.supervisor-entry-check', function () {
     const uuid = $(this).data('uuid');
     if ($(this).is(':checked')) state.selected.add(uuid); else state.selected.delete(uuid);
     renderEntries();
   });
 
-  $('#supervisorDtrTableBody').on('click', 'button[data-action="review"]', function () {
+  $('#supervisorDtrList').on('click', 'button[data-action="review"]', function () {
     const entry = state.entries.find((item) => item.uuid === $(this).data('uuid'));
     if (entry) openDecision(entry);
   });
 
-  $('#supervisorDtrTableBody').on('click', 'button[data-action="reject"]', function () {
+  $('#supervisorDtrList').on('click', 'button[data-action="reject"]', function () {
     const entry = state.entries.find((item) => item.uuid === $(this).data('uuid'));
     if (!entry) return;
     openDecision(entry);

@@ -43,6 +43,16 @@ function clearFieldErrors() {
   ['entryDateError', 'timeInError', 'timeOutError', 'lunchBreakMinutesError', 'activitiesError', 'backdateReasonError'].forEach((id) => setFieldError(id, ''));
 }
 
+function pad2(n) { return String(n).padStart(2, '0'); }
+function getTodayYYYYMMDD() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+function getCurrentTimeHHMM() {
+  const d = new Date();
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
 function formValues() {
   return {
     dtr_uuid: document.getElementById('dtrEntryUuid')?.value || '',
@@ -50,7 +60,8 @@ function formValues() {
     time_in: document.getElementById('timeIn')?.value || '',
     time_out: document.getElementById('timeOut')?.value || '',
     lunch_break_minutes: document.getElementById('lunchBreakMinutes')?.value || '60',
-    activities: document.getElementById('activities')?.value || '',
+    activities: document.getElementById('activities')?.value ?? '',
+    activities_performed: document.getElementById('activities')?.value ?? '',
     backdate_reason: document.getElementById('backdateReason')?.value || '',
   };
 }
@@ -61,11 +72,18 @@ function setModalMode(mode, entry = null) {
   document.getElementById('dtrEntryModalTitle').textContent = mode === 'edit' ? 'Edit DTR entry' : 'Log DTR entry';
   document.getElementById('saveDtrEntryBtn').textContent = mode === 'edit' ? 'Update entry' : 'Save entry';
   document.getElementById('dtrEntryUuid').value = entry?.uuid || '';
-  document.getElementById('entryDate').value = entry?.entry_date || '';
-  document.getElementById('timeIn').value = entry?.time_in || '';
-  document.getElementById('timeOut').value = entry?.time_out || '';
+  // If creating a new entry, default date/time to current values for convenience
+  if (mode === 'create' && !entry) {
+    document.getElementById('entryDate').value = getTodayYYYYMMDD();
+    document.getElementById('timeIn').value = getCurrentTimeHHMM();
+    document.getElementById('timeOut').value = '';
+  } else {
+    document.getElementById('entryDate').value = entry?.entry_date || '';
+    document.getElementById('timeIn').value = entry?.time_in || '';
+    document.getElementById('timeOut').value = entry?.time_out || '';
+  }
   document.getElementById('lunchBreakMinutes').value = entry?.lunch_break_minutes ?? '60';
-  document.getElementById('activities').value = entry?.activities || '';
+  document.getElementById('activities').value = entry?.activities ?? '';
   document.getElementById('backdateReason').value = entry?.backdate_reason || '';
   clearFieldErrors();
 }
@@ -81,7 +99,7 @@ function statusBadge(entry) {
 
 function matchesSearch(entry, term) {
   if (!term) return true;
-  const haystack = [entry.entry_date_label, entry.time_in_label, entry.time_out_label, entry.activities, entry.status_label, entry.backdate_reason]
+  const haystack = [entry.entry_date_label, entry.time_in_label, entry.time_out_label, entry.activities ?? '', entry.status_label, entry.backdate_reason]
     .filter(Boolean)
     .join(' ')
     .toLowerCase();
@@ -99,7 +117,7 @@ function renderSummary(summary) {
 }
 
 function renderEntries() {
-  const tbody = $('#studentDtrTableBody');
+  const list = $('#studentDtrList');
   const empty = $('#studentDtrEmptyState');
   const term = $('#dtrSearchInput').val() || '';
   const status = $('#dtrStatusFilter').val() || '';
@@ -112,7 +130,7 @@ function renderEntries() {
     return true;
   });
 
-  tbody.empty();
+  list.empty();
   if (!filtered.length) {
     empty.removeClass('d-none');
     return;
@@ -120,34 +138,53 @@ function renderEntries() {
   empty.addClass('d-none');
 
   filtered.forEach((entry) => {
-    const isBackdated = entry.is_backdated ? '<span class="badge rounded-pill bg-info-subtle text-info-emphasis ms-2">Backdated</span>' : '';
-    tbody.append(`
-      <tr>
-        <td class="ps-4">
-          <div class="fw-semibold">${entry.entry_date_label}</div>
-          <small class="text-muted">Submitted ${entry.time_ago || ''}</small>
-        </td>
-        <td>
-          <div class="small fw-semibold">${entry.time_in_label} - ${entry.time_out_label}</div>
-          <small class="text-muted">Lunch: ${entry.lunch_break_minutes} min</small>
-        </td>
-        <td>
-          <span class="fw-semibold">${entry.hours_label}</span>
-        </td>
-        <td>
-          ${statusBadge(entry)} ${isBackdated}
-        </td>
-        <td>
-          <div class="text-truncate" style="max-width: 360px;">${entry.activities || '<span class="text-muted">No activities recorded</span>'}</div>
-          ${entry.backdate_reason ? `<small class="text-muted d-block">Reason: ${entry.backdate_reason}</small>` : ''}
-        </td>
-        <td class="text-end pe-4">
-          <div class="btn-group btn-group-sm">
-            ${entry.can_edit ? `<button class="btn btn-outline-success" data-action="edit" data-uuid="${entry.uuid}">Edit</button>` : ''}
-            ${entry.can_delete ? `<button class="btn btn-outline-danger" data-action="delete" data-uuid="${entry.uuid}">Delete</button>` : ''}
+    const accent = entry.status === 'approved' ? 'success' : entry.status === 'rejected' ? 'danger' : entry.is_backdated ? 'warning' : 'info';
+    const statusIcon = entry.status === 'approved' ? 'bi-check2-circle' : entry.status === 'rejected' ? 'bi-x-circle' : entry.is_backdated ? 'bi-clock-history' : 'bi-journal-text';
+    const isBackdated = entry.is_backdated ? '<span class="badge rounded-pill bg-info-subtle text-info-emphasis">Backdated</span>' : '';
+    const activity = entry.activities ?? '' ? entry.activities : '<span class="text-muted">No activities recorded</span>';
+
+    list.append(`
+      <div class="card dtr-entry-card bg-blur-5 bg-semi-transparent shadow-sm" data-accent="${accent}">
+        <div class="card-body">
+          <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 dtr-entry-header">
+            <div class="d-flex gap-3 align-items-start flex-grow-1">
+              <div class="dtr-entry-icon bg-${accent}-subtle text-${accent}-emphasis">
+                <i class="bi ${statusIcon} fs-5"></i>
+              </div>
+              <div class="dtr-entry-title flex-grow-1">
+                <div class="dtr-chip-row mb-2">
+                  <span class="dtr-chip"><i class="bi bi-calendar3"></i>${entry.entry_date_label}</span>
+                  <span class="dtr-chip"><i class="bi bi-clock"></i>${entry.time_ago || 'Recently submitted'}</span>
+                  ${entry.is_backdated ? '<span class="dtr-chip text-info-emphasis"><i class="bi bi-exclamation-triangle"></i>Backdated</span>' : ''}
+                </div>
+                <h5 class="mb-1 fw-semibold">${entry.status_label || entry.status}</h5>
+                <p class="mb-0 text-muted dtr-entry-subtitle">${entry.time_in_label} - ${entry.time_out_label} · ${entry.hours_label}</p>
+              </div>
+            </div>
+            <div class="text-lg-end">
+              ${statusBadge(entry)}
+            </div>
           </div>
-        </td>
-      </tr>
+
+          <div class="dtr-entry-meta mt-3">
+            <div class="meta-box" data-importance="high"><span class="meta-label">Time in / out</span><span class="meta-value">${entry.time_in_label} - ${entry.time_out_label}</span></div>
+            <div class="meta-box"><span class="meta-label">Hours rendered</span><span class="meta-value">${entry.hours_label}</span></div>
+            <div class="meta-box"><span class="meta-label">Lunch break</span><span class="meta-value">${entry.lunch_break_minutes} min</span></div>
+            <div class="meta-box"><span class="meta-label">Status</span><span class="meta-value">${entry.status_label || entry.status}</span></div>
+          </div>
+
+          <div class="dtr-activity-preview mt-3">
+            <span class="meta-label mb-2">Activities performed</span>
+            <div class="activity-text">${activity}</div>
+            ${entry.backdate_reason ? `<small class="text-muted d-block mt-2">Reason: ${entry.backdate_reason}</small>` : ''}
+          </div>
+
+          <div class="d-flex justify-content-end flex-wrap gap-2 dtr-entry-actions mt-3">
+            ${entry.can_edit ? `<button class="btn btn-sm btn-outline-success rounded-pill px-3" data-action="edit" data-uuid="${entry.uuid}">Edit</button>` : ''}
+            ${entry.can_delete ? `<button class="btn btn-sm btn-outline-danger rounded-pill px-3" data-action="delete" data-uuid="${entry.uuid}">Delete</button>` : ''}
+          </div>
+        </div>
+      </div>
     `);
   });
 }
@@ -258,14 +295,14 @@ $(document).ready(() => {
 
   $('#dtrStatusFilter, #dtrMonthFilter, #dtrSearchInput').on('input change', renderEntries);
 
-  $('#studentDtrTableBody').on('click', 'button[data-action="edit"]', function () {
+  $('#studentDtrList').on('click', 'button[data-action="edit"]', function () {
     const entry = state.entries.find((item) => item.uuid === $(this).data('uuid'));
     if (!entry) return;
     setModalMode('edit', entry);
     modal?.show();
   });
 
-  $('#studentDtrTableBody').on('click', 'button[data-action="delete"]', function () {
+  $('#studentDtrList').on('click', 'button[data-action="delete"]', function () {
     deleteEntry($(this).data('uuid'));
   });
 });

@@ -280,6 +280,16 @@ function formatAuditLogRow(array $row): array
         $actorRole = 'system';
     }
 
+    $rawModule = strtolower(trim((string)($row['module'] ?? 'system')));
+    if ($rawModule === 'authentication') {
+        $rawModule = 'auth';
+    }
+
+    $rawIp = $row['ip_address'] ?? null;
+    if ($rawIp === '::1' || $rawIp === '127.0.0.1') {
+        $rawIp = 'localhost';
+    }
+
     return [
         'row_id' => $row['row_id'],
         'source' => $row['source'],
@@ -293,11 +303,11 @@ function formatAuditLogRow(array $row): array
         'event_type' => $row['event_type'] ?? 'unknown',
         'event_label' => humanizeAuditToken((string)($row['event_type'] ?? 'unknown')),
         'description' => $row['description'] ?? '—',
-        'module' => $row['module'] ?? 'system',
-        'module_label' => humanizeAuditToken((string)($row['module'] ?? 'system')),
+        'module' => $rawModule,
+        'module_label' => humanizeAuditToken($rawModule),
         'meta' => $metaArray,
         'meta_raw' => $metaRaw,
-        'ip_address' => $row['ip_address'] ?? null,
+        'ip_address' => $rawIp,
         'user_agent' => $row['user_agent'] ?? null,
         'login_success' => isset($row['login_success']) ? (int)$row['login_success'] : null,
         'fail_reason' => $row['fail_reason'] ?? null,
