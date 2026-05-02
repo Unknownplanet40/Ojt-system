@@ -105,11 +105,16 @@ $(document).ready(function () {
   if (hostingEnvironment === 'github') {
     $("#status").text("It seems you are running this application on GitHub Pages, which does not support server-side functionality. Please run this application on a local server or a hosting service that supports PHP.");
     $("#dot").addClass("d-none");
+    $("#version1").removeClass("d-none");
     BGcircleTheme(true, "warning", "fast");
   } else if (hostingEnvironment === 'ngrok' || hostingEnvironment === 'vercel') {
     $("#status").text("It seems you are running this application on a hosting service that may have restrictions on server-side functionality. Please ensure that your hosting service supports PHP and that the server is properly configured.");
     $("#dot").addClass("d-none");
+    $("#version1").removeClass("d-none");
     BGcircleTheme(true, "warning", "fast");
+    setTimeout(function () {
+      checkServer();
+    }, 10000);
   } else if (hostingEnvironment === 'local') {
     window.location.href = "./Src/Pages/Login";
   } else {
