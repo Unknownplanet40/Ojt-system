@@ -21,7 +21,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
-require_once dirname(__DIR__, 2) . '/functions/company_functions.php';
+require_once dirname(__DIR__, 2) . '/functions/grade_functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -34,12 +34,6 @@ if (empty($_POST['csrf_token']) ||
     response(['status' => 'error', 'message' => 'Invalid request.']);
 }
 
-$allowedRoles = ['admin', 'coordinator'];
-if (!isset($_SESSION['user_uuid']) || !in_array($_SESSION['user_role'], $allowedRoles)) {
-    http_response_code(403);
-    response(['status' => 'error', 'message' => 'Unauthorized.']);
-}
-
 if (!$conn || $conn->connect_error) {
     response([
         'status'       => 'critical',
@@ -49,33 +43,44 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
-$companyUuid = trim($_POST['company_uuid'] ?? '');
-
-if (empty($companyUuid)) {
-    response(['status' => 'error', 'message' => 'Company UUID is required.']);
+if (!isset($_SESSION['user_uuid'])) {
+    http_response_code(401);
+    response(['status' => 'error', 'message' => 'Unauthenticated.']);
 }
 
-if (empty($_FILES['document_file']) || $_FILES['document_file']['error'] === UPLOAD_ERR_NO_FILE) {
-    response(['status' => 'error', 'message' => 'No file uploaded.']);
+$role = $_SESSION['user_role'];
+
+// student always sees own grade
+$studentUuid = $role === 'student'
+    ? $_SESSION['profile_uuid']
+    : trim($_POST['student_uuid'] ?? '');
+
+$batchUuid = trim($_POST['batch_uuid'] ?? '') ?: ($_SESSION['active_batch_uuid'] ?? '');
+
+if (empty($studentUuid) || empty($batchUuid)) {
+    response(['status' => 'error', 'message' => 'Student UUID and batch UUID are required.']);
 }
 
-$result = uploadCompanyDocument(
-    $conn,
-    $companyUuid,
-    $_POST,
-    $_FILES['document_file'],
-    $_SESSION['user_uuid']
-);
+$studentView = $role === 'student';
+$grade       = getStudentGrade($conn, $studentUuid, $batchUuid, $studentView);
 
-if (!$result['success']) {
+if ($role === 'student' && !$grade) {
     response([
-        'status'  => 'error',
-        'message' => $result['error'],
+        'status'      => 'success',
+        'grade'       => null,
+        'has_grade'   => false,
+        'message'     => 'Your grade has not been finalized yet.',
     ]);
 }
 
+$readiness = null;
+if (in_array($role, ['coordinator', 'admin']) && !$grade) {
+    $readiness = isReadyForGrading($conn, $studentUuid, $batchUuid);
+}
+
 response([
-    'status'  => 'success',
-    'message' => 'Document uploaded successfully.',
-    'uuid'    => $result['uuid'],
+    'status'    => 'success',
+    'grade'     => $grade,
+    'has_grade' => !is_null($grade),
+    'readiness' => $readiness,
 ]);

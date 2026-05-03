@@ -177,24 +177,6 @@ if (actionFromUrl) {
   window.history.replaceState({}, document.title, newUrl);
 }
 
-function showError(inputSelector, message) {
-  if (!inputSelector) {
-    ToastVersion(swalTheme, message, "info", 3000, "top");
-    return;
-  }
-
-  if (inputSelector === "#photoInput") {
-    ToastVersion(swalTheme, "Invalid file. Please select a valid image file (jpg, png, gif) that is less than 5MB.", "info", 3000, "top");
-    return;
-  } else {
-    $(inputSelector).addClass("is-invalid");
-    ToastVersion(swalTheme, message, "info", 3000, "top");
-    setTimeout(() => {
-      $(inputSelector).removeClass("is-invalid");
-    }, 3000);
-    return;
-  }
-}
 
 function ProfileProgressBar(fill = 0) {
   const progressBar = $("#profileProgressBar");

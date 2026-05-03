@@ -21,7 +21,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle <?= in_array($CurrentPage, ['MyStudents', 'Requirements']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> Students</a>
           <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
-              <a class="dropdown-item" href="javascript:void(0)">
+              <a class="dropdown-item <?= $CurrentPage === 'MyStudents' ? 'nav-active' : '' ?>" href="../Coordinator/MyStudents">
                 <div class="hstack">
                   <i class="bi bi-person-badge me-2"></i>
                   <div class="vstack">
@@ -122,7 +122,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
           <a class="nav-link dropdown-toggle text-capitalize <?= in_array($CurrentPage, ['Companies', 'visits']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> Companies</a>
           <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
             <li>
-              <a class="dropdown-item <?= $CurrentPage === 'Companies' ? 'nav-active' : '' ?>" href="javascript:void(0)">
+              <a class="dropdown-item <?= $CurrentPage === 'Companies' ? 'nav-active' : '' ?>" href="../Coordinator/Companies">
                  <div class="hstack">
                   <i class="bi bi-building me-2"></i>
                   <div class="vstack">

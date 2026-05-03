@@ -294,12 +294,17 @@ export function ConfirmVersion(
   text = "You won't be able to revert this!",
   icon = "warning",
   confirmText = "Yes, proceed",
+  confirmColor = "success",
+  cancelColor = "danger",
   cancelText = "Cancel",
+  position = "center",
 ) {
   const themeToApply = normalize(theme, VALID.themes, "bootstrap-5-light");
   const iconToApply = normalize(icon, VALID.icons, "warning");
+  const positionToApply = normalize(position, VALID.positions, "center");
 
   return Swal.fire({
+    theme: themeToApply,
     title,
     text,
     icon: iconToApply,
@@ -307,13 +312,21 @@ export function ConfirmVersion(
     confirmButtonText: confirmText,
     cancelButtonText: cancelText,
     customClass: {
-      popup: useNewEffect ? "glass-ui glass-ui-strong rounded-3 shadow-lg" : "bg-blur-5 bg-semi-transparent border-1 rounded-3 shadow-lg",
-      container: "overflow-hidden",
-      confirmButton: "btn btn-success px-4 py-2 rounded-3 me-2",
-      cancelButton: "btn btn-outline-secondary px-4 py-2 rounded-3",
+      popup: useNewEffect ? "glass-ui glass-ui-strong rounded-3" : "bg-blur-5 bg-semi-transparent border-1 rounded-2",
+      timerProgressBar: "rounded-3 bg-gradient",
+      confirmButton: `btn btn-${confirmColor} px-4 py-2 rounded-3 me-2`,
+      cancelButton: `btn btn-outline-${cancelColor} px-4 py-2 rounded-3`,
     },
     buttonsStyling: false,
     showClass: { popup: "bounce-in-fwd" },
     hideClass: { popup: "slide-out-blurred-bottom" },
+    didOpen: (modalEl) => {
+      modalEl.classList.remove("bounce-in-top", "bounce-in-left", "bounce-in-right", "bounce-in-bottom", "bounce-in-fwd");
+      void modalEl.offsetWidth;
+      modalEl.classList.add(getEntryAnimationClass(positionToApply));
+      if (useNewEffect) {
+        attachGlassTilt(modalEl);
+      }
+    },
   });
 }

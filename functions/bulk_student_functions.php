@@ -37,14 +37,13 @@ function parseCsvFile(string $filePath): array
         $lineNum++;
 
         if ($lineNum === 1) {
-            // first row is headers — normalize
             $headers = array_map(fn ($h) => strtolower(trim($h)), $data);
             continue;
         }
 
         if (empty(array_filter($data))) {
             continue;
-        } // skip blank rows
+        }
 
         $row = [];
         foreach ($headers as $i => $header) {
@@ -383,7 +382,7 @@ function createBulkStudents($conn, array $validRows, string $actorUuid): array
     ];
 }
 
-function generateBulkTemplate($conn): string
+function generateBulkTemplate($conn, string $defaultCoordinatorUuid = null): string
 {
     $result   = $conn->query("SELECT code FROM programs WHERE is_active = 1 ORDER BY code");
     $codes    = [];
@@ -395,10 +394,14 @@ function generateBulkTemplate($conn): string
     $coordResult = $conn->query("SELECT uuid, first_name, last_name FROM coordinator_profiles ORDER BY first_name");
     $coordinators = [];
     $coordinatorNames = [];
+    $defaultName = 'John Doe';
     while ($row = $coordResult->fetch_assoc()) {
         $fullName = trim($row['first_name'] . ' ' . $row['last_name']);
         $coordinators[$row['uuid']] = $fullName;
         $coordinatorNames[] = $fullName;
+        if ($defaultCoordinatorUuid === $row['uuid']) {
+            $defaultName = $fullName;
+        }
     }
     $coordinatorList = implode(' / ', $coordinatorNames);
 
@@ -412,7 +415,6 @@ function generateBulkTemplate($conn): string
         'year_level',
         'section',
         'mobile',
-        'coordinator_name',
     ];
 
     $sample = [
@@ -425,7 +427,6 @@ function generateBulkTemplate($conn): string
         '4',
         'A',
         '09171234567',
-        'John Doe',
     ];
 
     $instructions = [
@@ -438,8 +439,14 @@ function generateBulkTemplate($conn): string
         '(Required - 1 2 3 or 4)',
         '(Optional)',
         '(Optional)',
-        "(Required - use: {$coordinatorList})",
     ];
+
+    // Only add coordinator_name if we are NOT a specific coordinator (i.e., we are admin)
+    if ($defaultCoordinatorUuid === null) {
+        $headers[] = 'coordinator_name';
+        $instructions[] = "(Required - use: {$coordinatorList})";
+        $sample[] = 'John Doe';
+    }
 
     $output  = '';
     $output .= implode(',', $headers) . "\n";

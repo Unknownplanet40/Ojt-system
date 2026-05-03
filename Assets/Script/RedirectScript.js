@@ -84,15 +84,15 @@ function detectHostingEnvironment() {
     return 'local';
   }
 
-  if (hostname.includes('ngrok')) {
+  if (hostname.endsWith('.ngrok.io') || hostname.endsWith('.ngrok-free.app')) {
     return 'ngrok';
   }
 
-  if (hostname.includes('vercel')) {
+  if (hostname.endsWith('.vercel.app')) {
     return 'vercel';
   }
 
-  if (hostname.includes('github.io')) {
+  if (hostname.endsWith('github.io')) {
     return 'github';
   }
 

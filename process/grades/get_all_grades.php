@@ -21,7 +21,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
-require_once dirname(__DIR__, 2) . '/functions/student_functions.php';
+require_once dirname(__DIR__, 2) . '/functions/grade_functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -34,37 +34,44 @@ if (empty($_POST['csrf_token']) ||
     response(['status' => 'error', 'message' => 'Invalid request.']);
 }
 
-if (!isset($_SESSION['user_uuid']) || !in_array($_SESSION['user_role'], ['admin', 'coordinator'])) {
-    http_response_code(403);
-    response(['status' => 'error', 'message' => 'Unauthorized.']);
-}
-
 if (!$conn || $conn->connect_error) {
     response([
         'status'       => 'critical',
         'message'      => 'Database connection failed.',
-        'details'      => $conn->connect_error ?? 'Unknown error',
-        'suggestion'   => 'Please try again later or contact support if the issue persists.'
+        'Details'      => $conn->connect_error ?? 'Unknown error',
+        'Suggestion'   => 'Please try again later or contact support if the issue persists.'
     ]);
 }
 
-$profileUuid = trim($_POST['profile_uuid'] ?? '');
-
-if (empty($profileUuid)) {
-    response(['status' => 'error', 'message' => 'Profile UUID is required.']);
+if (!isset($_SESSION['user_uuid'])) {
+    http_response_code(401);
+    response(['status' => 'error', 'message' => 'Unauthenticated.']);
 }
 
-$result = updateStudent($conn, $profileUuid, $_POST, $_SESSION['user_uuid']);
-
-if (!$result['success']) {
-    response([
-        'status'  => 'error',
-        'errors'  => $result['errors'],
-        'message' => reset($result['errors']),
-    ]);
+if (!in_array($_SESSION['user_role'], ['coordinator', 'admin'])) {
+    http_response_code(403);
+    response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
+
+$batchUuid = trim($_POST['batch_uuid'] ?? '');
+
+if (empty($batchUuid)) {
+    $result    = $conn->query("SELECT uuid FROM batches WHERE status = 'active' LIMIT 1");
+    $batchUuid = $result->fetch_assoc()['uuid'] ?? null;
+}
+
+if (empty($batchUuid)) {
+    response(['status' => 'error', 'message' => 'No active batch found.']);
+}
+
+$coordinatorUuid = $_SESSION['user_role'] === 'coordinator'
+    ? $_SESSION['profile_uuid']
+    : null;
+
+$grades = getAllGrades($conn, $batchUuid, $coordinatorUuid);
 
 response([
-    'status'  => 'success',
-    'message' => 'Student updated successfully.',
+    'status' => 'success',
+    'grades' => $grades,
+    'total'  => count($grades),
 ]);

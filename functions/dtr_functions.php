@@ -564,6 +564,41 @@ function getSupervisorPendingDtr($conn, string $supervisorUuid, string $batchUui
     return $entries;
 }
 
+function getSupervisorDtrHistory($conn, string $supervisorUuid, string $batchUuid): array
+{
+    $safeSupervisor = $conn->real_escape_string($supervisorUuid);
+    $safeBatch      = $conn->real_escape_string($batchUuid);
+
+    $result = $conn->query("
+        SELECT
+          d.*,
+          sp.first_name,
+          sp.last_name,
+          sp.student_number,
+          p.code AS program_code
+        FROM dtr_entries d
+        JOIN student_profiles sp
+          ON d.student_uuid = sp.uuid
+          AND sp.supervisor_uuid = '{$safeSupervisor}'
+        LEFT JOIN programs p ON sp.program_uuid = p.uuid
+        WHERE d.batch_uuid = '{$safeBatch}'
+          AND d.status IN ('approved', 'rejected')
+        ORDER BY d.entry_date DESC, d.submitted_at DESC
+        LIMIT 100
+    ");
+
+    $entries = [];
+    while ($row = $result->fetch_assoc()) {
+        $entry = formatDtrEntry($row);
+        $entry['full_name']      = $row['first_name'] . ' ' . $row['last_name'];
+        $entry['student_number'] = $row['student_number'];
+        $entry['program_code']   = $row['program_code'] ?? '—';
+        $entries[]               = $entry;
+    }
+
+    return $entries;
+}
+
 function logDtrAudit(
     $conn,
     string $dtrUuid,
