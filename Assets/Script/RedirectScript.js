@@ -92,7 +92,7 @@ function detectHostingEnvironment() {
     return 'vercel';
   }
 
-  if (hostname.endsWith('github.io')) {
+  if (hostname === 'github.io' || hostname.endsWith('.github.io')) {
     return 'github';
   }
 
