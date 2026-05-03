@@ -92,6 +92,8 @@ function getAllStudents($conn, string $batchUuid = null, array $filters = []): a
           sp.coordinator_uuid,
           sp.company_uuid,
           sp.program_uuid,
+          sp.batch_uuid,
+          sp.profile_path,
           sp.profile_name,
 
           u.uuid             AS user_uuid,
@@ -154,6 +156,12 @@ function getStudent($conn, string $profileUuid): ?array
           
 
           c.name         AS company_name,
+          c.address      AS company_address,
+
+          svp.first_name AS supervisor_first_name,
+          svp.last_name  AS supervisor_last_name,
+          svp.mobile     AS supervisor_mobile,
+          su.email       AS supervisor_email,
 
           CASE
             WHEN u.is_active = 0         THEN 'inactive'
@@ -167,6 +175,8 @@ function getStudent($conn, string $profileUuid): ?array
         LEFT JOIN batches b            ON sp.batch_uuid       = b.uuid
         LEFT JOIN coordinator_profiles cp ON sp.coordinator_uuid = cp.uuid
         LEFT JOIN companies c          ON sp.company_uuid     = c.uuid
+        LEFT JOIN supervisor_profiles svp ON sp.supervisor_uuid = svp.uuid
+        LEFT JOIN users su             ON svp.user_uuid       = su.uuid
         WHERE sp.uuid = ?
         LIMIT 1
     ");
@@ -186,6 +196,12 @@ function getStudent($conn, string $profileUuid): ?array
     $student['required_hours']        = (int) ($row['required_hours'] ?? 486);
     $student['department']            = $row['department']         ?? '—';
     $student['company_name']          = $row['company_name']       ?? null;
+    $student['company_address']       = $row['company_address']    ?? '—';
+    $student['supervisor_first_name'] = $row['supervisor_first_name'] ?? null;
+    $student['supervisor_last_name']  = $row['supervisor_last_name']  ?? null;
+    $student['supervisor_mobile']     = $row['supervisor_mobile']     ?? null;
+    $student['supervisor_email']      = $row['supervisor_email']      ?? null;
+
     $student['must_change_password']  = (int) $row['must_change_password'];
     $student['batch_label']           = $row['school_year']
                                           ? "AY {$row['school_year']} {$row['semester']} Semester"
@@ -558,6 +574,7 @@ function formatStudent(array $row): array
         'first_name'      => $row['first_name'],
         'last_name'       => $row['last_name'],
         'middle_name'     => $row['middle_name'] ?? '',
+        'profile_path'    => $row['profile_path'] ?? '',
         'profile_name'    => $row['profile_name'] ?? '',
         'initials'        => strtoupper(substr($row['first_name'],0,1) . substr($row['last_name'],0,1)),
         'email'           => $row['email'],
@@ -568,6 +585,7 @@ function formatStudent(array $row): array
         'program_uuid'    => $row['program_uuid']     ?? null,
         'program_code'    => $row['program_code']     ?? '—',
         'program_name'    => $row['program_name']     ?? '—',
+        'batch_uuid'      => $row['batch_uuid']       ?? null,
         'coordinator_uuid'=> $row['coordinator_uuid'] ?? null,
         'coordinator_name'=> $row['coordinator_name'] ?? '—',
         'is_active'       => (int) $row['is_active'],

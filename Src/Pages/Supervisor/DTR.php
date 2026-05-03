@@ -22,6 +22,55 @@ $CurrentPage = "DTR";
     <script type="module" src="../../../Assets/Script/dashboardScripts/SupervisorDashboard.js"></script>
     <script type="module" src="../../../Assets/Script/SupervisorScripts/DTRScripts.js"></script>
     <title><?= $ShortTitle ?></title>
+    <style>
+        .nav-pills .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .nav-pills .nav-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #0d6efd !important;
+            color: #fff !important;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+        }
+
+        .nav-pills .nav-link .badge {
+            transition: all 0.3s ease;
+            font-size: 0.7rem;
+            padding: 0.35em 0.65em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-pills .nav-link.active .badge {
+            background-color: rgba(255, 255, 255, 0.2) !important;
+            color: #fff !important;
+        }
+
+        .badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            vertical-align: middle !important;
+            line-height: 1 !important;
+        }
+
+        .dtr-chip {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px;
+        }
+    </style>
 </head>
 
 <body class="login-page" data-role="<?= $_SESSION['user_role'] ?>" data-uuid="<?= $_SESSION['user_uuid'] ?>">
@@ -121,8 +170,8 @@ $CurrentPage = "DTR";
                             <div class="col-6 col-md-3">
                                 <label class="form-label small fw-semibold text-uppercase text-muted" for="supervisorStatusFilter">Status</label>
                                 <select class="form-select bg-blur-5 bg-semi-transparent" id="supervisorStatusFilter" style="--blur-lvl: <?= $opacitylvl ?>;">
-                                    <option value="">All</option>
-                                    <option value="pending" selected>Pending</option>
+                                    <option class="CustomOption" value="">All</option>
+                                    <option class="CustomOption" value="pending" selected>Pending</option>
                                 </select>
                             </div>
                             <div class="col-6 col-md-3">
@@ -137,26 +186,50 @@ $CurrentPage = "DTR";
                 </div>
 
                 <div class="card bg-blur-5 bg-semi-transparent rounded-4 shadow-sm" style="--blur-lvl: <?= $opacitylvl ?>;">
-                    <div class="card-body p-3 p-md-4">
-                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
-                            <div class="d-flex align-items-center gap-2">
-                                <input class="form-check-input" type="checkbox" id="selectAllSupervisorEntries">
-                                <div>
-                                    <h5 class="mb-1 fw-semibold">Pending DTR reviews</h5>
-                                    <p class="mb-0 text-muted small">Approve logs, inspect activities, and flag anything that needs changes.</p>
+                    <div class="card-body p-0">
+                        <div class="p-3 p-md-4 border-bottom border-light border-opacity-10">
+                            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input class="form-check-input" type="checkbox" id="selectAllSupervisorEntries">
+                                    <div>
+                                        <h5 class="mb-1 fw-semibold">DTR Records</h5>
+                                        <p class="mb-0 text-muted small">Manage and track student attendance logs.</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="text-muted small">
-                                <i class="bi bi-shield-check me-1"></i>Only pending entries are shown here
+                                <ul class="nav nav-pills bg-light bg-opacity-10 p-1 rounded-pill" id="dtrTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active rounded-pill px-3 py-1 small" id="pending-tab" data-bs-toggle="pill" data-bs-target="#pending-content" type="button" role="tab" aria-selected="true">
+                                            Pending <span class="badge bg-primary-subtle text-primary-emphasis ms-1" id="tabPendingCount">0</span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link rounded-pill px-3 py-1 small" id="history-tab" data-bs-toggle="pill" data-bs-target="#history-content" type="button" role="tab" aria-selected="false">History</button>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
-                        <div id="supervisorDtrList" class="dtr-list vstack gap-3"></div>
-                        <div class="p-4 text-center d-none dtr-empty-state" id="supervisorDtrEmptyState">
-                            <div class="mx-auto mb-3 d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary" style="width: 64px; height: 64px;">
-                                <i class="bi bi-clipboard-check fs-4"></i>
+
+                        <div class="tab-content p-3 p-md-4">
+                            <div class="tab-pane fade show active" id="pending-content" role="tabpanel">
+                                <div id="supervisorDtrList" class="dtr-list vstack gap-3"></div>
+                                <div class="p-4 text-center d-none dtr-empty-state" id="supervisorDtrEmptyState">
+                                    <div class="mx-auto mb-3 d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary" style="width: 64px; height: 64px;">
+                                        <i class="bi bi-clipboard-check fs-4"></i>
+                                    </div>
+                                    <h5 class="mb-2">No pending logs right now</h5>
+                                    <p class="text-muted mb-0">Once your students submit DTR entries, they’ll show up here for your review.</p>
+                                </div>
                             </div>
-                            <h5 class="mb-2">No pending logs right now</h5>
-                            <p class="text-muted mb-0">Once your students submit DTR entries, they’ll show up here for your review.</p>
+                            <div class="tab-pane fade" id="history-content" role="tabpanel">
+                                <div id="supervisorHistoryList" class="dtr-list vstack gap-3"></div>
+                                <div class="p-4 text-center d-none dtr-empty-state" id="supervisorHistoryEmptyState">
+                                    <div class="mx-auto mb-3 d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary-subtle text-secondary" style="width: 64px; height: 64px;">
+                                        <i class="bi bi-archive fs-4"></i>
+                                    </div>
+                                    <h5 class="mb-2">History is empty</h5>
+                                    <p class="text-muted mb-0">Approved and rejected entries will appear here for your reference.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

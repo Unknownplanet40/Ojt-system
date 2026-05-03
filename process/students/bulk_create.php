@@ -34,7 +34,7 @@ if (empty($_POST['csrf_token']) ||
     response(['status' => 'error', 'message' => 'Invalid request.']);
 }
 
-if (!isset($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'admin') {
+if (!isset($_SESSION['user_uuid']) || !in_array($_SESSION['user_role'], ['admin', 'coordinator'])) {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }

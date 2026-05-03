@@ -6,38 +6,21 @@ if (session_status() === PHP_SESSION_NONE) {
 
 date_default_timezone_set('Asia/Manila');
 
-if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
-        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
-        $base = dirname($_SERVER['SCRIPT_NAME'], 3);
-        http_response_code(403);
-        header("Location: $base/Src/Pages/ErrorPage.php?error=403");
-        exit;
-    } else {
-        error_log(
-            "Unauthorized direct access attempt to " .
-            basename(__FILE__) . " from " .
-            ($_SERVER['REMOTE_ADDR'] ?? 'unknown')
-        );
-    }
-}
+// Direct access is allowed to support PDF generation via browser
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
 require_once dirname(__DIR__, 2) . '/functions/student_functions.php';
 require_once dirname(__DIR__, 2) . '/Assets/SystemInfo.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    response(['status' => 'error', 'message' => 'Method not allowed.']);
-}
+// Method check removed to allow GET requests for PDF downloads
 
-if (empty($_POST['csrf_token']) ||
-    $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (empty($_POST['csrf_token']) ||
+    $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? ''))) {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Invalid request.']);
 }
 
-if (!isset($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'admin') {
+if (!isset($_SESSION['user_uuid']) || !in_array($_SESSION['user_role'], ['admin', 'coordinator'])) {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
@@ -63,18 +46,15 @@ if (!is_array($studentData)) {
     $studentData = [];
 }
 
-$fullNameRaw     = $studentData['full_name'] ?? ($_POST['full_name'] ?? '');
-$tempPasswordRaw = $studentData['temp_password'] ?? ($_POST['temp_password'] ?? '');
+$fullNameRaw     = $studentData['full_name'] ?? ($_POST['full_name'] ?? ($_GET['full_name'] ?? ''));
+$tempPasswordRaw = $studentData['temp_password'] ?? ($_POST['temp_password'] ?? ($_GET['temp_password'] ?? ''));
 
 $fullName     = htmlspecialchars(trim((string)$fullNameRaw));
 $tempPassword = htmlspecialchars(trim((string)$tempPasswordRaw));
 
 if ($fullName === '' || $tempPassword === '') {
     http_response_code(422);
-    response([
-        'status'  => 'error',
-        'message' => 'Missing required fields: full_name and temp_password.'
-    ]);
+    die("Missing required fields: full_name and temp_password.");
 }
 
 $generatedAt   = date('F j, Y g:i A');

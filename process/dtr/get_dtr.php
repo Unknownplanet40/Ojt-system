@@ -67,9 +67,6 @@ if (empty($batchUuid)) {
     response(['status' => 'error', 'message' => 'No active batch found.']);
 }
 
-// -----------------------------------------------
-// STUDENT — own entries + summary
-// -----------------------------------------------
 if ($role === 'student') {
     $studentUuid = $_SESSION['profile_uuid'];
     $entries     = getStudentDtrEntries($conn, $studentUuid, $batchUuid, $filters);
@@ -83,22 +80,26 @@ if ($role === 'student') {
     ]);
 }
 
-// -----------------------------------------------
-// SUPERVISOR — assigned students' pending entries
-// -----------------------------------------------
 if ($role === 'supervisor') {
-    $entries = getSupervisorPendingDtr($conn, $_SESSION['profile_uuid'], $batchUuid);
+    $supervisorUuid = $_SESSION['profile_uuid'];
+    $entries = getSupervisorPendingDtr($conn, $supervisorUuid, $batchUuid);
+    $history = getSupervisorDtrHistory($conn, $supervisorUuid, $batchUuid);
+
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM student_profiles WHERE supervisor_uuid = ?");
+    $stmt->bind_param('s', $supervisorUuid);
+    $stmt->execute();
+    $assignedCount = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
+    $stmt->close();
 
     response([
-        'status'  => 'success',
-        'entries' => $entries,
-        'total'   => count($entries),
+        'status'         => 'success',
+        'entries'        => $entries,
+        'history'        => $history,
+        'assigned_count' => (int)$assignedCount,
+        'total'          => count($entries),
     ]);
 }
 
-// -----------------------------------------------
-// COORDINATOR / ADMIN — all entries with filters
-// -----------------------------------------------
 if (in_array($role, ['coordinator', 'admin'])) {
     $coordinatorUuid = $role === 'coordinator' ? $_SESSION['profile_uuid'] : null;
 
@@ -108,7 +109,6 @@ if (in_array($role, ['coordinator', 'admin'])) {
 
     $entries = getAllDtrEntries($conn, $batchUuid, $coordinatorUuid, $filters);
 
-    // also return summary if a specific student is requested
     $summary = null;
     if (!empty($filters['student_uuid'])) {
         $summary = getDtrSummary($conn, $filters['student_uuid'], $batchUuid);

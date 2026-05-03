@@ -74,7 +74,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
             </li>
             <li><hr class="dropdown-divider" /></li>
             <li>
-              <a class="dropdown-item <?= $CurrentPage === 'Supervisor_Profile' ? 'nav-active' : '' ?>" href="../Supervisor/Supervisor_Profile">
+              <a class="dropdown-item <?= $CurrentPage === 'Supervisor_Profile' ? 'nav-active' : '' ?>" href="../Supervisor/Supervisor_Profile?action=edit">
                 <div class="hstack">
                   <i class="bi bi-person-circle me-2"></i>
                   <div class="vstack">

@@ -10,3 +10,5 @@ scratch/check_tables.php
 process/Process Structure Template.php
 scratch/create_journals_table.php
 functions/credentials.php
+scratch/check_schema_supervisor.php
+scratch/check_schema.php

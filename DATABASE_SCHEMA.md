@@ -351,6 +351,39 @@ Bridge table between companies and programs.
 - `updated_at` (DATETIME, default: `NOW()` on update)
 - UNIQUE: `(student_uuid, batch_uuid, eval_type)`
 
+### `ojt_grades`
+
+- `id` (PK, auto-increment)
+- `uuid` (unique, CHAR(36))
+- `student_uuid` (FK) → `student_profiles.uuid`
+- `application_uuid` (FK) → `ojt_applications.uuid`
+- `batch_uuid` (FK) → `batches.uuid`
+- `finalized_by` (FK) → `coordinator_profiles.uuid`
+- Component scores (percentages 0-100):
+  - `hours_score` (DECIMAL(5,2), default: 0)
+  - `midterm_score` (DECIMAL(5,2), default: 0)
+  - `final_score` (DECIMAL(5,2), default: 0)
+  - `journal_score` (DECIMAL(5,2), default: 0)
+  - `self_score` (DECIMAL(5,2), default: 0)
+- Weights used (must sum to 100):
+  - `hours_weight` (DECIMAL(5,2), default: 20)
+  - `midterm_weight` (DECIMAL(5,2), default: 20)
+  - `final_weight` (DECIMAL(5,2), default: 40)
+  - `journal_weight` (DECIMAL(5,2), default: 10)
+  - `self_weight` (DECIMAL(5,2), default: 10)
+- Final computed grade:
+  - `weighted_score` (DECIMAL(5,2))
+  - `grade_equivalent` (VARCHAR(10))
+  - `remarks` (VARCHAR(50)) — `Passed`, `Failed`, `Incomplete`
+- `coordinator_notes` (nullable, TEXT)
+- `is_finalized` (TINYINT(1), default: 0)
+- `finalized_at` (nullable, DATETIME)
+- `created_at` (DATETIME, default: `NOW()`)
+- `updated_at` (DATETIME, default: `NOW()` on update)
+- UNIQUE: `(student_uuid, batch_uuid)`
+
+
+
 ## Key relationships
 
 - One `users` row can have one profile row in the matching profile table.

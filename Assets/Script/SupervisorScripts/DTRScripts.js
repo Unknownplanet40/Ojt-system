@@ -14,7 +14,7 @@ const ENDPOINTS = {
   approve: '../../../process/dtr/approve_dtr',
 };
 
-const state = { entries: [], selected: new Set(), active: null };
+const state = { entries: [], history: [], selected: new Set(), active: null, assignedCount: 0 };
 
 function toast(icon, title) {
   if (window.Swal) ToastVersion(swalTheme, title, icon, 3000, 'top-end', '8');
@@ -33,11 +33,11 @@ function groupEntries(entries) {
 }
 
 function renderSummary() {
-  const students = new Set(state.entries.map((e) => e.student_uuid || e.student_number));
   const backdated = state.entries.filter((e) => e.is_backdated).length;
   const hours = state.entries.reduce((sum, e) => sum + Number(e.hours_rendered || 0), 0);
   $('#supervisorPendingCount').text(state.entries.length);
-  $('#supervisorStudentCount').text(students.size);
+  $('#tabPendingCount').text(state.entries.length);
+  $('#supervisorStudentCount').text(state.assignedCount);
   $('#supervisorBackdatedCount').text(backdated);
   $('#supervisorPendingHours').text(hours.toFixed(2));
 }
@@ -62,62 +62,113 @@ function renderEntries() {
   if (!filtered.length) {
     empty.removeClass('d-none');
     $('#selectAllSupervisorEntries').prop('checked', false);
-    return;
-  }
-  empty.addClass('d-none');
-
-  filtered.forEach((entry) => {
-    const checked = state.selected.has(entry.uuid) ? 'checked' : '';
-    const activity = entry.activities || '<span class="text-muted">No activities recorded</span>';
-    const accent = 'info';
-    list.append(`
-      <div class="card dtr-entry-card bg-blur-5 bg-semi-transparent shadow-sm" data-accent="${accent}">
-        <div class="card-body">
-          <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 dtr-entry-header">
-            <div class="d-flex gap-3 flex-grow-1 align-items-start">
-              <div class="pt-1">
-                <input class="form-check-input supervisor-entry-check" type="checkbox" data-uuid="${entry.uuid}" ${checked}>
-              </div>
-              <div class="dtr-entry-icon bg-info-subtle text-info-emphasis">
-                <i class="bi bi-clipboard2-check fs-5"></i>
-              </div>
-              <div class="dtr-entry-title flex-grow-1">
-                <div class="dtr-chip-row mb-2">
-                  <span class="dtr-chip"><i class="bi bi-person"></i>${entry.full_name}</span>
-                  <span class="dtr-chip"><i class="bi bi-mortarboard"></i>${entry.program_code || '—'}</span>
-                  ${entry.is_backdated ? '<span class="badge rounded-pill bg-info-subtle text-info-emphasis">Backdated</span>' : ''}
+  } else {
+    empty.addClass('d-none');
+    filtered.forEach((entry) => {
+      const checked = state.selected.has(entry.uuid) ? 'checked' : '';
+      const activity = entry.activities || '<span class="text-muted">No activities recorded</span>';
+      const accent = 'info';
+      list.append(`
+        <div class="card dtr-entry-card bg-blur-5 bg-semi-transparent shadow-sm" data-accent="${accent}">
+          <div class="card-body">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 dtr-entry-header">
+              <div class="d-flex gap-3 flex-grow-1 align-items-start">
+                <div class="pt-1">
+                  <input class="form-check-input supervisor-entry-check" type="checkbox" data-uuid="${entry.uuid}" ${checked}>
                 </div>
-                <h5 class="mb-1 fw-semibold">${entry.full_name}</h5>
-                <p class="mb-0 text-muted dtr-entry-subtitle">${entry.student_number || '—'} · ${entry.program_code || '—'}</p>
+                <div class="dtr-entry-icon bg-info-subtle text-info-emphasis">
+                  <i class="bi bi-clipboard2-check fs-5"></i>
+                </div>
+                <div class="dtr-entry-title flex-grow-1">
+                  <div class="dtr-chip-row mb-2">
+                    <span class="dtr-chip"><i class="bi bi-person"></i>${entry.full_name}</span>
+                    <span class="dtr-chip"><i class="bi bi-mortarboard"></i>${entry.program_code || '—'}</span>
+                    ${entry.is_backdated ? '<span class="badge rounded-pill bg-info-subtle text-info-emphasis">Backdated</span>' : ''}
+                  </div>
+                  <h5 class="mb-1 fw-semibold">${entry.full_name}</h5>
+                  <p class="mb-0 text-muted dtr-entry-subtitle">${entry.student_number || '—'} · ${entry.program_code || '—'}</p>
+                </div>
+              </div>
+              <div class="text-lg-end">
+                <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">Pending</span>
               </div>
             </div>
-            <div class="text-lg-end">
-              <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">Pending</span>
+
+            <div class="dtr-entry-meta mt-3">
+              <div class="meta-box" data-importance="high"><span class="meta-label">Date</span><span class="meta-value">${entry.entry_date_label}</span></div>
+              <div class="meta-box"><span class="meta-label">Time</span><span class="meta-value">${entry.time_in_label} - ${entry.time_out_label}</span></div>
+              <div class="meta-box"><span class="meta-label">Hours</span><span class="meta-value">${entry.hours_label}</span></div>
+              <div class="meta-box"><span class="meta-label">Lunch break</span><span class="meta-value">${entry.lunch_break_minutes} min</span></div>
             </div>
-          </div>
 
-          <div class="dtr-entry-meta mt-3">
-            <div class="meta-box" data-importance="high"><span class="meta-label">Date</span><span class="meta-value">${entry.entry_date_label}</span></div>
-            <div class="meta-box"><span class="meta-label">Time</span><span class="meta-value">${entry.time_in_label} - ${entry.time_out_label}</span></div>
-            <div class="meta-box"><span class="meta-label">Hours</span><span class="meta-value">${entry.hours_label}</span></div>
-            <div class="meta-box"><span class="meta-label">Lunch break</span><span class="meta-value">${entry.lunch_break_minutes} min</span></div>
-          </div>
+            <div class="dtr-activity-preview mt-3">
+              <span class="meta-label mb-2">Activity</span>
+              <div class="activity-text">${activity}</div>
+            </div>
 
-          <div class="dtr-activity-preview mt-3">
-            <span class="meta-label mb-2">Activity</span>
-            <div class="activity-text">${activity}</div>
-          </div>
-
-          <div class="d-flex justify-content-end flex-wrap gap-2 dtr-entry-actions mt-3">
-            <button class="btn btn-sm btn-outline-success rounded-pill px-3" data-action="review" data-uuid="${entry.uuid}">Review</button>
-            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" data-action="reject" data-uuid="${entry.uuid}">Reject</button>
+            <div class="d-flex justify-content-end flex-wrap gap-2 dtr-entry-actions mt-3">
+              <button class="btn btn-sm btn-outline-success rounded-pill px-3" data-action="review" data-uuid="${entry.uuid}">Review</button>
+              <button class="btn btn-sm btn-outline-danger rounded-pill px-3" data-action="reject" data-uuid="${entry.uuid}">Reject</button>
+            </div>
           </div>
         </div>
-      </div>
-    `);
+      `);
+    });
+    $('#selectAllSupervisorEntries').prop('checked', filtered.length > 0 && filtered.every((entry) => state.selected.has(entry.uuid)));
+  }
+  
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = $('#supervisorHistoryList');
+  const empty = $('#supervisorHistoryEmptyState');
+  const term = ($('#supervisorSearchInput').val() || '').toLowerCase();
+  const month = $('#supervisorMonthFilter').val() || '';
+
+  const filtered = state.history.filter((entry) => {
+    if (month && !String(entry.entry_date || '').startsWith(month)) return false;
+    const text = [entry.full_name, entry.student_number, entry.program_code, entry.activities, entry.entry_date_label].filter(Boolean).join(' ').toLowerCase();
+    return text.includes(term);
   });
 
-  $('#selectAllSupervisorEntries').prop('checked', filtered.length > 0 && filtered.every((entry) => state.selected.has(entry.uuid)));
+  list.empty();
+  if (!filtered.length) {
+    empty.removeClass('d-none');
+  } else {
+    empty.addClass('d-none');
+    filtered.forEach((entry) => {
+      const statusClass = entry.status === 'approved' ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis';
+      list.append(`
+        <div class="card dtr-entry-card bg-blur-5 bg-semi-transparent shadow-sm opacity-75 border-light border-opacity-10" style="filter: grayscale(0.5);">
+          <div class="card-body">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
+              <div class="d-flex gap-3 align-items-start">
+                <div class="dtr-entry-icon ${entry.status === 'approved' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}">
+                  <i class="bi ${entry.status === 'approved' ? 'bi-check-circle' : 'bi-x-circle'} fs-5"></i>
+                </div>
+                <div>
+                  <div class="dtr-chip-row mb-2">
+                    <span class="dtr-chip small">${entry.full_name}</span>
+                    <span class="badge rounded-pill ${statusClass}">${entry.status_label}</span>
+                  </div>
+                  <h6 class="mb-0 fw-semibold text-white">${entry.entry_date_label}</h6>
+                  <p class="mb-0 text-muted small">${entry.hours_label} · ${entry.time_in_label} - ${entry.time_out_label}</p>
+                </div>
+              </div>
+              <div class="text-lg-end small text-muted">
+                <div>Decided on: ${entry.approved_at || '—'}</div>
+                ${entry.rejection_reason ? `<div class="text-danger mt-1">Reason: ${entry.rejection_reason}</div>` : ''}
+              </div>
+            </div>
+            <div class="mt-2 text-white-50 small text-truncate">
+              <i class="bi bi-journal-text me-1"></i> ${entry.activities || 'No activities recorded'}
+            </div>
+          </div>
+        </div>
+      `);
+    });
+  }
 }
 
 function loadDtr() {
@@ -132,6 +183,8 @@ function loadDtr() {
         return;
       }
       state.entries = response.entries || [];
+      state.history = response.history || [];
+      state.assignedCount = response.assigned_count || 0;
       state.selected = new Set();
       renderSummary();
       renderEntries();
