@@ -38,7 +38,7 @@ $CurrentPage = "Students";
         <div class="modal fade" id="CreateStudentModal" tabindex="-1" data-bs-backdrop="static"
             data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-lg modal-dialog-scrollable">
-                <div class="modal-content bg-blur-5 bg-semi-transparent border-0 shadow"
+                <div class="modal-content glass-ui glass-ui-strong border-0 shadow"
                     style="--blur-lvl: <?= $opacitylvl ?>;">
                     <div class="modal-body p-4 p-md-5">
                         <div class="mb-5">
@@ -54,7 +54,7 @@ $CurrentPage = "Students";
                             </div>
                         </div>
 
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-0 shadow-sm mb-4"
+                        <div class="card glass-ui rounded-4 border-0 shadow-sm mb-4"
                             style="--blur-lvl: <?= $opacitylvl ?>;">
                             <div class="card-body p-4">
                                 <div class="mb-4">
@@ -64,7 +64,7 @@ $CurrentPage = "Students";
                                 </div>
                                 <div class="row g-3">
                                     <div class="col-12 col-md-6">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <input type="email" class="form-control bg-transparent border-0 shadow-none"
                                                 id="studentEmail" placeholder="Email Address">
                                             <label for="studentEmail" class="text-muted">Email Address<span
@@ -74,7 +74,7 @@ $CurrentPage = "Students";
                                             email</small>
                                     </div>
                                     <div class="col-12 col-md-6">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <input type="text" class="form-control bg-transparent border-0 shadow-none"
                                                 id="studentNumber" placeholder="Student Number">
                                             <label for="studentNumber" class="text-muted">Student Number<span
@@ -86,13 +86,13 @@ $CurrentPage = "Students";
                             </div>
                         </div>
 
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-0 shadow-sm mb-4"
+                        <div class="card glass-ui glass-ui-strong rounded-4 border-0 shadow-sm mb-4"
                             style="--blur-lvl: <?= $opacitylvl ?>;">
                             <div class="card-body p-4">
                                 <h6 class="card-title fw-bold mb-4 fs-6">Personal Information</h6>
                                 <div class="row g-3">
                                     <div class="col-12 col-md-6 col-lg-4">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <input type="text" class="form-control bg-transparent border-0 shadow-none"
                                                 id="lastName" placeholder="Last Name">
                                             <label for="lastName" class="text-muted">Last Name<span
@@ -100,7 +100,7 @@ $CurrentPage = "Students";
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-6 col-lg-4">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <input type="text" class="form-control bg-transparent border-0 shadow-none"
                                                 id="firstName" placeholder="First Name">
                                             <label for="firstName" class="text-muted">First Name<span
@@ -108,35 +108,35 @@ $CurrentPage = "Students";
                                         </div>
                                     </div>
                                     <div class="col-12 col-lg-4">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <input type="text" class="form-control bg-transparent border-0 shadow-none"
                                                 id="middleName" placeholder="Middle Name">
                                             <label for="middleName" class="text-muted">Middle Name</label>
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-12">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <input type="text" class="form-control bg-transparent border-0 shadow-none"
                                                 id="mobileNumber" placeholder="Mobile Number">
                                             <label for="mobileNumber" class="text-muted">Mobile Number</label>
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-12">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <textarea class="form-control bg-transparent border-0 shadow-none"
                                                 placeholder="Address" id="address" style="height: 80px;"></textarea>
                                             <label for="address" class="text-muted">Address</label>
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-6">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <input type="text" class="form-control bg-transparent border-0 shadow-none"
                                                 id="emergencyContact" placeholder="Emergency contact">
                                             <label for="emergencyContact" class="text-muted">Emergency Contact</label>
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-6">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <input type="text" class="form-control bg-transparent border-0 shadow-none"
                                                 id="emergencyContactNumber" placeholder="Emergency contact number">
                                             <label for="emergencyContactNumber" class="text-muted">Emergency Contact
@@ -147,7 +147,7 @@ $CurrentPage = "Students";
                             </div>
                         </div>
 
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-0 shadow-sm mb-4"
+                        <div class="card glass-ui glass-ui-strong rounded-4 border-0 shadow-sm mb-4"
                             style="--blur-lvl: <?= $opacitylvl ?>;">
                             <div class="card-body p-4">
                                 <div class="mb-4">
@@ -157,7 +157,7 @@ $CurrentPage = "Students";
                                 </div>
                                 <div class="row g-3">
                                     <div class="col-12 col-md-6 col-lg-4">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <select class="form-select bg-transparent border-0 shadow-none"
                                                 id="programSelect">
                                             </select>
@@ -166,7 +166,7 @@ $CurrentPage = "Students";
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-6 col-lg-4">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <select class="form-select bg-transparent border-0 shadow-none"
                                                 id="yearLevelSelect">
                                                 <option value="" class="CustomOption" selected disabled hidden>Select
@@ -181,14 +181,14 @@ $CurrentPage = "Students";
                                         </div>
                                     </div>
                                     <div class="col-12 col-lg-4">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <input type="text" class="form-control bg-transparent border-0 shadow-none"
                                                 id="section" placeholder="Section">
                                             <label for="section" class="text-muted">Section</label>
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-7">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <select class="form-select bg-transparent border-0 shadow-none"
                                                 id="coordinatorSelect">
                                             </select>
@@ -196,7 +196,7 @@ $CurrentPage = "Students";
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-5">
-                                        <div class="form-floating">
+                                        <div class="form-floating border-bottom">
                                             <input type="text" class="form-control bg-transparent border-0 shadow-none"
                                                 id="StudactiveBatch" placeholder="Active Batch" disabled>
                                             <label for="activeBatch" class="text-muted">Active Batch</label>
@@ -481,9 +481,9 @@ $CurrentPage = "Students";
         </div>
         <div class="modal fade" id="ViewStudentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-dialog-scrollable modal-xl">
-                <div class="modal-content bg-blur-5 bg-semi-transparent border-0 shadow"
+                <div class="modal-content glass-ui glass-ui-strong border-0 shadow"
                     style="--blur-lvl: <?= $opacitylvl ?>;">
-                    <div class="modal-body bg-blur-5 bg-semi-transparent rounded-4">
+                    <div class="modal-body glass-ui rounded-4">
                         <div class="card bg-transparent border-0 shadow-sm">
                             <div class="vstack gap-4 p-2 p-md-4">
                                 <div class="hstack gap-3 flex-wrap align-items-start">
@@ -533,7 +533,7 @@ $CurrentPage = "Students";
                                 <section class="w-100">
                                     <div class="row g-3 g-md-4">
                                         <div class="col-12">
-                                            <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-0 shadow-sm"
+                                            <div class="card glass-ui glass-ui-strong rounded-4 border-0 shadow-sm"
                                                 style="--blur-lvl: <?= $opacitylvl ?>;">
                                                 <div class="card-body p-3 pt-0 p-md-4">
                                                     <div class="row g-4 mt-1">

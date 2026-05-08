@@ -231,7 +231,7 @@ $CurrentPage = "MyStudents";
                             <h4 class="text-white fw-bold mb-2">Student Account Created!</h4>
                             <p class="text-white-50 mb-4">The account for <span id="createdStudentName" class="text-white fw-semibold"></span> is ready. Please share the temporary password below:</p>
                             
-                            <div class="bg-light bg-opacity-10 rounded-4 p-4 mb-4 border border-light border-opacity-10">
+                            <div class="bg-blur-5 bg-semi-transparent rounded-4 p-4 mb-4 border border-light border-opacity-10">
                                 <small class="text-white-50 d-block mb-1 text-uppercase fw-semibold letter-spacing-1">Temporary Password</small>
                                 <div class="fs-2 fw-mono text-primary letter-spacing-2" id="createdStudentTempPassword">------</div>
                             </div>
@@ -274,12 +274,132 @@ $CurrentPage = "MyStudents";
                             </div>
                             <h4 class="fw-bold mb-2">Password Reset Successful!</h4>
                             <p class="text-white-50 mb-4">The new password for <span id="resetPasswordSuccessStudentName" class="fw-semibold text-white"></span> is:</p>
-                            <div class="bg-light bg-opacity-10 rounded-4 p-4 mb-4 border border-light border-opacity-10">
+                            <div class="bg-blur-5 bg-semi-transparent rounded-4 p-4 mb-4 border border-light border-opacity-10">
                                 <div class="fs-2 fw-mono text-success letter-spacing-2" id="resetPasswordSuccessTempPassword">------</div>
                             </div>
                             <div class="vstack gap-2">
                                 <button class="btn btn-outline-light rounded-pill py-2" id="exportResetPdfBtn"><i class="bi bi-file-earmark-pdf me-2"></i>Export PDF</button>
                                 <button class="btn btn-primary rounded-pill py-2" data-bs-dismiss="modal">Done</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Import Success Modal -->
+            <div class="modal fade" id="bulkSuccessModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-lg modal-dialog-scrollable">
+                    <div class="modal-content bg-blur-10 bg-semi-transparent border-light border-opacity-10 shadow-lg" style="background: rgba(255, 255, 255, 0.05);">
+                        <div class="modal-body p-4 p-md-5">
+                            <div class="alert bg-success-subtle border-0 rounded-4 d-flex align-items-center gap-3 mb-4">
+                                <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                                <div>
+                                    <h5 class="mb-1 fw-bold text-success"><span id="bulkAccountsCreatedCount">0</span> Accounts Created successfully</h5>
+                                    <p class="mb-0 text-success-emphasis small">All students have been assigned <span id="bulkBatchLabelCurrent">Current Batch</span> and their pre-OJT requirements have been initialized.</p>
+                                </div>
+                            </div>
+
+                            <div class="card bg-blur-5 bg-semi-transparent rounded-4 border mb-3" style="--blur-lvl: 5;">
+                                <div class="card-body p-3 p-md-4">
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-12 col-md-6">
+                                            <div class="card bg-success-subtle border border-success-subtle rounded-4 text-center h-100">
+                                                <div class="card-body py-3">
+                                                    <h4 class="fw-bold text-success mb-1" id="bulkSuccessCreatedCount">0</h4>
+                                                    <p class="small mb-0 text-success-emphasis">Successfully Created</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <div class="card bg-danger-subtle border border-danger-subtle rounded-4 text-center h-100">
+                                                <div class="card-body py-3">
+                                                    <h4 class="fw-bold text-danger mb-1" id="bulkSuccessFailedCount">0</h4>
+                                                    <p class="small mb-0 text-danger-emphasis">Failed to Create</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="bulkFailedRowsContainer" class="mt-3 d-none">
+                                        <div class="alert alert-danger border-0 rounded-4 mb-2">
+                                            <div class="hstack gap-2">
+                                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                                <p class="mb-0 small fw-semibold">Some rows failed during account creation.</p>
+                                                <button class="btn btn-sm btn-link text-decoration-none ms-auto p-0" id="bulkToggleFailedRowsBtn" type="button">Show details</button>
+                                            </div>
+                                        </div>
+                                        <div class="table-responsive rounded-3 border d-none" id="bulkFailedRowsDetails">
+                                            <table class="table table-sm table-striped table-hover align-middle mb-0">
+                                                <thead class="bg-blur-5 bg-semi-transparent border-0">
+                                                    <tr class="text-muted border-0">
+                                                        <th class="py-2 fw-bold text-uppercase text-secondary-emphasis border-0" style="font-size: 0.70rem; letter-spacing: 0.6px;">Name</th>
+                                                        <th class="py-2 fw-bold text-uppercase text-secondary-emphasis border-0 d-none d-sm-table-cell" style="font-size: 0.70rem; letter-spacing: 0.6px;">Email</th>
+                                                        <th class="py-2 fw-bold text-uppercase text-secondary-emphasis border-0" style="font-size: 0.70rem; letter-spacing: 0.6px;">Reason</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="bulkFailedRowsTableBody"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card bg-blur-5 bg-semi-transparent rounded-4 border" style="--blur-lvl: 5;">
+                                <div class="card-body p-3 p-md-4">
+                                    <div class="mb-4">
+                                        <h6 class="fw-bold text-white mb-1">Export Credentials</h6>
+                                        <small class="text-white-50 d-block">Download the credentials sheet to distribute to your students.</small>
+                                    </div>
+                                    <div class="vstack gap-3 mb-4">
+                                        <div class="card-body border rounded-4 p-3">
+                                            <div class="hstack gap-2">
+                                                <i class="bi bi-file-earmark-pdf-fill text-muted fs-4"></i>
+                                                <div class="vstack gap-0 flex-grow-1">
+                                                    <p class="mb-0 fw-semibold small text-white">PDF Credentials Sheet</p>
+                                                    <small class="text-white-50">Print-ready document with credentials</small>
+                                                </div>
+                                                <button class="btn btn-sm bg-secondary-subtle border text-body px-3 py-2 rounded-3 text-nowrap ms-auto" id="bulkPdfCredentialsBtn">
+                                                    <i class="bi bi-download me-2"></i>Download
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body border rounded-4 p-3">
+                                            <div class="hstack gap-2">
+                                                <i class="bi bi-file-earmark-spreadsheet-fill text-muted fs-4"></i>
+                                                <div class="vstack gap-0 flex-grow-1">
+                                                    <p class="mb-0 fw-semibold small text-white">CSV Export</p>
+                                                    <small class="text-white-50">Spreadsheet with all created accounts</small>
+                                                </div>
+                                                <button class="btn btn-sm bg-secondary-subtle border text-body px-3 py-2 rounded-3 text-nowrap ms-auto" id="bulkCsvCredentialsBtn">
+                                                    <i class="bi bi-download me-2"></i>Download
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive rounded-3 border bg-dark bg-opacity-50" style="max-height: 400px;">
+                                        <table class="table table-sm table-borderless table-hover align-middle mb-0 text-white-50" id="bulkCreatedAccountsTable">
+                                            <thead class="bg-blur-5 bg-semi-transparent border-0 sticky-top">
+                                                <tr class="text-muted border-0">
+                                                    <th class="py-3 fw-bold text-uppercase text-secondary-emphasis border-0" style="font-size: 0.70rem; letter-spacing: 0.6px;">Name</th>
+                                                    <th class="py-3 fw-bold text-uppercase text-secondary-emphasis border-0 d-none d-sm-table-cell" style="font-size: 0.70rem; letter-spacing: 0.6px;">Email</th>
+                                                    <th class="py-3 fw-bold text-uppercase text-secondary-emphasis border-0 d-none d-md-table-cell" style="font-size: 0.70rem; letter-spacing: 0.6px;">Student No.</th>
+                                                    <th class="py-3 fw-bold text-uppercase text-secondary-emphasis border-0" style="font-size: 0.70rem; letter-spacing: 0.6px;">Temp Password</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="border-0"></tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="hstack gap-3 justify-content-end mt-4 pt-3 border-top border-light border-opacity-10">
+                                        <button class="btn btn-outline-light rounded-pill px-4 py-2" id="bulkViewAllStudentsBtn">
+                                            <i class="bi bi-eye me-2"></i>View All Students
+                                        </button>
+                                        <button class="btn btn-primary rounded-pill px-4 py-2 text-nowrap" id="bulkImportNewBatchBtn">
+                                            <i class="bi bi-file-earmark-plus me-2"></i>Import New Batch
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -378,54 +498,140 @@ $CurrentPage = "MyStudents";
                 </div>
             </div>
 
-            <!-- View Student Modal -->
-            <div class="modal fade" id="ViewStudentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-                    <div class="modal-content bg-blur-10 bg-semi-transparent border-light border-opacity-10 shadow-lg text-white" style="background: rgba(255, 255, 255, 0.05);">
-                        <div class="modal-body p-0">
-                            <div class="p-4 p-md-5">
-                                <div class="d-flex align-items-center gap-4 mb-5 pb-4 border-bottom border-light border-opacity-10">
-                                    <img src="" alt="" id="viewStudentProfilePic" class="rounded-circle border border-2 border-primary border-opacity-25 shadow-sm" style="width: 80px; height: 80px; object-fit: cover;">
-                                    <div class="min-w-0">
-                                        <h4 class="mb-1 fw-bold text-truncate" id="viewStudentFullName"></h4>
-                                        <p class="mb-0 text-white-50 small" id="viewStudentNumber"></p>
-                                        <div class="mt-2" id="viewStudentStatus"></div>
-                                    </div>
-                                    <div class="ms-auto d-flex flex-column gap-2">
-                                        <button class="btn btn-sm btn-outline-light rounded-pill px-3" id="editStudentBtnView"><i class="bi bi-pencil me-2"></i>Edit</button>
-                                        <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="resetPasswordBtnView"><i class="bi bi-key me-2"></i>Reset Pwd</button>
-                                    </div>
-                                </div>
 
-                                <div class="row g-4">
-                                    <div class="col-12 col-md-6">
-                                        <div class="vstack gap-3">
-                                            <div>
-                                                <small class="text-white-50 text-uppercase fw-semibold small letter-spacing-1">Email Address</small>
-                                                <div class="fw-medium" id="viewStudentEmail"></div>
-                                            </div>
-                                            <div>
-                                                <small class="text-white-50 text-uppercase fw-semibold small letter-spacing-1">Program</small>
-                                                <div class="fw-medium" id="viewStudentProgram"></div>
+
+            <!-- Edit Student Modal -->
+            <div class="modal fade" id="EditStudentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-lg modal-dialog-scrollable">
+                    <div class="modal-content bg-blur-10 bg-semi-transparent border-light border-opacity-10 shadow-lg text-white" style="background: rgba(255, 255, 255, 0.05);">
+                        <div class="modal-body p-4 p-md-5">
+                            <div class="mb-5">
+                                <div class="hstack gap-3 align-items-center">
+                                    <div class="vstack gap-1 text-white">
+                                        <h5 class="modal-title fw-bold mb-0 fs-5">Edit Student</h5>
+                                        <p class="text-white-50 small mb-0"><span id="editStudentFullName"></span> &bull; <span id="editStudentNumberDisplay"></span></p>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-light ms-auto flex-shrink-0" data-bs-dismiss="modal"><i class="bi bi-arrow-left me-2"></i>Back</button>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="editStudentUuid">
+                            <input type="hidden" id="editCoordinatorUuid">
+
+                            <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-light border-opacity-10 shadow-sm mb-4" style="background: rgba(255, 255, 255, 0.03);">
+                                <div class="card-body p-4">
+                                    <div class="mb-4">
+                                        <h6 class="card-title fw-bold mb-1 fs-6 text-white">Account Information</h6>
+                                        <small class="text-white-50 d-block">Email and student number cannot be changed here.</small>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-6">
+                                            <div class="form-floating border border-light border-opacity-10 rounded-3">
+                                                <p class="form-control bg-transparent border-0 shadow-none text-white mb-0" id="editStudentEmail"></p>
+                                                <label class="text-white-50">Email Address</label>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="col-12 col-md-6">
-                                        <div class="vstack gap-3">
-                                            <div>
-                                                <small class="text-white-50 text-uppercase fw-semibold small letter-spacing-1">Year & Section</small>
-                                                <div class="fw-medium" id="viewStudentYearSection"></div>
-                                            </div>
-                                            <div>
-                                                <small class="text-white-50 text-uppercase fw-semibold small letter-spacing-1">Batch</small>
-                                                <div class="fw-medium" id="viewStudentBatch"></div>
+                                        <div class="col-12 col-md-6">
+                                            <div class="form-floating border border-light border-opacity-10 rounded-3">
+                                                <p class="form-control bg-transparent border-0 shadow-none text-white mb-0" id="editStudentNumber"></p>
+                                                <label class="text-white-50">Student Number</label>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="p-4 bg-opacity-5 border-top border-light border-opacity-10 text-end">
-                                <button class="btn btn-outline-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+
+                            <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-light border-opacity-10 shadow-sm mb-4" style="background: rgba(255, 255, 255, 0.03);">
+                                <div class="card-body p-4">
+                                    <h6 class="card-title fw-bold mb-4 fs-6 text-white">Personal Information</h6>
+                                    <div class="row g-3 text-white">
+                                        <div class="col-12 col-md-6 col-lg-4">
+                                            <div class="form-floating border border-light border-opacity-10 rounded-3">
+                                                <input type="text" class="form-control bg-transparent border-0 shadow-none text-white" id="editLastName" placeholder="Last Name">
+                                                <label for="editLastName" class="text-white-50">Last Name<span class="text-danger ms-1">*</span></label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6 col-lg-4">
+                                            <div class="form-floating border border-light border-opacity-10 rounded-3">
+                                                <input type="text" class="form-control bg-transparent border-0 shadow-none text-white" id="editFirstName" placeholder="First Name">
+                                                <label for="editFirstName" class="text-white-50">First Name<span class="text-danger ms-1">*</span></label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-lg-4">
+                                            <div class="form-floating border border-light border-opacity-10 rounded-3">
+                                                <input type="text" class="form-control bg-transparent border-0 shadow-none text-white" id="editMiddleName" placeholder="Middle Name">
+                                                <label for="editMiddleName" class="text-white-50">Middle Name</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-12">
+                                            <div class="form-floating border border-light border-opacity-10 rounded-3">
+                                                <input type="text" class="form-control bg-transparent border-0 shadow-none text-white" id="editMobileNumber" placeholder="Mobile Number">
+                                                <label for="editMobileNumber" class="text-white-50">Mobile Number</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-12">
+                                            <div class="form-floating border border-light border-opacity-10 rounded-3">
+                                                <textarea class="form-control bg-transparent border-0 shadow-none text-white" placeholder="Address" id="editAddress" style="height: 80px;"></textarea>
+                                                <label for="editAddress" class="text-white-50">Address</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <div class="form-floating border border-light border-opacity-10 rounded-3">
+                                                <input type="text" class="form-control bg-transparent border-0 shadow-none text-white" id="editEmergencyContact" placeholder="Emergency contact">
+                                                <label for="editEmergencyContact" class="text-white-50">Emergency Contact</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <div class="form-floating border border-light border-opacity-10 rounded-3">
+                                                <input type="text" class="form-control bg-transparent border-0 shadow-none text-white" id="editEmergencyContactNumber" placeholder="Emergency contact number">
+                                                <label for="editEmergencyContactNumber" class="text-white-50">Emergency Contact Number</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-light border-opacity-10 shadow-sm mb-4" style="background: rgba(255, 255, 255, 0.03);">
+                                <div class="card-body p-4">
+                                    <h6 class="card-title fw-bold mb-4 fs-6 text-white">Academic Information</h6>
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-6 col-lg-6">
+                                            <div class="form-floating border border-light border-opacity-10 rounded-3">
+                                                <select class="form-select bg-transparent border-0 shadow-none text-white" id="editProgramSelect"></select>
+                                                <label for="editProgramSelect" class="text-white-50">Program<span class="text-danger ms-1">*</span></label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6 col-lg-4">
+                                            <div class="form-floating border border-light border-opacity-10 rounded-3">
+                                                <select class="form-select bg-transparent border-0 shadow-none text-white" id="editYearLevelSelect">
+                                                    <option value="" class="bg-dark" selected disabled hidden>Select year level</option>
+                                                    <option value="1" class="bg-dark">1st Year</option>
+                                                    <option value="2" class="bg-dark">2nd Year</option>
+                                                    <option value="3" class="bg-dark">3rd Year</option>
+                                                    <option value="4" class="bg-dark">4th Year</option>
+                                                </select>
+                                                <label for="editYearLevelSelect" class="text-white-50">Year Level<span class="text-danger ms-1">*</span></label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-lg-2">
+                                            <div class="form-floating border border-light border-opacity-10 rounded-3">
+                                                <input type="text" class="form-control bg-transparent border-0 shadow-none text-white" id="editSection" placeholder="Section">
+                                                <label for="editSection" class="text-white-50">Section</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-light border-opacity-10 shadow-sm" style="background: rgba(255, 255, 255, 0.03);">
+                                <div class="card-body p-4">
+                                    <div class="vstack gap-3">
+                                        <p class="text-white-50 small mb-0">Click "Save Changes" to update the student information.</p>
+                                        <button class="btn btn-primary py-2 px-5 align-self-start text-nowrap" id="saveEditStudentBtn">
+                                            <i class="bi bi-check-circle me-2"></i>Save Changes
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

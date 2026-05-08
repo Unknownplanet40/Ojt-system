@@ -52,38 +52,38 @@ if ($currentHour >= 5 && $currentHour < 12) {
     <div class="modal fade" id="viewJournalModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content bg-blur-5 bg-semi-transparent border-0 shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
-                <div class="modal-header border-0 pb-0">
-                    <div>
-                        <h5 class="modal-title fw-semibold mb-1">Journal Details</h5>
-                        <p class="text-muted small mb-0"><span id="viewStudentName" class="fw-bold text-body"></span> • <span id="viewJournalWeekRange"></span></p>
+                <div class="modal-header border-0 border-bottom border-light border-opacity-10 pb-3">
+                    <div class="flex-grow-1">
+                        <h5 class="modal-title fw-bold mb-1">Journal Details</h5>
+                        <p class="text-muted small mb-0"><span id="viewStudentName" class="fw-semibold text-body"></span> • <span id="viewJournalWeekRange" class="text-primary"></span></p>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body pt-3">
-                    <div id="viewJournalStatusBadge" class="mb-3"></div>
+                <div class="modal-body pt-4">
+                    <div id="viewJournalStatusBadge" class="mb-4"></div>
 
-                    <div class="mb-3">
-                        <h6 class="fw-semibold text-muted small text-uppercase">Accomplishments & Tasks</h6>
-                        <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body" id="viewAccomplishments" style="white-space: pre-wrap;"></div>
+                    <div class="mb-4">
+                        <label class="fw-semibold small text-muted text-uppercase mb-2 d-block">Accomplishments & Tasks</label>
+                        <div class="p-4 bg-body-secondary bg-opacity-10 rounded-4 text-body border border-light border-opacity-10 lh-lg" id="viewAccomplishments" style="white-space: pre-wrap; font-size: 0.95rem;"></div>
                     </div>
                     
                     <div class="row g-3">
-                        <div class="col-md-4">
-                            <h6 class="fw-semibold text-muted small text-uppercase">Skills Learned</h6>
-                            <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body h-100" id="viewSkillsLearned" style="white-space: pre-wrap;"></div>
+                        <div class="col-lg-4 col-md-6">
+                            <label class="fw-semibold small text-muted text-uppercase mb-2 d-block">Skills Learned</label>
+                            <div class="p-3 bg-body-secondary bg-opacity-10 rounded-3 text-body h-100 border border-light border-opacity-10 small lh-lg" id="viewSkillsLearned" style="white-space: pre-wrap;"></div>
                         </div>
-                        <div class="col-md-4">
-                            <h6 class="fw-semibold text-muted small text-uppercase">Issues & Challenges</h6>
-                            <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body h-100" id="viewChallenges" style="white-space: pre-wrap;"></div>
+                        <div class="col-lg-4 col-md-6">
+                            <label class="fw-semibold small text-muted text-uppercase mb-2 d-block">Challenges</label>
+                            <div class="p-3 bg-body-secondary bg-opacity-10 rounded-3 text-body h-100 border border-light border-opacity-10 small lh-lg" id="viewChallenges" style="white-space: pre-wrap;"></div>
                         </div>
-                        <div class="col-md-4">
-                            <h6 class="fw-semibold text-muted small text-uppercase">Plans for Next Week</h6>
-                            <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body h-100" id="viewPlansNextWeek" style="white-space: pre-wrap;"></div>
+                        <div class="col-lg-4 col-md-6">
+                            <label class="fw-semibold small text-muted text-uppercase mb-2 d-block">Plans Next Week</label>
+                            <div class="p-3 bg-body-secondary bg-opacity-10 rounded-3 text-body h-100 border border-light border-opacity-10 small lh-lg" id="viewPlansNextWeek" style="white-space: pre-wrap;"></div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <div class="modal-footer border-0 border-top border-light border-opacity-10 pt-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

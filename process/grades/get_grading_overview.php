@@ -43,6 +43,10 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
+if (!ensureGradeTableExists($conn)) {
+    response(['status' => 'critical', 'message' => 'Failed to initialize grading table.']);
+}
+
 if (!isset($_SESSION['user_uuid'])) {
     http_response_code(401);
     response(['status' => 'error', 'message' => 'Unauthenticated.']);

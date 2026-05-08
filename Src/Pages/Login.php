@@ -42,7 +42,7 @@ if (!empty($_SESSION['user_uuid']) && !empty($_SESSION['user_role'])) {
 
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 
 <head>
 	<?php include_once "./srcPageHeader.php"; ?>
@@ -63,7 +63,7 @@ if (!empty($_SESSION['user_uuid']) && !empty($_SESSION['user_role'])) {
 		</div>
 	</div>
 	<div id="PageMainContent" class="login-page-main z-3 d-flex justify-content-center align-items-center w-100">
-		<div class="login-panel-card card rounded-3 bg-blur-3 bg-semi-transparent w-100" style="--blur-lvl: 0.50;">
+		<div class="login-panel-card card rounded-3 glass-ui glass-ui-strong w-100" style="--blur-lvl: 0.50;">
 			<div class="row g-0 h-100">
 				<div class="col-md-5 order-md-0 order-2">
 					<div style="background-color: #0F6E56;" class="p-4 rounded-start-3 h-100 d-none d-md-block"
@@ -110,10 +110,9 @@ if (!empty($_SESSION['user_uuid']) && !empty($_SESSION['user_role'])) {
 					</div>
 				</div>
 				<div class="col-md-7 order-md-1 order-1 border-5">
-					<div class="card-body h-100 p-4">
+					<div class="card-body h-100 p-4 ">
 						<h5 class="card-title mt-3">Sign In</h5>
-						<small class="text-muted mb-3 d-block">Use the credentials provided by your coordinator or
-							admin.</small>
+						<small class="text-muted mb-3 d-block">Use the credentials provided by your coordinator or admin.</small>
 						<div class="mb-3">
 							<label for="email" class="form-label">Email address</label>
 							<input type="email"
@@ -158,7 +157,7 @@ if (!empty($_SESSION['user_uuid']) && !empty($_SESSION['user_role'])) {
 						</div>
 						<div class="divider-line"><span>No account yet?</span></div>
 						<div class="d-grid">
-							<div class="alert rounded-3 p-2 px-3 bg-dark bg-opacity-50 border-secondary">
+							<div class="alert rounded-3 p-2 px-3 glass-ui">
 								<div class="vstack">
 									<small class="mb-0 fw-bold">Don't have an account?</small>
 									<small class="mb-3">Accounts are created by your OJT coordinator or system

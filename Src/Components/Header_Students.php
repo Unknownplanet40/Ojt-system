@@ -36,8 +36,8 @@ if (!$hasActiveApplication && in_array($CurrentPage, ['DTR', 'Journal', 'Evaluat
           <a class="nav-link <?= $CurrentPage === 'StudentDashboard' ? 'active' : '' ?>" aria-current="page" href="../Students/StudentsDashboard">Dashboard</a>
         </li>
       </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle text-capitalize <?= in_array($CurrentPage, ['Requirements', 'Applications', 'DTR', 'Journal', 'Evaluations']) ? 'active' : '' ?>"
+        <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle text-capitalize <?= in_array($CurrentPage, ['Requirements', 'Applications', 'DTR', 'Journal', 'Evaluations', 'Grade']) ? 'active' : '' ?>"
           href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> My OJT </a>
         <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
           <li>
@@ -133,6 +133,19 @@ if (!$hasActiveApplication && in_array($CurrentPage, ['DTR', 'Journal', 'Evaluat
               </div>
             </a>
           </li>
+          <li>
+            <a class="dropdown-item <?= $CurrentPage === 'Grade' ? 'nav-active' : '' ?>" href="../Students/Grade">
+              <div class="hstack">
+                <i class="bi bi-patch-check me-2"></i>
+                <div class="vstack">
+                  <div class="hstack gap-3">
+                    <span>My Grade</span>
+                  </div>
+                  <small class="text-muted" style="font-size: 0.7em">View your finalized grade once it is released.</small>
+                </div>
+              </div>
+            </a>
+          </li>
 
         </ul>
       </li> 
@@ -168,7 +181,7 @@ if (!$hasActiveApplication && in_array($CurrentPage, ['DTR', 'Journal', 'Evaluat
             </a>
           </li>
           <li>
-            <a class="dropdown-item <?= $CurrentPage === 'settings' ? 'nav-active' : '' ?>" href="javascript:void(0)">
+            <a class="dropdown-item <?= $CurrentPage === 'Settings' ? 'nav-active' : '' ?>" href="../Students/Settings">
               <div class="hstack">
                 <i class="bi bi-gear me-2"></i>
                 <div class="vstack">

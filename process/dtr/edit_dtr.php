@@ -67,6 +67,9 @@ if (!$result['success']) {
 
 response([
     'status'         => 'success',
-    'message'        => 'DTR entry updated.',
+    'message'        => !empty($result['resubmitted'])
+        ? 'DTR entry resubmitted. Awaiting supervisor approval.'
+        : 'DTR entry updated.',
     'hours_rendered' => $result['hours_rendered'],
+    'resubmitted'    => !empty($result['resubmitted']),
 ]);

@@ -189,7 +189,7 @@ body.forgot-password-page .container {
 .dtr-entry-meta {
   display: grid;
   gap: 0.75rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .dtr-entry-meta .meta-box {
@@ -900,8 +900,8 @@ body.forgot-password-page .container {
 .glass-progress {
   background: linear-gradient(
     90deg,
-    rgba(var(--bs-primary-rgb), 0.9),
-    rgba(var(--bs-info-rgb), 0.7)
+    rgba(var(--bs-dark-rgb), 0.9),
+    rgba(var(--bs-secondary-rgb), 0.7)
   ) !important;
   height: 4px;
 }

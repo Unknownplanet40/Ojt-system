@@ -135,15 +135,21 @@ function exportSupervisorCredentialsPdf(exportData, defaultFileName = "Superviso
   });
 }
 
-function fillCompanySelect($select, companies = [], selectedValue = "") {
+function fillCompanySelect($select, companies = [], selectedValue = "", supervisors = []) {
   $select.empty().append('<option value="" class="CustomOption" selected>Choose company</option>');
+
+  // Create a set of company_uuids that have supervisors assigned
+  const companiesWithSupervisors = new Set(supervisors.map(s => String(s.company_uuid || "")));
 
   companies.forEach((company) => {
     const selected = String(selectedValue || "") === String(company.uuid || "") ? "selected" : "";
+    const hasAssignedSupervisor = companiesWithSupervisors.has(String(company.uuid || ""));
     const labelParts = [company.name || "Company"];
     if (company.city) labelParts.push(company.city);
     if (company.work_setup) labelParts.push(company.work_setup);
-    $select.append(`<option value="${company.uuid}" class="CustomOption" ${selected}>${labelParts.join(" · ")}</option>`);
+    const indicatorText = hasAssignedSupervisor ? " ✓ (Has Supervisor)" : "";
+    const dataAttr = hasAssignedSupervisor ? 'data-has-supervisor="true"' : '';
+    $select.append(`<option value="${company.uuid}" class="CustomOption" ${selected} ${dataAttr}>${labelParts.join(" · ")}${indicatorText}</option>`);
   });
 }
 
@@ -173,8 +179,8 @@ function getSupervisors() {
       const supervisors = response.supervisors || [];
       $("#supervisorCount").text(response.total || supervisors.length || 0);
 
-      fillCompanySelect($("#supervisorCompany"), response.companies || []);
-      fillCompanySelect($("#editSupervisorCompany"), response.companies || [], $("#EditSupervisorModal").attr("data-company-uuid") || "");
+      fillCompanySelect($("#supervisorCompany"), response.companies || [], "", supervisors);
+      fillCompanySelect($("#editSupervisorCompany"), response.companies || [], $("#EditSupervisorModal").attr("data-company-uuid") || "", supervisors);
 
       const companyFilter = $("#companyFilter");
       companyFilter.empty().append('<option value="" class="CustomOption" selected>All Companies</option>');
@@ -324,7 +330,7 @@ function loadSupervisor(profileUuid, mode = "view") {
 
       $("#EditSupervisorModal").attr("data-profile-uuid", s.profile_uuid).attr("data-company-uuid", s.company_uuid || "");
       $("#ViewSupervisorModal").attr("data-profile-uuid", s.profile_uuid).attr("data-user-uuid", s.user_uuid);
-      fillCompanySelect($("#editSupervisorCompany"), response.companies || [], s.company_uuid || "");
+      fillCompanySelect($("#editSupervisorCompany"), response.companies || [], s.company_uuid || "", response.supervisors || []);
 
       if (mode === "view") {
         $("#viewSupervisorProfilePic").attr("src", image);

@@ -8,6 +8,7 @@ BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 const studentUuid = $("body").data("student-uuid");
+const referrerPage = $("body").data("referrer") || "mystudents";
 
 function loadStudentDetails() {
   $.ajax({
@@ -67,6 +68,22 @@ function renderStudentInfo(s, stats) {
   else if (s.account_status === "never_logged_in")
     statusBadge.addClass("bg-warning text-dark");
   else statusBadge.addClass("bg-secondary");
+
+  // Update toggle status button
+  const toggleBtn = $("#toggleStatusBtn");
+  if (s.account_status === "inactive") {
+    toggleBtn.removeClass("btn-outline-danger").addClass("btn-outline-success")
+      .html('<i class="bi bi-unlock me-2"></i>Activate')
+      .attr("data-account-status", "inactive");
+  } else {
+    toggleBtn.removeClass("btn-outline-success").addClass("btn-outline-danger")
+      .html('<i class="bi bi-lock me-2"></i>Deactivate')
+      .attr("data-account-status", "active");
+  }
+  
+  // Store student data for button actions
+  toggleBtn.attr("data-user-uuid", s.user_uuid).attr("data-name", s.full_name);
+  $("#resetPasswordBtn").attr("data-user-uuid", s.user_uuid).attr("data-name", s.full_name);
 
   // Stats
   $("#hoursRendered").text(stats.totalHours);
@@ -224,6 +241,118 @@ function formatTime(timeStr) {
   return `${hh}:${minutes} ${ampm}`;
 }
 
+function resetPassword(userUuid, userName) {
+  // Use Swal for confirmation
+  Swal.fire({
+    title: "Reset Password?",
+    html: `Are you sure you want to reset the password for <strong>${userName}</strong>? A new temporary password will be generated.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, reset it!",
+    confirmButtonColor: "#ffc107",
+    cancelButtonText: "Cancel",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      $("#pageLoader").fadeIn();
+      $.ajax({
+        url: "../../../process/students/reset_student_password",
+        type: "POST",
+        data: { csrf_token: csrfToken, user_uuid: userUuid },
+        dataType: "json",
+        success: function (response) {
+          if (response.status === "success") {
+            Swal.fire({
+              title: "Success!",
+              html: `Password reset successful for <strong>${userName}</strong><br><br><strong>New Password:</strong><br><code>${response.temp_password}</code>`,
+              icon: "success",
+              confirmButtonText: "Got it",
+            });
+          } else {
+            Swal.fire("Error", response.message, "error");
+          }
+        },
+        error: (xhr, status, error) => Errors(xhr, status, error),
+        complete: () => $("#pageLoader").fadeOut(),
+      });
+    }
+  });
+}
+
+function toggleStudentStatus(userUuid, currentStatus, userName) {
+  const isInactive = currentStatus === "inactive";
+  const action = isInactive ? "reactivate" : "deactivate";
+  const actionText = isInactive ? "Activate" : "Deactivate";
+  const description = isInactive
+    ? `Are you sure you want to activate the account for <strong>${userName}</strong>?`
+    : `Are you sure you want to deactivate the account for <strong>${userName}</strong>?`;
+
+  Swal.fire({
+    title: `${actionText} Account?`,
+    html: description,
+    icon: isInactive ? "success" : "warning",
+    showCancelButton: true,
+    confirmButtonText: `Yes, ${action} it!`,
+    confirmButtonColor: isInactive ? "#198754" : "#dc3545",
+    cancelButtonText: "Cancel",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      $("#pageLoader").fadeIn();
+      $.ajax({
+        url: "../../../process/students/deactivate_student",
+        type: "POST",
+        data: {
+          csrf_token: csrfToken,
+          user_uuid: userUuid,
+          action: action,
+        },
+        dataType: "json",
+        success: function (response) {
+          if (response.status === "success") {
+            Swal.fire("Success!", response.message, "success").then(() => {
+              loadStudentDetails();
+            });
+          } else {
+            Swal.fire("Error", response.message, "error");
+          }
+        },
+        error: (xhr, status, error) => Errors(xhr, status, error),
+        complete: () => $("#pageLoader").fadeOut(),
+      });
+    }
+  });
+}
+
 $(document).ready(function () {
   loadStudentDetails();
+
+  // Back button - navigate based on referrer
+  $("#backBtn").on("click", function () {
+    if (referrerPage === "companies") {
+      window.location.href = "./Companies";
+    } else {
+      window.location.href = "./MyStudents";
+    }
+  });
+
+  // Edit button - open edit modal or redirect
+  $("#editStudentBtn").on("click", function () {
+    // Navigate to edit page or open edit modal
+    // For now, we could add an edit modal or navigate to an edit page
+    alert("Edit functionality coming soon");
+  });
+
+  // Reset password button
+  $("#resetPasswordBtn").on("click", function () {
+    const userUuid = $(this).attr("data-user-uuid");
+    const userName = $(this).attr("data-name");
+    resetPassword(userUuid, userName);
+  });
+
+  // Toggle status button
+  $("#toggleStatusBtn").on("click", function () {
+    const userUuid = $(this).attr("data-user-uuid");
+    const currentStatus = $(this).attr("data-account-status");
+    const userName = $(this).attr("data-name");
+    toggleStudentStatus(userUuid, currentStatus, userName);
+  });
 });

@@ -26,7 +26,7 @@ const emptyRow = `
 
 function dotClass(status) {
     switch (status) {
-        case 'approved': return 'text-success-emphasis';
+        case 'approved': return 'text-success';
         case 'submitted': return 'text-warning-emphasis';
         case 'returned': return 'text-danger-emphasis';
         default: return 'text-secondary-emphasis';
@@ -105,15 +105,21 @@ function renderRequirements(overview) {
     overview.forEach(student => {
         const statuses = student.doc_statuses || {};
         const badge = getBadgeStatus(student);
+        
+        const docTypes = [
+            {key: 'resume', label: 'Resume'},
+            {key: 'guardian_form', label: 'Guardian Form'},
+            {key: 'parental_consent', label: 'Parental Consent'},
+            {key: 'medical_certificate', label: 'Medical Certificate'},
+            {key: 'insurance', label: 'Insurance'},
+            {key: 'nbi_clearance', label: 'NBI Clearance'},
+        ];
 
-        const dots = [
-            statuses.resume,
-            statuses.guardian_form,
-            statuses.parental_consent,
-            statuses.medical_certificate,
-            statuses.insurance,
-            statuses.nbi_clearance,
-        ].map((s) => `<span class="${dotClass(s)}">&#11044;</span>`).join('');
+        const dots = docTypes.map(dt => {
+            const s = statuses[dt.key];
+            const title = dt.label + (s ? ` — ${s.replace(/_/g, ' ')}` : ' — not submitted');
+            return `<span class="${dotClass(s)}" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" data-bs-content="${title}" tabindex="0" style="cursor: pointer;">&#11044;</span>`;
+        }).join('');
 
         let hasSubmitted = false;
 
@@ -123,7 +129,7 @@ function renderRequirements(overview) {
 
         const studentCard = `
             <div class="col-12 mb-3">
-                <div class="card border-0 shadow-sm rounded-4 bg-dark bg-opacity-75 h-100 transition-hover">
+                <div class="card border-0 shadow-sm rounded-4 bg-transparent h-100 quickactions">
                     <div class="card-body py-3 px-3 px-md-4">
                         <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
                             <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle overflow-hidden border border-2 border-secondary-subtle shadow-sm" style="width: 48px; height: 48px; background: #23272b;">
@@ -138,17 +144,20 @@ function renderRequirements(overview) {
                                         </div>
                                     </div>
                                     <div class="d-none d-md-flex align-items-center gap-2 ms-md-3">
-                                    ${dots}
-                                </div>
+                                        <span class="badge ${badge.cls} rounded-pill px-3 py-2 fw-semibold shadow-sm" style="font-size: 0.85rem; letter-spacing: 0.03em;">
+                                            ${badge.text}
+                                        </span>
+                                        ${dots}
+                                    </div>
                             </div>
                             <div class="d-flex d-md-none align-items-center gap-2 mt-2">
-                            ${dots}
-                        </div>
+                                <span class="badge ${badge.cls} rounded-pill px-3 py-2 fw-semibold shadow-sm" style="font-size: 0.85rem; letter-spacing: 0.03em;">
+                                    ${badge.text}
+                                </span>
+                                ${dots}
+                            </div>
                     </div>
                     <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2 ms-md-auto mt-2 mt-md-0">
-                        <span class="badge ${badge.cls} rounded-pill px-3 py-2 fw-semibold shadow-sm" style="font-size: 0.85rem; letter-spacing: 0.03em;">
-                            ${badge.text}
-                        </span>
                     <button class="btn btn-sm btn-outline-secondary rounded-2 js-view-student-reqs ${!hasSubmitted ? 'disabled' : ''} d-inline-flex align-items-center justify-content-center px-3"
                         style="min-width: 140px;" data-student-uuid="${student.student_uuid}" data-student-name="${student.full_name}">
                         <i class="bi ${hasSubmitted ? 'bi-eye' : 'bi-eye-slash'} me-1"></i> 
@@ -169,6 +178,9 @@ function renderRequirements(overview) {
         const studentName = $(this).data("student-name");
         showStudentRequirements(studentUuid, studentName);
     });
+
+    const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+    const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
 }
 
 function showStudentRequirements(studentUuid, studentName) {

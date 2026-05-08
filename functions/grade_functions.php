@@ -27,6 +27,78 @@ const DEFAULT_WEIGHTS = [
 ];
 
 
+function studentBelongsToCoordinator($conn, string $studentUuid, string $coordinatorUuid): bool
+{
+    $stmt = $conn->prepare("\n        SELECT 1\n        FROM student_profiles\n        WHERE uuid = ?\n          AND coordinator_uuid = ?\n        LIMIT 1\n    ");
+    $stmt->bind_param('ss', $studentUuid, $coordinatorUuid);
+    $stmt->execute();
+    $exists = $stmt->get_result()->num_rows > 0;
+    $stmt->close();
+
+    return $exists;
+}
+
+function resolveActiveBatchUuid($conn, string $batchUuid = ''): ?string
+{
+    if (!empty($batchUuid)) {
+        return $batchUuid;
+    }
+
+    $result = $conn->query("SELECT uuid FROM batches WHERE status = 'active' LIMIT 1");
+    if (!$result) {
+        return null;
+    }
+
+    $row = $result->fetch_assoc();
+    return $row['uuid'] ?? null;
+}
+
+function ensureGradeTableExists($conn): bool
+{
+    $sql = "
+        CREATE TABLE IF NOT EXISTS ojt_grades (
+            id               INT AUTO_INCREMENT PRIMARY KEY,
+            uuid             CHAR(36)      NOT NULL UNIQUE,
+            student_uuid     CHAR(36)      NOT NULL,
+            application_uuid CHAR(36)      NOT NULL,
+            batch_uuid       CHAR(36)      NOT NULL,
+            finalized_by     CHAR(36)      NOT NULL,
+
+            hours_score      DECIMAL(5,2)  NOT NULL DEFAULT 0,
+            midterm_score    DECIMAL(5,2)  NOT NULL DEFAULT 0,
+            final_score      DECIMAL(5,2)  NOT NULL DEFAULT 0,
+            journal_score    DECIMAL(5,2)  NOT NULL DEFAULT 0,
+            self_score       DECIMAL(5,2)  NOT NULL DEFAULT 0,
+
+            hours_weight     DECIMAL(5,2)  NOT NULL DEFAULT 20,
+            midterm_weight   DECIMAL(5,2)  NOT NULL DEFAULT 20,
+            final_weight     DECIMAL(5,2)  NOT NULL DEFAULT 40,
+            journal_weight   DECIMAL(5,2)  NOT NULL DEFAULT 10,
+            self_weight      DECIMAL(5,2)  NOT NULL DEFAULT 10,
+
+            weighted_score   DECIMAL(5,2)  NOT NULL,
+            grade_equivalent VARCHAR(10)   NOT NULL,
+            remarks          VARCHAR(50)   NOT NULL,
+
+            coordinator_notes TEXT         NULL,
+            is_finalized      TINYINT(1)   NOT NULL DEFAULT 0,
+            finalized_at      DATETIME     NULL,
+
+            created_at        DATETIME     NOT NULL DEFAULT NOW(),
+            updated_at        DATETIME     NOT NULL DEFAULT NOW() ON UPDATE NOW(),
+
+            UNIQUE KEY uq_student_batch (student_uuid, batch_uuid),
+            FOREIGN KEY (student_uuid)     REFERENCES student_profiles(uuid),
+            FOREIGN KEY (application_uuid) REFERENCES ojt_applications(uuid),
+            FOREIGN KEY (batch_uuid)       REFERENCES batches(uuid),
+            FOREIGN KEY (finalized_by)     REFERENCES coordinator_profiles(uuid)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ";
+
+    return (bool) $conn->query($sql);
+}
+
+
 // -----------------------------------------------
 // CHECK if student is ready for grading
 // all components must be present
@@ -230,6 +302,15 @@ function saveGrade(
         return ['success' => false, 'error' => 'Grade is already finalized and cannot be changed.'];
     }
 
+    $readiness = isReadyForGrading($conn, $studentUuid, $batchUuid);
+    if (!$readiness['ready']) {
+        return [
+            'success' => false,
+            'error'   => 'Student is not ready for grading yet.',
+            'readiness' => $readiness,
+        ];
+    }
+
     // compute
     $computed = computeGradeComponents($conn, $studentUuid, $batchUuid, $weights);
 
@@ -287,9 +368,8 @@ function saveGrade(
     ");
     $stmt->bind_param(
         'sssss' .
-        'ddddd' .
-        'ddddd' .
-        'dss' .
+        'ddddddddddd' .
+        'sss' .
         'si',
         $uuid, $studentUuid, $app['uuid'], $batchUuid, $coordinatorUuid,
         $computed['hours_score'],   $computed['midterm_score'],
@@ -333,6 +413,15 @@ function finalizeGrade(
         return $saveResult;
     }
 
+    $readiness = isReadyForGrading($conn, $studentUuid, $batchUuid);
+    if (!$readiness['ready']) {
+        return [
+            'success' => false,
+            'error'   => 'Student is not ready for grading yet.',
+            'readiness' => $readiness,
+        ];
+    }
+
     // finalize
     $stmt = $conn->prepare("
         UPDATE ojt_grades
@@ -345,12 +434,20 @@ function finalizeGrade(
     $stmt->execute();
     $stmt->close();
 
+    // resolve coordinator profile UUID to user UUID for audit logging
+    $userStmt = $conn->prepare("SELECT user_uuid FROM coordinator_profiles WHERE uuid = ? LIMIT 1");
+    $userStmt->bind_param('s', $coordinatorUuid);
+    $userStmt->execute();
+    $userRow = $userStmt->get_result()->fetch_assoc();
+    $userStmt->close();
+    $userUuid = $userRow['user_uuid'] ?? null;
+
     logActivity(
         conn: $conn,
         eventType: 'grade_finalized',
         description: "OJT grade finalized: {$saveResult['computed']['grade_equivalent']} ({$saveResult['computed']['weighted_score']}%)",
         module: 'grades',
-        actorUuid: $coordinatorUuid,
+        actorUuid: $userUuid,
         targetUuid: $studentUuid
     );
 
@@ -404,7 +501,7 @@ function getAllGrades(
     string $coordinatorUuid = null
 ): array {
     $safeBatch = $conn->real_escape_string($batchUuid);
-    $conditions = ["g.batch_uuid = '{$safeBatch}'"];
+    $conditions = ["g.batch_uuid = '{$safeBatch}'", "g.is_finalized = 1"];
 
     if ($coordinatorUuid) {
         $safeCoord    = $conn->real_escape_string($coordinatorUuid);
@@ -426,7 +523,7 @@ function getAllGrades(
         LEFT JOIN programs p ON sp.program_uuid = p.uuid
         LEFT JOIN coordinator_profiles cp ON g.finalized_by = cp.uuid
         WHERE {$where}
-        ORDER BY sp.last_name ASC
+        ORDER BY sp.last_name ASC, sp.first_name ASC
     ");
 
     $grades = [];
@@ -467,19 +564,12 @@ function getGradingOverview(
           sp.student_number,
           p.code            AS program_code,
           p.required_hours,
-
-          -- hours
-          COALESCE(SUM(CASE WHEN d.status = 'approved' THEN d.hours_rendered END), 0) AS approved_hours,
-
-          -- evaluations
-          MAX(CASE WHEN e.eval_type = 'midterm' AND e.submitted_by_role = 'supervisor' THEN 1 ELSE 0 END) AS has_midterm,
-          MAX(CASE WHEN e.eval_type = 'final'   AND e.submitted_by_role = 'supervisor' THEN 1 ELSE 0 END) AS has_final,
-          MAX(CASE WHEN e.eval_type = 'self'    AND e.submitted_by_role = 'student'   THEN 1 ELSE 0 END) AS has_self,
-
-          -- journals
-          SUM(CASE WHEN wj.status = 'approved' THEN 1 ELSE 0 END) AS approved_journals,
-
-          -- grade status
+          COALESCE(dtr.approved_hours, 0) AS approved_hours,
+          COALESCE(dtr.approved_count, 0)  AS approved_count,
+          COALESCE(evalx.has_midterm, 0)   AS has_midterm,
+          COALESCE(evalx.has_final, 0)     AS has_final,
+          COALESCE(evalx.has_self, 0)      AS has_self,
+          COALESCE(jrn.approved_journals, 0) AS approved_journals,
           g.uuid            AS grade_uuid,
           g.weighted_score,
           g.grade_equivalent,
@@ -488,18 +578,36 @@ function getGradingOverview(
 
         FROM student_profiles sp
         LEFT JOIN programs p ON sp.program_uuid = p.uuid
-        LEFT JOIN dtr_entries d
-          ON d.student_uuid = sp.uuid AND d.batch_uuid = '{$safeBatch}'
-        LEFT JOIN evaluations e
-          ON e.student_uuid = sp.uuid AND e.batch_uuid = '{$safeBatch}'
-        LEFT JOIN weekly_journals wj
-          ON wj.student_uuid = sp.uuid AND wj.batch_uuid = '{$safeBatch}'
+        LEFT JOIN (
+            SELECT student_uuid, batch_uuid,
+                   SUM(hours_rendered) AS approved_hours,
+                   COUNT(*) AS approved_count
+            FROM dtr_entries
+            WHERE batch_uuid = '{$safeBatch}'
+              AND status = 'approved'
+            GROUP BY student_uuid, batch_uuid
+        ) dtr ON dtr.student_uuid = sp.uuid AND dtr.batch_uuid = '{$safeBatch}'
+        LEFT JOIN (
+            SELECT student_uuid, batch_uuid,
+                   MAX(CASE WHEN eval_type = 'midterm' AND submitted_by_role = 'supervisor' THEN 1 ELSE 0 END) AS has_midterm,
+                   MAX(CASE WHEN eval_type = 'final'   AND submitted_by_role = 'supervisor' THEN 1 ELSE 0 END) AS has_final,
+                   MAX(CASE WHEN eval_type = 'self'    AND submitted_by_role = 'student'   THEN 1 ELSE 0 END) AS has_self
+            FROM evaluations
+            WHERE batch_uuid = '{$safeBatch}'
+            GROUP BY student_uuid, batch_uuid
+        ) evalx ON evalx.student_uuid = sp.uuid AND evalx.batch_uuid = '{$safeBatch}'
+        LEFT JOIN (
+            SELECT student_uuid, batch_uuid,
+                   SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) AS approved_journals
+            FROM weekly_journals
+            WHERE batch_uuid = '{$safeBatch}'
+            GROUP BY student_uuid, batch_uuid
+        ) jrn ON jrn.student_uuid = sp.uuid AND jrn.batch_uuid = '{$safeBatch}'
         LEFT JOIN ojt_grades g
           ON g.student_uuid = sp.uuid AND g.batch_uuid = '{$safeBatch}'
         WHERE sp.batch_uuid = '{$safeBatch}'
           {$coordFilter}
-        GROUP BY sp.uuid
-        ORDER BY sp.last_name ASC
+        ORDER BY sp.last_name ASC, sp.first_name ASC
     ");
 
     $overview = [];

@@ -70,7 +70,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
           </ul>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle text-capitalize <?= in_array($CurrentPage, ['Applications', 'DTR_Approvals', 'Journal', 'evaluations']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> OJT Process</a>
+          <a class="nav-link dropdown-toggle text-capitalize <?= in_array($CurrentPage, ['Applications', 'DTR_Approvals', 'Journal', 'Evaluations', 'Grading']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> OJT Process</a>
           <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
             <li>
               <a class="dropdown-item <?= $CurrentPage === 'Applications' ? 'nav-active' : '' ?>" href="../Coordinator/Applications">
@@ -116,10 +116,21 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
                 </div>
               </a>
             </li>
+            <li>
+              <a class="dropdown-item <?= $CurrentPage === 'Grading' ? 'nav-active' : '' ?>" href="../Coordinator/Grading">
+                 <div class="hstack">
+                  <i class="bi bi-calculator me-2"></i>
+                  <div class="vstack">
+                    <span>Grading</span>
+                    <small class="text-muted" style="font-size: 0.7em">Compute, save, and finalize final grades.</small>
+                  </div>
+                </div>
+              </a>
+            </li>
           </ul>
         </li>
                 <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle text-capitalize <?= in_array($CurrentPage, ['Companies', 'visits']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> Companies</a>
+          <a class="nav-link dropdown-toggle text-capitalize <?= in_array($CurrentPage, ['Companies', 'Visits']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> Companies</a>
           <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
             <li>
               <a class="dropdown-item <?= $CurrentPage === 'Companies' ? 'nav-active' : '' ?>" href="../Coordinator/Companies">
@@ -133,7 +144,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
               </a>
             </li>
             <li>
-              <a class="dropdown-item <?= $CurrentPage === 'visits' ? 'nav-active' : '' ?>" href="javascript:void(0)">
+              <a class="dropdown-item <?= $CurrentPage === 'Visits' ? 'nav-active' : '' ?>" href="../Coordinator/Visits">
                  <div class="hstack">
                   <i class="bi bi-briefcase me-2"></i>
                   <div class="vstack">
@@ -177,7 +188,7 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
               </a>
             </li>
             <li>
-              <a class="dropdown-item <?= $CurrentPage === 'settings' ? 'nav-active' : '' ?>" href="javascript:void(0)">
+              <a class="dropdown-item <?= $CurrentPage === 'Settings' ? 'nav-active' : '' ?>" href="../Coordinator/Settings">
                 <div class="hstack">
                   <i class="bi bi-gear me-2"></i>
                   <div class="vstack">

@@ -290,7 +290,7 @@ function validateBulkRows($conn, array $rows, string $batchUuid, string $coordin
     ];
 }
 
-function createBulkStudents($conn, array $validRows, string $actorUuid): array
+function createBulkStudents($conn, array $validRows, string $actorUuid, bool $saveToDb = true): array
 {
     $created = [];
     $failed  = [];
@@ -301,45 +301,48 @@ function createBulkStudents($conn, array $validRows, string $actorUuid): array
         $tempPassword = generateTempPassword();
         $passwordHash = password_hash($tempPassword, PASSWORD_BCRYPT);
 
-        $conn->begin_transaction();
-
         try {
-            $stmt = $conn->prepare("
-                INSERT INTO users
-                  (uuid, email, password_hash, role, is_active, must_change_password, created_by)
-                VALUES (?, ?, ?, 'student', 1, 1, ?)
-            ");
-            $stmt->bind_param('ssss', $userUuid, $row['email'], $passwordHash, $actorUuid);
-            $stmt->execute();
-            $stmt->close();
+            // Only attempt DB operations if saveToDb is true
+            if ($saveToDb) {
+                $conn->begin_transaction();
 
-            $stmt = $conn->prepare("
-                INSERT INTO student_profiles
-                  (uuid, user_uuid, student_number, last_name, first_name, middle_name,
-                   mobile, program_uuid, year_level, section, coordinator_uuid, batch_uuid)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->bind_param(
-                'ssssssssssss',
-                $profileUuid,
-                $userUuid,
-                $row['student_number'],
-                $row['last_name'],
-                $row['first_name'],
-                $row['middle_name'],
-                $row['mobile'],
-                $row['program_uuid'],
-                $row['year_level'],
-                $row['section'],
-                $row['coordinator_uuid'],
-                $row['batch_uuid']
-            );
-            $stmt->execute();
-            $stmt->close();
+                $stmt = $conn->prepare("
+                    INSERT INTO users
+                      (uuid, email, password_hash, role, is_active, must_change_password, created_by)
+                    VALUES (?, ?, ?, 'student', 1, 1, ?)
+                ");
+                $stmt->bind_param('ssss', $userUuid, $row['email'], $passwordHash, $actorUuid);
+                $stmt->execute();
+                $stmt->close();
 
-            $conn->commit();
+                $stmt = $conn->prepare("
+                    INSERT INTO student_profiles
+                      (uuid, user_uuid, student_number, last_name, first_name, middle_name,
+                       mobile, program_uuid, year_level, section, coordinator_uuid, batch_uuid)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                $stmt->bind_param(
+                    'ssssssssssss',
+                    $profileUuid,
+                    $userUuid,
+                    $row['student_number'],
+                    $row['last_name'],
+                    $row['first_name'],
+                    $row['middle_name'],
+                    $row['mobile'],
+                    $row['program_uuid'],
+                    $row['year_level'],
+                    $row['section'],
+                    $row['coordinator_uuid'],
+                    $row['batch_uuid']
+                );
+                $stmt->execute();
+                $stmt->close();
 
-            initializeRequirements($conn, $profileUuid, $row['batch_uuid']);
+                $conn->commit();
+
+                initializeRequirements($conn, $profileUuid, $row['batch_uuid']);
+            }
 
             $created[] = [
                 'row_num'        => $row['row_num'],
@@ -354,7 +357,9 @@ function createBulkStudents($conn, array $validRows, string $actorUuid): array
             ];
 
         } catch (Exception $e) {
-            $conn->rollback();
+            if ($saveToDb) {
+                $conn->rollback();
+            }
             $failed[] = [
                 'row_num'   => $row['row_num'],
                 'full_name' => $row['full_name'],

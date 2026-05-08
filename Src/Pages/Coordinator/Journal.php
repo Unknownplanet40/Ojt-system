@@ -52,58 +52,60 @@ if ($currentHour >= 5 && $currentHour < 12) {
     <div class="modal fade" id="reviewJournalModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content bg-blur-5 bg-semi-transparent border-0 shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
-                <div class="modal-header border-0 pb-0">
-                    <div>
-                        <h5 class="modal-title fw-semibold mb-1">Review Journal Entry</h5>
-                        <p class="text-muted small mb-0"><span id="viewStudentName" class="fw-bold text-body"></span> • <span id="viewJournalWeekRange"></span></p>
+                <div class="modal-header border-0 border-bottom border-light border-opacity-10 pb-3">
+                    <div class="flex-grow-1">
+                        <h5 class="modal-title fw-bold mb-1">Review Journal Entry</h5>
+                        <p class="text-muted small mb-0"><span id="viewStudentName" class="fw-semibold text-body"></span> • <span id="viewJournalWeekRange" class="text-primary"></span></p>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body pt-3">
+                <div class="modal-body pt-4">
                     <input type="hidden" id="reviewJournalUuid">
                     
-                    <div id="viewJournalStatusBadge" class="mb-3"></div>
+                    <div id="viewJournalStatusBadge" class="mb-4"></div>
 
-                    <div class="mb-3">
-                        <h6 class="fw-semibold text-muted small text-uppercase">Accomplishments & Tasks</h6>
-                        <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body" id="viewAccomplishments" style="white-space: pre-wrap;"></div>
+                    <h6 class="fw-bold text-uppercase text-muted mb-3 small d-flex align-items-center"><i class="bi bi-pencil-square me-2 text-primary"></i>Student's Entry</h6>
+                    
+                    <div class="mb-4">
+                        <label class="fw-semibold small text-muted text-uppercase mb-2 d-block">Accomplishments & Tasks</label>
+                        <div class="p-4 bg-body-secondary bg-opacity-10 rounded-4 text-body border border-light border-opacity-10 lh-lg" id="viewAccomplishments" style="white-space: pre-wrap; font-size: 0.95rem;"></div>
                     </div>
                     
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <h6 class="fw-semibold text-muted small text-uppercase">Skills Learned</h6>
-                            <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body h-100" id="viewSkillsLearned" style="white-space: pre-wrap;"></div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-lg-4 col-md-6">
+                            <label class="fw-semibold small text-muted text-uppercase mb-2 d-block">Skills Learned</label>
+                            <div class="p-3 bg-body-secondary bg-opacity-10 rounded-3 text-body h-100 border border-light border-opacity-10 small lh-lg" id="viewSkillsLearned" style="white-space: pre-wrap;"></div>
                         </div>
-                        <div class="col-md-4">
-                            <h6 class="fw-semibold text-muted small text-uppercase">Issues & Challenges</h6>
-                            <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body h-100" id="viewChallenges" style="white-space: pre-wrap;"></div>
+                        <div class="col-lg-4 col-md-6">
+                            <label class="fw-semibold small text-muted text-uppercase mb-2 d-block">Challenges</label>
+                            <div class="p-3 bg-body-secondary bg-opacity-10 rounded-3 text-body h-100 border border-light border-opacity-10 small lh-lg" id="viewChallenges" style="white-space: pre-wrap;"></div>
                         </div>
-                        <div class="col-md-4">
-                            <h6 class="fw-semibold text-muted small text-uppercase">Plans for Next Week</h6>
-                            <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body h-100" id="viewPlansNextWeek" style="white-space: pre-wrap;"></div>
+                        <div class="col-lg-4 col-md-6">
+                            <label class="fw-semibold small text-muted text-uppercase mb-2 d-block">Plans Next Week</label>
+                            <div class="p-3 bg-body-secondary bg-opacity-10 rounded-3 text-body h-100 border border-light border-opacity-10 small lh-lg" id="viewPlansNextWeek" style="white-space: pre-wrap;"></div>
                         </div>
                     </div>
 
                     <hr class="my-4 opacity-25">
                     
-                    <h5 class="fw-semibold mb-3"><i class="bi bi-chat-dots me-2"></i>Coordinator Evaluation</h5>
+                    <h6 class="fw-bold text-uppercase text-muted mb-3 small d-flex align-items-center"><i class="bi bi-chat-dots me-2 text-info"></i>Your Evaluation</h6>
 
                     <div class="mb-3">
-                        <label for="coordinatorRemarks" class="form-label fw-medium">Remarks / Feedback</label>
-                        <textarea class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="coordinatorRemarks" rows="3" placeholder="Provide feedback or encouragement..." style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
+                        <label for="coordinatorRemarks" class="form-label fw-medium small">Remarks / Feedback</label>
+                        <textarea class="form-control bg-blur-5 bg-semi-transparent border border-light border-opacity-25 shadow-none" id="coordinatorRemarks" rows="3" placeholder="Provide constructive feedback..." style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
                     </div>
 
-                    <div class="mb-3 d-none" id="returnReasonContainer">
-                        <label for="returnReason" class="form-label fw-medium text-danger">Return Reason <span class="text-danger">*</span></label>
-                        <textarea class="form-control bg-blur-5 bg-semi-transparent border-danger border-opacity-50 shadow-none" id="returnReason" rows="2" placeholder="Explain why this journal is being returned..." style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
-                        <div class="invalid-feedback d-block small" id="returnReasonError"></div>
+                    <div class="mb-0 d-none" id="returnReasonContainer">
+                        <label for="returnReason" class="form-label fw-medium small text-danger">Return Reason <span class="text-danger">*</span></label>
+                        <textarea class="form-control bg-blur-5 bg-semi-transparent border border-danger border-opacity-50 shadow-none" id="returnReason" rows="2" placeholder="Clearly explain what needs to be revised..." style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
+                        <div class="invalid-feedback d-block small mt-1" id="returnReasonError"></div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-info action-btn" data-action="remark" id="btnSaveRemarks">Save Remarks</button>
-                    <button type="button" class="btn btn-danger action-btn" data-action="return" id="btnReturnJournal">Return for Revision</button>
-                    <button type="button" class="btn btn-success action-btn" data-action="approve" id="btnApproveJournal">Approve Journal</button>
+                <div class="modal-footer border-0 border-top border-light border-opacity-10 pt-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-sm btn-outline-info action-btn rounded-pill px-4" data-action="remark" id="btnSaveRemarks"><i class="bi bi-check-lg me-1"></i>Save Remarks</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger action-btn rounded-pill px-4" data-action="return" id="btnReturnJournal"><i class="bi bi-arrow-return-left me-1"></i>Return</button>
+                    <button type="button" class="btn btn-sm btn-success action-btn rounded-pill px-4" data-action="approve" id="btnApproveJournal"><i class="bi bi-check-circle me-1"></i>Approve</button>
                 </div>
             </div>
         </div>
@@ -126,7 +128,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
 
                 <div class="row g-3 mb-4">
                     <div class="col-12 col-md-3">
-                        <div class="card bg-blur-5 bg-semi-transparent border-0 rounded-4 shadow-sm h-100" style="--blur-lvl: <?= $opacitylvl ?>;">
+                        <div class="card glass-ui glass-ui-strong border-0 rounded-4 shadow-sm h-100" style="--blur-lvl: <?= $opacitylvl ?>;">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="text-muted mb-0 fw-semibold text-uppercase small">Total Journals</h6>
@@ -137,7 +139,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                         </div>
                     </div>
                     <div class="col-12 col-md-3">
-                        <div class="card bg-blur-5 bg-semi-transparent border-0 rounded-4 shadow-sm h-100" style="--blur-lvl: <?= $opacitylvl ?>;">
+                        <div class="card glass-ui glass-ui-strong border-0 rounded-4 shadow-sm h-100" style="--blur-lvl: <?= $opacitylvl ?>;">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="text-muted mb-0 fw-semibold text-uppercase small">Pending Review</h6>
@@ -148,7 +150,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                         </div>
                     </div>
                     <div class="col-12 col-md-3">
-                        <div class="card bg-blur-5 bg-semi-transparent border-0 rounded-4 shadow-sm h-100" style="--blur-lvl: <?= $opacitylvl ?>;">
+                        <div class="card glass-ui glass-ui-strong border-0 rounded-4 shadow-sm h-100" style="--blur-lvl: <?= $opacitylvl ?>;">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="text-muted mb-0 fw-semibold text-uppercase small">Approved</h6>
@@ -159,7 +161,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                         </div>
                     </div>
                     <div class="col-12 col-md-3">
-                        <div class="card bg-blur-5 bg-semi-transparent border-0 rounded-4 shadow-sm h-100" style="--blur-lvl: <?= $opacitylvl ?>;">
+                        <div class="card glass-ui glass-ui-strong border-0 rounded-4 shadow-sm h-100" style="--blur-lvl: <?= $opacitylvl ?>;">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="text-muted mb-0 fw-semibold text-uppercase small">Returned</h6>
@@ -171,7 +173,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                     </div>
                 </div>
 
-                <div class="card bg-blur-5 bg-semi-transparent rounded-4 mb-4 border-0 shadow-sm" style="--blur-lvl: <?= $opacitylvl ?>;">
+                <div class="card glass-ui glass-ui-strong rounded-4 mb-4 border-0 shadow-sm" style="--blur-lvl: <?= $opacitylvl ?>;">
                     <div class="card-body p-3 p-md-4">
                         <div class="row g-3">
                             <div class="col-12 col-md-4">

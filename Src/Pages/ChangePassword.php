@@ -8,7 +8,7 @@ require_once "../../Assets/SystemInfo.php";
 
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 
 <head>
     <?php require_once "./srcPageHeader.php" ?>

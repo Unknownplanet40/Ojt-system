@@ -1,57 +1,80 @@
+const THEME_STORAGE_KEY = "ojt_theme_mode";
+const VALID_THEME_MODES = ["light", "dark", "auto"];
+const DEFAULT_THEME_MODE = "dark";
+
 let ThemeColor = null;
-let sameTheme = "default";
+let sameTheme = DEFAULT_THEME_MODE;
+let systemThemeListener = null;
+let systemThemeQuery = null;
 
-let FORCE_DEFAULT_THEME = "dark";
-
-export function MatchsystemThemes(isEnabled = true, ForceDefaultTheme = FORCE_DEFAULT_THEME) {
-  const validThemes = ["default", "light", "dark"];
-  isEnabled =false;
-  if (!isEnabled && ForceDefaultTheme.toLowerCase() !== "default") {
-    const themeToApply = validThemes.includes(ForceDefaultTheme.toLowerCase()) ? ForceDefaultTheme.toLowerCase() : "light";
-    document.documentElement.setAttribute("data-bs-theme", themeToApply);
-    ThemeColor = themeToApply;
-    sameTheme = themeToApply;
-    return;
-  }
-
-  if (!isEnabled) {
-    document.documentElement.setAttribute("data-bs-theme", "light");
-    ThemeColor = "light";
-    sameTheme = "light";
-    return;
-  }
-
-  const html = document.documentElement;
-  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-    html.setAttribute("data-bs-theme", "dark");
-    ThemeColor = "dark";
-  } else {
-    html.setAttribute("data-bs-theme", "light");
-    ThemeColor = "light";
-  }
-  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
-    html.setAttribute("data-bs-theme", e.matches ? "dark" : "light");
-    ThemeColor = e.matches ? "dark" : "light";
-  });
+function normalizeThemeMode(themeMode = DEFAULT_THEME_MODE) {
+  const normalized = String(themeMode || "").toLowerCase().trim();
+  return VALID_THEME_MODES.includes(normalized) ? normalized : DEFAULT_THEME_MODE;
 }
 
-export function SwalTheme(isEnabled = true) {
-  let ForceDefaultTheme = sameTheme;
-  const validThemes = ["default", "light", "dark"];
-  if (!isEnabled && ForceDefaultTheme.toLowerCase() !== "default") {
-    const themeToApply = validThemes.includes(ForceDefaultTheme.toLowerCase()) ? ForceDefaultTheme.toLowerCase() : "light";
-    return themeToApply === "dark" ? "bootstrap-5-dark" : "bootstrap-5-light";
+function getSystemThemeColor() {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function applyResolvedTheme(themeMode = DEFAULT_THEME_MODE) {
+  const normalizedMode = normalizeThemeMode(themeMode);
+  const resolvedTheme = normalizedMode === "auto" ? getSystemThemeColor() : normalizedMode;
+
+  document.documentElement.setAttribute("data-bs-theme", resolvedTheme);
+  document.documentElement.setAttribute("data-theme-mode", normalizedMode);
+  ThemeColor = resolvedTheme;
+  sameTheme = normalizedMode;
+
+  return resolvedTheme;
+}
+
+function bindSystemThemeListener() {
+  systemThemeQuery = systemThemeQuery || window.matchMedia("(prefers-color-scheme: dark)");
+
+  if (systemThemeListener) {
+    systemThemeQuery.removeEventListener("change", systemThemeListener);
   }
 
+  systemThemeListener = () => {
+    if (sameTheme === "auto") {
+      applyResolvedTheme("auto");
+    }
+  };
+
+  systemThemeQuery.addEventListener("change", systemThemeListener);
+}
+
+export function GetThemeMode() {
+  return normalizeThemeMode(localStorage.getItem(THEME_STORAGE_KEY) || sameTheme);
+}
+
+export function SetThemeMode(themeMode = DEFAULT_THEME_MODE, persist = true) {
+  const normalizedMode = normalizeThemeMode(themeMode);
+
+  if (persist) {
+    localStorage.setItem(THEME_STORAGE_KEY, normalizedMode);
+  }
+
+  const resolvedTheme = applyResolvedTheme(normalizedMode);
+  bindSystemThemeListener();
+  return {
+    mode: normalizedMode,
+    resolvedTheme,
+    swalTheme: resolvedTheme === "dark" ? "bootstrap-5-dark" : "bootstrap-5-light",
+  };
+}
+
+export function MatchsystemThemes(isEnabled = true, ForceDefaultTheme = DEFAULT_THEME_MODE) {
   if (!isEnabled) {
-    return "bootstrap-5-light";
+    return SetThemeMode(ForceDefaultTheme, false).mode;
   }
 
-  if (ThemeColor === "dark") {
-    return "bootstrap-5-dark";
-  } else {
-    return "bootstrap-5-light";
-  }
+  return SetThemeMode(GetThemeMode(), false).mode;
+}
+
+export function SwalTheme() {
+  const resolvedTheme = ThemeColor || SetThemeMode(GetThemeMode(), false).resolvedTheme;
+  return resolvedTheme === "dark" ? "bootstrap-5-dark" : "bootstrap-5-light";
 }
 
 export function BGcircleTheme(isEnabled = true, themeVersion = "primary", animationSpeed = "normal") {

@@ -1,6 +1,7 @@
 import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
 import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "../SystemTheme.js";
 import { Errors } from "../ErrorFunctions.js";
+import { animate } from "../../../libs/animejs/bundles/anime.esm.min.js";
 
 MatchsystemThemes(true);
 let swalTheme = SwalTheme();
@@ -8,6 +9,133 @@ BGcircleTheme(true, "default", "fast");
 let letPageLoad = true;
 let latestNeedsAttention = [];
 const ADMIN_DASHBOARD_TOUR_KEY = "admin_dashboard_tour_done";
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+let dashboardEntrancePrepared = false;
+
+function canAnimateDashboard() {
+  return Onlypage === "AdminDashboard" && !prefersReducedMotion.matches;
+}
+
+function isElementOnScreen(element) {
+  if (!element) return false;
+
+  const rect = element.getBoundingClientRect();
+  return rect.bottom > 0 && rect.right > 0 && rect.top < window.innerHeight && rect.left < window.innerWidth;
+}
+
+function runWhenOnScreen(element, callback, options = {}) {
+  if (!element) return;
+
+  if (!("IntersectionObserver" in window) || isElementOnScreen(element)) {
+    callback();
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries, activeObserver) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+
+      activeObserver.unobserve(entry.target);
+      callback();
+    });
+  }, {
+    threshold: options.threshold ?? 0.18,
+    rootMargin: options.rootMargin ?? "0px 0px -8% 0px",
+  });
+
+  observer.observe(element);
+}
+
+function animateDashboardEntrance() {
+  if (!canAnimateDashboard() || dashboardEntrancePrepared) return;
+
+  dashboardEntrancePrepared = true;
+  const dashboardPanels = [
+    "#dashboardContent > .hstack",
+    ".totalusercard",
+    ".studentcard",
+    ".coordinatorcard",
+    ".companiescard",
+    ".needsattention",
+    ".quickactions",
+    ".usersbyroles",
+    ".accounts",
+    ".recentActivity",
+  ].join(", ");
+
+  document.querySelectorAll(dashboardPanels).forEach((panel, index) => {
+    panel.style.opacity = "0";
+    panel.style.transform = "translateY(18px) scale(0.985)";
+
+    runWhenOnScreen(panel, () => {
+      if (panel.dataset.dashboardAnimated === "1") return;
+
+      panel.dataset.dashboardAnimated = "1";
+      animate(panel, {
+        opacity: [0, 1],
+        y: [18, 0],
+        scale: [0.985, 1],
+        duration: 720,
+        delay: index * 65,
+        ease: "out(3)",
+      });
+    });
+  });
+}
+
+function animateDashboardListItems(selector) {
+  if (!canAnimateDashboard()) return;
+
+  const items = document.querySelectorAll(selector);
+  if (!items.length) return;
+
+  items.forEach((item, index) => {
+    item.style.opacity = "0";
+    item.style.transform = "translateX(12px)";
+
+    runWhenOnScreen(item, () => {
+      if (item.dataset.dashboardListAnimated === "1") return;
+
+      item.dataset.dashboardListAnimated = "1";
+      animate(item, {
+        opacity: [0, 1],
+        x: [12, 0],
+        duration: 420,
+        delay: index * 45,
+        ease: "out(3)",
+      });
+    }, { threshold: 0.1, rootMargin: "0px 0px -4% 0px" });
+  });
+}
+
+function animateProgressBar(selector, percentage) {
+  const $bar = $(selector);
+  if (!$bar.length) return;
+
+  $bar.attr("aria-valuenow", percentage);
+  if (!canAnimateDashboard()) {
+    $bar.css("width", `${percentage}%`);
+    return;
+  }
+
+  const bar = $bar[0];
+  const triggerElement = bar.closest(".usersbyroles") || bar;
+  const targetWidth = `${percentage}%`;
+
+  bar.dataset.dashboardProgressTarget = targetWidth;
+  if (bar.dataset.dashboardProgressAnimated !== "1") {
+    bar.style.width = "0%";
+  }
+
+  runWhenOnScreen(triggerElement, () => {
+    bar.dataset.dashboardProgressAnimated = "1";
+    animate(bar, {
+      width: bar.dataset.dashboardProgressTarget || targetWidth,
+      duration: 850,
+      ease: "out(3)",
+    });
+  });
+}
 
 function startDashboardTour() {
   const driverFn = window.driver?.js?.driver || window.driver || (typeof driver === "function" ? driver : null);
@@ -244,6 +372,7 @@ function SignOut() {
     },
     success: function (response) {
       if (response.status === "success") {
+        localStorage.removeItem("ojt_theme_mode");
         Swal.close();
         window.location.href = response.redirect_url;
       } else {
@@ -500,10 +629,10 @@ function renderRoleBreakdown(roleBreakdown = {}) {
   $("#coordinatorCount").text(byRole.coordinator.count);
   $("#adminCount").text(byRole.admin.count);
 
-  $("#studentProgressBar").css("width", `${byRole.student.percentage}%`).attr("aria-valuenow", byRole.student.percentage);
-  $("#supervisorProgressBar").css("width", `${byRole.supervisor.percentage}%`).attr("aria-valuenow", byRole.supervisor.percentage);
-  $("#coordinatorProgressBar").css("width", `${byRole.coordinator.percentage}%`).attr("aria-valuenow", byRole.coordinator.percentage);
-  $("#adminProgressBar").css("width", `${byRole.admin.percentage}%`).attr("aria-valuenow", byRole.admin.percentage);
+  animateProgressBar("#studentProgressBar", byRole.student.percentage);
+  animateProgressBar("#supervisorProgressBar", byRole.supervisor.percentage);
+  animateProgressBar("#coordinatorProgressBar", byRole.coordinator.percentage);
+  animateProgressBar("#adminProgressBar", byRole.admin.percentage);
 }
 
 function getAlertVisuals(type = "") {
@@ -604,6 +733,7 @@ function renderNeedsAttention(alerts = []) {
         </div>
       </li>
     `);
+    animateDashboardListItems("#needsAttentionList > li");
     return;
   }
 
@@ -656,6 +786,8 @@ function renderNeedsAttention(alerts = []) {
       </li>
     `);
   });
+
+  animateDashboardListItems("#needsAttentionList > li");
 }
 
 function getRoleBadgeClass(role = "") {
@@ -679,6 +811,7 @@ function renderRecentAccounts(accounts = []) {
 
   if (!Array.isArray(accounts) || accounts.length === 0) {
     $list.append('<li class="list-group-item bg-transparent border-0 px-0 py-3 text-muted">No recent account activity.</li>');
+    animateDashboardListItems("#recentAccountsList > li");
     return;
   }
 
@@ -706,6 +839,8 @@ function renderRecentAccounts(accounts = []) {
       </li>
     `);
   });
+
+  animateDashboardListItems("#recentAccountsList > li");
 }
 
 function getActivityIconClass(eventType = "") {
@@ -731,6 +866,7 @@ function renderRecentActivity(activities = []) {
 
   if (safeActivities.length === 0) {
     $list.append('<li class="list-group-item bg-transparent border-0 px-0 py-3 text-muted">No recent activity yet.</li>');
+    animateDashboardListItems("#recentActivityList > li");
     return;
   }
 
@@ -753,6 +889,8 @@ function renderRecentActivity(activities = []) {
       </li>
     `);
   });
+
+  animateDashboardListItems("#recentActivityList > li");
 }
 
 function goToDashboardLink(link = "") {
@@ -848,11 +986,11 @@ function wireAdminDashboardQuickActions() {
     }
 
     window.location.href = "../../../Src/Pages/Admin/AuditLogs";
+  });
 
-      $("#refreshNeedsAttentionBtn").on("click", function (e) {
-        e.preventDefault();
-        fetchDashboardData({ showSuccessToast: true, isManualRefresh: true });
-      });
+  $("#refreshNeedsAttentionBtn").on("click", function (e) {
+    e.preventDefault();
+    fetchDashboardData({ showSuccessToast: true, isManualRefresh: true });
   });
 
   $(document)
@@ -867,7 +1005,7 @@ $(document).ready(function () {
   
   $("#pageLoader").fadeOut(500, function () {
     $(this).remove();
-    $("#PageMainContent").fadeIn(500);
+    $("#PageMainContent").fadeIn(500, animateDashboardEntrance);
   });
 
   fetchProfile();
@@ -877,6 +1015,7 @@ $(document).ready(function () {
   if (Onlypage === "AdminDashboard") {
     fetchDashboardData();
     wireAdminDashboardQuickActions();
+    setTimeout(animateDashboardEntrance, 650);
 
     $("#quickCreateBatch").on("click", function (e) {
       e.preventDefault();

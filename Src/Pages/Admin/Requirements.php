@@ -43,8 +43,8 @@ $CurrentPage = "Requirements";
     <div class="modal fade" id="requirementViewModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="staticBackdropLabel">
         <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
-            <div class="modal-content bg-dark border border-secondary-subtle rounded-4 shadow-lg">
-                <div class="modal-header border-bottom border-secondary-subtle py-3 px-4">
+            <div class="modal-content bg-dark border border-secondary-subtle rounded-4 shadow-lg bg-blur-5 bg-semi-transparent" style="--blur-lvl: <?= $opacitylvl ?>">
+                <div class="modal-header border-bottom border-secondary-subtle py-3 px-4 bg-transparent">
                     <div class="vstack">
                         <h5 class="modal-title fw-bold text-white mb-0">Student Audit: <span id="modalStudentName" class="text-success">Student Name</span></h5>
                         <p class="text-muted small mb-0">Comprehensive review of all pre-OJT documentation and coordinator feedback.</p>

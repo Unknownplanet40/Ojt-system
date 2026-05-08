@@ -70,7 +70,7 @@ function renderCompanies(companies) {
 
     const card = `
             <div class="col-12 col-md-6 col-xl-4">
-                <div class="card h-100 border-0 shadow-sm rounded-4 bg-blur-10 bg-semi-transparent overflow-hidden" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1) !important;">
+                <div class="card h-100 border shadow-sm rounded-4 glass-ui glass-ui-strong overflow-hidden">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center gap-3 mb-4">
                             <div class="rounded-3 bg-primary bg-opacity-10 d-flex align-items-center justify-content-center text-primary" style="width: 50px; height: 50px;">
@@ -250,7 +250,7 @@ $(document).ready(function () {
                       <div class="text-white-50 x-small text-truncate">${s.program_code}</div>
                     </div>
                   </div>
-                  <a href="./viewStudentProfile?uuid=${s.profile_uuid}" class="btn btn-sm btn-outline-primary rounded-pill px-3 x-small flex-shrink-0 ms-2">View Profile</a>
+                  <a href="./viewStudentProfile?uuid=${s.profile_uuid}&from=companies" class="btn btn-sm btn-outline-primary rounded-pill px-3 x-small flex-shrink-0 ms-2">View Profile</a>
                 </div>
               `);
             });
@@ -286,14 +286,12 @@ $(document).ready(function () {
 
     if (!file) return;
 
-    // Only allow PDF
     if (file.type !== "application/pdf") {
       ToastVersion("error", "Only PDF files are allowed.");
       $(this).val("");
       return;
     }
 
-    // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       ToastVersion("error", "File size too large. Max 5MB allowed.");
       $(this).val("");

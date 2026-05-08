@@ -69,10 +69,18 @@ function formValues() {
 function setModalMode(mode, entry = null) {
   state.mode = mode;
   state.activeUuid = entry?.uuid || '';
-  document.getElementById('dtrEntryModalTitle').textContent = mode === 'edit' ? 'Edit DTR entry' : 'Log DTR entry';
-  document.getElementById('saveDtrEntryBtn').textContent = mode === 'edit' ? 'Update entry' : 'Save entry';
+  const isResubmission = mode === 'edit' && entry?.status === 'rejected';
+  document.getElementById('dtrEntryModalTitle').textContent = isResubmission
+    ? 'Resubmit DTR entry'
+    : mode === 'edit'
+      ? 'Edit DTR entry'
+      : 'Log DTR entry';
+  document.getElementById('saveDtrEntryBtn').textContent = isResubmission
+    ? 'Resubmit entry'
+    : mode === 'edit'
+      ? 'Update entry'
+      : 'Save entry';
   document.getElementById('dtrEntryUuid').value = entry?.uuid || '';
-  // If creating a new entry, default date/time to current values for convenience
   if (mode === 'create' && !entry) {
     document.getElementById('entryDate').value = getTodayYYYYMMDD();
     document.getElementById('timeIn').value = getCurrentTimeHHMM();
@@ -141,10 +149,11 @@ function renderEntries() {
     const accent = entry.status === 'approved' ? 'success' : entry.status === 'rejected' ? 'danger' : entry.is_backdated ? 'warning' : 'info';
     const statusIcon = entry.status === 'approved' ? 'bi-check2-circle' : entry.status === 'rejected' ? 'bi-x-circle' : entry.is_backdated ? 'bi-clock-history' : 'bi-journal-text';
     const isBackdated = entry.is_backdated ? '<span class="badge rounded-pill bg-info-subtle text-info-emphasis">Backdated</span>' : '';
+    const requiresResubmission = entry.status === 'rejected' ? '<span class="dtr-chip badge rounded-pill bg-danger-subtle text-danger-emphasis">Requires resubmission</span>' : '';
     const activity = entry.activities ?? '' ? entry.activities : '<span class="text-muted">No activities recorded</span>';
 
     list.append(`
-      <div class="card dtr-entry-card bg-blur-5 bg-semi-transparent shadow-sm" data-accent="${accent}">
+      <div class="card bg-blur-5 bg-semi-transparent shadow-sm" data-accent="${accent}">
         <div class="card-body">
           <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 dtr-entry-header">
             <div class="d-flex gap-3 align-items-start flex-grow-1">
@@ -156,6 +165,7 @@ function renderEntries() {
                   <span class="dtr-chip"><i class="bi bi-calendar3"></i>${entry.entry_date_label}</span>
                   <span class="dtr-chip"><i class="bi bi-clock"></i>${entry.time_ago || 'Recently submitted'}</span>
                   ${entry.is_backdated ? '<span class="dtr-chip text-info-emphasis"><i class="bi bi-exclamation-triangle"></i>Backdated</span>' : ''}
+                  ${requiresResubmission}
                 </div>
                 <h5 class="mb-1 fw-semibold">${entry.status_label || entry.status}</h5>
                 <p class="mb-0 text-muted dtr-entry-subtitle">${entry.time_in_label} - ${entry.time_out_label} · ${entry.hours_label}</p>
@@ -177,10 +187,11 @@ function renderEntries() {
             <span class="meta-label mb-2">Activities performed</span>
             <div class="activity-text">${activity}</div>
             ${entry.backdate_reason ? `<small class="text-muted d-block mt-2">Reason: ${entry.backdate_reason}</small>` : ''}
+            ${entry.status === 'rejected' && entry.rejection_reason ? `<div class="alert alert-danger alert-sm mt-3 mb-0 p-2" role="alert"><small><strong>Rejection reason:</strong> ${entry.rejection_reason}</small></div>` : ''}
           </div>
 
           <div class="d-flex justify-content-end flex-wrap gap-2 dtr-entry-actions mt-3">
-            ${entry.can_edit ? `<button class="btn btn-sm btn-outline-success rounded-pill px-3" data-action="edit" data-uuid="${entry.uuid}">Edit</button>` : ''}
+            ${entry.can_edit ? `<button class="btn btn-sm ${entry.status === 'rejected' ? 'btn-outline-warning' : 'btn-outline-success'} rounded-pill px-3" data-action="edit" data-uuid="${entry.uuid}">${entry.status === 'rejected' ? 'Resubmit' : 'Edit'}</button>` : ''}
             ${entry.can_delete ? `<button class="btn btn-sm btn-outline-danger rounded-pill px-3" data-action="delete" data-uuid="${entry.uuid}">Delete</button>` : ''}
           </div>
         </div>

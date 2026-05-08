@@ -1,14 +1,6 @@
-plan/Coordinator dashboards.md
-plan/dtr.md
-plan/endorsement_and_start.md
-plan/evaluation.md
-plan/journal.md
-plan/ojt_application.md
-plan/pre_ojt_requirements.md
-scratch/check_mapping.php
-scratch/check_tables.php
+Src/Pages/Starter_Template.html
 process/Process Structure Template.php
-scratch/create_journals_table.php
 functions/credentials.php
-scratch/check_schema_supervisor.php
-scratch/check_schema.php
+scratch/
+plan/
+.agents/

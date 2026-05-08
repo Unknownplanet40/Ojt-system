@@ -85,6 +85,17 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
               </a>
             </li>
             <li>
+              <a class="dropdown-item <?= $CurrentPage === 'Settings' ? 'nav-active' : '' ?>" href="../Supervisor/Settings">
+                <div class="hstack">
+                  <i class="bi bi-gear me-2"></i>
+                  <div class="vstack">
+                    <span>Settings</span>
+                    <small class="text-muted" style="font-size: 0.7em">Manage your account settings and preferences.</small>
+                  </div>
+                </div>
+              </a>
+            </li>
+            <li>
               <a class="dropdown-item" href="javascript:void(0)" id="signOutBtn">
                 <div class="hstack">
                   <i class="bi bi-box-arrow-right me-2"></i>

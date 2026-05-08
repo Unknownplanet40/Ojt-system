@@ -72,7 +72,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                             <span class="d-none d-sm-inline">&bull;</span>
                                             <span><?= date("h:i A") ?></span>
                                             <span class="d-none d-sm-inline">&bull;</span>
-                                            <span><span id="currentSemester"></span> - <span id="currentAcademicYear"></span></span>
+                                            <span><span id="currentSemesterLabel"></span> - <span id="currentAcademicYearLabel"></span></span>
                                         </p>
                                     </div>
 
@@ -98,7 +98,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                     </div>
                 </div>
                 <div class="row row-cols-1 row-cols-md-4 g-4">
-                    <div class="col-md-12">
+                    <div class="col-md-12" id="activeOjtSection" style="display: none;">
                         <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg rounded-4 border-success-subtle"
                             style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body p-3 p-md-4">
@@ -111,27 +111,27 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                     <div class="flex-grow-1 min-w-0 w-100">
                                         <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2 mb-2">
                                             <p class="mb-0 text-uppercase fw-semibold text-success small">Active OJT</p>
-                                            <span class="badge rounded-pill bg-success-subtle text-success-emphasis">On-going</span>
+                                            <span class="badge rounded-pill bg-success-subtle text-success-emphasis" id="ojtStatusBadge">On-going</span>
                                         </div>
 
-                                        <h5 class="card-title mb-2 text-truncate">Accenture Philippines, Inc.</h5>
+                                        <h5 class="card-title mb-2 text-truncate" id="ojtCompany">...</h5>
 
                                         <div class="row g-2 g-md-3 text-muted small">
                                             <div class="col-12 col-sm-6 col-lg-3 d-flex align-items-center gap-2">
                                                 <i class="bi bi-diagram-3 text-success"></i>
-                                                <span class="text-break">Software Engineering</span>
+                                                <span class="text-break" id="ojtDept">...</span>
                                             </div>
                                             <div class="col-12 col-sm-6 col-lg-2 d-flex align-items-center gap-2">
                                                 <i class="bi bi-laptop text-success"></i>
-                                                <span>Hybrid</span>
+                                                <span id="ojtSetup">...</span>
                                             </div>
                                             <div class="col-12 col-sm-6 col-lg-4 d-flex align-items-center gap-2">
                                                 <i class="bi bi-person-badge text-success"></i>
-                                                <span class="text-break">Supervisor: David Tan</span>
+                                                <span class="text-break">Supervisor: <span id="ojtSupervisor">...</span></span>
                                             </div>
                                             <div class="col-12 col-sm-6 col-lg-3 d-flex align-items-center gap-2">
                                                 <i class="bi bi-calendar-event text-success"></i>
-                                                <span>Started Jun 10, 2025</span>
+                                                <span>Started <span id="ojtStart">...</span></span>
                                             </div>
                                         </div>
                                     </div>
@@ -149,15 +149,15 @@ if ($currentHour >= 5 && $currentHour < 12) {
                             <div class="card-body p-3 p-lg-4 d-flex flex-column gap-3">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <p class="mb-0 text-muted small fw-semibold text-uppercase">Hours rendered</p>
-                                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2">24.7%</span>
+                                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2" id="hoursPercentBadge">0%</span>
                                 </div>
                                 <div>
-                                    <h3 class="mb-1 fw-bold">120</h3>
-                                    <small class="text-muted">of 486 required</small>
+                                    <h3 class="mb-1 fw-bold" id="renderedHoursCount">0</h3>
+                                    <small class="text-muted">of <span id="requiredHoursCount">0</span> required</small>
                                 </div>
                                 <div class="progress mt-auto" style="height: 8px;">
                                     <div class="progress-bar bg-success rounded-pill" role="progressbar"
-                                        style="width: 24.7%;" aria-valuenow="120" aria-valuemin="0" aria-valuemax="486"></div>
+                                        style="width: 0%;" id="hoursProgressBarSide" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                             </div>
                         </div>
@@ -171,8 +171,8 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                     <i class="bi bi-calendar-event text-success fs-5"></i>
                                 </div>
                                 <div>
-                                    <h3 class="mb-1 fw-bold">48</h3>
-                                    <small class="text-muted">Est. end Oct 15, 2025</small>
+                                    <h3 class="mb-1 fw-bold" id="daysRemainingCount">—</h3>
+                                    <small class="text-muted" id="estimatedEndDate">...</small>
                                 </div>
                                 <small class="text-muted mt-auto">Keep your daily logs updated.</small>
                             </div>
@@ -187,12 +187,12 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                     <i class="bi bi-journal-check text-success fs-5"></i>
                                 </div>
                                 <div>
-                                    <h3 class="mb-1 fw-bold">12</h3>
+                                    <h3 class="mb-1 fw-bold" id="journalsCount">0</h3>
                                     <small class="text-muted">of 24 weeks</small>
                                 </div>
                                 <div class="progress mt-auto" style="height: 8px;">
                                     <div class="progress-bar bg-primary rounded-pill" role="progressbar"
-                                        style="width: 50%;" aria-valuenow="12" aria-valuemin="0" aria-valuemax="24"></div>
+                                        style="width: 0%;" id="journalProgressBar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="24"></div>
                                 </div>
                             </div>
                         </div>
@@ -247,25 +247,26 @@ if ($currentHour >= 5 && $currentHour < 12) {
 
                             <div class="card-body px-3 px-md-4 pb-3 pb-md-4">
                                 <div class="text-center mb-3">
-                                    <h2 class="fw-bold mb-1"><?= number_format($renderedHours) ?></h2>
-                                    <p class="text-muted mb-0">of <?= number_format($requiredHours) ?> required hours</p>
+                                    <h2 class="fw-bold mb-1" id="mainRenderedHours">0</h2>
+                                    <p class="text-muted mb-0">of <span id="mainRequiredHours">0</span> required hours</p>
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <small class="text-muted">Completion</small>
-                                    <small class="fw-semibold text-success"><?= $hoursPercent ?>%</small>
+                                    <small class="fw-semibold text-success" id="mainHoursPercent">0%</small>
                                 </div>
 
                                 <div class="progress" style="height: 10px;">
                                     <div class="progress-bar bg-success rounded-pill" role="progressbar"
-                                        style="width: <?= $hoursPercent ?>%;"
-                                        aria-valuenow="<?= $renderedHours ?>" aria-valuemin="0" aria-valuemax="<?= $requiredHours ?>">
+                                        id="mainHoursProgressBar"
+                                        style="width: 0%;"
+                                        aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
                                     </div>
                                 </div>
 
                                 <div class="d-flex justify-content-between mt-2">
-                                    <small class="text-muted"><?= number_format($remainingHours) ?> hours remaining</small>
-                                    <small class="text-muted"><?= number_format($renderedHours) ?>/<?= number_format($requiredHours) ?></small>
+                                    <small class="text-muted"><span id="mainRemainingHours">0</span> hours remaining</small>
+                                    <small class="text-muted"><span id="mainRenderedTotal">0</span>/<span id="mainRequiredTotal">0</span></small>
                                 </div>
 
                                 <hr class="my-3">
@@ -273,19 +274,19 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                 <div class="row row-cols-3 g-2 text-center">
                                     <div class="col">
                                         <div class="rounded-3 bg-dark bg-opacity-25 p-2 h-100">
-                                            <p class="mb-0 fw-bold"><?= number_format($daysLogged) ?></p>
+                                            <p class="mb-0 fw-bold" id="daysLoggedCount">0</p>
                                             <small class="text-muted">Days logged</small>
                                         </div>
                                     </div>
                                     <div class="col">
                                         <div class="rounded-3 bg-dark bg-opacity-25 p-2 h-100">
-                                            <p class="mb-0 fw-bold"><?= number_format($avgHoursPerDay, 1) ?></p>
+                                            <p class="mb-0 fw-bold" id="avgHoursCount">0</p>
                                             <small class="text-muted">Avg hrs/day</small>
                                         </div>
                                     </div>
                                     <div class="col">
                                         <div class="rounded-3 bg-dark bg-opacity-25 p-2 h-100">
-                                            <p class="mb-0 fw-bold"><?= number_format($pendingDtr) ?></p>
+                                            <p class="mb-0 fw-bold" id="pendingDtrCount">0</p>
                                             <small class="text-muted">Pending DTR</small>
                                         </div>
                                     </div>
@@ -406,31 +407,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                 </div>
                             </div>
                             <ul class="list-group list-group-flush" id="dtrList" style="max-height: 400px; overflow-y: auto;">
-                                <?php for ($i = 0; $i < 20; $i++) : ?>
-                                <li class="list-group-item bg-transparent px-3 py-3">
-                                    <?php
-                                    $logDate = strtotime("-{$i} day");
-                                    $timeIn = strtotime("08:00");
-                                    $timeOut = strtotime("17:00");
-                                    $hoursRendered = (int) (($timeOut - $timeIn) / 3600);
-                                    ?>
-                                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 w-100">
-                                        <div class="vstack gap-1">
-                                            <span class="fw-semibold text-body"><?= date("M j, D", $logDate) ?></span>
-                                            <span class="text-muted small"><?= date("g:i A", $timeIn) ?> – <?= date("g:i A", $timeOut) ?></span>
-                                        </div>
-
-                                        <div class="d-flex align-items-center gap-2 ms-sm-auto">
-                                            <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2">
-                                                <?= $hoursRendered ?>h
-                                            </span>
-                                            <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2">
-                                                Approved
-                                            </span>
-                                        </div>
-                                    </div>
-                                </li>
-                                <?php endfor; ?>
+                                <!-- Dynamic DTR entries -->
                             </ul>
                         </div>
                     </div>
@@ -447,51 +424,51 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                     <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
                                         <div class="row g-1">
                                             <div class="col-12 col-sm-4 text-muted small">Company</div>
-                                            <div class="col-12 col-sm-8 fw-semibold text-break">Accenture Philippines, Inc.</div>
+                                            <div class="col-12 col-sm-8 fw-semibold text-break" id="detailCompany">...</div>
                                         </div>
                                     </li>
                                     <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
                                         <div class="row g-1">
                                             <div class="col-12 col-sm-4 text-muted small">Work setup</div>
-                                            <div class="col-12 col-sm-8">
-                                                <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis">Hybrid</span>
+                                            <div class="col-12 col-sm-8" id="detailSetup">
+                                                ...
                                             </div>
                                         </div>
                                     </li>
                                     <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
                                         <div class="row g-1">
                                             <div class="col-12 col-sm-4 text-muted small">Department</div>
-                                            <div class="col-12 col-sm-8 fw-semibold text-break">Software Engineering</div>
+                                            <div class="col-12 col-sm-8 fw-semibold text-break" id="detailDept">...</div>
                                         </div>
                                     </li>
                                     <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
                                         <div class="row g-1">
                                             <div class="col-12 col-sm-4 text-muted small">Supervisor</div>
-                                            <div class="col-12 col-sm-8 fw-semibold text-break">David Tan</div>
+                                            <div class="col-12 col-sm-8 fw-semibold text-break" id="detailSupervisor">...</div>
                                         </div>
                                     </li>
                                     <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
                                         <div class="row g-1">
                                             <div class="col-12 col-sm-4 text-muted small">Coordinator</div>
-                                            <div class="col-12 col-sm-8 fw-semibold text-break">Jane Smith</div>
+                                            <div class="col-12 col-sm-8 fw-semibold text-break" id="detailCoordinator">...</div>
                                         </div>
                                     </li>
                                     <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
                                         <div class="row g-1">
                                             <div class="col-12 col-sm-4 text-muted small">Start date</div>
-                                            <div class="col-12 col-sm-8 fw-semibold">Jun 10, 2025</div>
+                                            <div class="col-12 col-sm-8 fw-semibold" id="detailStart">...</div>
                                         </div>
                                     </li>
                                     <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
                                         <div class="row g-1">
                                             <div class="col-12 col-sm-4 text-muted small">Program</div>
-                                            <div class="col-12 col-sm-8 fw-semibold text-break">BS Computer Science</div>
+                                            <div class="col-12 col-sm-8 fw-semibold text-break" id="detailProgram">...</div>
                                         </div>
                                     </li>
                                     <li class="list-group-item bg-transparent px-0 py-2 border-0">
                                         <div class="row g-1">
                                             <div class="col-12 col-sm-4 text-muted small">Required hours</div>
-                                            <div class="col-12 col-sm-8 fw-semibold">486 hours</div>
+                                            <div class="col-12 col-sm-8 fw-semibold" id="detailHours">...</div>
                                         </div>
                                     </li>
                                 </ul>

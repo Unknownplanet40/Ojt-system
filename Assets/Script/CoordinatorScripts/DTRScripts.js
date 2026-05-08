@@ -65,7 +65,7 @@ function renderEntries() {
     const statusIcon = entry.status === 'approved' ? 'bi-check-circle' : entry.status === 'rejected' ? 'bi-x-circle' : entry.is_backdated ? 'bi-clock-history' : 'bi-journal-text';
 
     list.append(`
-      <div class="card dtr-entry-card bg-blur-5 bg-semi-transparent shadow-sm" data-accent="${accent}">
+      <div class="card bg-blur-5 bg-semi-transparent shadow-sm" data-accent="${accent}">
         <div class="card-body">
           <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 dtr-entry-header">
             <div class="d-flex gap-3 flex-grow-1 align-items-start">

@@ -34,7 +34,17 @@ if (empty($_POST['csrf_token']) ||
     response(['status' => 'error', 'message' => 'Invalid request.']);
 }
 
-if (!isset($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'admin') {
+// Check authorization - admin or coordinator (for their own students)
+if (!isset($_SESSION['user_uuid'])) {
+    http_response_code(403);
+    response(['status' => 'error', 'message' => 'Unauthorized.']);
+}
+
+$userRole = $_SESSION['user_role'] ?? '';
+$isAdmin = $userRole === 'admin';
+$isCoordinator = $userRole === 'coordinator';
+
+if (!$isAdmin && !$isCoordinator) {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
@@ -53,6 +63,25 @@ $action   = trim($_POST['action']   ?? 'deactivate');
 
 if (empty($userUuid)) {
     response(['status' => 'error', 'message' => 'User UUID is required.']);
+}
+
+// If coordinator, verify the student is assigned to them
+if ($isCoordinator) {
+    $coordinatorUuid = $_SESSION['profile_uuid'] ?? '';
+    $stmt = $conn->prepare("
+        SELECT sp.uuid FROM student_profiles sp
+        JOIN users u ON sp.user_uuid = u.uuid
+        WHERE u.uuid = ? AND sp.coordinator_uuid = ?
+    ");
+    $stmt->bind_param('ss', $userUuid, $coordinatorUuid);
+    $stmt->execute();
+    $result_check = $stmt->get_result();
+    
+    if ($result_check->num_rows === 0) {
+        http_response_code(403);
+        response(['status' => 'error', 'message' => 'You can only manage your assigned students.']);
+    }
+    $stmt->close();
 }
 
 $result = $action === 'reactivate'

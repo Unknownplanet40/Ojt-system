@@ -77,4 +77,5 @@ response([
     'has_submitted_requirements' => $hasSubmittedRequirements,
     'role'                      => $user['role'],
     'must_change_password'      => (int) $user['must_change_password'],
+    'theme_preference'          => $_SESSION['theme_preference'] ?? 'dark',
 ]);
