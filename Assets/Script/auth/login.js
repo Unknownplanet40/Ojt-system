@@ -1,5 +1,5 @@
 import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
-import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "../SystemTheme.js";
+import { MatchsystemThemes, SwalTheme, BGcircleTheme, SetThemeMode } from "../SystemTheme.js";
 
 MatchsystemThemes(true);
 let swalTheme = SwalTheme();
@@ -100,6 +100,9 @@ $(document).ready(function () {
       },
       success: function (response) {
         if (response.status === "success") {
+            if (response.theme_preference) {
+                SetThemeMode(response.theme_preference);
+            }
             if (response.must_change_password) {
                 ToastVersion(swalTheme, "You must change your password before proceeding.", "warning", 3000, "top-end");
                 setTimeout(() => {

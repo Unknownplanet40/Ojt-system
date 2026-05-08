@@ -121,6 +121,7 @@ function SignOut() {
     },
     success: function (response) {
       if (response.status === "success") {
+        localStorage.removeItem("ojt_theme_mode");
         Swal.close();
         window.location.href = response.redirect_url;
       } else {
@@ -133,9 +134,9 @@ function SignOut() {
   });
 }
 
-function fetchRequirements() {
+function fetchDashboardStats() {
   $.ajax({
-    url: "../../../process/requirements/get_requirements",
+    url: "../../../process/dashboard/get_student_stats",
     method: "POST",
     dataType: "json",
     data: {
@@ -143,48 +144,122 @@ function fetchRequirements() {
     },
     success: function (response) {
       if (response.status === "success") {
-        const requirements = response.requirements;
-        const approvedCount = response.approved_count;
-        const total = response.total;
+        const { stats, recent_dtr, ojt_details, batch_info, requirements_list } = response;
 
-        // Update Progress Bar
-        const percent = total ? (approvedCount / total) * 100 : 0;
-        $("#reqProgressBar").css("width", percent + "%").attr("aria-valuenow", percent);
-        $("#reqApprovedCount").text(approvedCount);
-        $("#reqTotalCount").text(`of ${total} approved`);
+        // Update Batch Info
+        if (batch_info) {
+          $("#currentSemesterLabel").text(batch_info.semester + " Semester");
+          $("#currentAcademicYearLabel").text(batch_info.school_year);
+        }
 
-        // Update Requirements List
-        const list = $("#requirementsList");
-        list.empty();
+        // Update OJT Details Card & My OJT Details Card
+        if (ojt_details && ojt_details.app_status === 'active') {
+          $("#activeOjtSection").show();
+          
+          const comp = ojt_details.company_name || "No active placement";
+          const dept = ojt_details.department || "N/A";
+          const setup = ojt_details.work_setup || "N/A";
+          const sup = ojt_details.supervisor_name || "Not assigned";
+          const coord = ojt_details.coordinator_name || "Not assigned";
+          const start = ojt_details.start_date ? new Date(ojt_details.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "Not started";
+          const prog = ojt_details.program_name || "N/A";
+          const reqHrs = ojt_details.required_hours || 486;
 
-        const statusStyles = {
-          approved: { badge: "bg-success-subtle text-success-emphasis", dot: "text-success", label: "Approved" },
-          returned: { badge: "bg-danger-subtle text-danger-emphasis", dot: "text-danger", label: "Returned" },
-          submitted: { badge: "bg-primary-subtle text-primary-emphasis", dot: "text-primary", label: "Submitted" },
-          not_submitted: { badge: "bg-secondary-subtle text-secondary-emphasis", dot: "text-secondary", label: "Not submitted" },
-        };
+          const status = ojt_details.app_status ? (ojt_details.app_status.charAt(0).toUpperCase() + ojt_details.app_status.slice(1)) : "On-going";
+          $("#ojtStatusBadge").text(status);
+          $("#ojtCompany, #detailCompany").text(comp);
+          $("#ojtDept, #detailDept").text(dept);
+          $("#ojtSetup").text(setup);
+          $("#detailSetup").html(`<span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis">${setup}</span>`);
+          $("#ojtSupervisor, #detailSupervisor").text(sup);
+          $("#ojtStart, #detailStart").text(start);
+          $("#detailCoordinator").text(coord);
+          $("#detailProgram").text(prog);
+          $("#detailHours").text(reqHrs + " hours");
+        } else {
+          $("#activeOjtSection").hide();
+        }
 
-        requirements.forEach((req) => {
-          const style = statusStyles[req.status] || statusStyles.not_submitted;
-          const html = `
-            <li class="list-group-item bg-transparent px-2 px-sm-3 py-3 border-secondary-subtle">
-                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 w-100">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="${style.dot}" style="font-size: 0.70rem;">&#11044;</span>
-                        <span class="fw-semibold">${req.req_label}</span>
-                    </div>
-                    <span class="badge rounded-pill px-3 py-2 ms-sm-auto ${style.badge}">
-                        ${req.status_label || style.label}
-                    </span>
+        // Update Statistics
+        if (stats) {
+          // Hours Rendered
+          const dtr = stats.dtr;
+          $("#hoursPercentBadge, #mainHoursPercent").text(dtr.percentage + "%");
+          $("#renderedHoursCount, #mainRenderedHours, #mainRenderedTotal").text(dtr.total_approved);
+          $("#requiredHoursCount, #mainRequiredHours, #mainRequiredTotal").text(dtr.required_hours);
+          $("#hoursProgressBarSide").css("width", dtr.percentage + "%").attr("aria-valuenow", dtr.percentage);
+          $("#mainHoursProgressBar").css("width", dtr.percentage + "%").attr("aria-valuenow", dtr.percentage);
+          $("#mainRemainingHours").text(dtr.remaining_hours);
+
+          // Days Remaining & Est. End
+          const hasActiveOjt = ojt_details && ojt_details.app_status === 'active';
+          $("#daysRemainingCount").text(hasActiveOjt && dtr.remaining_hours > 0 ? Math.ceil(dtr.remaining_hours / (dtr.hours_per_day || 8)) : "—");
+          $("#estimatedEndDate").text(hasActiveOjt && dtr.estimated_completion ? "Est. end " + dtr.estimated_completion : "Placement pending");
+
+          // Journals
+          $("#journalsCount").text(stats.journals.approved);
+          $("#journalProgressBar").css("width", stats.journals.percent + "%").attr("aria-valuenow", stats.journals.percent);
+
+          // Requirements
+          $("#reqApprovedCount").text(stats.requirements.approved);
+          $("#reqTotalCount").text(`of ${stats.requirements.total} approved`);
+          $("#reqProgressBar").css("width", stats.requirements.percent + "%").attr("aria-valuenow", stats.requirements.percent);
+
+          // Mini Stats
+          $("#daysLoggedCount").text(dtr.approved_count);
+          $("#avgHoursCount").text(dtr.approved_count > 0 ? (dtr.total_approved / dtr.approved_count).toFixed(1) : "0");
+          $("#pendingDtrCount").text(dtr.pending_count);
+        }
+
+        // Render Recent DTR List
+        const dtrList = $("#dtrList");
+        dtrList.empty();
+        if (recent_dtr && recent_dtr.length > 0) {
+          recent_dtr.forEach(entry => {
+            const statusClass = entry.status === 'approved' ? 'bg-success-subtle text-success-emphasis' : (entry.status === 'rejected' ? 'bg-danger-subtle text-danger-emphasis' : 'bg-primary-subtle text-primary-emphasis');
+            dtrList.append(`
+              <li class="list-group-item bg-transparent px-3 py-3 border-secondary-subtle">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 w-100">
+                  <div class="vstack gap-1">
+                    <span class="fw-semibold text-body">${entry.entry_date_label}</span>
+                    <span class="text-muted small">${entry.time_in_label} – ${entry.time_out_label}</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-2 ms-sm-auto">
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2">${entry.hours_rendered}h</span>
+                    <span class="badge ${statusClass} rounded-pill px-3 py-2">${entry.status_label}</span>
+                  </div>
                 </div>
-            </li>
-          `;
-          list.append(html);
-        });
+              </li>
+            `);
+          });
+        } else {
+          dtrList.html('<div class="text-center p-4 text-muted small">No recent logs found</div>');
+        }
+
+        // Render Requirements (Mini List)
+        const reqList = $("#requirementsList");
+        reqList.empty();
+        if (requirements_list && requirements_list.length > 0) {
+          requirements_list.forEach(req => {
+            const statusStyle = req.status === 'approved' ? 'text-success' : (req.status === 'returned' ? 'text-danger' : (req.status === 'submitted' ? 'text-primary' : 'text-secondary'));
+            const badgeStyle = req.status === 'approved' ? 'bg-success-subtle text-success-emphasis' : (req.status === 'returned' ? 'bg-danger-subtle text-danger-emphasis' : (req.status === 'submitted' ? 'bg-primary-subtle text-primary-emphasis' : 'bg-secondary-subtle text-secondary-emphasis'));
+            reqList.append(`
+              <li class="list-group-item bg-transparent px-3 py-3 border-secondary-subtle">
+                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 w-100">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="${statusStyle}" style="font-size: 0.70rem;">&#11044;</span>
+                    <span class="fw-semibold small">${req.req_label}</span>
+                  </div>
+                  <span class="badge rounded-pill px-3 py-2 ms-sm-auto small ${badgeStyle}">${req.status_label}</span>
+                </div>
+              </li>
+            `);
+          });
+        }
       }
     },
     error: function (xhr, status, error) {
-      console.error("Failed to fetch requirements", error);
+      console.error("Dashboard fetch error:", error);
     },
   });
 }
@@ -192,11 +267,32 @@ function fetchRequirements() {
 $(document).ready(function () {
   DashboardEsentialElements();
   fetchProfile();
-  fetchRequirements();
+  fetchDashboardStats();
 
   $("#dashboardRefreshBtn").on("click", function () {
     fetchProfile();
-    fetchRequirements();
+    fetchDashboardStats();
     ToastVersion(swalTheme, "Dashboard updated", "success", 2000, "top-end");
+  });
+
+  // Quick Actions
+  $("#quickLogTime, #LogTimeBtn").on("click", function() {
+    window.location.href = "DTR";
+  });
+
+  $("#quickSubmitJournal").on("click", function() {
+    window.location.href = "Journal";
+  });
+
+  $("#quickViewEndorsementLetter").on("click", function() {
+    window.location.href = "Requirements";
+  });
+
+  $("#quickViewProfile").on("click", function() {
+    window.location.href = "Students_Profile";
+  });
+
+  $("#hoursProgressDetailsLink, #dtrViewAllLink").on("click", function() {
+    window.location.href = "DTR";
   });
 });

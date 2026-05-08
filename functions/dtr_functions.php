@@ -151,6 +151,10 @@ function submitDtrEntry(
     $stmt->close();
 
     if ($existing) {
+        if (($existing['status'] ?? '') === 'rejected') {
+            return ['success' => false, 'errors' => ['entry_date' => 'A rejected DTR entry already exists for this date. Please use Resubmit from your entry list.']];
+        }
+
         $statusLabel = ucfirst($existing['status']);
         return ['success' => false, 'errors' => ['entry_date' => "A DTR entry for this date already exists ({$statusLabel})."]];
     }
@@ -166,7 +170,7 @@ function submitDtrEntry(
     try {
         $stmt = $conn->prepare("\n            INSERT INTO dtr_entries\n              (uuid, student_uuid, application_uuid, batch_uuid,\n               entry_date, time_in, time_out, lunch_break_minutes,\n               hours_rendered, activities,\n               is_backdated, backdate_reason, status)\n            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')\n        ");
         $stmt->bind_param(
-            'ssssssssidss',
+            'sssssssidsis',
             $uuid, $studentUuid, $applicationUuid, $batchUuid,
             $entryDate, $timeIn, $timeOut, $lunchMinutes,
             $hoursRendered, $activities,
@@ -208,8 +212,8 @@ function editDtrEntry(
         return ['success' => false, 'error' => 'DTR entry not found.'];
     }
 
-    if ($entry['status'] !== 'pending') {
-        return ['success' => false, 'error' => 'Only pending entries can be edited.'];
+    if (!in_array($entry['status'], ['pending', 'rejected'], true)) {
+        return ['success' => false, 'error' => 'Only pending or rejected entries can be edited.'];
     }
 
     $timeIn       = trim($data['time_in'] ?? $entry['time_in']);
@@ -224,20 +228,29 @@ function editDtrEntry(
     }
 
     $hoursRendered = computeHoursRendered($timeIn, $timeOut, $lunchMinutes);
+    $isResubmission = $entry['status'] === 'rejected';
     $conn->begin_transaction();
 
     try {
-        $stmt = $conn->prepare("\n            UPDATE dtr_entries\n            SET time_in = ?,\n                time_out = ?,\n                lunch_break_minutes = ?,\n                hours_rendered = ?,\n                activities = ?\n            WHERE uuid = ?\n        ");
-        $stmt->bind_param('ssidss', $timeIn, $timeOut, $lunchMinutes, $hoursRendered, $activities, $dtrUuid);
+        if ($isResubmission) {
+            $pendingStatus = 'pending';
+            $stmt = $conn->prepare("\n                UPDATE dtr_entries\n                SET time_in = ?,\n                    time_out = ?,\n                    lunch_break_minutes = ?,\n                    hours_rendered = ?,\n                    activities = ?,\n                    status = ?,\n                    rejection_reason = NULL,\n                    approved_by = NULL,\n                    approved_at = NULL,\n                    approved_by_role = NULL,\n                    submitted_at = NOW()\n                WHERE uuid = ?\n            ");
+            $stmt->bind_param('ssidsss', $timeIn, $timeOut, $lunchMinutes, $hoursRendered, $activities, $pendingStatus, $dtrUuid);
+        } else {
+            $stmt = $conn->prepare("\n                UPDATE dtr_entries\n                SET time_in = ?,\n                    time_out = ?,\n                    lunch_break_minutes = ?,\n                    hours_rendered = ?,\n                    activities = ?\n                WHERE uuid = ?\n            ");
+            $stmt->bind_param('ssidss', $timeIn, $timeOut, $lunchMinutes, $hoursRendered, $activities, $dtrUuid);
+        }
         $stmt->execute();
         $stmt->close();
 
-        logDtrAudit($conn, $dtrUuid, 'edited', $actorUserUuid, 'student', [
+        logDtrAudit($conn, $dtrUuid, $isResubmission ? 'resubmitted' : 'edited', $actorUserUuid, 'student', [
             'old_time_in'    => $entry['time_in'],
             'old_time_out'   => $entry['time_out'],
             'new_time_in'    => $timeIn,
             'new_time_out'   => $timeOut,
             'hours_rendered' => $hoursRendered,
+            'from_status'    => $entry['status'],
+            'to_status'      => $isResubmission ? 'pending' : $entry['status'],
         ]);
 
         $conn->commit();
@@ -246,7 +259,7 @@ function editDtrEntry(
         return ['success' => false, 'error' => 'Failed to edit DTR entry: ' . $e->getMessage()];
     }
 
-    return ['success' => true, 'hours_rendered' => $hoursRendered];
+    return ['success' => true, 'hours_rendered' => $hoursRendered, 'resubmitted' => $isResubmission];
 }
 
 function deleteDtrEntry($conn, string $dtrUuid, string $studentUuid, string $actorUserUuid): array
@@ -659,7 +672,7 @@ function formatDtrEntry(array $row): array
         'approved_at'         => !empty($row['approved_at']) ? date('M j, Y g:i A', strtotime($row['approved_at'])) : null,
         'submitted_at'        => date('M j, Y g:i A', strtotime($row['submitted_at'])),
         'time_ago'            => timeAgo($row['submitted_at']),
-        'can_edit'            => $status === 'pending',
+        'can_edit'            => in_array($status, ['pending', 'rejected'], true),
         'can_delete'          => $status === 'pending',
         'can_bulk_approve'    => $status === 'pending' && !$isBackdated,
         'flagged'             => $isBackdated,

@@ -50,10 +50,12 @@ All frontend libraries are bundled locally inside `/libs`, so the project does n
 | View admin dashboard | ✅ | ❌ | ❌ | ❌ |
 | View coordinator dashboard | ❌ | ✅ | ❌ | ❌ |
 | Review student requirements | ❌ | ✅ | ❌ | ❌ |
+| Activate/deactivate assigned students | ❌ | ✅ | ❌ | ❌ |
 | View coordinator profile | ❌ | ✅ | ❌ | ❌ |
 | Submit pre-OJT requirements | ❌ | ❌ | ✅ | ❌ |
 | View student dashboard | ❌ | ❌ | ✅ | ❌ |
 | Set up student profile | ❌ | ❌ | ✅ | ❌ |
+| Export journal as PDF | ❌ | ❌ | ✅ | ❌ |
 | Access company documents | ✅ | ✅ | ❌ | ❌ |
 | View supervisor dashboard | ❌ | ❌ | ❌ | ✅ |
 | Submit evaluations | ❌ | ❌ | ✅ | ✅ |
@@ -69,13 +71,19 @@ All frontend libraries are bundled locally inside `/libs`, so the project does n
 - **Programs** — manage academic programs with per-program required hour overrides
 - **Students** — create/edit/view students, reset passwords, activate/deactivate accounts, and run bulk import with validation preview + credentials export
 - **Coordinator Accounts** — create/edit/view coordinator accounts, reset passwords, activate/deactivate accounts, and monitor assigned student counts
+- **Supervisors** — view and manage supervisor accounts linked to accredited companies
+- **Requirements Overview** — admin-level view of all student requirement statuses across the active batch
 - **Audit Logs** — read-only unified activity trail from `activity_log` and `login_audit_log` with date/user/action/module/source filters, search, CSV export, and detailed log inspector modal
 - **Dashboard** — stat cards, recent activity, and needs-attention alerts
 
 ### Coordinator
 - **Dashboard** — summary of assigned students, upcoming visits, company info, and hours progress
+- **My Students** — card-based student directory with search/filter, add/edit/reset-password/activate-deactivate, bulk import, and PDF/CSV credential export
+- **Student Profile** — consolidated view showing full student info, placement details, OJT progress, requirements, DTR entries, and journals with action buttons (Edit, Reset Password, Activate/Deactivate)
 - **Requirements Review** — approve or return student-submitted documents with feedback
 - **Applications Review** — review applications through `pending → approved → endorsed → active` with guarded transitions and notes
+- **Journals Review** — view and review student weekly journal submissions
+- **Grading** — compute, adjust, and finalize OJT grades per student using a weighted multi-component rubric
 - **Profile** — profile setup and read-only view page
 
 ### Student
@@ -100,6 +108,7 @@ All frontend libraries are bundled locally inside `/libs`, so the project does n
 - Role-based access control across pages and endpoints
 - **OJT Process Locking** — DTR, Journals, and Evaluations are strictly locked until a student has an active/accepted application
 - **Milestone Enforcement** — Midterm/Final evaluations are locked until specific hour thresholds are met in the DTR
+- **Grade Finalization Lock** — finalized grades are immutable; only unfinalised records can be adjusted
 - Sensitive documents are served through `file_serve.php` instead of direct static links
 - Document access is checked against the logged-in user role before files are streamed
 - Password hashing uses PHP's `password_hash()`
@@ -113,8 +122,8 @@ The project is split into a few clear layers so PHP pages stay thin and business
 
 - **`Src/Pages/`**: role-specific UI pages (auth, dashboard, profile, requirements, admin tools)
 - **`Src/Components/`**: reusable layout parts and cards
-- **`functions/`**: core backend logic (auth, batch, profile)
-- **`process/`**: request handlers for auth, batch, and profile operations
+- **`functions/`**: core backend logic (auth, batch, profile, grading, evaluations, journals, DTR)
+- **`process/`**: request handlers for auth, batch, profile, grades, and all OJT modules
 - **`Assets/Script/`**: client-side behavior by page/module
 - **`Assets/style/`**: shared style layer
 - **`uploads/`**: uploaded files served via guarded access
@@ -139,7 +148,10 @@ Typical request flow:
 - Coordinator account lifecycle endpoints: `process/coordinators/` with logic in `functions/coordinator_functions.php`
 - Requirements lifecycle endpoints: `process/requirements/` with logic in `functions/requirement_functions.php`
 - Applications lifecycle endpoints: `process/applications/` with logic in `functions/application_functions.php`
-- Audit log listing/export endpoints: `process/audit_logs/` with logic in `functions/audit_log_functions.php`
+- Grading lifecycle endpoints: `process/grades/` with logic in `functions/grade_functions.php`
+- Journal lifecycle endpoints: `process/journals/` with logic in `functions/journal_functions.php`
+- DTR lifecycle endpoints: `process/dtr/` with logic in `functions/dtr_functions.php`
+- Evaluation lifecycle endpoints: `process/evaluation/` with logic in `functions/evaluation_functions.php`
 - Profile fetch/save endpoints: `process/profile/` with logic in `functions/profile_functions.php`
 - Secure file delivery: `file_serve.php`
 - DB connection: `config/db.php` (MySQLi, `utf8mb4`)
@@ -218,7 +230,11 @@ Ojt-system/
 │   ├── audit_log_functions.php
 │   ├── program_functions.php
 │   ├── student_functions.php
-│   └── profile_functions.php
+│   ├── profile_functions.php
+│   ├── dtr_functions.php
+│   ├── journal_functions.php
+│   ├── evaluation_functions.php
+│   └── grade_functions.php
 ├── process/
 │   ├── applications/
 │   ├── auth/
@@ -228,6 +244,10 @@ Ojt-system/
 │   ├── requirements/
 │   ├── programs/
 │   ├── students/
+│   ├── dtr/
+│   ├── journals/
+│   ├── evaluation/
+│   ├── grades/
 │   └── profile/
 ├── Src/
 │   ├── Components/
@@ -249,10 +269,85 @@ Ojt-system/
 - **Setup wizard** — planned for end-of-development; first admin account is currently seeded manually
 - **No live demo** — to be deployed once the system reaches a stable state
 - **SQL seed files** — not included yet
+- **Grade finalization UI** — backend complete; coordinator grading dashboard frontend still being refined
+- **Coordinator visit scheduling** — `coordinator_visits` table exists; scheduling UI not yet started
 
 ---
 
 ## Changelog
+
+### May 2026 — Grading System, Coordinator My Students, & Module Expansions
+
+- **Grading System (new)**
+  - Added `functions/grade_functions.php` with full weighted grade computation logic
+  - Added `process/grades/` handler suite:
+    - `compute_grade.php` — auto-calculates scores from hours, evaluations, and journals
+    - `save_grade.php` — saves coordinator-adjusted grade components
+    - `finalize_grade.php` — locks the grade record and sets `finalized_at`
+    - `get_grade.php` — fetches a single student’s grade breakdown
+    - `get_all_grades.php` — fetches all grades for a batch (coordinator view)
+    - `get_grading_overview.php` — dashboard-level summary of grade statuses
+  - Added `ojt_grades` and `coordinator_visits` tables to the database schema
+  - Grade components: hours (20%), midterm eval (20%), final eval (40%), journals (10%), self-eval (10%) — weights are stored per record
+
+- **Coordinator My Students module (new)**
+  - Added page: `Src/Pages/Coordinator/MyStudents.php`
+  - Added script: `Assets/Script/CoordinatorScripts/MyStudentsScripts.js`
+  - Features: card-based student grid, search/filter by program/status, view student profile modal, edit student details, reset password with PDF export, single-account creation, and full bulk import (validate → preview → create → export credentials)
+  - Coordinators can now manage their own students independently, without going through the Admin panel
+
+- **Admin Requirements module (new)**
+  - Added page: `Src/Pages/Admin/Requirements.php`
+  - Added script: `Assets/Script/AdminScripts/RequirementsScripts.js`
+  - Admins can now view all student requirement statuses across the active batch
+
+- **Admin Supervisors module (new)**
+  - Added/updated `Src/Pages/Admin/Supervisors.php`
+  - Admin-level view and management of supervisor accounts linked to accredited companies
+
+- **Journal module expansion (multi-role)**
+  - Added Journal pages for Coordinator (`Src/Pages/Coordinator/Journal.php`), Student, and Supervisor roles
+  - Added Journal scripts for all three roles
+  - Coordinators can now review and approve/return student journal submissions
+  - Supervisors can view journals of students under their supervision
+  - Enhanced journal date handling with validation and sensible defaults
+
+- **DTR improvements**
+  - Added `process/dtr/edit_dtr.php` for coordinator/admin corrections to DTR entries
+  - Updated DTR scripts for coordinator and student roles
+
+- **Database schema additions** (`DATABASE_SCHEMA.md` updated)
+  - `ojt_grades` table — stores finalized weighted grade per student per batch
+  - `coordinator_visits` table — tracks scheduled and completed company visits
+  - `weekly_journals` and `evaluations` table documentation finalized
+
+- **Coordinator My Students — Student Account Management**
+  - Coordinators can now activate/deactivate student accounts for their assigned students
+  - Updated `process/students/deactivate_student.php` to support coordinator role with ownership verification
+  - Added toggle status buttons with dynamic styling and confirmation dialogs
+  - Account status changes reflected immediately in UI with appropriate visual feedback
+
+- **Student Profile Page — UI Consolidation**
+  - Unified student profile view: removed redundant modal from MyStudents page
+  - Single comprehensive profile page featuring:
+    - Full student details, contact information, placement/supervisor assignment
+    - OJT progress metrics with hours progress bar
+    - Requirements, recent DTR entries, and journals in tabbed interface
+    - Quick action buttons: Edit Profile, Reset Password, Activate/Deactivate Account
+    - Context-aware back button that returns to originating page (MyStudents or Companies module)
+    - Dynamic breadcrumb navigation reflecting entry point
+
+- **Journal Module — Export Restriction**
+  - Restricted journal PDF exports to students only
+  - Updated `process/journal/export_journal_pdf.php` to enforce student-only authorization
+  - Removed export buttons from Coordinator and Supervisor journal views
+  - Non-student export attempts receive 403 Unauthorized response
+
+- **Navigation & User Experience**
+  - Implemented referrer tracking for intelligent back button navigation
+  - Smart breadcrumb updates dynamically based on page entry point
+  - View Student buttons now redirect to full profile page instead of opening modal
+  - Improved overall navigation flow between My Students, Companies, and Student Profile pages
 
 ### Early May 2026 — Evaluation Module & UX Overhaul
 

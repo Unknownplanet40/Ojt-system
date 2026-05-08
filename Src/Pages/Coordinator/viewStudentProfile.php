@@ -10,6 +10,7 @@ if (empty($_SESSION['user_uuid']) || ($_SESSION['user_role'] ?? '') !== 'coordin
 }
 
 $studentUuid = $_GET['uuid'] ?? '';
+$referrerPage = $_GET['from'] ?? 'mystudents'; // Default to MyStudents
 if (empty($studentUuid)) {
     header("Location: ./MyStudents");
     exit;
@@ -43,7 +44,7 @@ $CurrentPage = "MyStudents";
     <title><?= $ShortTitle ?> - Student Profile</title>
 </head>
 
-<body class="login-page" data-role="<?= $_SESSION['user_role'] ?>" data-uuid="<?= $_SESSION['user_uuid'] ?>" data-student-uuid="<?= htmlspecialchars($studentUuid) ?>">
+<body class="login-page" data-role="<?= $_SESSION['user_role'] ?>" data-uuid="<?= $_SESSION['user_uuid'] ?>" data-student-uuid="<?= htmlspecialchars($studentUuid) ?>" data-referrer="<?= htmlspecialchars($referrerPage) ?>">
     <div class="circles position-fixed w-100 h-100 overflow-hidden top-0 start-0 z-n1">
         <div class="circle circle1" data-speed="fast"></div>
         <div class="circle circle2" data-speed="normal"></div>
@@ -61,12 +62,16 @@ $CurrentPage = "MyStudents";
             <?php require_once "../../Components/Header_Coordinator.php"; ?>
             <div class="container-fluid p-4 w-100" id="dashboardContent">
                 <div class="d-flex align-items-center gap-3 mb-4">
-                    <a href="./MyStudents" class="btn btn-sm btn-outline-light rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <button id="backBtn" class="btn btn-sm btn-outline-light rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
                         <i class="bi bi-arrow-left"></i>
-                    </a>
+                    </button>
                     <nav aria-label="breadcrumb" class="mb-0">
                         <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="./MyStudents" class="text-decoration-none text-primary">My Students</a></li>
+                            <li class="breadcrumb-item">
+                                <a href=".<?php echo $referrerPage === 'companies' ? '/Companies' : '/MyStudents'; ?>" class="text-decoration-none text-primary">
+                                    <?php echo $referrerPage === 'companies' ? 'Companies' : 'My Students'; ?>
+                                </a>
+                            </li>
                             <li class="breadcrumb-item active text-light" aria-current="page">Student Profile</li>
                         </ol>
                     </nav>
@@ -74,12 +79,17 @@ $CurrentPage = "MyStudents";
 
                 <div class="row g-3">
                     <div class="col-12 col-lg-4">
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-0 shadow-sm mb-3" style="--blur-lvl: <?= $opacitylvl ?>;">
+                        <div class="card glass-ui rounded-4 border-0 shadow-sm mb-3">
                             <div class="card-body p-4 text-center">
                                 <img src="https://placehold.co/128x128/C1C1C1/000000/png?text=SP&font=poppins" id="studentPhoto" class="rounded-circle border border-3 border-primary-subtle shadow-sm mb-3" style="width: 128px; height: 128px; object-fit: cover;">
                                 <h4 class="mb-1 fw-bold" id="studentName">Loading...</h4>
                                 <p class="text-muted small mb-3" id="studentNumber">---</p>
                                 <span class="badge rounded-pill px-3 py-2 mb-3" id="studentStatusBadge">Status</span>
+                                <div class="d-flex flex-column gap-2 mb-3">
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill" id="editStudentBtn"><i class="bi bi-pencil me-2"></i>Edit Profile</button>
+                                    <button class="btn btn-sm btn-outline-warning rounded-pill" id="resetPasswordBtn"><i class="bi bi-key me-2"></i>Reset Password</button>
+                                    <button class="btn btn-sm btn-outline-danger rounded-pill" id="toggleStatusBtn"><i class="bi bi-lock me-2"></i>Deactivate</button>
+                                </div>
                                 <hr class="border-light border-opacity-10">
                                 <div class="vstack gap-2 text-start small">
                                     <div class="d-flex justify-content-between"><span class="text-muted">Program:</span><span class="fw-semibold" id="studentProgram">---</span></div>
@@ -89,7 +99,7 @@ $CurrentPage = "MyStudents";
                             </div>
                         </div>
 
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-0 shadow-sm" style="--blur-lvl: <?= $opacitylvl ?>;">
+                        <div class="card glass-ui rounded-4 border-0 shadow-sm">
                             <div class="card-body p-4">
                                 <h6 class="text-uppercase fw-bold text-primary small mb-3">Contact Information</h6>
                                 <div class="vstack gap-3 small">
@@ -111,7 +121,7 @@ $CurrentPage = "MyStudents";
                     </div>
 
                     <div class="col-12 col-lg-8">
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-0 shadow-sm mb-3" style="--blur-lvl: <?= $opacitylvl ?>;">
+                        <div class="card glass-ui rounded-4 border-0 shadow-sm mb-3">
                             <div class="card-body p-4">
                                 <h5 class="fw-bold mb-4">Placement Details</h5>
                                 <div class="row g-3">
@@ -133,7 +143,7 @@ $CurrentPage = "MyStudents";
                             </div>
                         </div>
 
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-0 shadow-sm mb-3" style="--blur-lvl: <?= $opacitylvl ?>;">
+                        <div class="card glass-ui glass-ui-strong rounded-4 border-0 shadow-sm mb-3">
                             <div class="card-body p-4">
                                 <h5 class="fw-bold mb-4">OJT Progress</h5>
                                 <div class="row g-4 text-center">
@@ -161,7 +171,7 @@ $CurrentPage = "MyStudents";
                             </div>
                         </div>
 
-                        <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-0 shadow-sm" style="--blur-lvl: <?= $opacitylvl ?>;">
+                        <div class="card glass-ui rounded-4 border-0 shadow-sm">
                             <div class="card-body p-4">
                                 <ul class="nav nav-pills mb-3 gap-2" id="studentDetailTabs" role="tablist">
                                     <li class="nav-item" role="presentation">

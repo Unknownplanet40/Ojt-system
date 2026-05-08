@@ -19,6 +19,37 @@ require_once __DIR__ . '/../helpers/helpers.php';
 // COMPUTE week number from OJT start date
 // week 1 = first week of OJT
 // -----------------------------------------------
+function ensureWeeklyJournalsSchema($conn): bool
+{
+    $columns = [
+        'application_uuid'   => "CHAR(36) NULL AFTER student_uuid",
+        'week_number'        => "TINYINT NULL AFTER batch_uuid",
+        'accomplishments'    => "TEXT NULL AFTER week_end",
+        'skills_learned'     => "TEXT NULL AFTER accomplishments",
+        'challenges'         => "TEXT NULL AFTER skills_learned",
+        'plans_next_week'    => "TEXT NULL AFTER challenges",
+        'return_reason'      => "TEXT NULL AFTER status",
+        'coordinator_remarks'=> "TEXT NULL AFTER return_reason",
+        'reviewed_by'        => "CHAR(36) NULL AFTER coordinator_remarks",
+        'reviewed_at'        => "DATETIME NULL AFTER reviewed_by",
+        'submitted_at'       => "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER reviewed_at",
+        'updated_at'         => "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER submitted_at",
+    ];
+
+    foreach ($columns as $column => $definition) {
+        $check = $conn->query("SHOW COLUMNS FROM weekly_journals LIKE '{$column}'");
+        if ($check && $check->num_rows > 0) {
+            continue;
+        }
+
+        if (!$conn->query("ALTER TABLE weekly_journals ADD COLUMN {$column} {$definition}")) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 function computeWeekNumber(string $startDate, string $weekStart): int
 {
     $start  = strtotime($startDate);
@@ -149,6 +180,10 @@ function submitJournal(
     string $batchUuid,
     array  $data
 ): array {
+    if (!ensureWeeklyJournalsSchema($conn)) {
+        return ['success' => false, 'errors' => ['general' => 'Failed to initialize weekly journal table.']];
+    }
+
     $weekStart      = trim($data['week_start']      ?? '');
     $weekEnd        = trim($data['week_end']        ?? '');
     $accomplishments = trim($data['accomplishments'] ?? '');
@@ -216,12 +251,20 @@ function submitJournal(
     $stmt->execute();
     $stmt->close();
 
+    // resolve student profile UUID to user UUID for audit logging
+    $userStmt = $conn->prepare("SELECT user_uuid FROM student_profiles WHERE uuid = ? LIMIT 1");
+    $userStmt->bind_param('s', $studentUuid);
+    $userStmt->execute();
+    $userRow = $userStmt->get_result()->fetch_assoc();
+    $userStmt->close();
+    $userUuid = $userRow['user_uuid'] ?? null;
+
     logActivity(
         conn: $conn,
         eventType: 'journal_submitted',
         description: "Week {$weekNumber} journal submitted",
         module: 'journal',
-        actorUuid: $studentUuid,
+        actorUuid: $userUuid,
         targetUuid: $uuid
     );
 
@@ -320,12 +363,20 @@ function editJournal(
     $stmt->execute();
     $stmt->close();
 
+    // resolve student profile UUID to user UUID for audit logging
+    $userStmt = $conn->prepare("SELECT user_uuid FROM student_profiles WHERE uuid = ? LIMIT 1");
+    $userStmt->bind_param('s', $studentUuid);
+    $userStmt->execute();
+    $userRow = $userStmt->get_result()->fetch_assoc();
+    $userStmt->close();
+    $userUuid = $userRow['user_uuid'] ?? null;
+
     logActivity(
         conn: $conn,
         eventType: 'journal_resubmitted',
         description: "Week {$weekCheck['week_number']} journal resubmitted after return",
         module: 'journal',
-        actorUuid: $studentUuid,
+        actorUuid: $userUuid,
         targetUuid: $journalUuid
     );
 
@@ -409,6 +460,14 @@ function reviewJournal(
     $stmt->execute();
     $stmt->close();
 
+    // resolve coordinator profile UUID to user UUID for audit logging
+    $userStmt = $conn->prepare("SELECT user_uuid FROM coordinator_profiles WHERE uuid = ? LIMIT 1");
+    $userStmt->bind_param('s', $coordinatorUuid);
+    $userStmt->execute();
+    $userRow = $userStmt->get_result()->fetch_assoc();
+    $userStmt->close();
+    $userUuid = $userRow['user_uuid'] ?? null;
+
     $eventMap = [
         'remark'  => 'journal_remarked',
         'approve' => 'journal_approved',
@@ -420,7 +479,7 @@ function reviewJournal(
         eventType: $eventMap[$action],
         description: "Week {$journal['week_number']} journal {$action}ed",
         module: 'journal',
-        actorUuid: $coordinatorUuid,
+        actorUuid: $userUuid,
         targetUuid: $journalUuid
     );
 
@@ -616,6 +675,7 @@ function getJournal($conn, string $journalUuid): ?array
     $entry                   = formatJournal($row);
     $entry['full_name']      = $row['first_name'] . ' ' . $row['last_name'];
     $entry['student_number'] = $row['student_number'];
+    $entry['student_uuid']   = $row['student_uuid'];
     $entry['coordinator_uuid'] = $row['coordinator_uuid'];
     $entry['supervisor_uuid']  = $row['supervisor_uuid'];
 
@@ -656,6 +716,7 @@ function formatJournal(array $row): array
         'status_text'         => $colors['text'],
         'return_reason'       => $row['return_reason']       ?? null,
         'coordinator_remarks' => $row['coordinator_remarks'] ?? null,
+        'reviewed_by'         => $row['reviewed_by']         ?? null,
         'reviewer_name'       => $row['reviewer_name']       ?? null,
         'reviewed_at'         => !empty($row['reviewed_at'])
                                    ? date('M j, Y g:i A', strtotime($row['reviewed_at']))

@@ -47,7 +47,7 @@ if (!$isProfileDone && !in_array($currentPage, $allowWithoutCompletedProfile, tr
 <link rel="stylesheet" href="../../../Assets/style/AniBG.css" />
 <link rel="stylesheet" href="../../../Assets/style/MainStyle.css" />
 <link rel="manifest" href="../../../Assets/manifest.json" />
-<link rel="shortcut icon" href="../../../Assets/Images/favicon.svg" type="image/x-icon">
+<link rel="shortcut icon" href="../../../Assets/Images/favicon.png" type="image/x-icon">
 
 <script defer src="../../../libs/bootstrap/js/bootstrap.bundle.js"></script>
 <script defer src="../../../libs/sweetalert2/js/sweetalert2.all.min.js"></script>

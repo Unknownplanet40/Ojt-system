@@ -36,7 +36,7 @@ if (empty($_POST['csrf_token']) ||
     response(['status' => 'error', 'message' => 'Invalid request.']);
 }
 
-if (!isset($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'admin') {
+if (!isset($_SESSION['user_uuid']) || !in_array($_SESSION['user_role'], ['admin', 'coordinator'])) {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
@@ -70,7 +70,7 @@ $schoolPhone = $SchoolPhone ?? '';
 $documentFooterNote = $DocumentFooterNote ?? 'Officially issued by the OJT Coordinator Management System';
 $documentVerificationNote = $DocumentVerificationNote ?? 'Please verify document authenticity with the coordinator\'s office.';
 $fileCreatedBy = $_SESSION['user_name'] ?? 'Admin User';
-$roleofCreator = $_SESSION['user_role'] === 'admin' ? 'Administrator' : 'User';
+$roleofCreator = $_SESSION['user_role'] === 'admin' ? 'Administrator' : 'Coordinator';
 $LogoPath1 = $SchoolLogoLeft ?? 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
 $LogoPath2 = $SchoolLogoRight ?? 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
 

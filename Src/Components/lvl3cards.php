@@ -1,6 +1,6 @@
 <div class="row row-cols-1 row-cols-md-3 g-4 mt-1">
   <div class="col-12 col-md-6 col-xl-4 usersbyroles">
-    <div class="card h-100 border-0 shadow-sm bg-blur-5 bg-semi-transparent" style="--blur-lvl: <?= $opacitylvl ?>">
+    <div class="card h-100 border-0 shadow-sm glass-ui glass-ui-strong" style="--blur-lvl: <?= $opacitylvl ?>">
       <div class="card-header bg-transparent border-0 pb-0">
         <div class="d-flex align-items-center justify-content-between">
           <h5 class="card-title mb-0">Users by Role</h5>
@@ -75,7 +75,7 @@
     </div>
   </div>
   <div class="col-md-4 accounts">
-    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow h-100" style="--blur-lvl: <?= $opacitylvl ?>">
+    <div class="card h-100 glass-ui glass-ui-strong shadow h-100" style="--blur-lvl: <?= $opacitylvl ?>">
       <div class="card-header border-bottom-0 bg-transparent">
         <div class="hstack">
           <h5 class="card-title">Recent Accounts</h5>
@@ -89,7 +89,7 @@
     </div>
   </div>
   <div class="col-md-4 recentActivity">
-    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow h-100" style="--blur-lvl: <?= $opacitylvl ?>">
+    <div class="card h-100 glass-ui glass-ui-strong shadow h-100" style="--blur-lvl: <?= $opacitylvl ?>">
       <div class="card-header border-bottom-0 bg-transparent">
         <div class="hstack">
           <h5 class="card-title">Recent Activity - (<small class="text-muted" id="activityCount">0</small>)</h5>

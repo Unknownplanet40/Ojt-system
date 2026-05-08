@@ -43,6 +43,10 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
+if (!ensureGradeTableExists($conn)) {
+    response(['status' => 'critical', 'message' => 'Failed to initialize grading table.']);
+}
+
 if (!isset($_SESSION['user_uuid'])) {
     http_response_code(401);
     response(['status' => 'error', 'message' => 'Unauthenticated.']);
@@ -56,8 +60,7 @@ if (!in_array($_SESSION['user_role'], ['coordinator', 'admin'])) {
 $batchUuid = trim($_POST['batch_uuid'] ?? '');
 
 if (empty($batchUuid)) {
-    $result    = $conn->query("SELECT uuid FROM batches WHERE status = 'active' LIMIT 1");
-    $batchUuid = $result->fetch_assoc()['uuid'] ?? null;
+    $batchUuid = resolveActiveBatchUuid($conn, $batchUuid) ?? '';
 }
 
 if (empty($batchUuid)) {

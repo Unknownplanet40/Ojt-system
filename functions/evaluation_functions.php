@@ -251,12 +251,20 @@ function submitSupervisorEvaluation(
     $stmt->execute();
     $stmt->close();
 
+    // resolve supervisor profile UUID to user UUID for audit logging
+    $userStmt = $conn->prepare("SELECT user_uuid FROM supervisor_profiles WHERE uuid = ? LIMIT 1");
+    $userStmt->bind_param('s', $supervisorUuid);
+    $userStmt->execute();
+    $userRow = $userStmt->get_result()->fetch_assoc();
+    $userStmt->close();
+    $userUuid = $userRow['user_uuid'] ?? null;
+
     logActivity(
         conn: $conn,
         eventType: 'evaluation_submitted',
         description: ucfirst($evalType) . " evaluation submitted for student",
         module: 'evaluation',
-        actorUuid: $supervisorUuid,
+        actorUuid: $userUuid,
         targetUuid: $studentUuid
     );
 
@@ -371,12 +379,20 @@ function submitSelfEvaluation(
     $stmt->execute();
     $stmt->close();
 
+    // resolve student profile UUID to user UUID for audit logging
+    $userStmt = $conn->prepare("SELECT user_uuid FROM student_profiles WHERE uuid = ? LIMIT 1");
+    $userStmt->bind_param('s', $studentUuid);
+    $userStmt->execute();
+    $userRow = $userStmt->get_result()->fetch_assoc();
+    $userStmt->close();
+    $userUuid = $userRow['user_uuid'] ?? null;
+
     logActivity(
         conn: $conn,
         eventType: 'evaluation_submitted',
         description: 'Student submitted self-evaluation',
         module: 'evaluation',
-        actorUuid: $studentUuid,
+        actorUuid: $userUuid,
         targetUuid: $studentUuid
     );
 

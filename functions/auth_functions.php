@@ -135,6 +135,10 @@ function buildSession($conn, array $user): void
     $_SESSION['user_role']            = $user['role'];
     $_SESSION['must_change_password'] = (int) $user['must_change_password'];
 
+    // Load per-user theme from user_settings
+    require_once __DIR__ . '/../functions/settings_functions.php';
+    $_SESSION['theme_preference'] = getUserTheme($conn, $user['uuid']);
+
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }

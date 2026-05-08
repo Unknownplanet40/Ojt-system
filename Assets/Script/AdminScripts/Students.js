@@ -1306,8 +1306,14 @@ function createBulkAccounts() {
   });
 }
 
-async function downloadBulkCredentialsCsv() {
+async function downloadBulkCredentialsCsv($button = null) {
+  const $btn = $button && $button.length ? $button : null;
+  const originalHtml = $btn ? $btn.html() : "";
   try {
+    if ($btn) {
+      $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Downloading...');
+    }
+
     const response = await fetch("../../../process/students/bulk_export_csv", {
       method: "POST",
       credentials: "same-origin",
@@ -1327,13 +1333,24 @@ async function downloadBulkCredentialsCsv() {
     const fileName = getDownloadFileNameFromResponse(response, "bulk_created_accounts.csv");
     const blob = await response.blob();
     downloadBlobFile(blob, fileName);
+    ToastVersion(swalTheme, "CSV credentials downloaded successfully.", "success", 2500, "top-end");
   } catch (error) {
     Errors({ status: 0 }, "error", error?.message || error);
+  } finally {
+    if ($btn) {
+      $btn.prop("disabled", false).html(originalHtml);
+    }
   }
 }
 
-async function downloadBulkCredentialsPdf() {
+async function downloadBulkCredentialsPdf($button = null) {
+  const $btn = $button && $button.length ? $button : null;
+  const originalHtml = $btn ? $btn.html() : "";
   try {
+    if ($btn) {
+      $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Downloading...');
+    }
+
     const response = await fetch("../../../process/students/bulk_export_pdf", {
       method: "POST",
       credentials: "same-origin",
@@ -1361,8 +1378,13 @@ async function downloadBulkCredentialsPdf() {
     const fileName = getDownloadFileNameFromResponse(response, "bulk_created_accounts.pdf");
     const blob = await response.blob();
     downloadBlobFile(blob, fileName);
+    ToastVersion(swalTheme, "PDF credentials downloaded successfully.", "success", 2500, "top-end");
   } catch (error) {
     Errors({ status: 0 }, "error", error?.message || error);
+  } finally {
+    if ($btn) {
+      $btn.prop("disabled", false).html(originalHtml);
+    }
   }
 }
 
@@ -1682,11 +1704,11 @@ $(document).ready(function () {
   });
 
   $("#CsvCredentialsBtn").click(function () {
-    downloadBulkCredentialsCsv();
+    downloadBulkCredentialsCsv($(this));
   });
 
   $("#PdfCredentialsBtn").click(function () {
-    downloadBulkCredentialsPdf();
+    downloadBulkCredentialsPdf($(this));
   });
 
   $("#toggleFailedRowsBtn").click(function () {

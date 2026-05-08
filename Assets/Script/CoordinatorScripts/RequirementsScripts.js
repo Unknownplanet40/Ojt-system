@@ -90,19 +90,40 @@ function renderStudents(students) {
         return;
     }
 
-    students.forEach(student => {
+    const sortedStudents = [...students].sort((a, b) => {
+        const aHasSubmissions = Number(a.submitted_count || 0) > 0 ? 1 : 0;
+        const bHasSubmissions = Number(b.submitted_count || 0) > 0 ? 1 : 0;
+
+        if (aHasSubmissions !== bHasSubmissions) {
+            return bHasSubmissions - aHasSubmissions;
+        }
+
+        if (Number(b.submitted_count || 0) !== Number(a.submitted_count || 0)) {
+            return Number(b.submitted_count || 0) - Number(a.submitted_count || 0);
+        }
+
+        return String(a.full_name || '').localeCompare(String(b.full_name || ''));
+    });
+
+    sortedStudents.forEach(student => {
         const statuses = student.doc_statuses || {};
         const badge = getBadgeStatus(student);
         const canReview = Number(student.submitted_count || 0) > 0;
 
-        const dots = [
-            statuses.resume,
-            statuses.guardian_form,
-            statuses.parental_consent,
-            statuses.medical_certificate,
-            statuses.insurance,
-            statuses.nbi_clearance,
-        ].map((s) => `<span class="${dotClass(s)}">&#11044;</span>`).join('');
+        const docTypes = [
+            {key: 'resume', label: 'Resume'},
+            {key: 'guardian_form', label: 'Guardian Form'},
+            {key: 'parental_consent', label: 'Parental Consent'},
+            {key: 'medical_certificate', label: 'Medical Certificate'},
+            {key: 'insurance', label: 'Insurance'},
+            {key: 'nbi_clearance', label: 'NBI Clearance'},
+        ];
+
+        const dots = docTypes.map(dt => {
+            const s = statuses[dt.key];
+            const title = dt.label + (s ? ` — ${s.replace(/_/g, ' ')}` : ' — not submitted');
+            return `<span class="${dotClass(s)}" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" data-bs-content="${title}" tabindex="0" style="cursor: pointer;">&#11044;</span>`;
+        }).join('');
 
         const studentRow = `
             <div class="col-12">
@@ -150,6 +171,9 @@ function renderStudents(students) {
         const studentName = $(this).data("student-name");
         openReviewModal(studentUuid, studentName);
     });
+
+    const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+    const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
 }
 
 function openReviewModal(studentUuid, studentName) {
@@ -165,7 +189,9 @@ function openReviewModal(studentUuid, studentName) {
         success: function (response) {
             if (response.status === "success") {
                 state.studentRequirements = response.requirements || [];
-                const submitted = state.studentRequirements.filter(r => r.status === 'submitted');
+                const submitted = state.studentRequirements
+                    .filter(r => r.status === 'submitted')
+                    .sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0));
                 
                 if (submitted.length === 0) {
                     ToastVersion(swalTheme, "No documents pending review for this student.", "info", 3000, "top-end");

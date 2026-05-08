@@ -6,10 +6,10 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     exit;
 }
 
-$host     = 'localhost';
-$username = 'root';
-$password = '';
-$dbname   = 'ojt_system';
+$host = getenv('DB_HOST') !== false ? getenv('DB_HOST') : 'localhost';
+$username = getenv('DB_USER') !== false ? getenv('DB_USER') : 'root';
+$password = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
+$dbname = getenv('DB_NAME') !== false ? getenv('DB_NAME') : 'ojt_system';
 
 $conn = new mysqli($host, $username, $password, $dbname);
 

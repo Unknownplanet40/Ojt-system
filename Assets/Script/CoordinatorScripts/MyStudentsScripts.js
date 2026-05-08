@@ -7,6 +7,25 @@ let swalTheme = SwalTheme();
 BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
+let currentViewedStudent = null;
+
+function getDownloadFileNameFromResponse(response, fallbackName) {
+  const contentDisposition = response.headers.get("Content-Disposition") || "";
+  const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
+  const fileNameFromHeader = fileNameMatch ? decodeURIComponent(fileNameMatch[1].trim()) : "";
+  return fileNameFromHeader || fallbackName;
+}
+
+function downloadBlobFile(blob, fileName) {
+  const blobUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = blobUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(blobUrl);
+}
 
 function loadStudents() {
   const filters = {
@@ -52,13 +71,119 @@ function renderStats(stats) {
 function renderPrograms(programs) {
   const filter = $("#programFilter");
   const select = $("#programSelect");
+  const editSelect = $("#editProgramSelect");
   select.empty().append('<option value="" selected disabled hidden>Select Program</option>');
+  if (editSelect.length) {
+    editSelect.empty().append('<option value="" selected disabled hidden>Select Program</option>');
+  }
   programs.forEach((p) => {
     const option = `<option value="${p.uuid}" class="bg-dark text-white">${p.code} - ${p.name}</option>`;
     if (filter.find(`option[value="${p.uuid}"]`).length === 0) {
       filter.append(option);
     }
     select.append(option);
+    if (editSelect.length) {
+      editSelect.append(option);
+    }
+  });
+}
+
+function resetEditStudentModal() {
+  $("#editStudentFullName").text("");
+  $("#editStudentNumberDisplay").text("");
+  $("#editStudentEmail").text("");
+  $("#editStudentNumber").text("");
+  $("#editLastName").val("");
+  $("#editFirstName").val("");
+  $("#editMiddleName").val("");
+  $("#editMobileNumber").val("");
+  $("#editAddress").val("");
+  $("#editEmergencyContact").val("");
+  $("#editEmergencyContactNumber").val("");
+  $("#editProgramSelect").val("");
+  $("#editYearLevelSelect").val("");
+  $("#editSection").val("");
+  $("#editCoordinatorUuid").val("");
+  $("#editStudentUuid").val("");
+}
+
+function openEditStudentModal(student) {
+  if (!student) {
+    toast("warning", "Student details are not available yet.");
+    return;
+  }
+
+  currentViewedStudent = student;
+
+  $("#editStudentFullName").text(student.full_name || "Student");
+  $("#editStudentNumberDisplay").text(student.student_number || "N/A");
+  $("#editStudentEmail").text(student.email || "N/A");
+  $("#editStudentNumber").text(student.student_number || "N/A");
+  $("#editLastName").val(student.last_name || "");
+  $("#editFirstName").val(student.first_name || "");
+  $("#editMiddleName").val(student.middle_name || "");
+  $("#editMobileNumber").val(student.mobile || "");
+  $("#editAddress").val(student.home_address || "");
+  $("#editEmergencyContact").val(student.emergency_contact || "");
+  $("#editEmergencyContactNumber").val(student.emergency_phone || "");
+  $("#editProgramSelect").val(student.program_uuid || "");
+  $("#editYearLevelSelect").val(String(student.year_level || ""));
+  $("#editSection").val(student.section || "");
+  $("#editCoordinatorUuid").val(student.coordinator_uuid || $("body").data("uuid") || "");
+  $("#editStudentUuid").val(student.profile_uuid || "");
+
+  $("#ViewStudentModal").one("hidden.bs.modal", function () {
+    $("#EditStudentModal").modal("show");
+  });
+  $("#ViewStudentModal").modal("hide");
+}
+
+function saveEditedStudent() {
+  const profileUuid = $("#editStudentUuid").val();
+
+  if (!profileUuid) {
+    toast("warning", "Unable to update this student right now.");
+    return;
+  }
+
+  const btn = $("#saveEditStudentBtn");
+  const originalHtml = btn.html();
+  btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Saving...');
+  $("#pageLoader").fadeIn();
+
+  $.ajax({
+    url: "../../../process/students/update_student",
+    type: "POST",
+    dataType: "json",
+    data: {
+      csrf_token: csrfToken,
+      profile_uuid: profileUuid,
+      last_name: $("#editLastName").val().trim(),
+      first_name: $("#editFirstName").val().trim(),
+      middle_name: $("#editMiddleName").val().trim(),
+      mobile: $("#editMobileNumber").val().trim(),
+      home_address: $("#editAddress").val().trim(),
+      emergency_contact: $("#editEmergencyContact").val().trim(),
+      emergency_phone: $("#editEmergencyContactNumber").val().trim(),
+      program_uuid: $("#editProgramSelect").val(),
+      year_level: $("#editYearLevelSelect").val(),
+      section: $("#editSection").val().trim(),
+      coordinator_uuid: $("#editCoordinatorUuid").val(),
+    },
+    success: function (response) {
+      if (response.status === "success") {
+        toast("success", response.message || "Student updated successfully.");
+        $("#EditStudentModal").modal("hide");
+        loadStudents();
+      } else {
+        toast("error", response.message || "Unable to update student.");
+      }
+    },
+    error: (xhr, status, error) => Errors(xhr, status, error),
+    complete: function () {
+      btn.prop("disabled", false).html(originalHtml);
+      $("#pageLoader").fadeOut();
+    },
   });
 }
 
@@ -83,7 +208,7 @@ function renderStudents(students) {
 
       const card = `
         <div class="col-12 col-md-6 col-xl-4 mb-4">
-          <div class="card h-100 border-0 shadow-sm rounded-4 bg-blur-10 bg-semi-transparent overflow-hidden" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1) !important;">
+          <div class="card h-100 border shadow-sm rounded-4 glass-ui glass-ui-strong overflow-hidden">
             <div class="card-body p-4">
               <div class="d-flex align-items-start gap-3 mb-4 overflow-hidden">
                 <img src="${profileImg}" alt="${s.full_name}" 
@@ -113,12 +238,17 @@ function renderStudents(students) {
                 </div>
               </div>
               
-              <div class="mt-auto hstack gap-2">
-                <button class="btn btn-primary flex-grow-1 rounded-pill shadow-sm py-2" data-action="view" data-profile-uuid="${s.profile_uuid}">
-                  <i class="bi bi-person-badge me-2"></i>View
-                </button>
-                <button class="btn btn-outline-warning rounded-circle shadow-sm" style="width: 42px; height: 42px;" data-action="reset" data-user-uuid="${s.user_uuid}" data-name="${s.full_name}" title="Reset Password">
-                  <i class="bi bi-key"></i>
+              <div class="mt-auto vstack gap-2">
+                <div class="hstack gap-2">
+                  <button class="btn btn-primary flex-grow-1 rounded-pill shadow-sm py-2" data-action="view" data-profile-uuid="${s.profile_uuid}">
+                    <i class="bi bi-person-badge me-2"></i>View
+                  </button>
+                  <button class="btn btn-outline-warning rounded-circle shadow-sm" style="width: 42px; height: 42px;" data-action="reset" data-user-uuid="${s.user_uuid}" data-name="${s.full_name}" title="Reset Password">
+                    <i class="bi bi-key"></i>
+                  </button>
+                </div>
+                <button class="btn ${s.account_status === 'inactive' ? 'btn-success' : 'btn-outline-danger'} rounded-pill shadow-sm py-2 w-100" data-action="toggle-status" data-user-uuid="${s.user_uuid}" data-profile-uuid="${s.profile_uuid}" data-account-status="${s.account_status}" data-name="${s.full_name}" title="${s.account_status === 'inactive' ? 'Activate Account' : 'Deactivate Account'}">
+                  <i class="bi ${s.account_status === 'inactive' ? 'bi-unlock' : 'bi-lock'} me-2"></i>${s.account_status === 'inactive' ? 'Activate' : 'Deactivate'}
                 </button>
               </div>
             </div>
@@ -216,38 +346,47 @@ function resetPassword(uuid, name) {
   });
 }
 
-function viewStudent(uuid) {
-  $("#pageLoader").fadeIn();
-  $.ajax({
-    url: "../../../process/coordinators/get_student_full_details",
-    type: "POST",
-    data: { csrf_token: csrfToken, student_uuid: uuid },
-    dataType: "json",
-    success: function (response) {
-      if (response.status === "success") {
-        const s = response.student;
-        $("#viewStudentFullName").text(s.full_name);
-        $("#viewStudentNumber").text(s.student_number);
-        $("#viewStudentEmail").text(s.email);
-        $("#viewStudentProgram").text(s.program_name);
-        $("#viewStudentYearSection").text(`${s.year_level}nd Year - ${s.section || 'N/A'}`);
-        $("#viewStudentBatch").text(s.batch_label || s.batch_name || "N/A");
-        $("#viewStudentStatus").html(getStatusBadge(s.account_status, s.status_label));
-        $("#viewStudentProfilePic").attr("src", s.profile_name ? `../../../Assets/Images/profiles/${s.profile_name}` : `https://placehold.co/80x80/C1C1C1/000000/png?text=${s.initials}&font=poppins`);
-        
-        $("#editStudentBtnView").attr("data-profile-uuid", uuid);
-        $("#exportPdfBtnView").attr("data-profile-uuid", uuid);
-        $("#resetPasswordBtnView").attr("data-user-uuid", s.user_uuid).attr("data-name", s.full_name);
-        
-        $("#ViewStudentModal").modal("show");
-      } else {
-        toast("error", response.message);
-      }
-    },
-    error: (xhr, status, error) => Errors(xhr, status, error),
-    complete: () => $("#pageLoader").fadeOut(),
+function toggleStudentStatus(uuid, currentStatus, name) {
+  const isInactive = currentStatus === 'inactive';
+  const action = isInactive ? 'reactivate' : 'deactivate';
+  const actionText = isInactive ? 'Activate' : 'Deactivate';
+  const description = isInactive 
+    ? `Are you sure you want to activate the account for ${name}?`
+    : `Are you sure you want to deactivate the account for ${name}?`;
+  
+  ConfirmVersion(
+    swalTheme,
+    `${actionText} Account?`,
+    description,
+    isInactive ? "success" : "warning",
+    `Yes, ${action} it!`,
+    isInactive ? "success" : "warning",
+    "secondary",
+    "Cancel"
+  ).then((result) => {
+    if (result.isConfirmed) {
+      $("#pageLoader").fadeIn();
+      $.ajax({
+        url: "../../../process/students/deactivate_student",
+        type: "POST",
+        data: { csrf_token: csrfToken, user_uuid: uuid, action: action },
+        dataType: "json",
+        success: function (response) {
+          if (response.status === "success") {
+            toast(isInactive ? "success" : "info", response.message);
+            loadStudents();
+          } else {
+            toast("error", response.message);
+          }
+        },
+        error: (xhr, status, error) => Errors(xhr, status, error),
+        complete: () => $("#pageLoader").fadeOut(),
+      });
+    }
   });
 }
+
+
 
 function toast(icon, title) {
   if (window.Swal) ToastVersion(swalTheme, title, icon, 3000, "top-end", "8");
@@ -282,13 +421,19 @@ $(document).ready(function () {
     resetPassword($(this).data("user-uuid"), $(this).data("name"));
   });
 
-  $(document).on("click", '[data-action="view"]', function () {
-    viewStudent($(this).data("profile-uuid"));
+  $(document).on("click", '[data-action="toggle-status"]', function () {
+    toggleStudentStatus($(this).data("user-uuid"), $(this).data("account-status"), $(this).data("name"));
   });
 
-  $("#resetPasswordBtnView").on("click", function () {
-    $("#ViewStudentModal").modal("hide");
-    resetPassword($(this).data("user-uuid"), $(this).data("name"));
+  $(document).on("click", '[data-action="view"]', function () {
+    const profileUuid = $(this).data("profile-uuid");
+    window.location.href = `./viewStudentProfile?uuid=${profileUuid}&from=mystudents`;
+  });
+
+  $("#saveEditStudentBtn").on("click", saveEditedStudent);
+
+  $("#EditStudentModal").on("hidden.bs.modal", function () {
+    resetEditStudentModal();
   });
 
   $("#bulkimportBtn").on("click", function () {
@@ -311,6 +456,9 @@ $(document).ready(function () {
     formData.append("csrf_token", csrfToken);
     formData.append("bulk_file", file); // Match backend field name
 
+    const btn = $(this);
+    const ogText = btn.html();
+    btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2"></span>Validating...');
     $("#pageLoader").fadeIn();
     $.ajax({
       url: "../../../process/students/bulk_validate",
@@ -380,11 +528,17 @@ $(document).ready(function () {
         }
       },
       error: (xhr, status, error) => Errors(xhr, status, error),
-      complete: () => $("#pageLoader").fadeOut(),
+      complete: () => {
+        btn.prop("disabled", false).html(ogText);
+        $("#pageLoader").fadeOut();
+      },
     });
   });
 
   $("#confirmImportBtn").on("click", function () {
+    const btn = $(this);
+    const ogText = btn.html();
+    btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2"></span>Creating Accounts...');
     $("#pageLoader").fadeIn();
     $.ajax({
       url: "../../../process/students/bulk_create",
@@ -394,29 +548,164 @@ $(document).ready(function () {
       success: function (response) {
         if (response.status === "success") {
           $("#bulkCreationModal").modal("hide");
-          Swal.fire({
-            title: "Success!",
-            text: response.message,
-            icon: "success",
-            background: swalTheme.background,
-            color: swalTheme.color,
-          });
+          
+          // Populate success modal
+          $("#bulkBatchLabelCurrent").text("Current Batch");
+          $("#bulkAccountsCreatedCount").text(response.created_count);
+          $("#bulkSuccessCreatedCount").text(response.created_count);
+          $("#bulkSuccessFailedCount").text(response.failed_count);
+          
+          // Populate created accounts table
+          const createdTable = $("#bulkCreatedAccountsTable tbody");
+          createdTable.empty();
+          if (response.created && response.created.length > 0) {
+            response.created.forEach(student => {
+              const row = `<tr class="border-0 border-bottom border-light border-opacity-10">
+                <td class="py-3 fw-semibold text-white">${student.full_name}</td>
+                <td class="py-3 d-none d-sm-table-cell text-white-50 small">${student.email}</td>
+                <td class="py-3 d-none d-md-table-cell text-white-50 small">${student.student_number}</td>
+                <td class="py-3 fw-mono text-info">${student.temp_password}</td>
+              </tr>`;
+              createdTable.append(row);
+            });
+          }
+          
+          // Show failed rows if any
+          if (response.failed_count > 0 && response.failed && response.failed.length > 0) {
+            $("#bulkFailedRowsContainer").removeClass("d-none");
+            const failedTable = $("#bulkFailedRowsTableBody");
+            failedTable.empty();
+            response.failed.forEach(row => {
+              const failRow = `<tr class="border-0 border-bottom border-light border-opacity-10">
+                <td class="py-3 text-white-50">${row.name || row.first_name + ' ' + row.last_name}</td>
+                <td class="py-3 d-none d-sm-table-cell text-white-50 small">${row.email || 'N/A'}</td>
+                <td class="py-3 text-danger small">${row.error || 'Unknown error'}</td>
+              </tr>`;
+              failedTable.append(failRow);
+            });
+          } else {
+            $("#bulkFailedRowsContainer").addClass("d-none");
+          }
+          
+          // Show success modal
+          $("#bulkSuccessModal").modal("show");
+
+          toast("success", response.message || "Accounts created successfully.");
+          
           // Reset UI for next time
           $("#validationResults").hide();
           $("#bulkCsvFile").val("");
-          loadStudents();
         } else {
           toast("error", response.message);
         }
       },
       error: (xhr, status, error) => Errors(xhr, status, error),
-      complete: () => $("#pageLoader").fadeOut(),
+      complete: () => {
+        btn.prop("disabled", false).html(ogText);
+        $("#pageLoader").fadeOut();
+      },
     });
   });
 
   $("#cancelImportBtn").on("click", function () {
     $("#validationResults").slideUp();
     $("#bulkCsvFile").val("");
+  });
+
+  // Bulk Success Modal Handlers
+  $("#bulkToggleFailedRowsBtn").on("click", function() {
+    $("#bulkFailedRowsDetails").toggleClass("d-none");
+    $(this).text($(this).text() === "Show details" ? "Hide details" : "Show details");
+  });
+
+  $("#bulkPdfCredentialsBtn").on("click", async function() {
+    const $btn = $(this);
+    const originalHtml = $btn.html();
+    if ($btn.prop("disabled")) return;
+
+    $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Downloading...');
+
+    try {
+      const response = await fetch("../../../process/students/bulk_export_pdf", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: new URLSearchParams({ csrf_token: csrfToken }),
+      });
+
+      const contentType = (response.headers.get("Content-Type") || "").toLowerCase();
+      if (!response.ok || contentType.includes("application/json")) {
+        let message = "Failed to export PDF credentials.";
+        try {
+          const json = await response.json();
+          message = json.message || message;
+        } catch {
+          const text = await response.text();
+          message = text || message;
+        }
+        ToastVersion(swalTheme, message, "error", 3500, "top-end");
+        return;
+      }
+
+      const fileName = getDownloadFileNameFromResponse(response, "bulk_created_accounts.pdf");
+      const blob = await response.blob();
+      downloadBlobFile(blob, fileName);
+      ToastVersion(swalTheme, "PDF credentials downloaded successfully.", "success", 2500, "top-end");
+    } catch (error) {
+      Errors({ status: 0 }, "error", error?.message || error);
+    } finally {
+      $btn.prop("disabled", false).html(originalHtml);
+    }
+  });
+
+  $("#bulkCsvCredentialsBtn").on("click", async function() {
+    const $btn = $(this);
+    const originalHtml = $btn.html();
+    if ($btn.prop("disabled")) return;
+
+    $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Downloading...');
+
+    try {
+      const response = await fetch("../../../process/students/bulk_export_csv", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: new URLSearchParams({ csrf_token: csrfToken }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        ToastVersion(swalTheme, text || "Failed to export CSV credentials.", "error", 3500, "top-end");
+        return;
+      }
+
+      const fileName = getDownloadFileNameFromResponse(response, "bulk_created_accounts.csv");
+      const blob = await response.blob();
+      downloadBlobFile(blob, fileName);
+      ToastVersion(swalTheme, "CSV credentials downloaded successfully.", "success", 2500, "top-end");
+    } catch (error) {
+      Errors({ status: 0 }, "error", error?.message || error);
+    } finally {
+      $btn.prop("disabled", false).html(originalHtml);
+    }
+  });
+
+  $("#bulkViewAllStudentsBtn").on("click", function() {
+    $("#bulkSuccessModal").modal("hide");
+    loadStudents();
+  });
+
+  $("#bulkImportNewBatchBtn").on("click", function() {
+    $("#bulkSuccessModal").modal("hide");
+    $("#bulkCreationModal").modal("show");
+    $("#bulkCsvFile").val("");
+    $("#validationResults").hide();
   });
 
   $("#exportPdfBtn, #exportPdfBtnView").on("click", function() {

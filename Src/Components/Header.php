@@ -18,7 +18,7 @@
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle <?= in_array($CurrentPage, ['Coordinators', 'Students', 'Supervisors']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> Accounts </a>
-          <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
+          <ul class="dropdown-menu glass-ui glass-ui-strong shadow">
             <li><span class="dropdown-item-text text-nowrap text-success text-center text-capitalize">User Management</span></li>
             <li>
               <a class="dropdown-item <?= $CurrentPage === 'Coordinators' ? 'nav-active' : '' ?>" href="../Admin/Coordinators">
@@ -66,12 +66,36 @@
             </li>
           </ul>
         </li>
-        <li class="nav-item">
-          <a class="nav-link <?= $CurrentPage === 'Companies' ? 'active' : '' ?>" aria-current="page" href="../Admin/Companies">Companies</a>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle text-capitalize <?= in_array($CurrentPage, ['Companies', 'Visits']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> Companies</a>
+          <ul class="dropdown-menu glass-ui glass-ui-strong shadow">
+            <li>
+              <a class="dropdown-item <?= $CurrentPage === 'Companies' ? 'nav-active' : '' ?>" href="../Admin/Companies">
+                <div class="hstack">
+                  <i class="bi bi-building me-2"></i>
+                  <div class="vstack">
+                    <span>Companies</span>
+                    <small class="text-muted" style="font-size: 0.7em">Manage company profiles and partnerships.</small>
+                  </div>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item <?= $CurrentPage === 'Visits' ? 'nav-active' : '' ?>" href="../Admin/Visits">
+                 <div class="hstack">
+                  <i class="bi bi-briefcase me-2"></i>
+                  <div class="vstack">
+                    <span>Visits</span>
+                    <small class="text-muted" style="font-size: 0.7em">View coordinator visits and meeting logs.</small>
+                  </div>
+                </div>
+              </a>
+            </li>
+          </ul>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle text-capitalize <?= in_array($CurrentPage, ['Batches', 'Programs']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> Academic</a>
-          <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
+          <a class="nav-link dropdown-toggle text-capitalize <?= in_array($CurrentPage, ['Batches', 'Programs', 'Grading']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> Academic</a>
+          <ul class="dropdown-menu glass-ui glass-ui-strong shadow">
             <li>
               <a class="dropdown-item <?= $CurrentPage === 'Batches' ? 'nav-active' : '' ?>" href="../Admin/Batches">
                 <div class="hstack">
@@ -94,13 +118,24 @@
                 </div>
               </a>
             </li>
+            <li>
+              <a class="dropdown-item <?= $CurrentPage === 'Grading' ? 'nav-active' : '' ?>" href="../Admin/Grading">
+                <div class="hstack">
+                  <i class="bi bi-calculator me-2"></i>
+                  <div class="vstack">
+                    <span>Grading</span>
+                    <small class="text-muted" style="font-size: 0.7em">View finalized grades for the active batch.</small>
+                  </div>
+                </div>
+              </a>
+            </li>
           </ul>
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
             <img src="https://placehold.co/30x30?text=No+Photo" alt="Profile" id="navProfilePhoto" class="rounded-circle" style="width: 30px; height: 30px; object-fit: cover" />
           </a>
-          <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
+          <ul class="dropdown-menu glass-ui glass-ui-strong shadow">
             <li>
               <div class="hstack">
                 <img src="https://placehold.co/30x30?text=No+Photo" alt="Profile" id="dropdownProfilePhoto" class="rounded-circle mx-3" style="width: 30px; height: 30px; object-fit: cover" />
@@ -139,7 +174,7 @@
               </a>
             </li>
             <li>
-              <a class="dropdown-item" href="javascript:void(0)">
+              <a class="dropdown-item <?= $CurrentPage === 'Settings' ? 'nav-active' : '' ?>" href="../Admin/Settings">
                 <div class="hstack">
                   <i class="bi bi-gear me-2"></i>
                   <div class="vstack">

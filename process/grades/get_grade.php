@@ -43,6 +43,10 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
+if (!ensureGradeTableExists($conn)) {
+    response(['status' => 'critical', 'message' => 'Failed to initialize grading table.']);
+}
+
 if (!isset($_SESSION['user_uuid'])) {
     http_response_code(401);
     response(['status' => 'error', 'message' => 'Unauthenticated.']);
@@ -57,8 +61,17 @@ $studentUuid = $role === 'student'
 
 $batchUuid = trim($_POST['batch_uuid'] ?? '') ?: ($_SESSION['active_batch_uuid'] ?? '');
 
+if (empty($batchUuid)) {
+    $batchUuid = resolveActiveBatchUuid($conn, $batchUuid) ?? '';
+}
+
 if (empty($studentUuid) || empty($batchUuid)) {
     response(['status' => 'error', 'message' => 'Student UUID and batch UUID are required.']);
+}
+
+if ($role === 'coordinator' && !studentBelongsToCoordinator($conn, $studentUuid, $_SESSION['profile_uuid'])) {
+    http_response_code(403);
+    response(['status' => 'error', 'message' => 'Unauthorized access to this student.']);
 }
 
 $studentView = $role === 'student';

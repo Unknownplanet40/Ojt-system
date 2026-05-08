@@ -22,8 +22,8 @@
       </div>
     </div>
   </div>
-  <div class="col-md-4 quickactions">
-    <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-sm border-0 h-100" style="--blur-lvl: <?= $opacitylvl ?>;">
+  <div class="col-md-4">
+    <div class="card h-100 glass-ui glass-ui-strong shadow-sm border-0 h-100" style="--blur-lvl: <?= $opacitylvl ?>;">
       <div class="card-body p-4">
       <div class="d-flex align-items-center mb-3">
         <h5 class="card-title mb-0">Quick Actions</h5>

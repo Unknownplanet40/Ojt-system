@@ -71,61 +71,65 @@ if ($currentHour >= 5 && $currentHour < 12) {
     <div class="modal fade" id="journalEntryModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content bg-blur-5 bg-semi-transparent border-0 shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
-                <div class="modal-header border-0 pb-0">
-                    <div>
-                        <h5 class="modal-title fw-semibold mb-1" id="journalEntryModalTitle">Weekly Journal Entry</h5>
+                <div class="modal-header border-0 border-bottom border-light border-opacity-10 pb-3">
+                    <div class="flex-grow-1">
+                        <h5 class="modal-title fw-bold mb-1" id="journalEntryModalTitle">Submit Weekly Journal</h5>
                         <p class="text-muted small mb-0">Record your weekly accomplishments, challenges, and plans.</p>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body pt-3">
-                    <form id="journalEntryForm" class="vstack gap-3">
+                <div class="modal-body pt-4">
+                    <form id="journalEntryForm" class="vstack gap-4">
                         <input type="hidden" id="journalEntryUuid" name="journal_uuid" value="">
                         
                         <!-- For Returned Journals: Feedback -->
-                        <div id="returnFeedbackContainer" class="d-none alert alert-danger border-danger-subtle rounded-3 py-2 px-3 mb-0">
-                            <div class="fw-semibold small"><i class="bi bi-exclamation-triangle-fill me-2"></i>Returned by Coordinator</div>
-                            <p class="small mb-0 mt-1" id="returnReasonText"></p>
+                        <div id="returnFeedbackContainer" class="d-none alert alert-warning border-warning-subtle bg-warning-subtle rounded-4 py-3 px-4 mb-0">
+                            <div class="fw-semibold small mb-2"><i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Journal Returned for Revision</div>
+                            <p class="small mb-0 lh-lg" id="returnReasonText"></p>
                         </div>
 
+                        <!-- Week Range -->
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="weekStart" class="form-label fw-medium">Week Start Date</label>
-                                <input type="date" class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="weekStart" name="week_start" min="<?= htmlspecialchars($ojtStartDateValue) ?>" style="--blur-lvl: <?= $opacitylvl ?>">
-                                <div class="invalid-feedback d-block small" id="weekStartError"></div>
+                                <label for="weekStart" class="form-label fw-medium small">Week Start Date</label>
+                                <input type="date" class="form-control bg-blur-5 bg-semi-transparent border border-light border-opacity-25 shadow-none" id="weekStart" name="week_start" min="<?= htmlspecialchars($ojtStartDateValue) ?>" style="--blur-lvl: <?= $opacitylvl ?>">
+                                <div class="invalid-feedback d-block small mt-1" id="weekStartError"></div>
                             </div>
                             <div class="col-md-6">
-                                <label for="weekEnd" class="form-label fw-medium">Week End Date</label>
-                                <input type="date" class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="weekEnd" name="week_end" style="--blur-lvl: <?= $opacitylvl ?>">
-                                <div class="invalid-feedback d-block small" id="weekEndError"></div>
+                                <label for="weekEnd" class="form-label fw-medium small">Week End Date</label>
+                                <input type="date" class="form-control bg-blur-5 bg-semi-transparent border border-light border-opacity-25 shadow-none" id="weekEnd" name="week_end" style="--blur-lvl: <?= $opacitylvl ?>">
+                                <div class="invalid-feedback d-block small mt-1" id="weekEndError"></div>
                             </div>
                         </div>
                         
+                        <!-- Main Content -->
                         <div>
-                            <label for="accomplishments" class="form-label fw-medium">Accomplishments & Tasks <span class="text-danger">*</span></label>
-                            <textarea class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="accomplishments" name="accomplishments" rows="4" placeholder="Describe the tasks and deliverables you completed this week" style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
-                            <div class="invalid-feedback d-block small" id="accomplishmentsError"></div>
+                            <label for="accomplishments" class="form-label fw-medium small d-flex justify-content-between"><span>Accomplishments & Tasks <span class="text-danger">*</span></span><span class="text-muted" id="accomplishmentsCount">(0/max)</span></label>
+                            <textarea class="form-control bg-blur-5 bg-semi-transparent border border-light border-opacity-25 shadow-none" id="accomplishments" name="accomplishments" rows="4" placeholder="Describe the tasks and deliverables you completed this week..." style="--blur-lvl: <?= $opacitylvl ?>;"></textarea>
+                            <div class="invalid-feedback d-block small mt-1" id="accomplishmentsError"></div>
+                        </div>
+
+                        <!-- Additional Fields -->
+                        <div class="row g-3">
+                            <div class="col-lg-6">
+                                <label for="skillsLearned" class="form-label fw-medium small">Skills Learned</label>
+                                <textarea class="form-control bg-blur-5 bg-semi-transparent border border-light border-opacity-25 shadow-none" id="skillsLearned" name="skills_learned" rows="3" placeholder="What new technical or soft skills did you acquire this week?" style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
+                            </div>
+                            <div class="col-lg-6">
+                                <label for="challenges" class="form-label fw-medium small">Challenges & Issues</label>
+                                <textarea class="form-control bg-blur-5 bg-semi-transparent border border-light border-opacity-25 shadow-none" id="challenges" name="challenges" rows="3" placeholder="What difficulties did you encounter and how did you resolve them?" style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
+                            </div>
                         </div>
 
                         <div>
-                            <label for="skillsLearned" class="form-label fw-medium">Skills Learned</label>
-                            <textarea class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="skillsLearned" name="skills_learned" rows="3" placeholder="What new technical or soft skills did you acquire?" style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
-                        </div>
-
-                        <div>
-                            <label for="challenges" class="form-label fw-medium">Issues & Challenges</label>
-                            <textarea class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="challenges" name="challenges" rows="3" placeholder="What difficulties did you encounter and how did you resolve them?" style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
-                        </div>
-
-                        <div>
-                            <label for="plansNextWeek" class="form-label fw-medium">Plans for Next Week</label>
-                            <textarea class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="plansNextWeek" name="plans_next_week" rows="3" placeholder="What are your tasks or goals for the upcoming week?" style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
+                            <label for="plansNextWeek" class="form-label fw-medium small">Plans for Next Week</label>
+                            <textarea class="form-control bg-blur-5 bg-semi-transparent border border-light border-opacity-25 shadow-none" id="plansNextWeek" name="plans_next_week" rows="3" placeholder="What are your tasks or goals for the upcoming week?" style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveJournalEntryBtn">Submit Journal</button>
+                <div class="modal-footer border-0 border-top border-light border-opacity-10 pt-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-sm btn-primary rounded-pill px-4" id="saveJournalEntryBtn"><i class="bi bi-check-lg me-1"></i>Submit Journal</button>
                 </div>
             </div>
         </div>
@@ -135,44 +139,45 @@ if ($currentHour >= 5 && $currentHour < 12) {
     <div class="modal fade" id="viewJournalModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content bg-blur-5 bg-semi-transparent border-0 shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
-                <div class="modal-header border-0 pb-0">
-                    <div>
-                        <h5 class="modal-title fw-semibold mb-1">Journal Details</h5>
+                <div class="modal-header border-0 border-bottom border-light border-opacity-10 pb-3">
+                    <div class="flex-grow-1">
+                        <h5 class="modal-title fw-bold mb-1">Journal Details</h5>
                         <p class="text-muted small mb-0" id="viewJournalWeekRange"></p>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body pt-3">
-                    <div id="viewJournalStatusBadge" class="mb-3"></div>
+                <div class="modal-body pt-4">
+                    <div id="viewJournalStatusBadge" class="mb-4"></div>
 
-                    <div id="viewCoordinatorRemarksContainer" class="d-none alert alert-info border-info-subtle rounded-3 py-2 px-3 mb-3">
-                        <div class="fw-semibold small"><i class="bi bi-chat-left-text me-2"></i>Coordinator Remarks</div>
-                        <p class="small mb-0 mt-1" id="viewCoordinatorRemarks"></p>
+                    <div id="viewCoordinatorRemarksContainer" class="d-none alert alert-info border-info-subtle bg-info-subtle rounded-4 py-3 px-4 mb-4">
+                        <div class="fw-semibold small mb-2"><i class="bi bi-chat-left-text me-2 text-info"></i>Coordinator Remarks</div>
+                        <p class="small mb-0 lh-lg" id="viewCoordinatorRemarks"></p>
                     </div>
 
-                    <div class="mb-3">
-                        <h6 class="fw-semibold text-muted small text-uppercase">Accomplishments & Tasks</h6>
-                        <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body" id="viewAccomplishments" style="white-space: pre-wrap;"></div>
+                    <div class="mb-4">
+                        <label class="fw-semibold small text-muted text-uppercase mb-2 d-block">Accomplishments & Tasks</label>
+                        <div class="p-4 bg-body-secondary bg-opacity-10 rounded-4 text-body border border-light border-opacity-10 lh-lg" id="viewAccomplishments" style="white-space: pre-wrap; font-size: 0.95rem;"></div>
                     </div>
                     
-                    <div class="mb-3">
-                        <h6 class="fw-semibold text-muted small text-uppercase">Skills Learned</h6>
-                        <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body" id="viewSkillsLearned" style="white-space: pre-wrap;"></div>
-                    </div>
-
-                    <div class="mb-3">
-                        <h6 class="fw-semibold text-muted small text-uppercase">Issues & Challenges</h6>
-                        <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body" id="viewChallenges" style="white-space: pre-wrap;"></div>
-                    </div>
-
-                    <div class="mb-3">
-                        <h6 class="fw-semibold text-muted small text-uppercase">Plans for Next Week</h6>
-                        <div class="p-3 bg-body-tertiary bg-opacity-50 rounded-3 text-body" id="viewPlansNextWeek" style="white-space: pre-wrap;"></div>
+                    <div class="row g-3 mb-0">
+                        <div class="col-lg-4 col-md-6">
+                            <label class="fw-semibold small text-muted text-uppercase mb-2 d-block">Skills Learned</label>
+                            <div class="p-3 bg-body-secondary bg-opacity-10 rounded-3 text-body h-100 border border-light border-opacity-10 small lh-lg" id="viewSkillsLearned" style="white-space: pre-wrap;"></div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <label class="fw-semibold small text-muted text-uppercase mb-2 d-block">Challenges</label>
+                            <div class="p-3 bg-body-secondary bg-opacity-10 rounded-3 text-body h-100 border border-light border-opacity-10 small lh-lg" id="viewChallenges" style="white-space: pre-wrap;"></div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <label class="fw-semibold small text-muted text-uppercase mb-2 d-block">Plans Next Week</label>
+                            <div class="p-3 bg-body-secondary bg-opacity-10 rounded-3 text-body h-100 border border-light border-opacity-10 small lh-lg" id="viewPlansNextWeek" style="white-space: pre-wrap;"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-warning d-none" id="editReturnedJournalBtn">Edit & Resubmit</button>
+                <div class="modal-footer border-0 border-top border-light border-opacity-10 pt-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-sm btn-info rounded-pill px-4" id="exportJournalBtn" title="Export this journal as a PDF document"><i class="bi bi-file-pdf me-1"></i>Export PDF</button>
+                    <button type="button" class="btn btn-sm btn-warning rounded-pill px-4 d-none" id="editReturnedJournalBtn"><i class="bi bi-pencil-square me-1"></i>Edit & Resubmit</button>
                 </div>
             </div>
         </div>

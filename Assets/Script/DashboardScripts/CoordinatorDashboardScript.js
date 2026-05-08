@@ -112,6 +112,7 @@ function SignOut() {
     },
     success: function (response) {
       if (response.status === "success") {
+        localStorage.removeItem("ojt_theme_mode");
         Swal.close();
         window.location.href = response.redirect_url;
       } else {

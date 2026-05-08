@@ -34,7 +34,8 @@ if (empty($_POST['csrf_token']) ||
     response(['status' => 'error', 'message' => 'Invalid request.']);
 }
 
-if (!isset($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'admin') {
+
+if (!isset($_SESSION['user_uuid']) || !in_array($_SESSION['user_role'], ['admin', 'coordinator'])) {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
@@ -46,11 +47,6 @@ if (!$conn || $conn->connect_error) {
         'details'      => $conn->connect_error ?? 'Unknown error',
         'suggestion'   => 'Please try again later or contact support if the issue persists.'
     ]);
-}
-
-if (!in_array($_SESSION['user_role'], ['admin', 'coordinator'])) {
-    http_response_code(403);
-    exit;
 }
 
 $created = $_SESSION['bulk_created'] ?? [];

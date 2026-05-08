@@ -382,7 +382,43 @@ Bridge table between companies and programs.
 - `updated_at` (DATETIME, default: `NOW()` on update)
 - UNIQUE: `(student_uuid, batch_uuid)`
 
+### `coordinator_visits`
 
+- `id` (PK, auto-increment)
+- `uuid` (unique, CHAR(36))
+- `coordinator_uuid` (FK) → `coordinator_profiles.uuid`
+- `company_uuid` (FK) → `companies.uuid`
+- `batch_uuid` (FK) → `batches.uuid`
+- `visit_date` (DATE)
+- `visit_type` (ENUM: `scheduled`, `unscheduled`, default: `scheduled`)
+- `purpose` (TEXT)
+- `status` (ENUM: `scheduled`, `completed`, `cancelled`, default: `scheduled`)
+- Completion fields:
+  - `findings` (TEXT, nullable)
+  - `recommendations` (TEXT, nullable)
+  - `students_observed` (TEXT, nullable) — JSON array of student UUIDs
+- Cancellation:
+  - `cancel_reason` (TEXT, nullable)
+- `created_at` (DATETIME, default: `NOW()`)
+- `updated_at` (DATETIME, default: `NOW()` on update)
+
+### `admin_settings`
+
+Stores admin system-wide settings and preferences.
+
+- `id` (PK, auto-increment)
+- `setting_key` (VARCHAR unique)
+- `setting_value` (LONGTEXT, JSON-encoded for complex values)
+- `updated_by` → `users.uuid` (admin who made the change)
+- `updated_at` (DATETIME, default: `NOW()` on update)
+
+**Example settings:**
+- `theme` — `"light"` | `"dark"` | `"auto"`
+- `email_smtp_host` — SMTP server host (e.g., `smtp.gmail.com`)
+- `email_smtp_port` — SMTP port (e.g., `587`)
+- `email_address` — Sender email address
+- `email_app_password` — OAuth2/App-specific password (encrypted)
+- `email_from_name` — Sender display name
 
 ## Key relationships
 
