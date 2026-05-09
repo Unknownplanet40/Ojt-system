@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 date_default_timezone_set('Asia/Manila');
 
-if (empty($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'coordinator') {
+if (empty($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'student') {
     header("Location: ../Login");
     exit;
 }
@@ -19,9 +19,9 @@ $CurrentPage = "viewProfile";
 
 <head>
     <?php require_once "pagehead.php"; ?>
-    <script type="module" src="../../../Assets/Script/dashboardScripts/CoordinatorDashboardScript.js"></script>
-    <script type="module" src="../../../Assets/Script/ProfileScripts/CoordinatorViewProfileScript.js"></script>
-    <title><?= $ShortTitle ?> - Coordinator Profile</title>
+    <script type="module" src="../../../Assets/Script/dashboardScripts/StudentDashboard.js"></script>
+    <script type="module" src="../../../Assets/Script/ProfileScripts/StudentViewProfileScript.js"></script>
+    <title><?= $ShortTitle ?> - My Profile</title>
 </head>
 
 <body class="login-page">
@@ -38,7 +38,7 @@ $CurrentPage = "viewProfile";
     </div>
     <div class="d-flex flex-nowrap z-3 min-vh-100" id="PageMainContent">
         <main class="d-flex flex-column flex-grow-1 overflow-auto">
-            <?php require_once "../../Components/Header_Coordinator.php" ?>
+            <?php require_once "../../Components/Header_Students.php" ?>
             <div class="container-fluid p-4 w-100" id="dashboardContent">
                 <div class="row row-cols-1 row-cols-md-3 g-3">
                     <div class="col-md-12">
@@ -56,20 +56,18 @@ $CurrentPage = "viewProfile";
                                             </div>
 
                                             <div class="w-100 text-center text-sm-start">
-                                                <h3 class="fw-bold mb-1" id="FullName"><?= ucfirst($_SESSION['user_name']) ?></h3>
+                                                <h3 class="fw-bold mb-1" id="FullName">---</h3>
                                                 <p class="text-body-secondary mb-3 d-flex align-items-center justify-content-center justify-content-sm-start gap-2">
-                                                    <i class="bi bi-envelope"></i>
-                                                    <span id="EmailHeader"><?= htmlspecialchars($_SESSION['user_email']) ?></span>
-                                                    <span class="d-none d-sm-inline">&bull;</span>
-                                                    <span id="DepartmentHeader">---</span>
+                                                    <i class="bi bi-mortarboard"></i>
+                                                    <span id="Program">---</span>
                                                 </p>
 
                                                 <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-sm-start">
-                                                    <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">
-                                                        Coordinator
+                                                    <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2" id="RoleBadge">
+                                                        Student
                                                     </span>
                                                     <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 rounded-pill px-3 py-2">
-                                                        <i class="bi bi-shield-check me-1"></i>
+                                                        <i class="bi bi-check-circle-fill me-1"></i>
                                                         <span id="Status">Active</span>
                                                     </span>
                                                 </div>
@@ -95,14 +93,14 @@ $CurrentPage = "viewProfile";
                             style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body p-4">
                                 <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <div class="text-body-secondary small text-uppercase fw-bold ls-1">My Students</div>
+                                    <div class="text-body-secondary small text-uppercase fw-bold ls-1">Hours Rendered</div>
                                     <div class="rounded-3 bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center"
                                         style="width: 45px; height: 45px;">
-                                        <i class="bi bi-people-fill fs-4"></i>
+                                        <i class="bi bi-clock fs-4"></i>
                                     </div>
                                 </div>
-                                <h2 class="fw-bold mb-0" id="StudentCount">0</h2>
-                                <p class="text-body-secondary small mt-2 mb-0">Total assigned students</p>
+                                <h2 class="fw-bold mb-0" id="HoursRendered">0</h2>
+                                <p class="text-body-secondary small mt-2 mb-0">Total approved OJT hours</p>
                             </div>
                         </div>
                     </div>
@@ -112,14 +110,17 @@ $CurrentPage = "viewProfile";
                             style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body p-4">
                                 <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <div class="text-body-secondary small text-uppercase fw-bold ls-1">Active Batch</div>
+                                    <div class="text-body-secondary small text-uppercase fw-bold ls-1">Requirements</div>
                                     <div class="rounded-3 bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center"
                                         style="width: 45px; height: 45px;">
-                                        <i class="bi bi-calendar2-check-fill fs-4"></i>
+                                        <i class="bi bi-file-earmark-check fs-4"></i>
                                     </div>
                                 </div>
-                                <h2 class="fw-bold mb-0 lh-1" style="font-size: 1.5rem;" id="activeBatch">---</h2>
-                                <p class="text-body-secondary small mt-2 mb-0">Currently active batches</p>
+                                <h4 class="fw-bold mb-0" id="ReqProgress">0/0</h4>
+                                <div class="progress mt-2" style="height: 6px;">
+                                    <div class="progress-bar bg-success" id="ReqProgressBar" style="width: 0%"></div>
+                                </div>
+                                <p class="text-body-secondary small mt-1 mb-0">Submission progress</p>
                             </div>
                         </div>
                     </div>
@@ -129,46 +130,34 @@ $CurrentPage = "viewProfile";
                             style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body p-4">
                                 <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <div class="text-body-secondary small text-uppercase fw-bold ls-1">Last Login</div>
+                                    <div class="text-body-secondary small text-uppercase fw-bold ls-1">OJT Status</div>
                                     <div class="rounded-3 bg-info bg-opacity-10 text-info d-inline-flex align-items-center justify-content-center"
                                         style="width: 45px; height: 45px;">
-                                        <i class="bi bi-clock-history fs-4"></i>
+                                        <i class="bi bi-lightning fs-4"></i>
                                     </div>
                                 </div>
-                                <h2 class="fw-bold mb-0 lh-1" style="font-size: 1.25rem;" id="lastLogin">---</h2>
-                                <p class="text-body-secondary small mt-2 mb-0">Most recent account access</p>
+                                <h4 class="fw-bold mb-0" id="OJTStatusBadge">---</h4>
+                                <p class="text-body-secondary small mt-2 mb-0">Current internship status</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Personal Information -->
+                    <!-- Personal Info -->
                     <div class="col-md-6">
                         <div class="card bg-blur-5 bg-semi-transparent h-100 rounded-4 shadow-sm border border-body border-opacity-10"
                             style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body p-4">
-                                <div class="d-flex align-items-center justify-content-between mb-4">
-                                    <div>
-                                        <h5 class="fw-bold mb-0">Personal Information</h5>
-                                        <small class="text-body-secondary">Your account details at a glance</small>
+                                <div class="d-flex align-items-center gap-3 mb-4">
+                                    <div class="rounded-3 bg-warning bg-opacity-10 text-warning p-2">
+                                        <i class="bi bi-person-badge fs-4"></i>
                                     </div>
-                                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center"
-                                        style="width: 40px; height: 40px;">
-                                        <i class="bi bi-person-vcard"></i>
+                                    <div>
+                                        <h5 class="fw-bold mb-0">Account Details</h5>
+                                        <small class="text-body-secondary">Personal and contact information</small>
                                     </div>
                                 </div>
 
                                 <div class="list-group list-group-flush rounded-3 overflow-hidden border-0">
-                                    <div class="list-group-item bg-transparent px-0 py-3 border-body border-opacity-10">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <div class="rounded-3 bg-body-secondary p-2 text-primary">
-                                                <i class="bi bi-upc-scan"></i>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <small class="text-body-secondary d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Employee ID</small>
-                                                <span class="fw-medium" id="PIEmployeeID">---</span>
-                                            </div>
-                                        </div>
-                                    </div>
                                     <div class="list-group-item bg-transparent px-0 py-3 border-body border-opacity-10">
                                         <div class="d-flex align-items-center gap-3">
                                             <div class="rounded-3 bg-body-secondary p-2 text-primary">
@@ -183,11 +172,11 @@ $CurrentPage = "viewProfile";
                                     <div class="list-group-item bg-transparent px-0 py-3 border-body border-opacity-10">
                                         <div class="d-flex align-items-center gap-3">
                                             <div class="rounded-3 bg-body-secondary p-2 text-primary">
-                                                <i class="bi bi-building"></i>
+                                                <i class="bi bi-upc-scan"></i>
                                             </div>
                                             <div class="flex-grow-1">
-                                                <small class="text-body-secondary d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Department</small>
-                                                <span class="fw-medium" id="PIDepartment">---</span>
+                                                <small class="text-body-secondary d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Student Number</small>
+                                                <span class="fw-medium" id="PIStudentNumber">---</span>
                                             </div>
                                         </div>
                                     </div>
@@ -197,12 +186,23 @@ $CurrentPage = "viewProfile";
                                                 <i class="bi bi-telephone"></i>
                                             </div>
                                             <div class="flex-grow-1">
-                                                <small class="text-body-secondary d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Mobile Number</small>
+                                                <small class="text-body-secondary d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Contact Number</small>
                                                 <span class="fw-medium" id="PIMobileNumber">---</span>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="list-group-item bg-transparent px-0 py-3 border-body border-opacity-10">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-3 bg-body-secondary p-2 text-primary">
+                                                <i class="bi bi-envelope"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-body-secondary d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Email Address</small>
+                                                <span class="fw-medium text-break" id="Email">---</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="list-group-item bg-transparent px-0 py-3 border-0">
                                         <div class="d-flex align-items-center gap-3">
                                             <div class="rounded-3 bg-body-secondary p-2 text-primary">
                                                 <i class="bi bi-calendar-plus"></i>
@@ -218,25 +218,54 @@ $CurrentPage = "viewProfile";
                         </div>
                     </div>
 
-                    <!-- My Students List -->
+                    <!-- OJT Details -->
                     <div class="col-md-6">
                         <div class="card bg-blur-5 bg-semi-transparent h-100 rounded-4 shadow-sm border border-body border-opacity-10"
                             style="--blur-lvl: <?= $opacitylvl ?>">
                             <div class="card-body p-4">
-                                <div class="d-flex align-items-center justify-content-between mb-4">
-                                    <div>
-                                        <h5 class="fw-bold mb-0">My Students</h5>
-                                        <small class="text-body-secondary" id="BatchInfo">Recent active trainees</small>
+                                <div class="d-flex align-items-center gap-3 mb-4">
+                                    <div class="rounded-3 bg-info bg-opacity-10 text-info p-2">
+                                        <i class="bi bi-briefcase fs-4"></i>
                                     </div>
-                                    <div class="rounded-circle bg-info bg-opacity-10 text-info d-inline-flex align-items-center justify-content-center"
-                                        style="width: 40px; height: 40px;">
-                                        <i class="bi bi-mortarboard"></i>
+                                    <div>
+                                        <h5 class="fw-bold mb-0">Internship Details</h5>
+                                        <small class="text-body-secondary">Current OJT assignment and supervisor</small>
                                     </div>
                                 </div>
-                                <ul class="list-group list-group-flush border-0" id="studentList"
-                                    style="max-height: 480px; overflow-y: auto;">
-                                    <!-- Populated by JS -->
-                                </ul>
+
+                                <div class="vstack gap-3">
+                                    <div class="p-4 rounded-4 bg-body-secondary bg-opacity-25 border border-body border-opacity-10 text-center mb-2">
+                                        <div class="rounded-circle bg-body-secondary d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                                            <i class="bi bi-building fs-3 text-primary"></i>
+                                        </div>
+                                        <h5 class="fw-bold mb-1" id="Company">Not Assigned</h5>
+                                        <p class="text-body-secondary small mb-0">Host Training Establishment</p>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-6">
+                                            <div class="p-3 rounded-3 bg-body-secondary bg-opacity-25 border border-body border-opacity-10">
+                                                <small class="text-body-secondary d-block text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Supervisor</small>
+                                                <span class="fw-medium" id="Supervisor">---</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <div class="p-3 rounded-3 bg-body-secondary bg-opacity-25 border border-body border-opacity-10">
+                                                <small class="text-body-secondary d-block text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">OJT Status</small>
+                                                <span class="fw-medium" id="OJTStatusDetail">---</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-auto p-4 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-20 mt-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; min-width: 40px;">
+                                                <i class="bi bi-info-circle"></i>
+                                            </div>
+                                            <p class="small mb-0 fw-medium">Keep your profile updated for accurate tracking of your internship progress.</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -44,22 +44,76 @@ All frontend libraries are bundled locally inside `/libs`, so the project does n
 
 | Feature | Admin | Coordinator | Student | Supervisor |
 |---|:---:|:---:|:---:|:---:|
-| Manage batches | ✅ | ❌ | ❌ | ❌ |
-| Manage companies | ✅ | ❌ | ❌ | ❌ |
-| Manage programs | ✅ | ❌ | ❌ | ❌ |
+| **Authentication & Account** | | | | |
+| Login / logout | ✅ | ✅ | ✅ | ✅ |
+| Forgot password / reset | ✅ | ✅ | ✅ | ✅ |
+| Change password (voluntary) | ✅ | ✅ | ✅ | ✅ |
+| Forced password change (first login) | ✅ | ✅ | ✅ | ✅ |
+| Setup own profile | ✅ | ✅ | ✅ | ✅ |
+| Edit own profile | ✅ | ✅ | ⚠️ | ✅ |
+| User preferences & appearance settings | ✅ | ✅ | ✅ | ✅ |
+| **Admin Management** | | | | |
 | View admin dashboard | ✅ | ❌ | ❌ | ❌ |
+| Manage batches (create, activate, close) | ✅ | ❌ | ❌ | ❌ |
+| Manage programs (create, edit, toggle) | ✅ | ❌ | ❌ | ❌ |
+| Manage companies (create, edit, MOA upload) | ✅ | ✅ | ❌ | ❌ |
+| Manage coordinator accounts | ✅ | ❌ | ❌ | ❌ |
+| Manage student accounts (all students) | ✅ | ⚠️ | ❌ | ❌ |
+| Manage supervisor accounts | ✅ | ✅ | ❌ | ❌ |
+| Bulk student import (CSV/XLSX) | ✅ | ✅ | ❌ | ❌ |
+| View audit log | ✅ | ⚠️ | ❌ | ❌ |
+| **Reports & Analytics** | | | | |
+| View system-wide analytics & charts | ✅ | ❌ | ❌ | ❌ |
+| Export institutional-grade PDF reports | ✅ | ✅ | ❌ | ❌ |
+| Monitor company performance ratings | ✅ | ✅ | ❌ | ❌ |
+| View coordinator visitation logs | ✅ | ✅ | ❌ | ❌ |
+| Admin system settings | ✅ | ❌ | ❌ | ❌ |
+| Reassign student to another coordinator | ✅ | ❌ | ❌ | ❌ |
+| View all grades across coordinators | ✅ | ❌ | ❌ | ❌ |
+| **Coordinator Workflow** | | | | |
 | View coordinator dashboard | ❌ | ✅ | ❌ | ❌ |
-| Review student requirements | ❌ | ✅ | ❌ | ❌ |
-| Activate/deactivate assigned students | ❌ | ✅ | ❌ | ❌ |
-| View coordinator profile | ❌ | ✅ | ❌ | ❌ |
-| Submit pre-OJT requirements | ❌ | ❌ | ✅ | ❌ |
+| Create & manage own students | ⚠️ | ✅ | ❌ | ❌ |
+| Reset student password | ✅ | ✅ | ❌ | ❌ |
+| Approve / return student requirements | ⚠️ | ✅ | ❌ | ❌ |
+| Review OJT applications (approve/return/reject) | ❌ | ✅ | ❌ | ❌ |
+| Generate endorsement letter | ❌ | ✅ | ❌ | ❌ |
+| Confirm OJT start & assign supervisor | ❌ | ✅ | ❌ | ❌ |
+| Monitor student DTR & hours progress | ⚠️ | ✅ | ❌ | ❌ |
+| Override / manually approve rejected DTR | ❌ | ✅ | ❌ | ❌ |
+| Review weekly journals & add remarks | ❌ | ✅ | ❌ | ❌ |
+| Approve / return weekly journals | ❌ | ✅ | ❌ | ❌ |
+| View evaluations submitted by supervisor | ❌ | ✅ | ❌ | ❌ |
+| Compute & finalize student grade | ❌ | ✅ | ❌ | ❌ |
+| Schedule & log company visits | ❌ | ✅ | ❌ | ❌ |
+| View & export reports (own students) | ✅ | ✅ | ❌ | ❌ |
+| **Student Workflow** | | | | |
 | View student dashboard | ❌ | ❌ | ✅ | ❌ |
-| Set up student profile | ❌ | ❌ | ✅ | ❌ |
-| Export journal as PDF | ❌ | ❌ | ✅ | ❌ |
-| Access company documents | ✅ | ✅ | ❌ | ❌ |
+| Upload pre-OJT requirement documents | ❌ | ❌ | ✅ | ❌ |
+| Browse & apply to available companies | ❌ | ❌ | ✅ | ❌ |
+| Withdraw / resubmit OJT application | ❌ | ❌ | ✅ | ❌ |
+| Download endorsement letter | ❌ | ✅ | ✅ | ❌ |
+| Log daily DTR (time-in, time-out) | ❌ | ❌ | ✅ | ❌ |
+| Edit / delete pending DTR entries | ❌ | ❌ | ✅ | ❌ |
+| Submit backdated DTR (up to 3 days) | ❌ | ❌ | ✅ | ❌ |
+| View hours progress & completion status | ❌ | ✅ | ✅ | ✅ |
+| Submit weekly journal | ❌ | ❌ | ✅ | ❌ |
+| Edit & resubmit returned journal | ❌ | ❌ | ✅ | ❌ |
+| Submit self-evaluation form | ❌ | ❌ | ✅ | ❌ |
+| View own finalized grade | ❌ | ❌ | ✅ | ❌ |
+| View application status & history | ❌ | ✅ | ✅ | ❌ |
+| Edit section in student profile | ❌ | ✅ | ✅ | ❌ |
+| **Supervisor Workflow** | | | | |
 | View supervisor dashboard | ❌ | ❌ | ❌ | ✅ |
-| Submit evaluations | ❌ | ❌ | ✅ | ✅ |
-| Track OJT progress (DTR/Journal) | ❌ | ❌ | ✅ | ❌ |
+| View assigned students only | ❌ | ❌ | ❌ | ✅ |
+| Approve / reject DTR entries | ❌ | ❌ | ❌ | ✅ |
+| Bulk approve non-backdated DTR | ❌ | ❌ | ❌ | ✅ |
+| Submit midterm evaluation | ❌ | ❌ | ❌ | ✅ |
+| Submit final evaluation | ❌ | ❌ | ❌ | ✅ |
+| View student weekly journals | ❌ | ❌ | ❌ | ✅ |
+| View own company info | ❌ | ❌ | ❌ | ✅ |
+
+**Legend:**
+✅ Full access | ⚠️ Partial / scoped access | ❌ No access
 
 ---
 
@@ -75,6 +129,7 @@ All frontend libraries are bundled locally inside `/libs`, so the project does n
 - **Requirements Overview** — admin-level view of all student requirement statuses across the active batch
 - **Audit Logs** — read-only unified activity trail from `activity_log` and `login_audit_log` with date/user/action/module/source filters, search, CSV export, and detailed log inspector modal
 - **Dashboard** — stat cards, recent activity, and needs-attention alerts
+- **Reports & Analytics** — interactive data visualization dashboard using Chart.js, providing insights into placement distribution, completion rates, and industry partner performance with professional PDF export functionality.
 
 ### Coordinator
 - **Dashboard** — summary of assigned students, upcoming visits, company info, and hours progress
@@ -276,7 +331,30 @@ Ojt-system/
 
 ## Changelog
 
-### May 2026 — Grading System, Coordinator My Students, & Module Expansions
+### May 2026 (Part 2) — Reports, Analytics & Visitation Monitoring
+
+- **Reports & Analytics Module (new)**
+  - Integrated **Chart.js** for dynamic, interactive data visualizations on the Admin dashboard.
+  - Features: Placement Status distribution (Line/Pie), Program Enrollment breakdown, and Monthly Activity trends.
+  - **Top Company Partners** UI refactor: migrated from legacy tables to a modern, high-profile card-based layout featuring real performance ratings.
+  - Real-time rating engine: average scores are now dynamically computed from the `evaluations` database.
+
+- **Institutional PDF Export Engine**
+  - Developed a professional, document-ready export utility using **mPDF**.
+  - Features: Official school branding, header metadata, executive summaries, and themed data tables.
+  - Applied to both general analytics reports and specific visitation monitoring logs.
+
+- **Visitation Monitoring Enhancement**
+  - Implemented the **Export Visitation Report** feature for the Admin Visits module.
+  - Added filter-sensitive exports (Status, Coordinator, Company) to generate targeted administrative logs.
+  - Refined the visit details modal with a cleaner "Glass-UI" aesthetic and better findings visibility.
+
+- **UI/UX & Design System**
+  - Standardized "Glassmorphism" design tokens across all reporting components.
+  - Enhanced responsive layouts for analytics cards, ensuring compatibility across different screen sizes and orientations.
+  - Optimized chart performance and rendering lifecycle within the dashboard modules.
+
+### May 2026 (Part 1) — Grading System, Coordinator My Students, & Module Expansions
 
 - **Grading System (new)**
   - Added `functions/grade_functions.php` with full weighted grade computation logic

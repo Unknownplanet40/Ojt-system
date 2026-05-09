@@ -152,7 +152,7 @@
               <span class="dropdown-item-text text-nowrap text-success text-center text-capitalize">System Management</span>
             </li>
             <li>
-              <a class="dropdown-item" href="../Admin/Admin_Profile?action=edit">
+              <a class="dropdown-item <?= $CurrentPage === 'viewProfile' ? 'nav-active' : '' ?>" href="../Admin/viewProfile">
                 <div class="hstack">
                   <i class="bi bi-person-circle me-2"></i>
                   <div class="vstack">
@@ -162,6 +162,7 @@
                 </div>
               </a>
             </li>
+
             <li>
               <a class="dropdown-item <?= $CurrentPage === 'AuditLogs' ? 'nav-active' : '' ?>" href="../Admin/AuditLogs">
                 <div class="hstack">

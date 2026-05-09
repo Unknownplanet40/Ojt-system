@@ -534,6 +534,99 @@ function resetSupervisorPassword($conn, string $userUuid, string $actorUuid): ar
     ];
 }
 
+function getSupervisorDashboardStats($conn, string $supervisorUuid): array
+{
+    // 1. Get supervisor profile to get the company_uuid
+    $stmt = $conn->prepare("SELECT company_uuid, uuid FROM supervisor_profiles WHERE user_uuid = ? LIMIT 1");
+    $stmt->bind_param('s', $supervisorUuid);
+    $stmt->execute();
+    $supervisor = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$supervisor) {
+        return [
+            'total_students' => 0,
+            'active_ojt' => 0,
+            'pending_dtr' => 0,
+            'pending_evaluations' => 0,
+            'company_name' => 'Unknown'
+        ];
+    }
+
+    $companyUuid = $supervisor['company_uuid'];
+    $supervisorProfileUuid = $supervisor['uuid'];
+
+    // 2. Get company name
+    $stmt = $conn->prepare("SELECT name FROM companies WHERE uuid = ? LIMIT 1");
+    $stmt->bind_param('s', $companyUuid);
+    $stmt->execute();
+    $company = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    $companyName = $company['name'] ?? 'Unknown';
+
+    // 3. Get total students assigned to this company (and this supervisor if applicable)
+    // The current schema has supervisor_uuid in student_profiles
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM student_profiles WHERE company_uuid = ? AND supervisor_uuid = ?");
+    $stmt->bind_param('ss', $companyUuid, $supervisorProfileUuid);
+    $stmt->execute();
+    $totalStudents = $stmt->get_result()->fetch_assoc()['count'];
+    $stmt->close();
+
+    // 4. Get active OJT students (assigned to this supervisor and application status is 'active')
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as count 
+        FROM student_profiles sp
+        JOIN ojt_applications oa ON sp.uuid = oa.student_uuid
+        WHERE sp.company_uuid = ? 
+        AND sp.supervisor_uuid = ?
+        AND oa.status = 'active'
+    ");
+    $stmt->bind_param('ss', $companyUuid, $supervisorProfileUuid);
+    $stmt->execute();
+    $activeOjt = $stmt->get_result()->fetch_assoc()['count'];
+    $stmt->close();
+
+    // 5. Get pending DTR approvals for students under this supervisor
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as count 
+        FROM dtr_entries de
+        JOIN student_profiles sp ON de.student_uuid = sp.uuid
+        WHERE sp.company_uuid = ? 
+        AND sp.supervisor_uuid = ?
+        AND de.status = 'pending'
+    ");
+    $stmt->bind_param('ss', $companyUuid, $supervisorProfileUuid);
+    $stmt->execute();
+    $pendingDtr = $stmt->get_result()->fetch_assoc()['count'];
+    $stmt->close();
+
+    // 6. Get pending evaluations (Midterm and Final)
+    // Logic: If active student has reached 50% or 100% hours but evaluation doesn't exist
+    // This is more complex, let's simplify for now: count students who don't have final evaluation yet
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as count 
+        FROM student_profiles sp
+        JOIN ojt_applications oa ON sp.uuid = oa.student_uuid
+        LEFT JOIN evaluations ev ON sp.uuid = ev.student_uuid AND ev.eval_type = 'final'
+        WHERE sp.company_uuid = ? 
+        AND sp.supervisor_uuid = ?
+        AND oa.status = 'active'
+        AND ev.id IS NULL
+    ");
+    $stmt->bind_param('ss', $companyUuid, $supervisorProfileUuid);
+    $stmt->execute();
+    $pendingEvals = $stmt->get_result()->fetch_assoc()['count'];
+    $stmt->close();
+
+    return [
+        'total_students' => (int)$totalStudents,
+        'active_ojt' => (int)$activeOjt,
+        'pending_dtr' => (int)$pendingDtr,
+        'pending_evaluations' => (int)$pendingEvals,
+        'company_name' => $companyName
+    ];
+}
+
 function formatSupervisor(array $row): array
 {
     $status = $row['account_status'] ?? null;
@@ -581,4 +674,4 @@ function formatSupervisor(array $row): array
             ? date('M j, Y', strtotime($row['created_at']))
             : null,
     ];
-}
+}

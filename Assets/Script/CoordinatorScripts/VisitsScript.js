@@ -228,6 +228,35 @@ $(document).ready(function () {
             }
         });
     });
+
+    // Handle URL parameters for direct actions from dashboard
+    const urlParams = new URLSearchParams(window.location.search);
+    const visitUuid = urlParams.get('uuid');
+    const action = urlParams.get('action');
+
+    if (visitUuid && action) {
+        setTimeout(() => {
+            if (action === 'complete') {
+                $.ajax({
+                    url: '../../../process/visits/get_visit',
+                    type: 'POST',
+                    data: { visit_uuid: visitUuid, csrf_token: csrfToken },
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.status === 'success' && response.visit) {
+                            let v = response.visit;
+                            $('#completeVisitUuid').val(v.uuid);
+                            $('#completeCompanyName').text(v.company_name);
+                            $('#completeVisitDate').text(v.visit_date_label);
+                            $('#CompleteVisitModal').modal('show');
+                        }
+                    }
+                });
+            } else if (action === 'manage') {
+                $('.btn-view-visit[data-uuid="' + visitUuid + '"]').first().click();
+            }
+        }, 1000); // Wait for visits to load
+    }
 });
 
 function loadVisitableCompanies() {

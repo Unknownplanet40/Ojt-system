@@ -57,17 +57,17 @@ if ($currentHour >= 5 && $currentHour < 12) {
                         <div class="card h-100 border-0 shadow-sm rounded-4 bg-blur-5 bg-semi-transparent"
                             style="--blur-lvl: <?= $opacitylvl ?>;">
                             <div class="card-body p-3 p-md-4">
-                                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3">
+                                <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-3">
                                     <div class="d-flex align-items-center justify-content-center rounded-circle bg-success-subtle text-success flex-shrink-0"
                                         style="width: 48px; height: 48px;">
                                         <i class="bi bi-person-check fs-5"></i>
                                     </div>
 
-                                    <div class="flex-grow-1 min-w-0">
-                                        <h4 class="mb-1 fw-semibold text-break">
-                                            <?= $greeting ?>, <strong id="welcomeUserName"></strong>
+                                    <div class="flex-grow-1 min-w-0 text-center text-sm-start">
+                                        <h4 class="mb-1 fw-bold text-break">
+                                            <?= $greeting ?>, <span id="welcomeUserName" class="text-primary">Student</span>
                                         </h4>
-                                        <p class="mb-0 text-muted small d-flex flex-wrap align-items-center gap-2">
+                                        <p class="mb-0 text-body-secondary small d-flex flex-wrap justify-content-center justify-content-sm-start align-items-center gap-2">
                                             <span><?= date("l, F j, Y") ?></span>
                                             <span class="d-none d-sm-inline">&bull;</span>
                                             <span><?= date("h:i A") ?></span>
@@ -78,10 +78,10 @@ if ($currentHour >= 5 && $currentHour < 12) {
 
                                     <div class="ms-sm-auto">
                                         <button type="button"
-                                            class="btn btn-outline-success rounded-pill d-inline-flex align-items-center gap-2 px-3 px-xl-4 py-2 shadow-sm"
+                                            class="btn btn-outline-primary rounded-pill d-inline-flex align-items-center gap-2 px-3 px-xl-4 py-2 shadow-sm"
                                             id="dashboardRefreshBtn" aria-label="Refresh dashboard">
                                             <i class="bi bi-arrow-clockwise"></i>
-                                            <span class="fw-medium">Refresh dashboard</span>
+                                            <span class="fw-medium">Refresh</span>
                                         </button>
                                     </div>
                                 </div>
@@ -91,387 +91,356 @@ if ($currentHour >= 5 && $currentHour < 12) {
 
                     <div class="col-12 col-lg-3">
                         <button
-                            class="btn btn-success rounded-4 px-4 py-3 fw-semibold shadow-sm h-100 w-100"
+                            class="btn btn-success rounded-4 px-4 py-3 fw-bold shadow-sm h-100 w-100 d-flex align-items-center justify-content-center gap-2"
                             id="LogTimeBtn">
-                            <i class="bi bi-clock me-2"></i>Log today's time
+                            <i class="bi bi-clock-fill fs-5"></i>
+                            Log Today's Time
                         </button>
                     </div>
                 </div>
+
                 <div class="row row-cols-1 row-cols-md-4 g-4">
+                    <!-- Active OJT Card (Conditionally shown) -->
                     <div class="col-md-12" id="activeOjtSection" style="display: none;">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg rounded-4 border-success-subtle"
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg rounded-4 border-success border-opacity-25"
                             style="--blur-lvl: <?= $opacitylvl ?>">
-                            <div class="card-body p-3 p-md-4">
-                                <div class="d-flex flex-column flex-md-row align-items-start gap-3">
-                                    <div class="d-flex align-items-center justify-content-center rounded-circle bg-success-subtle text-success flex-shrink-0"
-                                        style="width: 52px; height: 52px;">
-                                        <i class="bi bi-building fs-4"></i>
+                            <div class="card-body p-4">
+                                <div class="d-flex flex-column flex-md-row align-items-start gap-4">
+                                    <div class="d-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10 text-success flex-shrink-0"
+                                        style="width: 64px; height: 64px;">
+                                        <i class="bi bi-building fs-3"></i>
                                     </div>
 
                                     <div class="flex-grow-1 min-w-0 w-100">
-                                        <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2 mb-2">
-                                            <p class="mb-0 text-uppercase fw-semibold text-success small">Active OJT</p>
-                                            <span class="badge rounded-pill bg-success-subtle text-success-emphasis" id="ojtStatusBadge">On-going</span>
+                                        <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-3 mb-2">
+                                            <p class="mb-0 text-uppercase fw-bold text-success small ls-1">Active Internship</p>
+                                            <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2" id="ojtStatusBadge">On-going</span>
                                         </div>
 
-                                        <h5 class="card-title mb-2 text-truncate" id="ojtCompany">...</h5>
+                                        <h3 class="fw-bold mb-3" id="ojtCompany">---</h3>
 
-                                        <div class="row g-2 g-md-3 text-muted small">
+                                        <div class="row g-3 text-body-secondary">
                                             <div class="col-12 col-sm-6 col-lg-3 d-flex align-items-center gap-2">
-                                                <i class="bi bi-diagram-3 text-success"></i>
-                                                <span class="text-break" id="ojtDept">...</span>
+                                                <div class="rounded-3 bg-body-secondary p-2 text-primary">
+                                                    <i class="bi bi-diagram-3"></i>
+                                                </div>
+                                                <span class="text-truncate" id="ojtDept">---</span>
                                             </div>
                                             <div class="col-12 col-sm-6 col-lg-2 d-flex align-items-center gap-2">
-                                                <i class="bi bi-laptop text-success"></i>
-                                                <span id="ojtSetup">...</span>
+                                                <div class="rounded-3 bg-body-secondary p-2 text-primary">
+                                                    <i class="bi bi-laptop"></i>
+                                                </div>
+                                                <span id="ojtSetup">---</span>
                                             </div>
                                             <div class="col-12 col-sm-6 col-lg-4 d-flex align-items-center gap-2">
-                                                <i class="bi bi-person-badge text-success"></i>
-                                                <span class="text-break">Supervisor: <span id="ojtSupervisor">...</span></span>
+                                                <div class="rounded-3 bg-body-secondary p-2 text-primary">
+                                                    <i class="bi bi-person-badge"></i>
+                                                </div>
+                                                <span class="text-truncate">Supervisor: <span id="ojtSupervisor" class="fw-medium text-body">---</span></span>
                                             </div>
                                             <div class="col-12 col-sm-6 col-lg-3 d-flex align-items-center gap-2">
-                                                <i class="bi bi-calendar-event text-success"></i>
-                                                <span>Started <span id="ojtStart">...</span></span>
+                                                <div class="rounded-3 bg-body-secondary p-2 text-primary">
+                                                    <i class="bi bi-calendar-event"></i>
+                                                </div>
+                                                <span>Started <span id="ojtStart" class="fw-medium text-body">---</span></span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="d-flex flex-row flex-md-column gap-2 ms-md-auto mt-2 mt-md-0 w-auto justify-content-md-start align-items-md-end">
-                                        <a href="javascript:void(0)" class="btn btn-success btn-sm px-3 text-center" style="width: 140px;">View details</a>
+                                    <div class="ms-md-auto mt-2 mt-md-0">
+                                        <a href="../../Pages/Students/Applications" class="btn btn-primary rounded-pill px-4 shadow-sm text-nowrap">
+                                            View Internship Details
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Statistics Cards -->
                     <div class="col-12 col-sm-6 col-xl-3">
-                        <div class="card h-100 border shadow-sm rounded-4 bg-blur-5 bg-semi-transparent"
+                        <div class="card h-100 border-body border-opacity-10 shadow-sm rounded-4 bg-blur-5 bg-semi-transparent"
                             style="--blur-lvl: <?= $opacitylvl ?>;">
-                            <div class="card-body p-3 p-lg-4 d-flex flex-column gap-3">
+                            <div class="card-body p-4 d-flex flex-column gap-3">
                                 <div class="d-flex align-items-center justify-content-between">
-                                    <p class="mb-0 text-muted small fw-semibold text-uppercase">Hours rendered</p>
-                                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2" id="hoursPercentBadge">0%</span>
+                                    <p class="mb-0 text-body-secondary small fw-bold text-uppercase ls-1">Hours Rendered</p>
+                                    <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2" id="hoursPercentBadge">0%</span>
                                 </div>
                                 <div>
-                                    <h3 class="mb-1 fw-bold" id="renderedHoursCount">0</h3>
-                                    <small class="text-muted">of <span id="requiredHoursCount">0</span> required</small>
+                                    <h2 class="mb-1 fw-bold" id="renderedHoursCount">0</h2>
+                                    <small class="text-body-secondary">of <span id="requiredHoursCount">0</span> total hours</small>
                                 </div>
-                                <div class="progress mt-auto" style="height: 8px;">
-                                    <div class="progress-bar bg-success rounded-pill" role="progressbar"
+                                <div class="progress mt-auto" style="height: 10px;">
+                                    <div class="progress-bar bg-success rounded-pill shadow-sm" role="progressbar"
                                         style="width: 0%;" id="hoursProgressBarSide" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                     <div class="col-12 col-sm-6 col-xl-3">
-                        <div class="card h-100 border shadow-sm rounded-4 bg-blur-5 bg-semi-transparent"
+                        <div class="card h-100 border-body border-opacity-10 shadow-sm rounded-4 bg-blur-5 bg-semi-transparent"
                             style="--blur-lvl: <?= $opacitylvl ?>;">
-                            <div class="card-body p-3 p-lg-4 d-flex flex-column gap-3">
+                            <div class="card-body p-4 d-flex flex-column gap-3">
                                 <div class="d-flex align-items-center justify-content-between">
-                                    <p class="mb-0 text-muted small fw-semibold text-uppercase">Days remaining</p>
-                                    <i class="bi bi-calendar-event text-success fs-5"></i>
+                                    <p class="mb-0 text-body-secondary small fw-bold text-uppercase ls-1">Days Remaining</p>
+                                    <div class="rounded-3 bg-info bg-opacity-10 text-info p-2">
+                                        <i class="bi bi-calendar-event fs-5"></i>
+                                    </div>
                                 </div>
                                 <div>
-                                    <h3 class="mb-1 fw-bold" id="daysRemainingCount">—</h3>
-                                    <small class="text-muted" id="estimatedEndDate">...</small>
+                                    <h2 class="mb-1 fw-bold" id="daysRemainingCount">—</h2>
+                                    <small class="text-body-secondary" id="estimatedEndDate">Placement pending</small>
                                 </div>
-                                <small class="text-muted mt-auto">Keep your daily logs updated.</small>
+                                <small class="text-body-secondary mt-auto">Based on average daily hours</small>
                             </div>
                         </div>
                     </div>
+
                     <div class="col-12 col-sm-6 col-xl-3">
-                        <div class="card h-100 border shadow-sm rounded-4 bg-blur-5 bg-semi-transparent"
+                        <div class="card h-100 border-body border-opacity-10 shadow-sm rounded-4 bg-blur-5 bg-semi-transparent"
                             style="--blur-lvl: <?= $opacitylvl ?>;">
-                            <div class="card-body p-3 p-lg-4 d-flex flex-column gap-3">
+                            <div class="card-body p-4 d-flex flex-column gap-3">
                                 <div class="d-flex align-items-center justify-content-between">
-                                    <p class="mb-0 text-muted small fw-semibold text-uppercase">Journals submitted</p>
-                                    <i class="bi bi-journal-check text-success fs-5"></i>
+                                    <p class="mb-0 text-body-secondary small fw-bold text-uppercase ls-1">Journals</p>
+                                    <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-2">
+                                        <i class="bi bi-journal-check fs-5"></i>
+                                    </div>
                                 </div>
                                 <div>
-                                    <h3 class="mb-1 fw-bold" id="journalsCount">0</h3>
-                                    <small class="text-muted">of 24 weeks</small>
+                                    <h2 class="mb-1 fw-bold" id="journalsCount">0</h2>
+                                    <small class="text-body-secondary">approved journals</small>
                                 </div>
-                                <div class="progress mt-auto" style="height: 8px;">
-                                    <div class="progress-bar bg-primary rounded-pill" role="progressbar"
-                                        style="width: 0%;" id="journalProgressBar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="24"></div>
+                                <div class="progress mt-auto" style="height: 10px;">
+                                    <div class="progress-bar bg-primary rounded-pill shadow-sm" role="progressbar"
+                                        style="width: 0%;" id="journalProgressBar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                     <div class="col-12 col-sm-6 col-xl-3">
-                        <div class="card h-100 border shadow-sm rounded-4 bg-blur-5 bg-semi-transparent"
+                        <div class="card h-100 border-body border-opacity-10 shadow-sm rounded-4 bg-blur-5 bg-semi-transparent"
                             style="--blur-lvl: <?= $opacitylvl ?>;">
-                            <div class="card-body p-3 p-lg-4 d-flex flex-column gap-3">
+                            <div class="card-body p-4 d-flex flex-column gap-3">
                                 <div class="d-flex align-items-center justify-content-between">
-                                    <p class="mb-0 text-muted small fw-semibold text-uppercase">Requirements</p>
-                                    <i class="bi bi-file-earmark-check text-success fs-5"></i>
+                                    <p class="mb-0 text-body-secondary small fw-bold text-uppercase ls-1">Requirements</p>
+                                    <div class="rounded-3 bg-warning bg-opacity-10 text-warning p-2">
+                                        <i class="bi bi-file-earmark-check fs-5"></i>
+                                    </div>
                                 </div>
                                 <div>
-                                    <h3 class="mb-1 fw-bold" id="reqApprovedCount">—</h3>
-                                    <small class="text-muted" id="reqTotalCount">of 6 approved</small>
+                                    <h2 class="mb-1 fw-bold" id="reqApprovedCount">—</h2>
+                                    <small class="text-body-secondary" id="reqTotalCount">of 0 approved</small>
                                 </div>
-                                <div class="progress mt-auto" style="height: 8px;">
-                                    <div class="progress-bar bg-success rounded-pill" role="progressbar"
+                                <div class="progress mt-auto" style="height: 10px;">
+                                    <div class="progress-bar bg-warning rounded-pill shadow-sm" role="progressbar"
                                         style="width: 0%;" id="reqProgressBar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Progress & Quick Actions -->
                     <div class="col-md-6">
-                        <?php
-                        $requiredHours = 486;
-                        $renderedHours = 120;
-                        $remainingHours = max(0, $requiredHours - $renderedHours);
-                        $hoursPercent = $requiredHours > 0 ? round(($renderedHours / $requiredHours) * 100, 1) : 0;
-
-                        $daysLogged = 22;
-                        $avgHoursPerDay = 6.5;
-                        $pendingDtr = 0;
-                        ?>
-
-                        <div class="card h-100 border shadow-sm rounded-4 bg-blur-5 bg-semi-transparent"
+                        <div class="card h-100 border-body border-opacity-10 shadow-sm rounded-4 bg-blur-5 bg-semi-transparent"
                             style="--blur-lvl: <?= $opacitylvl ?>;">
-                            <div class="card-header bg-transparent border-0 px-3 px-md-4 pt-3 pt-md-4 pb-0">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle text-success"
-                                        style="width: 40px; height: 40px;">
-                                        <i class="bi bi-graph-up-arrow"></i>
+                            <div class="card-header bg-transparent border-0 px-4 pt-4 pb-0">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10 text-success"
+                                        style="width: 44px; height: 44px;">
+                                        <i class="bi bi-graph-up-arrow fs-5"></i>
                                     </span>
                                     <div>
-                                        <p class="mb-0 fw-semibold">Hours Progress</p>
-                                        <small class="text-muted">Track your internship completion</small>
+                                        <h5 class="mb-0 fw-bold">Hours Progress</h5>
+                                        <small class="text-body-secondary">Overall internship completion status</small>
                                     </div>
-                                    <a href="javascript:void(0)" class="ms-auto text-decoration-none text-success small fw-semibold"
-                                        id="hoursProgressDetailsLink">View details</a>
+                                    <a href="DTR" class="ms-auto text-decoration-none text-primary small fw-bold">View DTR</a>
                                 </div>
                             </div>
 
-                            <div class="card-body px-3 px-md-4 pb-3 pb-md-4">
-                                <div class="text-center mb-3">
-                                    <h2 class="fw-bold mb-1" id="mainRenderedHours">0</h2>
-                                    <p class="text-muted mb-0">of <span id="mainRequiredHours">0</span> required hours</p>
+                            <div class="card-body p-4">
+                                <div class="text-center mb-4">
+                                    <h1 class="display-5 fw-bold mb-0" id="mainRenderedHours">0</h1>
+                                    <p class="text-body-secondary">rendered out of <span id="mainRequiredHours" class="fw-bold text-body">0</span> hours</p>
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <small class="text-muted">Completion</small>
-                                    <small class="fw-semibold text-success" id="mainHoursPercent">0%</small>
+                                    <small class="text-body-secondary fw-bold text-uppercase ls-1" style="font-size: 0.65rem;">Progress</small>
+                                    <small class="fw-bold text-success" id="mainHoursPercent">0%</small>
                                 </div>
 
-                                <div class="progress" style="height: 10px;">
-                                    <div class="progress-bar bg-success rounded-pill" role="progressbar"
+                                <div class="progress mb-3" style="height: 12px;">
+                                    <div class="progress-bar bg-success rounded-pill shadow-sm" role="progressbar"
                                         id="mainHoursProgressBar"
                                         style="width: 0%;"
                                         aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
                                     </div>
                                 </div>
 
-                                <div class="d-flex justify-content-between mt-2">
-                                    <small class="text-muted"><span id="mainRemainingHours">0</span> hours remaining</small>
-                                    <small class="text-muted"><span id="mainRenderedTotal">0</span>/<span id="mainRequiredTotal">0</span></small>
+                                <div class="d-flex justify-content-between mb-4">
+                                    <small class="text-body-secondary"><i class="bi bi-info-circle me-1"></i> <span id="mainRemainingHours">0</span> hours left</small>
+                                    <small class="text-body-secondary fw-medium"><span id="mainRenderedTotal">0</span> / <span id="mainRequiredTotal">0</span></small>
                                 </div>
 
-                                <hr class="my-3">
-
-                                <div class="row row-cols-3 g-2 text-center">
+                                <div class="row row-cols-3 g-3 text-center">
                                     <div class="col">
-                                        <div class="rounded-3 bg-dark bg-opacity-25 p-2 h-100">
-                                            <p class="mb-0 fw-bold" id="daysLoggedCount">0</p>
-                                            <small class="text-muted">Days logged</small>
+                                        <div class="rounded-4 bg-body-secondary bg-opacity-50 p-3 border border-body border-opacity-10">
+                                            <h4 class="mb-0 fw-bold" id="daysLoggedCount">0</h4>
+                                            <small class="text-body-secondary d-block mt-1">Days Logged</small>
                                         </div>
                                     </div>
                                     <div class="col">
-                                        <div class="rounded-3 bg-dark bg-opacity-25 p-2 h-100">
-                                            <p class="mb-0 fw-bold" id="avgHoursCount">0</p>
-                                            <small class="text-muted">Avg hrs/day</small>
+                                        <div class="rounded-4 bg-body-secondary bg-opacity-50 p-3 border border-body border-opacity-10">
+                                            <h4 class="mb-0 fw-bold" id="avgHoursCount">0</h4>
+                                            <small class="text-body-secondary d-block mt-1">Avg Hrs/Day</small>
                                         </div>
                                     </div>
                                     <div class="col">
-                                        <div class="rounded-3 bg-dark bg-opacity-25 p-2 h-100">
-                                            <p class="mb-0 fw-bold" id="pendingDtrCount">0</p>
-                                            <small class="text-muted">Pending DTR</small>
+                                        <div class="rounded-4 bg-body-secondary bg-opacity-50 p-3 border border-body border-opacity-10">
+                                            <h4 class="mb-0 fw-bold text-warning" id="pendingDtrCount">0</h4>
+                                            <small class="text-body-secondary d-block mt-1">Pending</small>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                     <div class="col-md-6">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg rounded-4 border"
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg rounded-4 border-body border-opacity-10"
                             style="--blur-lvl: <?= $opacitylvl ?>">
-                            <div class="card-header bg-transparent border-bottom-0 pb-0">
-                                <div class="d-flex flex-wrap align-items-center gap-2">
-                                    <p class="card-text fw-semibold mb-0">Quick actions</p>
-                                    <small class="text-muted">Frequently used shortcuts</small>
+                            <div class="card-header bg-transparent border-0 px-4 pt-4 pb-0">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10 text-primary"
+                                        style="width: 44px; height: 44px;">
+                                        <i class="bi bi-lightning-charge fs-5"></i>
+                                    </span>
+                                    <div>
+                                        <h5 class="mb-0 fw-bold">Quick Actions</h5>
+                                        <small class="text-body-secondary">Access essential tools quickly</small>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="card-body pt-3">
-                                <div class="d-grid gap-2">
+                            <div class="card-body p-4">
+                                <div class="d-grid gap-3">
                                     <button type="button"
-                                        class="quickactions btn w-100 text-start rounded-3 border border-secondary-subtle bg-dark bg-opacity-50 p-3 d-flex align-items-start gap-3"
-                                        id="quickLogTime" aria-label="Log today's time">
-                                        <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary flex-shrink-0"
-                                            style="width: 42px; height: 42px;">
-                                            <i class="bi bi-clock fs-5"></i>
-                                        </span>
-                                        <span class="flex-grow-1 min-w-0">
-                                            <span class="d-flex align-items-center justify-content-between gap-2">
-                                                <span class="fw-semibold text-white text-wrap">Log today’s time</span>
-                                                <i class="bi bi-arrow-up-right-circle text-muted"></i>
-                                            </span>
-                                            <small class="text-muted d-block">Record your time-in and time-out</small>
-                                        </span>
-                                    </button>
-
-                                    <button type="button"
-                                        class="quickactions btn w-100 text-start rounded-3 border border-secondary-subtle bg-dark bg-opacity-50 p-3 d-flex align-items-start gap-3"
-                                        id="quickSubmitJournal" aria-label="Submit this week's journal">
-                                        <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle text-success flex-shrink-0"
-                                            style="width: 42px; height: 42px;">
-                                            <i class="bi bi-journal-text fs-5"></i>
-                                        </span>
-                                        <span class="flex-grow-1 min-w-0">
-                                            <span class="d-flex align-items-center justify-content-between gap-2">
-                                                <span class="fw-semibold text-white text-wrap">Submit this week’s journal</span>
-                                                <i class="bi bi-arrow-up-right-circle text-muted"></i>
-                                            </span>
-                                            <small class="text-muted d-block">Week 4 — due Friday</small>
-                                        </span>
-                                    </button>
-
-                                    <button type="button"
-                                        class="quickactions btn w-100 text-start rounded-3 border border-secondary-subtle bg-dark bg-opacity-50 p-3 d-flex align-items-start gap-3"
-                                        id="quickViewEndorsementLetter" aria-label="View endorsement letter">
-                                        <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning-subtle text-warning flex-shrink-0"
-                                            style="width: 42px; height: 42px;">
-                                            <i class="bi bi-file-earmark-pdf fs-5"></i>
-                                        </span>
-                                        <span class="flex-grow-1 min-w-0">
-                                            <span class="d-flex align-items-center justify-content-between gap-2">
-                                                <span class="fw-semibold text-white text-wrap">View endorsement letter</span>
-                                                <i class="bi bi-arrow-up-right-circle text-muted"></i>
-                                            </span>
-                                            <small class="text-muted d-block">Download your endorsement PDF</small>
-                                        </span>
-                                    </button>
-
-                                    <button type="button"
-                                        class="quickactions btn w-100 text-start rounded-3 border border-secondary-subtle bg-dark bg-opacity-50 p-3 d-flex align-items-start gap-3"
-                                        id="quickViewProfile" aria-label="View my profile">
-                                        <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary-subtle text-secondary flex-shrink-0"
-                                            style="width: 42px; height: 42px;">
-                                            <i class="bi bi-person-circle fs-5"></i>
-                                        </span>
-                                        <span class="flex-grow-1 min-w-0">
-                                            <span class="d-flex align-items-center justify-content-between gap-2">
-                                                <span class="fw-semibold text-white text-wrap">View my profile</span>
-                                                <i class="bi bi-arrow-up-right-circle text-muted"></i>
-                                            </span>
-                                            <small class="text-muted d-block">Update personal information</small>
-                                        </span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg rounded-4 p-2"
-                            style="--blur-lvl: <?= $opacitylvl ?>">
-                            <div class="card-header bg-transparent border-bottom-0">
-                                <div class="hstack">
-                                    <p class="card-text fw-semibold mb-0">Requirements</p>
-                                    <a href="../../Pages/Students/Requirements" class="ms-auto text-decoration-none text-success">View all</a>
-                                </div>
-                            </div>
-                            <?php
-                            $statusStyles = [
-                                'Approved'      => ['badge' => 'bg-success-subtle text-success-emphasis', 'dot' => 'text-success'],
-                                'Returned'      => ['badge' => 'bg-danger-subtle text-danger-emphasis', 'dot' => 'text-danger'],
-                                'Submitted'     => ['badge' => 'bg-primary-subtle text-primary-emphasis', 'dot' => 'text-primary'],
-                                'Not submitted' => ['badge' => 'bg-secondary-subtle text-secondary-emphasis', 'dot' => 'text-secondary'],
-                            ];
-                            ?>
-
-                            <ul class="list-group list-group-flush" id="requirementsList" style="max-height: 400px; overflow-y: auto;">
-                                <!-- Dynamic Requirements List -->
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg rounded-4 p-2"
-                            style="--blur-lvl: <?= $opacitylvl ?>">
-                            <div class="card-header bg-transparent border-bottom-0">
-                                <div class="hstack">
-                                    <p class="card-text fw-semibold mb-0">Recent DTR</p>
-                                    <a href="javascript:void(0)" class="ms-auto text-decoration-none text-success"
-                                        id="dtrViewAllLink">View all</a>
-                                </div>
-                            </div>
-                            <ul class="list-group list-group-flush" id="dtrList" style="max-height: 400px; overflow-y: auto;">
-                                <!-- Dynamic DTR entries -->
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg rounded-4 p-2"
-                            style="--blur-lvl: <?= $opacitylvl ?>">
-                            <div class="card-header bg-transparent border-bottom-0">
-                                <div class="hstack">
-                                    <p class="card-text fw-semibold mb-0">My OJT Details</p>
-                                </div>
-                            </div>
-                            <div class="card-body pt-2">
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
-                                        <div class="row g-1">
-                                            <div class="col-12 col-sm-4 text-muted small">Company</div>
-                                            <div class="col-12 col-sm-8 fw-semibold text-break" id="detailCompany">...</div>
+                                        class="quickactions btn w-100 text-start rounded-4 border border-body border-opacity-10 bg-body-secondary bg-opacity-25 p-3 d-flex align-items-center gap-3"
+                                        id="quickLogTime">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center shadow-sm"
+                                            style="width: 48px; height: 48px; min-width: 48px;">
+                                            <i class="bi bi-clock-fill fs-5"></i>
                                         </div>
-                                    </li>
-                                    <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
-                                        <div class="row g-1">
-                                            <div class="col-12 col-sm-4 text-muted small">Work setup</div>
-                                            <div class="col-12 col-sm-8" id="detailSetup">
-                                                ...
+                                        <div class="flex-grow-1 min-w-0">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <span class="fw-bold">Daily Time Record</span>
+                                                <i class="bi bi-chevron-right text-body-secondary small"></i>
                                             </div>
+                                            <small class="text-body-secondary">Record your attendance for today</small>
                                         </div>
-                                    </li>
-                                    <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
-                                        <div class="row g-1">
-                                            <div class="col-12 col-sm-4 text-muted small">Department</div>
-                                            <div class="col-12 col-sm-8 fw-semibold text-break" id="detailDept">...</div>
+                                    </button>
+
+                                    <button type="button"
+                                        class="quickactions btn w-100 text-start rounded-4 border border-body border-opacity-10 bg-body-secondary bg-opacity-25 p-3 d-flex align-items-center gap-3"
+                                        id="quickSubmitJournal">
+                                        <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center shadow-sm"
+                                            style="width: 48px; height: 48px; min-width: 48px;">
+                                            <i class="bi bi-journal-text fs-5"></i>
                                         </div>
-                                    </li>
-                                    <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
-                                        <div class="row g-1">
-                                            <div class="col-12 col-sm-4 text-muted small">Supervisor</div>
-                                            <div class="col-12 col-sm-8 fw-semibold text-break" id="detailSupervisor">...</div>
+                                        <div class="flex-grow-1 min-w-0">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <span class="fw-bold">Weekly Journal</span>
+                                                <i class="bi bi-chevron-right text-body-secondary small"></i>
+                                            </div>
+                                            <small class="text-body-secondary">Update your internship reflections</small>
                                         </div>
-                                    </li>
-                                    <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
-                                        <div class="row g-1">
-                                            <div class="col-12 col-sm-4 text-muted small">Coordinator</div>
-                                            <div class="col-12 col-sm-8 fw-semibold text-break" id="detailCoordinator">...</div>
+                                    </button>
+
+                                    <button type="button"
+                                        class="quickactions btn w-100 text-start rounded-4 border border-body border-opacity-10 bg-body-secondary bg-opacity-25 p-3 d-flex align-items-center gap-3"
+                                        id="quickViewEndorsementLetter">
+                                        <div class="rounded-circle bg-warning bg-opacity-10 text-warning d-flex align-items-center justify-content-center shadow-sm"
+                                            style="width: 48px; height: 48px; min-width: 48px;">
+                                            <i class="bi bi-file-earmark-pdf-fill fs-5"></i>
                                         </div>
-                                    </li>
-                                    <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
-                                        <div class="row g-1">
-                                            <div class="col-12 col-sm-4 text-muted small">Start date</div>
-                                            <div class="col-12 col-sm-8 fw-semibold" id="detailStart">...</div>
+                                        <div class="flex-grow-1 min-w-0">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <span class="fw-bold">Requirements</span>
+                                                <i class="bi bi-chevron-right text-body-secondary small"></i>
+                                            </div>
+                                            <small class="text-body-secondary">Check and upload needed documents</small>
                                         </div>
-                                    </li>
-                                    <li class="list-group-item bg-transparent px-0 py-2 border-secondary-subtle">
-                                        <div class="row g-1">
-                                            <div class="col-12 col-sm-4 text-muted small">Program</div>
-                                            <div class="col-12 col-sm-8 fw-semibold text-break" id="detailProgram">...</div>
-                                        </div>
-                                    </li>
-                                    <li class="list-group-item bg-transparent px-0 py-2 border-0">
-                                        <div class="row g-1">
-                                            <div class="col-12 col-sm-4 text-muted small">Required hours</div>
-                                            <div class="col-12 col-sm-8 fw-semibold" id="detailHours">...</div>
-                                        </div>
-                                    </li>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Cards -->
+                    <div class="col-md-4">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg rounded-4 border-body border-opacity-10"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
+                            <div class="card-header bg-transparent border-0 px-4 pt-4 pb-0">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <h5 class="mb-0 fw-bold">Requirements</h5>
+                                    <a href="Requirements" class="text-decoration-none text-primary small fw-bold">View All</a>
+                                </div>
+                            </div>
+                            <div class="card-body p-2">
+                                <ul class="list-group list-group-flush border-0" id="requirementsList">
+                                    <!-- Dynamic Requirements List -->
                                 </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg rounded-4 border-body border-opacity-10"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
+                            <div class="card-header bg-transparent border-0 px-4 pt-4 pb-0">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <h5 class="mb-0 fw-bold">Recent DTR</h5>
+                                    <a href="DTR" class="text-decoration-none text-primary small fw-bold">View All</a>
+                                </div>
+                            </div>
+                            <div class="card-body p-2">
+                                <ul class="list-group list-group-flush border-0" id="dtrList">
+                                    <!-- Dynamic DTR entries -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4" id="ojtDetailsCardSection" style="display: none;">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg rounded-4 border-body border-opacity-10"
+                            style="--blur-lvl: <?= $opacitylvl ?>">
+                            <div class="card-header bg-transparent border-0 px-4 pt-4 pb-0">
+                                <h5 class="mb-0 fw-bold">My OJT Details</h5>
+                            </div>
+                            <div class="card-body p-4 pt-2">
+                                <div class="list-group list-group-flush border-0">
+                                    <div class="list-group-item bg-transparent px-0 py-3 border-body border-opacity-10">
+                                        <small class="text-body-secondary d-block text-uppercase fw-bold ls-1 mb-1" style="font-size: 0.65rem;">Company</small>
+                                        <span class="fw-bold" id="detailCompany">---</span>
+                                    </div>
+                                    <div class="list-group-item bg-transparent px-0 py-3 border-body border-opacity-10">
+                                        <small class="text-body-secondary d-block text-uppercase fw-bold ls-1 mb-1" style="font-size: 0.65rem;">Work Setup</small>
+                                        <div id="detailSetup">---</div>
+                                    </div>
+                                    <div class="list-group-item bg-transparent px-0 py-3 border-body border-opacity-10">
+                                        <small class="text-body-secondary d-block text-uppercase fw-bold ls-1 mb-1" style="font-size: 0.65rem;">Supervisor</small>
+                                        <span class="fw-bold" id="detailSupervisor">---</span>
+                                    </div>
+                                    <div class="list-group-item bg-transparent px-0 py-3 border-body border-opacity-10">
+                                        <small class="text-body-secondary d-block text-uppercase fw-bold ls-1 mb-1" style="font-size: 0.65rem;">Coordinator</small>
+                                        <span class="fw-bold" id="detailCoordinator">---</span>
+                                    </div>
+                                    <div class="list-group-item bg-transparent px-0 py-3 border-0">
+                                        <small class="text-body-secondary d-block text-uppercase fw-bold ls-1 mb-1" style="font-size: 0.65rem;">Start Date</small>
+                                        <span class="fw-bold" id="detailStart">---</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
