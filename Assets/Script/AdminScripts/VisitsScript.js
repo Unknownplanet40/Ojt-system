@@ -25,6 +25,51 @@ $(document).ready(function () {
         loadVisits();
     });
 
+    $('#exportVisitsBtn').click(function () {
+        const $btn = $(this);
+        const originalHtml = $btn.html();
+        
+        // Show loading state
+        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Exporting...');
+        
+        const status = $('#statusFilter').val();
+        const coordinator_uuid = $('#coordinatorFilter').val();
+        const company_uuid = $('#companyFilter').val();
+        
+        // Create a hidden form and submit it to trigger download
+        const $form = $('<form>', {
+            action: '../../../process/visits/export_visits_pdf',
+            method: 'POST',
+            target: '_blank'
+        }).append($('<input>', {
+            type: 'hidden',
+            name: 'csrf_token',
+            value: csrfToken
+        })).append($('<input>', {
+            type: 'hidden',
+            name: 'status',
+            value: status
+        })).append($('<input>', {
+            type: 'hidden',
+            name: 'coordinator_uuid',
+            value: coordinator_uuid
+        })).append($('<input>', {
+            type: 'hidden',
+            name: 'company_uuid',
+            value: company_uuid
+        }));
+
+        $('body').append($form);
+        $form.submit();
+        $form.remove();
+
+        // Reset button after a delay
+        setTimeout(() => {
+            $btn.prop('disabled', false).html(originalHtml);
+            ToastVersion(swalTheme, 'Visit report generated successfully.', 'success', 2000, 'top-end');
+        }, 2000);
+    });
+
     $(document).on('click', '.btn-view-visit', function () {
         let uuid = $(this).data('uuid');
         

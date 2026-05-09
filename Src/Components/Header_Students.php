@@ -170,16 +170,17 @@ if (!$hasActiveApplication && in_array($CurrentPage, ['DTR', 'Journal', 'Evaluat
           </li>
           <li>
             <a class="dropdown-item <?= $CurrentPage === 'viewProfile' ? 'nav-active' : '' ?>"
-              href="../Students/Students_Profile?action=edit">
+              href="../Students/viewProfile">
               <div class="hstack">
                 <i class="bi bi-person me-2"></i>
                 <div class="vstack">
                   <span>Profile</span>
-                  <small class="text-muted" style="font-size: 0.7em">View and edit your profile information.</small>
+                  <small class="text-muted" style="font-size: 0.7em">View and manage your internship profile.</small>
                 </div>
               </div>
             </a>
           </li>
+
           <li>
             <a class="dropdown-item <?= $CurrentPage === 'Settings' ? 'nav-active' : '' ?>" href="../Students/Settings">
               <div class="hstack">

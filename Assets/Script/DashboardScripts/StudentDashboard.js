@@ -154,7 +154,7 @@ function fetchDashboardStats() {
 
         // Update OJT Details Card & My OJT Details Card
         if (ojt_details && ojt_details.app_status === 'active') {
-          $("#activeOjtSection").show();
+          $("#activeOjtSection, #ojtDetailsCardSection").fadeIn(500);
           
           const comp = ojt_details.company_name || "No active placement";
           const dept = ojt_details.department || "N/A";
@@ -170,14 +170,14 @@ function fetchDashboardStats() {
           $("#ojtCompany, #detailCompany").text(comp);
           $("#ojtDept, #detailDept").text(dept);
           $("#ojtSetup").text(setup);
-          $("#detailSetup").html(`<span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis">${setup}</span>`);
+          $("#detailSetup").html(`<span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1">${setup}</span>`);
           $("#ojtSupervisor, #detailSupervisor").text(sup);
           $("#ojtStart, #detailStart").text(start);
           $("#detailCoordinator").text(coord);
           $("#detailProgram").text(prog);
           $("#detailHours").text(reqHrs + " hours");
         } else {
-          $("#activeOjtSection").hide();
+          $("#activeOjtSection, #ojtDetailsCardSection").hide();
         }
 
         // Update Statistics
@@ -216,24 +216,24 @@ function fetchDashboardStats() {
         dtrList.empty();
         if (recent_dtr && recent_dtr.length > 0) {
           recent_dtr.forEach(entry => {
-            const statusClass = entry.status === 'approved' ? 'bg-success-subtle text-success-emphasis' : (entry.status === 'rejected' ? 'bg-danger-subtle text-danger-emphasis' : 'bg-primary-subtle text-primary-emphasis');
+            const statusClass = entry.status === 'approved' ? 'bg-success bg-opacity-10 text-success border-success border-opacity-25' : (entry.status === 'rejected' ? 'bg-danger bg-opacity-10 text-danger border-danger border-opacity-25' : 'bg-primary bg-opacity-10 text-primary border-primary border-opacity-25');
             dtrList.append(`
-              <li class="list-group-item bg-transparent px-3 py-3 border-secondary-subtle">
+              <li class="list-group-item bg-transparent px-3 py-3 border-body border-opacity-10">
                 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 w-100">
                   <div class="vstack gap-1">
-                    <span class="fw-semibold text-body">${entry.entry_date_label}</span>
-                    <span class="text-muted small">${entry.time_in_label} – ${entry.time_out_label}</span>
+                    <span class="fw-bold">${entry.entry_date_label}</span>
+                    <span class="text-body-secondary small">${entry.time_in_label} – ${entry.time_out_label}</span>
                   </div>
                   <div class="d-flex align-items-center gap-2 ms-sm-auto">
-                    <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2">${entry.hours_rendered}h</span>
-                    <span class="badge ${statusClass} rounded-pill px-3 py-2">${entry.status_label}</span>
+                    <span class="badge bg-body-secondary text-body rounded-pill px-3 py-2 border border-body border-opacity-10">${entry.hours_rendered}h</span>
+                    <span class="badge ${statusClass} rounded-pill px-3 py-2 border">${entry.status_label}</span>
                   </div>
                 </div>
               </li>
             `);
           });
         } else {
-          dtrList.html('<div class="text-center p-4 text-muted small">No recent logs found</div>');
+          dtrList.html('<div class="text-center p-4 text-body-secondary small">No recent logs found</div>');
         }
 
         // Render Requirements (Mini List)
@@ -241,16 +241,16 @@ function fetchDashboardStats() {
         reqList.empty();
         if (requirements_list && requirements_list.length > 0) {
           requirements_list.forEach(req => {
-            const statusStyle = req.status === 'approved' ? 'text-success' : (req.status === 'returned' ? 'text-danger' : (req.status === 'submitted' ? 'text-primary' : 'text-secondary'));
-            const badgeStyle = req.status === 'approved' ? 'bg-success-subtle text-success-emphasis' : (req.status === 'returned' ? 'bg-danger-subtle text-danger-emphasis' : (req.status === 'submitted' ? 'bg-primary-subtle text-primary-emphasis' : 'bg-secondary-subtle text-secondary-emphasis'));
+            const statusStyle = req.status === 'approved' ? 'text-success' : (req.status === 'returned' ? 'text-danger' : (req.status === 'submitted' ? 'text-primary' : 'text-body-secondary'));
+            const badgeStyle = req.status === 'approved' ? 'bg-success bg-opacity-10 text-success border-success border-opacity-25' : (req.status === 'returned' ? 'bg-danger bg-opacity-10 text-danger border-danger border-opacity-25' : (req.status === 'submitted' ? 'bg-primary bg-opacity-10 text-primary border-primary border-opacity-25' : 'bg-body-secondary bg-opacity-10 text-body-secondary border-body border-opacity-25'));
             reqList.append(`
-              <li class="list-group-item bg-transparent px-3 py-3 border-secondary-subtle">
+              <li class="list-group-item bg-transparent px-3 py-3 border-body border-opacity-10">
                 <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 w-100">
                   <div class="d-flex align-items-center gap-2">
                     <span class="${statusStyle}" style="font-size: 0.70rem;">&#11044;</span>
-                    <span class="fw-semibold small">${req.req_label}</span>
+                    <span class="fw-bold small">${req.req_label}</span>
                   </div>
-                  <span class="badge rounded-pill px-3 py-2 ms-sm-auto small ${badgeStyle}">${req.status_label}</span>
+                  <span class="badge rounded-pill px-3 py-2 ms-sm-auto small border ${badgeStyle}">${req.status_label}</span>
                 </div>
               </li>
             `);

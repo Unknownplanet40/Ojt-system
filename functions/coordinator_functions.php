@@ -504,3 +504,207 @@ function formatCoordinator(array $row): array
             : null,
     ];
 }
+
+function getCoordinatorDashboardStats($conn, string $coordinatorUserUuid): array
+{
+    // 1. Get coordinator profile uuid
+    $stmt = $conn->prepare("SELECT uuid FROM coordinator_profiles WHERE user_uuid = ? LIMIT 1");
+    $stmt->bind_param('s', $coordinatorUserUuid);
+    $stmt->execute();
+    $coordinator = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$coordinator) {
+        return ['error' => 'Coordinator not found.'];
+    }
+
+    $coordinatorUuid = $coordinator['uuid'];
+
+    // 2. Total Students
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM student_profiles WHERE coordinator_uuid = ?");
+    $stmt->bind_param('s', $coordinatorUuid);
+    $stmt->execute();
+    $totalStudents = $stmt->get_result()->fetch_assoc()['count'];
+    $stmt->close();
+
+    // 3. Active OJT
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as count 
+        FROM student_profiles sp
+        JOIN ojt_applications oa ON sp.uuid = oa.student_uuid
+        WHERE sp.coordinator_uuid = ? AND oa.status = 'active'
+    ");
+    $stmt->bind_param('s', $coordinatorUuid);
+    $stmt->execute();
+    $activeOjt = $stmt->get_result()->fetch_assoc()['count'];
+    $stmt->close();
+
+    // 4. Pending Approvals (Requirements + Applications + DTR Override + Journals)
+    $stmt = $conn->prepare("
+        SELECT 
+            (SELECT COUNT(*) FROM student_requirements sr 
+             JOIN student_profiles sp ON sr.student_uuid = sp.uuid 
+             WHERE sp.coordinator_uuid = ? AND sr.status = 'pending') +
+            (SELECT COUNT(*) FROM ojt_applications oa 
+             JOIN student_profiles sp ON oa.student_uuid = sp.uuid 
+             WHERE sp.coordinator_uuid = ? AND oa.status = 'pending') as count
+    ");
+    $stmt->bind_param('ss', $coordinatorUuid, $coordinatorUuid);
+    $stmt->execute();
+    $pendingApprovals = $stmt->get_result()->fetch_assoc()['count'];
+    $stmt->close();
+
+    // 5. Avg Hours Rendered
+    $stmt = $conn->prepare("
+        SELECT AVG(hours_count) as avg_hours FROM (
+            SELECT COALESCE(SUM(de.hours_rendered), 0) as hours_count
+            FROM student_profiles sp
+            LEFT JOIN dtr_entries de ON sp.uuid = de.student_uuid AND de.status = 'approved'
+            WHERE sp.coordinator_uuid = ?
+            GROUP BY sp.uuid
+        ) as t
+    ");
+    $stmt->bind_param('s', $coordinatorUuid);
+    $stmt->execute();
+    $avgHours = $stmt->get_result()->fetch_assoc()['avg_hours'] ?? 0;
+    $stmt->close();
+
+    // 6. "Need your action" items
+    $actions = [];
+    
+    // Students without applications
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as count 
+        FROM student_profiles sp
+        LEFT JOIN ojt_applications oa ON sp.uuid = oa.student_uuid
+        WHERE sp.coordinator_uuid = ? AND oa.id IS NULL
+    ");
+    $stmt->bind_param('s', $coordinatorUuid);
+    $stmt->execute();
+    $noAppCount = $stmt->get_result()->fetch_assoc()['count'];
+    if ($noAppCount > 0) {
+        $actions[] = [
+            'type' => 'info',
+            'title' => "{$noAppCount} students have no OJT application yet",
+            'description' => 'Action needed',
+            'link' => './MyStudents.php'
+        ];
+    }
+    $stmt->close();
+
+    // Pending requirements
+    $stmt = $conn->prepare("
+        SELECT COUNT(DISTINCT sp.uuid) as count 
+        FROM student_profiles sp
+        JOIN student_requirements sr ON sp.uuid = sr.student_uuid
+        WHERE sp.coordinator_uuid = ? AND sr.status = 'pending'
+    ");
+    $stmt->bind_param('s', $coordinatorUuid);
+    $stmt->execute();
+    $pendingReqCount = $stmt->get_result()->fetch_assoc()['count'];
+    if ($pendingReqCount > 0) {
+        $actions[] = [
+            'type' => 'warning',
+            'title' => "{$pendingReqCount} students have pending requirements",
+            'description' => 'Review needed',
+            'link' => '../Coordinator/Requirements.php'
+        ];
+    }
+    $stmt->close();
+
+    // 7. Recent Students (All assigned, Active students first)
+    $stmt = $conn->prepare("
+        SELECT 
+            sp.uuid, sp.first_name, sp.last_name, sp.student_number, sp.program, sp.profile_name,
+            COALESCE(oa.status, 'none') as app_status
+        FROM student_profiles sp
+        LEFT JOIN ojt_applications oa ON sp.uuid = oa.student_uuid
+        WHERE sp.coordinator_uuid = ?
+        ORDER BY (CASE WHEN oa.status = 'active' THEN 1 ELSE 0 END) DESC, sp.created_at DESC
+    ");
+    $stmt->bind_param('s', $coordinatorUuid);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $recentStudents = [];
+    while($row = $res->fetch_assoc()) {
+        $row['full_name'] = $row['first_name'] . ' ' . $row['last_name'];
+        $recentStudents[] = $row;
+    }
+    $stmt->close();
+
+    // 8. Hours Progress (ONLY students with active OJT)
+    $stmt = $conn->prepare("
+        SELECT 
+            sp.first_name, sp.last_name, 
+            COALESCE(SUM(de.hours_rendered), 0) as rendered
+        FROM student_profiles sp
+        JOIN ojt_applications oa ON sp.uuid = oa.student_uuid
+        LEFT JOIN dtr_entries de ON sp.uuid = de.student_uuid AND de.status = 'approved'
+        WHERE sp.coordinator_uuid = ? AND oa.status = 'active'
+        GROUP BY sp.uuid
+        ORDER BY rendered ASC
+    ");
+    $stmt->bind_param('s', $coordinatorUuid);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $progress = [];
+    while($row = $res->fetch_assoc()) {
+        $row['full_name'] = $row['first_name'] . ' ' . $row['last_name'];
+        $progress[] = $row;
+    }
+    $stmt->close();
+
+
+    // 9. Partner Companies
+    $stmt = $conn->prepare("
+        SELECT c.uuid, c.name, COUNT(sp.id) as student_count
+        FROM companies c
+        LEFT JOIN student_profiles sp ON c.uuid = sp.company_uuid
+        WHERE sp.coordinator_uuid = ?
+        GROUP BY c.uuid
+        ORDER BY student_count DESC
+    ");
+    $stmt->bind_param('s', $coordinatorUuid);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $companies = [];
+    while($row = $res->fetch_assoc()) {
+        $companies[] = $row;
+    }
+    $stmt->close();
+
+    // 10. Upcoming Visits
+    $stmt = $conn->prepare("
+        SELECT cv.*, c.name as company_name
+        FROM coordinator_visits cv
+        JOIN companies c ON cv.company_uuid = c.uuid
+        WHERE cv.coordinator_uuid = ? AND cv.visit_date >= CURDATE()
+        ORDER BY cv.visit_date ASC
+    ");
+
+
+    $stmt->bind_param('s', $coordinatorUuid);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $visits = [];
+    while($row = $res->fetch_assoc()) {
+        $row['formatted_date'] = date('M j, Y', strtotime($row['visit_date']));
+        $visits[] = $row;
+    }
+    $stmt->close();
+
+    return [
+        'stats' => [
+            'total_students' => $totalStudents,
+            'active_ojt' => $activeOjt,
+            'pending_approvals' => $pendingApprovals,
+            'avg_hours' => round($avgHours, 1)
+        ],
+        'actions' => $actions,
+        'recent_students' => $recentStudents,
+        'progress' => $progress,
+        'companies' => $companies,
+        'visits' => $visits
+    ];
+}
+

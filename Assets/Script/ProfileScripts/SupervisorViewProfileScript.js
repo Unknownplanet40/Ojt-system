@@ -2,8 +2,6 @@ import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
 import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "../SystemTheme.js";
 import { Errors } from "../ErrorFunctions.js";
 
-
-const driver = window.driver.js.driver;
 MatchsystemThemes(true);
 let swalTheme = SwalTheme();
 BGcircleTheme(true);
@@ -11,13 +9,13 @@ BGcircleTheme(true);
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 const userRole = $('meta[name="user-Role"]').attr("content") || "";
 
-if (!csrfToken || !userRole || userRole !== "coordinator") {
+if (!csrfToken || !userRole || userRole !== "supervisor") {
   window.location.href = "../../../Src/Pages/Login";
 }
 
-function viewCoordinatorProfile() {
+function viewSupervisorProfile() {
   $.ajax({
-    url: "../../../process/profile/get_coordinator_profile_view",
+    url: "../../../process/profile/get_supervisor_profile_view",
     type: "POST",
     data: {
       csrf_token: csrfToken,
@@ -26,30 +24,28 @@ function viewCoordinatorProfile() {
     success: function (response) {
       if (response.status === "success") {
         const p = response.profile;
-        const b = response.activeBatch;
         const students = response.students;
 
         // Header Info
         $("#ProfilePicture").attr("src", response.profileImage);
         $("#FullName").text(p.full_name);
-        $("#DepartmentHeader").text(p.department);
+        $("#Company").text(p.company_name || 'No Company Linked');
         $("#Status").text(p.status_label);
-        $("#EmployeeID").text(p.employee_id);
+        $("#RoleBadge").text("Supervisor");
 
         // Stats
-        $("#StudentCount").text(p.assigned_students);
-        $("#activeBatch").text(b ? `AY ${b.school_year} ${b.semester} Sem` : "No Active Batch");
+        $("#StudentCount").text(response.studentCount);
+        $("#CompanyNameCard").text(p.company_name || "N/A");
         $("#lastLogin").text(p.last_login || "Never");
 
         // Personal Information Section
-        $("#PIEmployeeID").text(p.employee_id);
         $("#PIFullName").text(p.full_name);
-        $("#PIDepartment").text(p.department);
-        $("#PIMobileNumber").text(p.mobile);
-        $("#PIAccountCreated").text(p.created_at);
+        $("#PICompany").text(p.company_name || "N/A");
+        $("#PIMobileNumber").text(p.mobile || 'N/A');
+        $("#PIAccountCreated").text(p.created_at_label);
+        $("#Email").text(p.email);
 
         // Student List
-        $("#BatchInfo").text(b ? `AY ${b.school_year} ${b.semester} Sem` : "N/A");
         const listContainer = $("#studentList");
         listContainer.empty();
 
@@ -61,14 +57,14 @@ function viewCoordinatorProfile() {
                 <div class="d-flex align-items-center gap-3">
                   <img src="${studentImg}" 
                        alt="${s.full_name}" 
-                       class="rounded-circle border border-light-subtle shadow-sm"
+                       class="rounded-circle border border-light-subtle shadow-sm object-fit-cover"
                        style="width: 40px; height: 40px;">
                   <div class="flex-grow-1 min-w-0">
                     <h6 class="mb-0 text-truncate">${s.full_name}</h6>
-                    <small class="text-muted d-block text-truncate">${s.program_code} &bull; ${s.student_number}</small>
+                    <small class="text-body-secondary d-block text-truncate">${s.program} &bull; ${s.student_number}</small>
                   </div>
-                  <span class="badge ${s.account_status === 'active' ? 'bg-success' : 'bg-secondary'} rounded-pill">
-                    ${s.status_label}
+                  <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill">
+                    Active
                   </span>
                 </div>
               </li>
@@ -76,7 +72,7 @@ function viewCoordinatorProfile() {
             listContainer.append(studentItem);
           });
         } else {
-          listContainer.append('<li class="list-group-item bg-transparent text-center text-muted py-4">No students assigned yet.</li>');
+          listContainer.append('<li class="list-group-item bg-transparent text-center text-body-secondary py-4">No active students under your supervision.</li>');
         }
       } else {
         Errors(response.message);
@@ -92,10 +88,10 @@ function viewCoordinatorProfile() {
 }
 
 $(document).ready(function () {
-  viewCoordinatorProfile();
+  viewSupervisorProfile();
 
   $("#editprofileBtn").on("click", function () {
-    window.location.href = "../../../Src/Pages/Coordinator/Coordinator_Profile?action=edit";
+    window.location.href = "../../../Src/Pages/Supervisor/Supervisor_Profile.php?action=edit";
   });
 
   $("#changepasswordBtn").on("click", function () {
