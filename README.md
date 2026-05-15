@@ -25,7 +25,7 @@ Here is a glimpse of the OJT Management System in action. *(Screenshots to be ad
 *The intuitive 5-step institutional branding and configuration wizard.*
 
 ### 2. Secure Login Portal
-![Login Portal](./Assets/Images/Previews/login.png)
+![Login Portal](./Assets/Images/Previews/Login.png)
 *Role-based authentication featuring the Liquid Glass UI.*
 
 ### 3. Administrator Dashboard
