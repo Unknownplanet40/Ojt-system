@@ -29,7 +29,7 @@ if (!isset($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'coordinator') 
 
 $coordinatorUuid = $_SESSION['profile_uuid'];
 
-// Filters
+
 $filters = [
     'coordinator_uuid' => $coordinatorUuid,
     'program_uuid'     => trim($_POST['program_uuid'] ?? ''),
@@ -38,9 +38,9 @@ $filters = [
 ];
 
 $students = getAllStudents($conn, null, $filters);
-$programs = getAllPrograms($conn, true); // only active
+$programs = getAllPrograms($conn, true); 
 
-// Stats
+
 $stats = [
     'total'     => 0,
     'active'    => 0,
@@ -55,8 +55,8 @@ foreach ($allMyStudents as $s) {
     if ($s['account_status'] === 'active') {
         $stats['active']++;
     }
-    // For pending/completed, we might need to check ojt_applications or student_profiles.isProfileDone
-    // Let's keep it simple for now or fetch from applications if needed
+    
+    
 }
 
 $stmt = $conn->prepare("

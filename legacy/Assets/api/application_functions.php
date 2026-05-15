@@ -2,9 +2,9 @@
 
 require_once 'ServerConfig.php';
 
-// Prevent direct access to this file
+
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    // Only allow AJAX requests
+    
     if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         $base = dirname($_SERVER['SCRIPT_NAME'], 3);
@@ -69,9 +69,9 @@ const VALID_TRANSITIONS = [
 ];
 
 
-// -----------------------------------------------
-// LOG status change
-// -----------------------------------------------
+
+
+
 function logApplicationStatus(
     $conn,
     string  $applicationUuid,
@@ -100,9 +100,9 @@ function logApplicationStatus(
 }
 
 
-// -----------------------------------------------
-// SUBMIT application  (student action)
-// -----------------------------------------------
+
+
+
 function submitApplication($conn, array $data, string $studentProfileUuid, string $actorUuid): array
 {
     $companyUuid   = trim($data['company_uuid']    ?? '');
@@ -110,7 +110,7 @@ function submitApplication($conn, array $data, string $studentProfileUuid, strin
     $preferredDept = trim($data['preferred_dept']   ?? '');
     $coverLetter   = trim($data['cover_letter']     ?? '');
 
-    // --- validate ---
+    
     if (empty($companyUuid)) {
         return ['success' => false, 'errors' => ['company_uuid' => 'Select a company.']];
     }
@@ -119,12 +119,12 @@ function submitApplication($conn, array $data, string $studentProfileUuid, strin
         return ['success' => false, 'errors' => ['general' => 'No active batch found.']];
     }
 
-    // --- check requirements complete ---
+    
     if (!canStudentApply($conn, $studentProfileUuid, $batchUuid)) {
         return ['success' => false, 'errors' => ['general' => 'Complete all pre-OJT requirements first.']];
     }
 
-    // --- check no existing active application ---
+    
     $stmt = $conn->prepare("
         SELECT uuid, status FROM ojt_applications
         WHERE student_uuid = ? AND batch_uuid = ?
@@ -141,7 +141,7 @@ function submitApplication($conn, array $data, string $studentProfileUuid, strin
         }
     }
 
-    // --- check company is valid for this student ---
+    
     $stmt = $conn->prepare("
         SELECT sp.program_uuid FROM student_profiles sp WHERE sp.uuid = ? LIMIT 1
     ");
@@ -152,7 +152,7 @@ function submitApplication($conn, array $data, string $studentProfileUuid, strin
 
     $programUuid = $sp['program_uuid'] ?? null;
 
-    // check company accepts student's program
+    
     $stmt = $conn->prepare("
         SELECT id FROM company_accepted_programs
         WHERE company_uuid = ? AND program_uuid = ?
@@ -167,7 +167,7 @@ function submitApplication($conn, array $data, string $studentProfileUuid, strin
         return ['success' => false, 'errors' => ['company_uuid' => 'This company does not accept your program.']];
     }
 
-    // check company has remaining slots
+    
     $stmt = $conn->prepare("
         SELECT cs.total_slots,
                COUNT(DISTINCT sp2.id) AS filled_slots
@@ -188,7 +188,7 @@ function submitApplication($conn, array $data, string $studentProfileUuid, strin
         return ['success' => false, 'errors' => ['company_uuid' => 'This company has no remaining slots.']];
     }
 
-    // --- insert application ---
+    
     $appUuid = generateUuid();
 
     $stmt = $conn->prepare("
@@ -209,7 +209,7 @@ function submitApplication($conn, array $data, string $studentProfileUuid, strin
     $stmt->execute();
     $stmt->close();
 
-    // log status
+    
     logApplicationStatus(
         $conn,
         $appUuid,
@@ -231,9 +231,9 @@ function submitApplication($conn, array $data, string $studentProfileUuid, strin
     return ['success' => true, 'uuid' => $appUuid];
 }
 
-// -----------------------------------------------
-// RESUBMIT application after revision  (student action)
-// -----------------------------------------------
+
+
+
 function updateApplication($conn, string $appUuid, array $data, string $studentProfileUuid, string $actorUuid): array
 {
     $companyUuid   = trim($data['company_uuid']   ?? '');
@@ -244,7 +244,7 @@ function updateApplication($conn, string $appUuid, array $data, string $studentP
         return ['success' => false, 'errors' => ['company_uuid' => 'Select a company.']];
     }
 
-    // fetch current application — must belong to this student and be needs_revision
+    
     $stmt = $conn->prepare("
         SELECT uuid, student_uuid, company_uuid, batch_uuid, status
         FROM ojt_applications
@@ -264,7 +264,7 @@ function updateApplication($conn, string $appUuid, array $data, string $studentP
         return ['success' => false, 'errors' => ['general' => 'Only returned applications can be updated.']];
     }
 
-    // validate new company — same checks as submitApplication
+    
     $stmt = $conn->prepare("SELECT program_uuid FROM student_profiles WHERE uuid = ? LIMIT 1");
     $stmt->bind_param('s', $studentProfileUuid);
     $stmt->execute();
@@ -272,7 +272,7 @@ function updateApplication($conn, string $appUuid, array $data, string $studentP
     $stmt->close();
     $programUuid = $sp['program_uuid'] ?? null;
 
-    // check company accepts program
+    
     $stmt = $conn->prepare("
         SELECT id FROM company_accepted_programs
         WHERE company_uuid = ? AND program_uuid = ?
@@ -287,7 +287,7 @@ function updateApplication($conn, string $appUuid, array $data, string $studentP
         return ['success' => false, 'errors' => ['company_uuid' => 'This company does not accept your program.']];
     }
 
-    // check slots
+    
     $stmt = $conn->prepare("
         SELECT cs.total_slots, COUNT(DISTINCT sp2.id) AS filled_slots
         FROM company_slots cs
@@ -306,7 +306,7 @@ function updateApplication($conn, string $appUuid, array $data, string $studentP
         return ['success' => false, 'errors' => ['company_uuid' => 'This company has no remaining slots.']];
     }
 
-    // update the application — reset to pending
+    
     $stmt = $conn->prepare("
         UPDATE ojt_applications
         SET company_uuid      = ?,
@@ -322,7 +322,7 @@ function updateApplication($conn, string $appUuid, array $data, string $studentP
     $stmt->execute();
     $stmt->close();
 
-    // log status change
+    
     logApplicationStatus(
         $conn,
         $appUuid,
@@ -346,9 +346,9 @@ function updateApplication($conn, string $appUuid, array $data, string $studentP
 }
 
 
-// -----------------------------------------------
-// APPROVE application  (coordinator action)
-// -----------------------------------------------
+
+
+
 function approveApplication($conn, string $appUuid, string $note = '', string $actorUuid): array
 {
     $stmt = $conn->prepare("
@@ -380,7 +380,7 @@ function approveApplication($conn, string $appUuid, string $note = '', string $a
     $stmt->execute();
     $stmt->close();
 
-    // assign company to student profile
+    
     $stmt = $conn->prepare("
         UPDATE student_profiles SET company_uuid = ?
         WHERE uuid = ?
@@ -404,9 +404,9 @@ function approveApplication($conn, string $appUuid, string $note = '', string $a
 }
 
 
-// -----------------------------------------------
-// RETURN for revision  (coordinator action)
-// -----------------------------------------------
+
+
+
 function returnApplication($conn, string $appUuid, string $note, string $actorUuid): array
 {
     if (empty(trim($note))) {
@@ -456,9 +456,9 @@ function returnApplication($conn, string $appUuid, string $note, string $actorUu
 }
 
 
-// -----------------------------------------------
-// REJECT application  (coordinator action)
-// -----------------------------------------------
+
+
+
 function rejectApplication($conn, string $appUuid, string $note, string $actorUuid): array
 {
     if (empty(trim($note))) {
@@ -494,7 +494,7 @@ function rejectApplication($conn, string $appUuid, string $note, string $actorUu
     $stmt->execute();
     $stmt->close();
 
-    // clear company from student profile
+    
     $stmt = $conn->prepare("
         UPDATE student_profiles SET company_uuid = NULL WHERE uuid = ?
     ");
@@ -517,9 +517,9 @@ function rejectApplication($conn, string $appUuid, string $note, string $actorUu
 }
 
 
-// -----------------------------------------------
-// WITHDRAW application  (student action)
-// -----------------------------------------------
+
+
+
 function withdrawApplication($conn, string $appUuid, string $studentProfileUuid, string $actorUuid): array
 {
     $stmt = $conn->prepare("
@@ -546,7 +546,7 @@ function withdrawApplication($conn, string $appUuid, string $studentProfileUuid,
     $stmt->execute();
     $stmt->close();
 
-    // release company from student profile
+    
     $stmt = $conn->prepare("
         UPDATE student_profiles SET company_uuid = NULL WHERE uuid = ?
     ");
@@ -569,9 +569,9 @@ function withdrawApplication($conn, string $appUuid, string $studentProfileUuid,
 }
 
 
-// -----------------------------------------------
-// GET student's own application
-// -----------------------------------------------
+
+
+
 function getStudentApplication($conn, string $studentProfileUuid, string $batchUuid): ?array
 {
     $stmt = $conn->prepare("
@@ -632,9 +632,9 @@ function getStudentApplication($conn, string $studentProfileUuid, string $batchU
 }
 
 
-// -----------------------------------------------
-// GET all applications  (coordinator view)
-// -----------------------------------------------
+
+
+
 function getApplications($conn, string $coordinatorUuid, string $batchUuid, array $filters = []): array
 {
     $safeCoord = $conn->real_escape_string($coordinatorUuid);
@@ -718,7 +718,7 @@ function getApplications($conn, string $coordinatorUuid, string $batchUuid, arra
             $requirementsStatus[$reqRow['req_type']] = $reqRow['status'];
         }
 
-        // get all student from the same company and batch to calculate remaining slots
+        
         $stmt = $conn->prepare("
             SELECT COUNT(*) AS count FROM student_profiles
             WHERE company_uuid = ? AND batch_uuid = ?
@@ -795,9 +795,9 @@ function getApplications($conn, string $coordinatorUuid, string $batchUuid, arra
 }
 
 
-// -----------------------------------------------
-// GET status log for an application
-// -----------------------------------------------
+
+
+
 function getApplicationStatusLog($conn, string $appUuid): array
 {
     $stmt = $conn->prepare("

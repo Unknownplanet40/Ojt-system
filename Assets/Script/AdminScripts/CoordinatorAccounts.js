@@ -286,7 +286,7 @@ function getCoordinators() {
       coordinators.forEach((coordinator) => {
         const profileImage = coordinator.profile_name
           ? `../../../Assets/Images/profiles/${coordinator.profile_name}`
-          : `https://placehold.co/64x64/483a0f/c6983d/png?text=${coordinator.initials}&font=poppins`;
+          : `https:
 
         tableBody.append(`
           <tr>

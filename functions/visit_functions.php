@@ -1,10 +1,10 @@
 <?php
-// functions/visit_functions.php
-// -----------------------------------------------
-// Module:    Coordinator Visits
-// Primary:   Coordinator (schedules + logs)
-// Secondary: Admin (view all)
-// -----------------------------------------------
+
+
+
+
+
+
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     $base = dirname($_SERVER['SCRIPT_NAME'], 2);
     header("Location: $base/Src/Pages/ErrorPage.php?error=403");
@@ -13,9 +13,9 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 require_once __DIR__ . '/../helpers/helpers.php';
 
 
-// -----------------------------------------------
-// SCHEDULE a visit
-// -----------------------------------------------
+
+
+
 function scheduleVisit(
     $conn,
     string $coordinatorUuid,
@@ -39,11 +39,11 @@ function scheduleVisit(
 
     if (!empty($visitDate)) {
         $today = date('Y-m-d');
-        // scheduled visits must be in the future or today
+        
         if ($visitType === 'scheduled' && $visitDate < $today) {
             $errors['visit_date'] = 'Scheduled visit date must be today or in the future.';
         }
-        // unscheduled visits must be today or past
+        
         if ($visitType === 'unscheduled' && $visitDate > $today) {
             $errors['visit_date'] = 'Unscheduled visit date cannot be in the future.';
         }
@@ -53,7 +53,7 @@ function scheduleVisit(
         return ['success' => false, 'errors' => $errors];
     }
 
-    // verify company has students under this coordinator
+    
     $stmt = $conn->prepare("
         SELECT COUNT(*) AS total
         FROM student_profiles
@@ -73,7 +73,7 @@ function scheduleVisit(
         ];
     }
 
-    // unscheduled = log immediately as completed
+    
     $status = $visitType === 'unscheduled' ? 'completed' : 'scheduled';
 
     $uuid = generateUuid();
@@ -133,10 +133,10 @@ function scheduleVisit(
 }
 
 
-// -----------------------------------------------
-// LOG visit completion
-// coordinator fills in findings after visiting
-// -----------------------------------------------
+
+
+
+
 function completeVisit(
     $conn,
     string $visitUuid,
@@ -151,7 +151,7 @@ function completeVisit(
         return ['success' => false, 'errors' => ['findings' => 'Visit findings are required.']];
     }
 
-    // fetch visit + scope check
+    
     $stmt = $conn->prepare("
         SELECT uuid, status, coordinator_uuid
         FROM coordinator_visits WHERE uuid = ? LIMIT 1
@@ -206,9 +206,9 @@ function completeVisit(
 }
 
 
-// -----------------------------------------------
-// CANCEL a scheduled visit
-// -----------------------------------------------
+
+
+
 function cancelVisit(
     $conn,
     string $visitUuid,
@@ -263,10 +263,10 @@ function cancelVisit(
 }
 
 
-// -----------------------------------------------
-// UPDATE scheduled visit details
-// only if still scheduled
-// -----------------------------------------------
+
+
+
+
 function updateVisit(
     $conn,
     string $visitUuid,
@@ -322,9 +322,9 @@ function updateVisit(
 }
 
 
-// -----------------------------------------------
-// GET visits — coordinator view
-// -----------------------------------------------
+
+
+
 function getCoordinatorVisits(
     $conn,
     string $coordinatorUuid,
@@ -383,9 +383,9 @@ function getCoordinatorVisits(
 }
 
 
-// -----------------------------------------------
-// GET all visits — admin view
-// -----------------------------------------------
+
+
+
 function getAllVisits(
     $conn,
     string $batchUuid,
@@ -443,9 +443,9 @@ function getAllVisits(
 }
 
 
-// -----------------------------------------------
-// GET single visit
-// -----------------------------------------------
+
+
+
 function getVisit($conn, string $visitUuid): ?array
 {
     $stmt = $conn->prepare("
@@ -474,7 +474,7 @@ function getVisit($conn, string $visitUuid): ?array
     $visit['coordinator_name'] = $row['coordinator_name'];
     $visit['company_address']  = $row['address'] ?? '—';
 
-    // resolve student UUIDs to names if students_observed is set
+    
     if (!empty($visit['students_observed_raw'])) {
         $studentUuids = json_decode($visit['students_observed_raw'], true) ?? [];
         if (!empty($studentUuids)) {
@@ -502,10 +502,10 @@ function getVisit($conn, string $visitUuid): ?array
 }
 
 
-// -----------------------------------------------
-// GET companies visited by coordinator
-// for dropdown — only companies with assigned students
-// -----------------------------------------------
+
+
+
+
 function getVisitableCompanies($conn, string $coordinatorUuid, string $batchUuid): array
 {
     $stmt = $conn->prepare("
@@ -541,9 +541,9 @@ function getVisitableCompanies($conn, string $coordinatorUuid, string $batchUuid
 }
 
 
-// -----------------------------------------------
-// FORMAT visit row
-// -----------------------------------------------
+
+
+
 function formatVisit(array $row): array
 {
     $status = $row['status'];
@@ -579,12 +579,12 @@ function formatVisit(array $row): array
         'findings'             => $row['findings']          ?? null,
         'recommendations'      => $row['recommendations']   ?? null,
         'students_observed_raw'=> $row['students_observed'] ?? null,
-        'students_observed'    => [], // resolved separately in getVisit()
+        'students_observed'    => [], 
         'cancel_reason'        => $row['cancel_reason']     ?? null,
         'assigned_students'    => (int) ($row['assigned_students'] ?? 0),
         'created_at'           => date('M j, Y', strtotime($row['created_at'])),
         'time_ago'             => timeAgo($row['created_at']),
-        // action flags
+        
         'can_complete'         => $status === 'scheduled',
         'can_cancel'           => $status === 'scheduled',
         'can_edit'             => $status === 'scheduled',

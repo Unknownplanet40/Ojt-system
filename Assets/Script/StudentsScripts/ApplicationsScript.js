@@ -75,7 +75,7 @@ $(document).ready(function() {
                             $('#downloadEndorsementBtn').addClass('d-none').removeData('uuid');
                         }
                         
-                        // Timeline - Tracker UI
+                        
                         $('#applicationStatusTimeline').empty();
                         if (response.history) {
                             response.history.forEach((hist, index) => {
@@ -145,7 +145,7 @@ $(document).ready(function() {
                             $('#requirementsIncompleteContainer').addClass('d-none');
                             $('#applyNowBtn').removeClass('d-none');
                             
-                            // Update the text in noApplicationsContainer to be more welcoming
+                            
                             $('#noApplicationsContainer h4').text('Ready to Start Your OJT?');
                             $('#noApplicationsContainer p').text('Your requirements are complete! You can now browse available companies and submit your application.');
                             $('#noApplicationsContainer .d-flex.flex-wrap').html(`
@@ -159,7 +159,7 @@ $(document).ready(function() {
                             $('#noApplicationsContainer').addClass('d-none');
                             $('#requirementsIncompleteContainer').removeClass('d-none');
                             $('#applyNowBtn').addClass('d-none');
-                            // We keep the response requirements in a variable for the modal
+                            
                             window.currentRequirements = response.requirements;
                         }
                     }
@@ -175,18 +175,18 @@ $(document).ready(function() {
     $('#resubmitApplicationBtn').click(function() {
         const uuid = $(this).data('uuid');
         const currentCover = $(this).data('cover-letter');
-        const companyUuid = $('#detailCompanyName').data('company-uuid'); // We need to store this
+        const companyUuid = $('#detailCompanyName').data('company-uuid'); 
 
-        // Switch modal to resubmit mode
+        
         $('#ApplyFormsModal').attr('data-mode', 'resubmit');
         $('#ApplyFormsModal').attr('data-application-uuid', uuid);
         $('#ApplyFormsModal h5').text('Edit & Resubmit Application');
         
-        // Pre-fill Step 2
+        
         $('#preferredDepartment').val($('#detailDepartmentPreference').text() === '—' ? '' : $('#detailDepartmentPreference').text());
         $('#coverLetter').val(currentCover);
 
-        // Pre-select company in Step 1
+        
         loadAvailableCompanies(companyUuid); 
 
         $('#ApplyFormsModal').modal('show');

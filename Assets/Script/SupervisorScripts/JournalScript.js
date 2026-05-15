@@ -20,13 +20,13 @@ $(document).ready(function () {
         loadJournals();
     });
 
-    // View Details
+    
     $(document).on('click', '.view-journal-btn', function() {
         let uuid = $(this).data('uuid');
         let journal = journalsCache.find(j => j.uuid === uuid);
         if (!journal) return;
 
-        // Store the current journal UUID for export
+        
         $('#viewJournalModal').data('journalUuid', uuid);
 
         $('#viewStudentName').text(journal.full_name);
@@ -42,7 +42,7 @@ $(document).ready(function () {
         $('#viewJournalModal').modal('show');
     });
 
-    // Export Journal Button
+    
     $('#exportJournalBtn').click(function() {
         let uuid = $('#viewJournalModal').data('journalUuid');
         if (!uuid) {

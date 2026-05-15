@@ -1,15 +1,15 @@
-// ---- config ----
+
 const maxVisibleToasts = 3;
 const maxActiveModals = 1;
 const useNewEffect = true;
 
-// ---- state ----
+
 const toastQueue = [];
 const modalQueue = [];
 let activeToasts = 0;
 let activeModals = 0;
 
-// ---- utils ----
+
 const VALID = {
   themes: ["bootstrap-5-light", "bootstrap-5-dark"],
   icons: ["info", "success", "error", "warning", "question"],
@@ -105,27 +105,20 @@ function attachGlassTilt(el) {
   const maxTilt = 10;
 
   function onMove(e) {
-    // ensure immediate response while moving
     el.style.transition = "transform 0s";
     const rect = el.getBoundingClientRect();
-
     const px = (e.clientX - rect.left) / rect.width;
     const py = (e.clientY - rect.top) / rect.height;
-
     const rx = (0.5 - py) * maxTilt;
     const ry = (px - 0.5) * maxTilt;
-
     el.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.02)`;
-
     el.style.setProperty("--mx", `${px * 100}%`);
     el.style.setProperty("--my", `${py * 100}%`);
   }
 
   function reset() {
-    // smooth reset so it doesn't feel instant
     el.style.transition = "transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1)";
     el.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)`;
-
     el.style.setProperty("--mx", `50%`);
     el.style.setProperty("--my", `50%`);
   }
@@ -134,14 +127,12 @@ function attachGlassTilt(el) {
   el.addEventListener("mouseleave", reset);
 }
 
-// ---- queue processors ----
+
 function processToastQueue() {
   if (activeToasts >= maxVisibleToasts) return;
   if (toastQueue.length === 0) return;
-
   const { instance, data, hash } = toastQueue.shift();
   activeToasts++;
-
   instance.fire({
     ...data,
     didClose: () => {
@@ -155,10 +146,8 @@ function processToastQueue() {
 function processModalQueue() {
   if (activeModals >= maxActiveModals) return;
   if (modalQueue.length === 0) return;
-
   const data = modalQueue.shift();
   activeModals++;
-
   Swal.fire({
     ...data,
     didClose: () => {
@@ -168,11 +157,10 @@ function processModalQueue() {
   });
 }
 
-// ---- dedupe tracking ----
 const activeToastHashes = new Set();
 
-// ---- public API ----
-export function ToastVersion(theme = "bootstrap-5-light", title = "This is a toast notification!", icon = "info", timer = 3000, position = "top-end", topOffset = "none") {
+
+function ToastVersion(theme = "bootstrap-5-light", title = "This is a toast notification!", icon = "info", timer = 3000, position = "top-end", topOffset = "none") {
   let themeToApply = normalize(theme, VALID.themes, "bootstrap-5-light");
   let iconToApply = normalize(icon, VALID.icons, "info");
   let positionToApply = normalize(position, VALID.positions, "top-end");
@@ -185,29 +173,17 @@ export function ToastVersion(theme = "bootstrap-5-light", title = "This is a toa
     window.matchMedia("(display-mode: window-controls-overlay)").matches ||
     window.navigator.standalone === true;
 
-  if (isStandalone) {
-    positionToApply = "top";
-  }
+  if (isStandalone) positionToApply = "top";
 
   const popupClass = useNewEffect
     ? "glass-ui rounded-3 " + (topOffsetToApply !== "none" ? `mt-${topOffsetToApply}` : "")
     : "bg-blur-5 bg-semi-transparent border-1 rounded-3 fade-bg " + (topOffsetToApply !== "none" ? `mt-${topOffsetToApply}` : "");
 
-  const progressClass = useNewEffect ? "rounded-3 glass-progress" : "rounded-3 bg-gradient";
-
   const entryAnimation = getEntryAnimationClass(positionToApply);
   const exitAnimation = getToastExitAnimationClass(positionToApply);
 
-  const data = {
-    icon: iconToApply,
-    title,
-    timer: timer === 0 ? false : timer,
-    position: positionToApply,
-    theme: themeToApply,
-  };
-
+  const data = { icon: iconToApply, title, timer: timer === 0 ? false : timer, position: positionToApply, theme: themeToApply };
   const hash = hashToast(data);
-
   if (activeToastHashes.has(hash)) return;
 
   const instance = Swal.mixin({
@@ -226,17 +202,9 @@ export function ToastVersion(theme = "bootstrap-5-light", title = "This is a toa
       toastEl.classList.remove("bounce-in-top", "bounce-in-left", "bounce-in-right", "bounce-in-bottom", "bounce-in-fwd");
       void toastEl.offsetWidth;
       toastEl.classList.add(entryAnimation);
-
-      toastEl.addEventListener("mouseenter", () => {
-        Swal.stopTimer();
-      });
-      toastEl.addEventListener("mouseleave", () => {
-        Swal.resumeTimer();
-      });
-
-      if (useNewEffect) {
-        attachGlassTilt(toastEl);
-      }
+      toastEl.addEventListener("mouseenter", () => Swal.stopTimer());
+      toastEl.addEventListener("mouseleave", () => Swal.resumeTimer());
+      if (useNewEffect) attachGlassTilt(toastEl);
     },
   });
 
@@ -245,11 +213,10 @@ export function ToastVersion(theme = "bootstrap-5-light", title = "This is a toa
   processToastQueue();
 }
 
-export function ModalVersion(theme = "bootstrap-5-light", title = "This is a modal!", text = "Here is some more information about this modal.", icon = "info", timer = 0, position = "center") {
+function ModalVersion(theme = "bootstrap-5-light", title = "This is a modal!", text = "Here is some more information about this modal.", icon = "info", timer = 0, position = "center") {
   const themeToApply = normalize(theme, VALID.themes, "bootstrap-5-light");
   const iconToApply = normalize(icon, VALID.icons, "info");
   const positionToApply = normalize(position, VALID.positions, "center");
-
   const exitAnimation = getExitAnimationClass(positionToApply);
 
   modalQueue.push({
@@ -271,34 +238,38 @@ export function ModalVersion(theme = "bootstrap-5-light", title = "This is a mod
       modalEl.classList.remove("bounce-in-top", "bounce-in-left", "bounce-in-right", "bounce-in-bottom", "bounce-in-fwd");
       void modalEl.offsetWidth;
       modalEl.classList.add(getEntryAnimationClass(positionToApply));
-      if (useNewEffect) {
-        attachGlassTilt(modalEl);
-      }
-
-      modalEl.addEventListener("mouseenter", () => {
-        Swal.stopTimer();
-      });
-
-      modalEl.addEventListener("mouseleave", () => {
-        Swal.resumeTimer();
-      });
+      if (useNewEffect) attachGlassTilt(modalEl);
+      modalEl.addEventListener("mouseenter", () => Swal.stopTimer());
+      modalEl.addEventListener("mouseleave", () => Swal.resumeTimer());
     },
   });
-
   processModalQueue();
 }
 
-export function ConfirmVersion(
-  theme = "bootstrap-5-light",
-  title = "Are you sure?",
-  text = "You won't be able to revert this!",
-  icon = "warning",
-  confirmText = "Yes, proceed",
-  confirmColor = "success",
-  cancelColor = "danger",
-  cancelText = "Cancel",
-  position = "center",
-) {
+function LoadingVersion(theme = "bootstrap-5-light", title = "Processing...", text = "Please wait a moment.") {
+  const themeToApply = normalize(theme, VALID.themes, "bootstrap-5-light");
+  return Swal.fire({
+    theme: themeToApply,
+    title,
+    text,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showConfirmButton: false,
+    customClass: {
+      popup: useNewEffect ? "glass-ui glass-ui-strong rounded-3" : "bg-blur-5 bg-semi-transparent border-1 rounded-2",
+      container: "overflow-hidden",
+    },
+    didOpen: (modalEl) => {
+      Swal.showLoading();
+      modalEl.classList.remove("bounce-in-top", "bounce-in-left", "bounce-in-right", "bounce-in-bottom", "bounce-in-fwd");
+      void modalEl.offsetWidth;
+      modalEl.classList.add("bounce-in-fwd");
+      if (useNewEffect) attachGlassTilt(modalEl);
+    }
+  });
+}
+
+function ConfirmVersion(theme = "bootstrap-5-light", title = "Are you sure?", text = "You won't be able to revert this!", icon = "warning", confirmText = "Yes, proceed", confirmColor = "success", cancelColor = "danger", cancelText = "Cancel", position = "center") {
   const themeToApply = normalize(theme, VALID.themes, "bootstrap-5-light");
   const iconToApply = normalize(icon, VALID.icons, "warning");
   const positionToApply = normalize(position, VALID.positions, "center");
@@ -324,9 +295,11 @@ export function ConfirmVersion(
       modalEl.classList.remove("bounce-in-top", "bounce-in-left", "bounce-in-right", "bounce-in-bottom", "bounce-in-fwd");
       void modalEl.offsetWidth;
       modalEl.classList.add(getEntryAnimationClass(positionToApply));
-      if (useNewEffect) {
-        attachGlassTilt(modalEl);
-      }
+      if (useNewEffect) attachGlassTilt(modalEl);
     },
   });
 }
+
+
+export { ToastVersion, ModalVersion, LoadingVersion, ConfirmVersion };
+

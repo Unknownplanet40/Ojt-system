@@ -70,7 +70,7 @@ function ReturnRequrementStatus(status, maincontainerid, submittedCardId, notSub
   const Container = $(`#${maincontainerid}`);
   const submittedCard = $(`#${submittedCardId}`);
   const notSubmittedCard = $(`#${notSubmittedCardId}`);
-  // submitted Card
+  
   const labelS = $(`#${Doc}LabelS`);
   const descriptionS = $(`#${Doc}DescriptionS`);
   const DocStatus = $(`#${Doc}StatusS`);
@@ -83,7 +83,7 @@ function ReturnRequrementStatus(status, maincontainerid, submittedCardId, notSub
   const coordinatorNoteContentS = $(`#${Doc}CoordinatorNoteContentS`);
   const uploadBtnS = $(`#upload${Doc}BtnS`);
 
-  // not submitted card
+  
   const labelNS = $(`#${Doc}LabelNS`);
   const descriptionNS = $(`#${Doc}DescriptionNS`);
   const cancelBtnNS = $(`#Cancel${Doc}BtnNS`);

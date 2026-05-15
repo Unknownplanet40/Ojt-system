@@ -1,18 +1,7 @@
 <?php
-/**
- * Server Environment & System Check Functions
- * 
- * Core business logic for checking:
- * - Server environment (PHP version, extensions, modules)
- * - Dependencies (libraries, tools)
- * - Database connection
- * - Storage and directories
- */
 
-/**
- * Get PHP version
- * @return array Status info with version and status
- */
+
+
 function checkPHPVersion() {
     $version = phpversion();
     $minVersion = '7.4.0';
@@ -29,10 +18,7 @@ function checkPHPVersion() {
     ];
 }
 
-/**
- * Check if mod_rewrite is enabled
- * @return array Status info
- */
+
 function checkModRewrite() {
     $enabled = function_exists('apache_get_modules') 
         ? in_array('mod_rewrite', apache_get_modules())
@@ -46,10 +32,7 @@ function checkModRewrite() {
     ];
 }
 
-/**
- * Check required PHP extensions
- * @return array Status info
- */
+
 function checkPHPExtensions() {
     $required = [
         'pdo' => 'PDO Database',
@@ -82,10 +65,7 @@ function checkPHPExtensions() {
     ];
 }
 
-/**
- * Check file upload functionality
- * @return array Status info
- */
+
 function checkFileUpload() {
     $uploadMaxSize = ini_get('upload_max_filesize');
     $postMaxSize = ini_get('post_max_size');
@@ -101,11 +81,7 @@ function checkFileUpload() {
     ];
 }
 
-/**
- * Check database connection
- * @param $conn Database connection resource
- * @return array Status info
- */
+
 function checkDatabaseConnection($conn) {
     if (!$conn) {
         return [
@@ -116,11 +92,11 @@ function checkDatabaseConnection($conn) {
         ];
     }
     
-    // Get database version
+    
     $result = $conn->query("SELECT VERSION() as version");
     $version = $result ? $result->fetch_assoc()['version'] : 'Unknown';
     
-    // Get database name
+    
     $dbName = $conn->query("SELECT DATABASE() as db")->fetch_assoc()['db'] ?? 'Unknown';
     
     return [
@@ -132,10 +108,7 @@ function checkDatabaseConnection($conn) {
     ];
 }
 
-/**
- * Check storage directories
- * @return array Array of directory status info
- */
+
 function checkStorageDirectories() {
     $directories = [
         [
@@ -152,7 +125,7 @@ function checkStorageDirectories() {
         $exists = is_dir($fullPath);
         $writable = $exists ? is_writable($fullPath) : false;
         
-        // Calculate directory size
+        
         $size = 0;
         if ($exists) {
             $size = getDirectorySize($fullPath);
@@ -173,11 +146,7 @@ function checkStorageDirectories() {
     return $results;
 }
 
-/**
- * Get total size of a directory recursively
- * @param string $path Directory path
- * @return int Size in bytes
- */
+
 function getDirectorySize($path) {
     $size = 0;
     
@@ -206,12 +175,7 @@ function getDirectorySize($path) {
     return $size;
 }
 
-/**
- * Format bytes to human-readable format
- * @param int $bytes Number of bytes
- * @param int $precision Decimal places
- * @return string Formatted size
- */
+
 function formatBytes($bytes, $precision = 1) {
     $units = ['B', 'KB', 'MB', 'GB', 'TB'];
     
@@ -223,11 +187,7 @@ function formatBytes($bytes, $precision = 1) {
     return round($bytes, $precision) . ' ' . $units[$pow];
 }
 
-/**
- * Check if a library is available by checking directory existence
- * @param string $library Library name (e.g., 'mpdf', 'phpspreadsheet')
- * @return bool True if library directory exists
- */
+
 function isLibraryAvailable($library) {
     $basePath = __DIR__ . '/../libs/composer/vendor';
     
@@ -238,14 +198,14 @@ function isLibraryAvailable($library) {
             return is_dir($basePath . '/phpoffice/phpspreadsheet');
         case 'phpmailer':
             return is_dir($basePath . '/phpmailer/phpmailer');
+        case 'ratchet':
+            return is_dir($basePath . '/cboden/ratchet') || is_dir($basePath . '/ratchet/pawl');
         default:
             return false;
     }
 }
 
-/** * Get server software info
- * @return array Status info
- */
+
 function checkServerSoftware() {
     $software = $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown';
     
@@ -257,10 +217,7 @@ function checkServerSoftware() {
     ];
 }
 
-/**
- * Get OS/Platform information
- * @return array Status info
- */
+
 function checkOperatingSystem() {
     $os = php_uname();
     $osType = strtoupper(substr(php_uname('s'), 0, 3));
@@ -274,10 +231,7 @@ function checkOperatingSystem() {
     ];
 }
 
-/**
- * Get server memory usage
- * @return array Status info
- */
+
 function checkMemoryUsage() {
     $memoryUsed = memory_get_usage(true);
     $memoryPeak = memory_get_peak_usage(true);
@@ -291,10 +245,7 @@ function checkMemoryUsage() {
     ];
 }
 
-/**
- * Get disk space information
- * @return array Status info
- */
+
 function checkDiskSpace() {
     $diskTotal = disk_total_space('/');
     $diskFree = disk_free_space('/');
@@ -311,17 +262,14 @@ function checkDiskSpace() {
     ];
 }
 
-/**
- * Get server uptime
- * @return array Status info
- */
+
 function checkServerUptime() {
     if (strtoupper(substr(php_uname('s'), 0, 3)) === 'WIN') {
-        // Windows uptime
+        
         $lastboot = shell_exec('wmic os get lastbootuptime /value 2>nul');
         $uptime = 'Windows System';
     } else {
-        // Linux uptime
+        
         $uptime_file = @file_get_contents('/proc/uptime');
         if ($uptime_file !== false) {
             $uptime_seconds = intval(explode(' ', $uptime_file)[0]);
@@ -341,10 +289,7 @@ function checkServerUptime() {
     ];
 }
 
-/**
- * Check request handler/SAPI
- * @return array Status info
- */
+
 function checkRequestHandler() {
     $sapi = php_sapi_name();
     $handler = 'Unknown';
@@ -367,10 +312,7 @@ function checkRequestHandler() {
     ];
 }
 
-/** * Get all system information in one call
- * @param $conn Database connection resource
- * @return array Comprehensive system info
- */
+
 function getAllSystemInfo($conn) {
     return [
         'php' => checkPHPVersion(),

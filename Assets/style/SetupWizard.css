@@ -1,0 +1,218 @@
+
+.setup-wizard-page {
+    overflow-y: auto !important;
+    background-color: transparent !important;
+}
+
+.circles {
+    pointer-events: none !important;
+    user-select: none !important;
+}
+
+.setup-wizard-page .container-fluid {
+    position: relative;
+    z-index: 10;
+}
+
+.setup-card {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.setup-icon-box {
+    width: 60px;
+    height: 60px;
+    background: rgba(var(--bs-primary-rgb), 0.1);
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.2);
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.setup-stepper {
+    padding: 0 1rem;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 1;
+}
+
+.step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.4);
+    transition: all 0.3s ease;
+}
+
+.step-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.step-item.active .step-num {
+    background: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+    box-shadow: 0 0 15px rgba(var(--bs-primary-rgb), 0.4);
+}
+
+.step-item.active .step-label {
+    color: var(--bs-primary);
+}
+
+.step-item.completed .step-num {
+    background: var(--bs-success);
+    border-color: var(--bs-success);
+    color: white;
+}
+
+.step-item.completed .step-label {
+    color: var(--bs-success);
+}
+
+.setup-step {
+    display: none;
+    opacity: 0;
+}
+
+.setup-step.active {
+    display: block !important;
+    opacity: 1 !important;
+    animation: fadeInSlide 0.4s ease forwards;
+}
+
+.dependency-item {
+    transition: transform 0.3s ease, border-color 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.dependency-item:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dep-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fs-xs {
+    font-size: 0.7rem;
+}
+
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.glass-input {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.fix-list-container {
+    max-height: 320px;     overflow-y: auto;
+    padding-right: 8px;
+}
+
+.fix-list-container::-webkit-scrollbar {
+    width: 5px;
+}
+
+.fix-list-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.fix-list-container::-webkit-scrollbar-thumb {
+    background: rgba(var(--bs-primary-rgb), 0.3);
+    border-radius: 10px;
+}
+
+.fix-list-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--bs-primary-rgb), 0.5);
+}
+
+.dependency-item[data-status="valid"] {
+    border-color: rgba(25, 135, 84, 0.3);
+}
+
+.glass-input:focus {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(var(--bs-primary-rgb), 0.4) !important;
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.15) !important;
+}
+
+.glass-btn {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.dependency-item {
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.dependency-item:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    transform: translateX(5px);
+}
+
+.review-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.review-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.review-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.review-grid {
+    display: grid;
+    gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .setup-card {
+        border-radius: 1.5rem !important;
+    }
+    
+    .card-body {
+        padding: 1.5rem !important;
+    }
+}

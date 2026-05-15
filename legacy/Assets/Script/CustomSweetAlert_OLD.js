@@ -22,7 +22,7 @@ function processToastQueue() {
   });
 }
 
-// Prevent adding duplicate toast to queue
+
 function isDuplicateToast(newToast) {
   return toastQueue.some((t) => t.icon === newToast.icon && t.title === newToast.title && t.timer === newToast.timer && t.position === newToast.position && t.theme === newToast.theme);
 }
@@ -38,7 +38,7 @@ export function ToastVersion(theme = "bootstrap-5-light", title = "This is a toa
   const positionToApply = validPositions.includes(position.toLowerCase()) ? position.toLowerCase() : "top-end";
   const topOffsetToApply = validOffsets.includes(topOffset.toLowerCase()) ? topOffset.toLowerCase() : "none";
 
-  // map position → animation
+  
   function getAnimationClass(pos) {
     switch (pos) {
       case "top":
@@ -68,7 +68,7 @@ export function ToastVersion(theme = "bootstrap-5-light", title = "This is a toa
     showConfirmButton: false,
     timerProgressBar: true,
 
-    // disable default animation so yours takes over
+    
     showClass: { popup: "" },
     hideClass: { popup: "swal2-hide" },
 
@@ -79,9 +79,9 @@ export function ToastVersion(theme = "bootstrap-5-light", title = "This is a toa
       timerProgressBar: "rounded-3 bg-gradient",
     },
 
-    // 🔑 THIS is where animation should be applied
+    
     didOpen: (toastEl) => {
-      // reset animation if reused
+      
       toastEl.classList.remove(
         "bounce-in-top",
         "bounce-in-left",
@@ -90,7 +90,7 @@ export function ToastVersion(theme = "bootstrap-5-light", title = "This is a toa
         "bounce-in-fwd"
       );
 
-      // force reflow so animation retriggers
+      
       void toastEl.offsetWidth;
 
       toastEl.classList.add(animationClass);
@@ -129,51 +129,51 @@ function processModalQueue() {
   });
 }
 
-// export function ToastVersion(
-//   theme = "bootstrap-5-light",
-//   title = "This is a toast notification!",
-//   icon = "info",
-//   timer = 3000,
-//   position = "top-end",
-//   topOffset = "none"
-// ) {
-//   const validThemes = ["bootstrap-5-light","bootstrap-5-dark"];
-//   const validIcons = ["info","success","error","warning","question"];
-//   const validOffsets = ["none","0","1","2","3","4","5"];
-//   const validPositions = [
-//     "top","top-start","top-end",
-//     "center","center-start","center-end",
-//     "bottom","bottom-start","bottom-end"
-//   ];
 
-//   const themeToApply = validThemes.includes(theme.toLowerCase()) ? theme.toLowerCase() : "bootstrap-5-light";
-//   const iconToApply = validIcons.includes(icon.toLowerCase()) ? icon.toLowerCase() : "info";
-//   const positionToApply = validPositions.includes(position.toLowerCase()) ? position.toLowerCase() : "top-end";
-//   const topOffsetToApply = validOffsets.includes(topOffset.toLowerCase()) ? topOffset.toLowerCase() : "none";
 
-//   Toast = Swal.mixin({
-//     toast: true,
-//     position: positionToApply,
-//     showConfirmButton: false,
-//     timerProgressBar: true,
-//     showClass: { popup: "" },
-//     hideClass: { popup: "swal2-hide" },
-//     customClass: {
-//       popup: "bg-blur-5 bg-semi-transparent border-1 rounded-3 " + (topOffsetToApply !== "none" ? `mt-${topOffsetToApply}` : ""),
-//       timerProgressBar: "rounded-3 bg-gradient"
-//     }
-//   });
 
-//   toastQueue.push({
-//     icon: iconToApply,
-//     title: title,
-//     timer: timer === 0 ? false : timer,
-//     position: positionToApply,
-//     theme: themeToApply
-//   });
 
-//   processToastQueue();
-// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export function ModalVersion(theme = "bootstrap-5-light", title = "This is a modal!", text = "Here is some more information about this modal.", icon = "info", timer = 0, position = "center") {
   const validThemes = ["bootstrap-5-light", "bootstrap-5-dark"];

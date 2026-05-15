@@ -53,12 +53,12 @@ if (!$conn || $conn->connect_error) {
 $batchUuid = trim($_POST['batch_uuid'] ?? '');
 $filters   = [];
 
-// coordinators only see their own students
+
 if ($_SESSION['user_role'] === 'coordinator') {
     $filters['coordinator_uuid'] = $_SESSION['profile_uuid'];
 }
 
-// optional filters from request
+
 if (!empty($_POST['program_uuid'])) $filters['program_uuid'] = $_POST['program_uuid'];
 if (!empty($_POST['company_uuid'])) $filters['company_uuid'] = $_POST['company_uuid'];
 if (!empty($_POST['year_level']))   $filters['year_level']   = $_POST['year_level'];

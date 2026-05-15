@@ -2,9 +2,9 @@
 
 require_once 'ServerConfig.php';
 
-// Prevent direct access to this file
+
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    // Only allow AJAX requests
+    
     if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         $base = dirname($_SERVER['SCRIPT_NAME'], 3);
@@ -89,7 +89,7 @@ if ($action === 'fetch_profile_data') {
         $stmtReq->bind_param("s", $userId);
         $stmtReq->execute();
 
-        // if return 0 means no requirements submitted yet
+        
         $profileData['hasSubmittedRequirements'] = $stmtReq->get_result()->num_rows > 0 ? true : false;
         
         response([

@@ -4,12 +4,12 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Direct access is allowed for this file to support browser downloads
+
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
 require_once dirname(__DIR__, 2) . '/functions/bulk_student_functions.php';
 
-// Removed POST check to allow direct download via GET
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (empty($_POST['csrf_token']) ||
     $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? ''))) {

@@ -5,18 +5,18 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     header("Location: $base/Src/Pages/ErrorPage.php?error=403");
     exit;
 }
-// functions/evaluation_functions.php
-// -----------------------------------------------
-// Module:    Evaluation Forms
-// Primary:   Supervisor (midterm + final)
-//            Student (self-evaluation)
-// Secondary: Coordinator (view + monitor)
-// -----------------------------------------------
+
+
+
+
+
+
+
 
 require_once __DIR__ . '/../helpers/helpers.php';
 
 
-// evaluation criteria for supervisor
+
 const SUPERVISOR_CRITERIA = [
     'technical_skills' => 'Technical Skills',
     'work_attitude'    => 'Work Attitude & Professionalism',
@@ -25,7 +25,7 @@ const SUPERVISOR_CRITERIA = [
     'problem_solving'  => 'Problem Solving & Initiative',
 ];
 
-// self-evaluation criteria for student
+
 const SELF_EVAL_CRITERIA = [
     'technical_skills'   => 'Technical Skills Gained',
     'work_attitude'      => 'Work Attitude & Discipline',
@@ -35,7 +35,7 @@ const SELF_EVAL_CRITERIA = [
     'overall_experience' => 'Overall OJT Experience',
 ];
 
-// rating labels
+
 const RATING_LABELS = [
     1 => 'Poor',
     2 => 'Fair',
@@ -45,19 +45,19 @@ const RATING_LABELS = [
 ];
 
 
-// -----------------------------------------------
-// CHECK if evaluation is unlocked
-// midterm → student reached 50% of required hours
-// final   → student reached 100% of required hours
-// self    → supervisor final evaluation submitted
-// -----------------------------------------------
+
+
+
+
+
+
 function isEvaluationUnlocked(
     $conn,
     string $studentUuid,
     string $batchUuid,
     string $evalType
 ): array {
-    // get required hours + approved hours
+    
     $stmt = $conn->prepare("
         SELECT
           p.required_hours,
@@ -109,7 +109,7 @@ function isEvaluationUnlocked(
     }
 
     if ($evalType === 'self') {
-        // self-eval unlocks when supervisor final is submitted
+        
         $stmt = $conn->prepare("
             SELECT uuid FROM evaluations
             WHERE student_uuid = ?
@@ -135,9 +135,9 @@ function isEvaluationUnlocked(
 }
 
 
-// -----------------------------------------------
-// SUBMIT supervisor evaluation (midterm or final)
-// -----------------------------------------------
+
+
+
 function submitSupervisorEvaluation(
     $conn,
     string $supervisorUuid,
@@ -150,7 +150,7 @@ function submitSupervisorEvaluation(
         return ['success' => false, 'error' => 'Invalid evaluation type.'];
     }
 
-    // verify supervisor is assigned to this student
+    
     $stmt = $conn->prepare("
         SELECT id FROM student_profiles
         WHERE uuid = ? AND supervisor_uuid = ?
@@ -164,13 +164,13 @@ function submitSupervisorEvaluation(
     }
     $stmt->close();
 
-    // check if evaluation is unlocked
+    
     $unlockCheck = isEvaluationUnlocked($conn, $studentUuid, $batchUuid, $evalType);
     if (!$unlockCheck['unlocked']) {
         return ['success' => false, 'error' => $unlockCheck['reason']];
     }
 
-    // validate scores
+    
     $errors   = [];
     $criteria = ['technical_skills','work_attitude','communication','teamwork','problem_solving'];
 
@@ -192,13 +192,13 @@ function submitSupervisorEvaluation(
     $problemSolving  = (int) $data['problem_solving'];
     $comments        = trim($data['comments'] ?? '');
 
-    // compute total score (average of 5 criteria)
+    
     $totalScore = round(
         ($technicalSkills + $workAttitude + $communication + $teamwork + $problemSolving) / 5,
         2
     );
 
-    // get active application UUID
+    
     $stmt = $conn->prepare("
         SELECT uuid FROM ojt_applications
         WHERE student_uuid = ? AND batch_uuid = ? AND status = 'active'
@@ -251,7 +251,7 @@ function submitSupervisorEvaluation(
     $stmt->execute();
     $stmt->close();
 
-    // resolve supervisor profile UUID to user UUID for audit logging
+    
     $userStmt = $conn->prepare("SELECT user_uuid FROM supervisor_profiles WHERE uuid = ? LIMIT 1");
     $userStmt->bind_param('s', $supervisorUuid);
     $userStmt->execute();
@@ -277,22 +277,22 @@ function submitSupervisorEvaluation(
 }
 
 
-// -----------------------------------------------
-// SUBMIT student self-evaluation
-// -----------------------------------------------
+
+
+
 function submitSelfEvaluation(
     $conn,
     string $studentUuid,
     string $batchUuid,
     array  $data
 ): array {
-    // check if unlocked
+    
     $unlockCheck = isEvaluationUnlocked($conn, $studentUuid, $batchUuid, 'self');
     if (!$unlockCheck['unlocked']) {
         return ['success' => false, 'error' => $unlockCheck['reason']];
     }
 
-    // validate scores
+    
     $errors   = [];
     $criteria = ['technical_skills','work_attitude','communication','teamwork','problem_solving','overall_experience'];
 
@@ -316,13 +316,13 @@ function submitSelfEvaluation(
     $wouldRecommend    = (int) (!empty($data['would_recommend']) ? 1 : 0);
     $comments          = trim($data['comments'] ?? '');
 
-    // total = average of 5 main criteria (excluding overall experience from score)
+    
     $totalScore = round(
         ($technicalSkills + $workAttitude + $communication + $teamwork + $problemSolving) / 5,
         2
     );
 
-    // get application UUID
+    
     $stmt = $conn->prepare("
         SELECT uuid FROM ojt_applications
         WHERE student_uuid = ? AND batch_uuid = ? AND status = 'active'
@@ -379,7 +379,7 @@ function submitSelfEvaluation(
     $stmt->execute();
     $stmt->close();
 
-    // resolve student profile UUID to user UUID for audit logging
+    
     $userStmt = $conn->prepare("SELECT user_uuid FROM student_profiles WHERE uuid = ? LIMIT 1");
     $userStmt->bind_param('s', $studentUuid);
     $userStmt->execute();
@@ -404,10 +404,10 @@ function submitSelfEvaluation(
 }
 
 
-// -----------------------------------------------
-// GET evaluations for a student
-// returns all 3 types if submitted
-// -----------------------------------------------
+
+
+
+
 function getStudentEvaluations(
     $conn,
     string $studentUuid,
@@ -425,7 +425,7 @@ function getStudentEvaluations(
     $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
-    // index by type for easy access
+    
     $evaluations = [
         'midterm' => null,
         'final'   => null,
@@ -436,7 +436,7 @@ function getStudentEvaluations(
         $evaluations[$row['eval_type']] = formatEvaluation($row);
     }
 
-    // check unlock status for each type
+    
     $midtermUnlock = isEvaluationUnlocked($conn, $studentUuid, $batchUuid, 'midterm');
     $finalUnlock   = isEvaluationUnlocked($conn, $studentUuid, $batchUuid, 'final');
     $selfUnlock    = isEvaluationUnlocked($conn, $studentUuid, $batchUuid, 'self');
@@ -455,9 +455,9 @@ function getStudentEvaluations(
 }
 
 
-// -----------------------------------------------
-// GET all evaluations — coordinator view
-// -----------------------------------------------
+
+
+
 function getAllEvaluations(
     $conn,
     string $batchUuid,
@@ -500,10 +500,10 @@ function getAllEvaluations(
 }
 
 
-// -----------------------------------------------
-// GET evaluation summary per student
-// used for grade computation
-// -----------------------------------------------
+
+
+
+
 function getEvaluationSummary(
     $conn,
     string $studentUuid,
@@ -575,9 +575,9 @@ function getEvaluationSummary(
 }
 
 
-// -----------------------------------------------
-// FORMAT evaluation row
-// -----------------------------------------------
+
+
+
 function formatEvaluation(array $row): array
 {
     $totalScore = (float) $row['total_score'];
@@ -602,7 +602,7 @@ function formatEvaluation(array $row): array
         }
     }
 
-    // add overall_experience for self-eval
+    
     if ($row['eval_type'] === 'self' && !is_null($row['overall_experience'] ?? null)) {
         $score      = (int) $row['overall_experience'];
         $criteria[] = [
@@ -633,10 +633,10 @@ function formatEvaluation(array $row): array
 }
 
 
-// -----------------------------------------------
-// SCORE to grade equivalent
-// based on Philippine grading system
-// -----------------------------------------------
+
+
+
+
 function scoreToGrade(float $score): string
 {
     $percentage = ($score / 5) * 100;

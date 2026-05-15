@@ -2,9 +2,9 @@
 
 require_once 'ServerConfig.php';
 
-// Prevent direct access to this file
+
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    // Only allow AJAX requests
+    
     if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         $base = dirname($_SERVER['SCRIPT_NAME'], 3);
@@ -97,7 +97,7 @@ function getExpiringMoas($conn, int $daysThreshold = 30): array
 
 function getStatCards($conn): array
 {
-    // user counts by role
+    
     $result = $conn->query("
         SELECT
           SUM(CASE WHEN role = 'student'     THEN 1 ELSE 0 END) AS total_students,
@@ -110,7 +110,7 @@ function getStatCards($conn): array
     ");
     $counts = $result->fetch_assoc();
 
-    // students with no profile
+    
     $result    = $conn->query("
         SELECT COUNT(*) AS total
         FROM users u
@@ -326,7 +326,7 @@ function getNeedsAttention($conn): array
 {
     $alerts = [];
 
-    // students with no profile
+    
     $result = $conn->query("
         SELECT COUNT(*) AS total
         FROM users u
@@ -344,7 +344,7 @@ function getNeedsAttention($conn): array
         ];
     }
 
-    // accounts that never logged in
+    
     $result = $conn->query("
         SELECT COUNT(*) AS total FROM users
         WHERE last_login_at IS NULL AND is_active = 1
@@ -369,7 +369,7 @@ function getNeedsAttention($conn): array
         ];
     }
 
-    // no active batch
+    
     $result = $conn->query("SELECT COUNT(*) AS total FROM batches WHERE status = 'active'");
     $hasActiveBatch = (int) $result->fetch_assoc()['total'];
     if ($hasActiveBatch === 0) {
@@ -393,7 +393,7 @@ function getNeedsAttention($conn): array
         ];
     }
 
-    // deactivated accounts
+    
     $result = $conn->query("SELECT COUNT(*) AS total FROM users WHERE is_active = 0");
     $count = (int) $result->fetch_assoc()['total'];
     if ($count > 0) {

@@ -167,8 +167,7 @@ if (!empty($_SESSION['user_uuid']) && !empty($_SESSION['user_role'])) {
 										please contact
 										your
 										coordinator directly.</small>
-									<small class="fw-bold text-success">Administrator@school.edu.ph · +63 912 345
-										6789</small>
+									<small class="fw-bold text-success"><?= htmlspecialchars($SchoolEmail) ?> &middot; <?= htmlspecialchars($SchoolPhone) ?></small>
 								</div>
 							</div>
 							<div class="alert rounded-3 p-2 px-3 bg-primary bg-opacity-25 border-secondary">

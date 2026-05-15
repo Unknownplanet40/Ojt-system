@@ -17,16 +17,16 @@ $CurrentPage = "Supervisors";
     <script type="module" src="../../../Assets/Script/dashboardScripts/AdminDashboard.js"></script>
     <script type="module" src="../../../Assets/Script/AdminScripts/SupervisorAccounts.js"></script>
     <style>
-        /* Color indicator styling for company options with assigned supervisors */
+        
         select option[data-has-supervisor="true"] {
-            color: #155724 !important;
+            color: 
             font-weight: 500;
         }
 
-        /* Fallback styling for better visual indication */
-        #supervisorCompany option[data-has-supervisor="true"],
-        #editSupervisorCompany option[data-has-supervisor="true"] {
-            color: #155724 !important;
+        
+        
+        
+            color: 
         }
     </style>
     <title><?= $ShortTitle ?></title>

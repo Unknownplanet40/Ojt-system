@@ -23,7 +23,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 require_once dirname(__DIR__, 2) . '/config/db.php';
 require_once dirname(__DIR__, 2) . '/functions/bulk_student_functions.php';
 
-// Testing flag: Set to false to test without saving to database
+
 define('BULK_SAVE_TO_DB', true);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -51,7 +51,7 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
-// get valid rows from session (set by bulk_validate.php)
+
 $validRows = $_SESSION['bulk_valid_rows'] ?? [];
 
 if (empty($validRows)) {
@@ -61,12 +61,12 @@ if (empty($validRows)) {
     ]);
 }
 
-// clear session after use
+
 unset($_SESSION['bulk_valid_rows']);
 
 $result = createBulkStudents($conn, $validRows, $_SESSION['user_uuid'], BULK_SAVE_TO_DB);
 
-// store created accounts in session for export
+
 $_SESSION['bulk_created'] = $result['created'];
 
 response([

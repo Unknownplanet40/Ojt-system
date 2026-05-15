@@ -100,7 +100,9 @@ function servePdfWithTitle(string $absolutePath, string $tabTitle, string $fileN
     $params           = $_GET;
     $params['action'] = 'download';
     $downloadUrl      = '?' . http_build_query($params);
-    $base64Pdf = base64_encode(file_get_contents($realPath));
+    
+    $params['action'] = 'view_raw';
+    $rawPdfUrl        = '?' . http_build_query($params);
 
     echo <<<HTML
     <!DOCTYPE html>
@@ -111,13 +113,13 @@ function servePdfWithTitle(string $absolutePath, string $tabTitle, string $fileN
       <title>{$escapedTitle}</title>
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; overflow: hidden; background: #3c3c3c; }
+        html, body { height: 100%; overflow: hidden; background: 
 
         .toolbar {
           position: fixed;
           top: 0; left: 0; right: 0;
           height: 46px;
-          background: #3c3c3c;
+          background: 
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -136,7 +138,7 @@ function servePdfWithTitle(string $absolutePath, string $tabTitle, string $fileN
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           font-size: 13px;
           font-weight: 500;
-          color: #e5e7eb;
+          color: 
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -161,16 +163,16 @@ function servePdfWithTitle(string $absolutePath, string $tabTitle, string $fileN
           transition: background .15s;
         }
         .btn-back {
-          background: #2d2d2f;
-          color: #d1d5db;
+          background: 
+          color: 
         }
-        .btn-back:hover { background: #3a3a3c; }
+        .btn-back:hover { background: 
         .btn-download {
-          background: #0F6E56;
-          color: #fff;
-          display: none;
+          background: 
+          color: 
+          display: inline-flex;
         }
-        .btn-download:hover { background: #0d5f49; }
+        .btn-download:hover { background: 
 
         .pdf-container {
           position: fixed;
@@ -198,8 +200,8 @@ function servePdfWithTitle(string $absolutePath, string $tabTitle, string $fileN
         </div>
       </div>
 
-      <div class="pdf-container" onload="document.querySelector('.btn-download').style.display = 'inline-flex';">
-        <iframe src="data:application/pdf;base64,{$base64Pdf}" title="{$escapedTitle} - {$escapedFileName}">
+      <div class="pdf-container">
+        <iframe src="{$rawPdfUrl}" title="{$escapedTitle} - {$escapedFileName}">
            <p>Your browser does not support iframes. Please <a href="{$downloadUrl}">download the PDF</a> to view it.</p>
         </iframe>
       </div>
@@ -266,7 +268,7 @@ if ($resourceType === 'requirement') {
     }
 
     $absolutePath = __DIR__ . '/' . $req['file_path'];
-    $download     = (($_GET['action'] ?? 'inline') === 'download');
+    $action = $_GET['action'] ?? 'inline';
     $downloadName = basename($req['file_name'] ?? 'requirement.pdf');
 
     $reqLabels = [
@@ -280,8 +282,10 @@ if ($resourceType === 'requirement') {
     $reqType  = $req['req_type'] ?? '';
     $tabTitle = $reqLabels[$reqType] ?? 'Requirement Document';
 
-    if ($download) {
+    if ($action === 'download') {
         serveFile($absolutePath, 'application/pdf', true, $downloadName);
+    } elseif ($action === 'view_raw') {
+        serveFile($absolutePath, 'application/pdf', false, $downloadName);
     } else {
         servePdfWithTitle($absolutePath, $tabTitle, $downloadName);
     }
@@ -387,7 +391,7 @@ $mimeTypes = [
 ];
 
 $mimeType = $mimeTypes[$ext] ?? 'application/octet-stream';
-if ($action !== 'download' && $mimeType === 'application/pdf') {
+if ($action === 'inline' && $mimeType === 'application/pdf') {
     $docTypeLabel = [
         'moa'       => 'MOA',
         'nda'       => 'NDA',

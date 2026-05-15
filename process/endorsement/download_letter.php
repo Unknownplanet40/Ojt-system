@@ -74,7 +74,7 @@ if (!$appRow) {
     exit('Application not found.');
 }
 
-// scope check for students — only own letter
+
 if ($_SESSION['user_role'] === 'student') {
     if ($appRow['student_uuid'] !== $_SESSION['profile_uuid']) {
         http_response_code(403);
@@ -89,10 +89,10 @@ if ($_SESSION['user_role'] === 'coordinator') {
     }
 }
 
-// get endorsement letter record
+
 $letter = getEndorsementLetter($conn, $appUuid);
 
-// fallback for legacy records: generate on first download if status allows it
+
 if (!$letter && in_array($appRow['status'], ['approved', 'endorsed', 'active'])) {
     $generated = generateEndorsementLetter($conn, $appUuid, $_SESSION['user_uuid']);
 
@@ -110,7 +110,7 @@ if (!$letter) {
     exit('Endorsement letter not found.');
 }
 
-// mark as endorsed on first download (only if currently approved)
+
 if ($appRow && $appRow['status'] === 'approved') {
     transitionApplication(
         $conn,
@@ -122,7 +122,7 @@ if ($appRow && $appRow['status'] === 'approved') {
     );
 }
 
-// serve the file
+
 $absolutePath = dirname(__DIR__, 2) . '/' . $letter['file_path'];
 
 if (!file_exists($absolutePath)) {

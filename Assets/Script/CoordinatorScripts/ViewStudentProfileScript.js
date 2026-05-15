@@ -56,7 +56,7 @@ function renderStudentInfo(s, stats) {
   } else {
     $("#studentPhoto").attr(
       "src",
-      `https://placehold.co/128x128/C1C1C1/000000/png?text=${s.initials}&font=poppins`
+      `https:
     );
   }
 
@@ -69,7 +69,7 @@ function renderStudentInfo(s, stats) {
     statusBadge.addClass("bg-warning text-dark");
   else statusBadge.addClass("bg-secondary");
 
-  // Update toggle status button
+  
   const toggleBtn = $("#toggleStatusBtn");
   if (s.account_status === "inactive") {
     toggleBtn.removeClass("btn-outline-danger").addClass("btn-outline-success")
@@ -81,17 +81,17 @@ function renderStudentInfo(s, stats) {
       .attr("data-account-status", "active");
   }
   
-  // Store student data for button actions
+  
   toggleBtn.attr("data-user-uuid", s.user_uuid).attr("data-name", s.full_name);
   $("#resetPasswordBtn").attr("data-user-uuid", s.user_uuid).attr("data-name", s.full_name);
 
-  // Stats
+  
   $("#hoursRendered").text(stats.totalHours);
   $("#hoursGoal").text(`of ${s.required_hours || 486} hrs`);
   $("#reqsCompleted").text(stats.reqsCompleted);
   $("#journalsSubmitted").text(stats.totalJournals);
 
-  // Placement
+  
   $("#companyName").text(s.company_name || "Not Assigned Yet");
   $("#companyAddress").text(s.company_address || "---");
   if (s.supervisor_first_name) {
@@ -242,7 +242,7 @@ function formatTime(timeStr) {
 }
 
 function resetPassword(userUuid, userName) {
-  // Use Swal for confirmation
+  
   Swal.fire({
     title: "Reset Password?",
     html: `Are you sure you want to reset the password for <strong>${userName}</strong>? A new temporary password will be generated.`,
@@ -325,7 +325,7 @@ function toggleStudentStatus(userUuid, currentStatus, userName) {
 $(document).ready(function () {
   loadStudentDetails();
 
-  // Back button - navigate based on referrer
+  
   $("#backBtn").on("click", function () {
     if (referrerPage === "companies") {
       window.location.href = "./Companies";
@@ -334,21 +334,21 @@ $(document).ready(function () {
     }
   });
 
-  // Edit button - open edit modal or redirect
+  
   $("#editStudentBtn").on("click", function () {
-    // Navigate to edit page or open edit modal
-    // For now, we could add an edit modal or navigate to an edit page
+    
+    
     alert("Edit functionality coming soon");
   });
 
-  // Reset password button
+  
   $("#resetPasswordBtn").on("click", function () {
     const userUuid = $(this).attr("data-user-uuid");
     const userName = $(this).attr("data-name");
     resetPassword(userUuid, userName);
   });
 
-  // Toggle status button
+  
   $("#toggleStatusBtn").on("click", function () {
     const userUuid = $(this).attr("data-user-uuid");
     const currentStatus = $(this).attr("data-account-status");

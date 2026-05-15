@@ -2,9 +2,9 @@
 
 require_once 'ServerConfig.php';
 
-// Prevent direct access to this file
+
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    // Only allow AJAX requests
+    
     if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         $base = dirname($_SERVER['SCRIPT_NAME'], 3);
@@ -87,7 +87,7 @@ function createBatch($conn, array $data, string $adminUuid): array
         }
     }
 
-    // check for duplicate school year + semester
+    
     $stmt = $conn->prepare("
         SELECT id FROM batches
         WHERE school_year = ? AND semester = ?
@@ -263,7 +263,7 @@ function updateBatch($conn, string $batchUuid, array $data, string $adminUuid): 
 
 function activateBatch($conn, string $batchUuid, string $adminUuid): array
 {
-    // check batch exists and is upcoming
+    
     $stmt = $conn->prepare("
         SELECT uuid, status, school_year, semester
         FROM batches WHERE uuid = ? LIMIT 1
@@ -283,7 +283,7 @@ function activateBatch($conn, string $batchUuid, string $adminUuid): array
         return ['success' => false, 'error' => 'A closed batch cannot be reactivated.'];
     }
 
-    // close any currently active batch first
+    
     $stmt = $conn->prepare("
         UPDATE batches
         SET status    = 'closed',
@@ -295,7 +295,7 @@ function activateBatch($conn, string $batchUuid, string $adminUuid): array
     $stmt->execute();
     $stmt->close();
 
-    // activate the new batch
+    
     $stmt = $conn->prepare("
         UPDATE batches
         SET status       = 'active',

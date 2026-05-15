@@ -2,10 +2,6 @@
 import { ToastVersion, ConfirmVersion } from "./CustomSweetAlert.js";
 import { GetThemeMode, SetThemeMode, SwalTheme } from "./SystemTheme.js";
 
-/**
- * SettingsScript.js
- * Handles the frontend logic for the settings page across all roles.
- */
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 let swalTheme = SwalTheme();
@@ -13,38 +9,38 @@ let swalTheme = SwalTheme();
 $(document).ready(function () {
     let pendingTheme = GetThemeMode();
 
-    // Initial load
+    
     initializeThemeUI();
 
-    // Tab switching
+    
     $('.settings-nav-item').on('click', function() {
         const paneId = $(this).data('pane');
         
-        // Update nav items
+        
         $('.settings-nav-item').removeClass('active');
         $(this).addClass('active');
         
-        // Update panes
+        
         $('.pane').removeClass('active');
         $(`#pane-${paneId}`).addClass('active');
 
-        // Fetch logs if sessions pane is opened
+        
         if (paneId === 'sessions') {
             fetchLogHistory();
         }
     });
 
-    // Theme card selection (Visual only)
+    
     $('.theme-card').on('click', function() {
         const theme = $(this).data('theme');
         pendingTheme = theme;
         
-        // Update UI selection
+        
         $(`.theme-card`).removeClass('selected');
         $(this).addClass('selected');
     });
 
-    // Save Changes button
+    
     $('#saveAppearance').on('click', function() {
         if (pendingTheme === 'light') {
             ConfirmVersion(
@@ -61,7 +57,7 @@ $(document).ready(function () {
                 if (result.isConfirmed) {
                     handleThemeChange(pendingTheme);
                 } else {
-                    // Reset to current applied theme
+                    
                     pendingTheme = GetThemeMode();
                     initializeThemeUI();
                 }
@@ -71,7 +67,7 @@ $(document).ready(function () {
         }
     });
 
-    // Reset button (Sets to Dark Mode by default)
+    
     $('#resetAppearance').on('click', function() {
         pendingTheme = 'dark';
         $(`.theme-card`).removeClass('selected');
@@ -79,7 +75,7 @@ $(document).ready(function () {
         ToastVersion(swalTheme, "Selection reset to Dark Mode. Click Save Changes to apply.", "info", 2000, "top-end");
     });
 
-    // Sign out other devices
+    
     $(document).on('click', '.btn-danger', function() {
         if ($(this).closest('#pane-sessions').length) {
             ToastVersion(swalTheme, "Sign out feature will be available in the next security update.", "info", 2000, "top-end");
@@ -87,9 +83,7 @@ $(document).ready(function () {
     });
 });
 
-/**
- * Fetch and render user log history
- */
+
 function fetchLogHistory(page = 1) {
     const $container = $('#logHistoryContainer');
     if (!$container.length) return;
@@ -119,9 +113,7 @@ function fetchLogHistory(page = 1) {
     });
 }
 
-/**
- * Render log entries to the container
- */
+
 function renderLogs(logs) {
     const $container = $('#logHistoryContainer');
     if (logs.length === 0) {
@@ -137,7 +129,7 @@ function renderLogs(logs) {
         const badgeClass = isSuccess ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger';
         const statusLabel = isLogin ? (isSuccess ? 'Login Success' : 'Login Failed') : 'Activity';
         
-        // Parse user agent for better display
+        
         const device = log.user_agent ? (log.user_agent.includes('Windows') ? 'Windows' : log.user_agent.includes('Mac') ? 'MacOS' : 'Mobile Device') : 'Unknown Device';
         const browser = log.user_agent ? (log.user_agent.includes('Chrome') ? 'Chrome' : log.user_agent.includes('Firefox') ? 'Firefox' : log.user_agent.includes('Safari') ? 'Safari' : 'Browser') : 'Unknown';
 
@@ -163,18 +155,13 @@ function renderLogs(logs) {
     $container.html(html);
 }
 
-/**
- * Initialize theme UI based on current theme
- */
+
 function initializeThemeUI() {
     const currentTheme = GetThemeMode();
     $(`.theme-card`).removeClass('selected');
     $(`.theme-card[data-theme="${currentTheme}"]`).addClass('selected');
 }
 
-/**
- * Handle theme change
- */
 function handleThemeChange(theme) {
     $.ajax({
         url: '../../../process/profile/update_theme',

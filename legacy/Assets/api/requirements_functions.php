@@ -2,9 +2,9 @@
 
 require_once 'ServerConfig.php';
 
-// Prevent direct access to this file
+
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    // Only allow AJAX requests
+    
     if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         $base = dirname($_SERVER['SCRIPT_NAME'], 3);
@@ -137,7 +137,7 @@ function getStudentRequirements($conn, string $studentUuid, string $batchUuid): 
     $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
-    // merge with type definitions
+    
     $requirements = [];
     foreach ($rows as $row) {
         $typeDef = REQUIREMENT_TYPES[$row['req_type']] ?? [];
@@ -210,13 +210,13 @@ function getRequirementsSummary($conn, string $studentUuid, string $batchUuid): 
         'pending'       => $pending,
         'percentage'    => $total > 0 ? round(($approved / $total) * 100) : 0,
         'is_complete'   => $allDone,
-        'can_apply'     => $allDone,  // all 6 approved = can submit OJT application
+        'can_apply'     => $allDone,  
     ];
 }
 
 function submitRequirement($conn, string $requirementUuid, array $file, string $studentNote = ''): array
 {
-    // validate file
+    
     if (empty($file['name']) || $file['error'] !== UPLOAD_ERR_OK) {
         return ['success' => false, 'error' => 'No file uploaded or upload error.'];
     }
@@ -229,7 +229,7 @@ function submitRequirement($conn, string $requirementUuid, array $file, string $
         return ['success' => false, 'error' => 'File must be 5MB or less.'];
     }
 
-    // fetch requirement to get student_uuid, req_type, and old file_path
+    
     $stmt = $conn->prepare("
         SELECT uuid, student_uuid, req_type, status, file_path
         FROM student_requirements
@@ -244,12 +244,12 @@ function submitRequirement($conn, string $requirementUuid, array $file, string $
         return ['success' => false, 'error' => 'Requirement not found.'];
     }
 
-    // only allow submit if not_submitted or returned
+    
     if (!in_array($req['status'], ['not_submitted', 'returned'])) {
         return ['success' => false, 'error' => 'This document has already been submitted or approved.'];
     }
 
-    // save new file
+    
     $safeFileName = generateUuid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($file['name']));
     $uploadDir    = dirname(__DIR__, 2) . '/uploads/requirements/' . $req['req_type'] . '/' . $req['student_uuid'] . '/';
     $relativePath = 'uploads/requirements/' . $req['req_type'] . '/' . $req['student_uuid'] . '/' . $safeFileName;
@@ -262,7 +262,7 @@ function submitRequirement($conn, string $requirementUuid, array $file, string $
         return ['success' => false, 'error' => 'Failed to save file. Check folder permissions.'];
     }
 
-    // update DB
+    
     $stmt = $conn->prepare("
         UPDATE student_requirements
         SET status           = 'submitted',
@@ -285,7 +285,7 @@ function submitRequirement($conn, string $requirementUuid, array $file, string $
     $stmt->execute();
     $stmt->close();
 
-    // delete old file after successful replacement
+    
     if (!empty($req['file_path'])) {
         $oldAbsolutePath = dirname(__DIR__, 2) . '/' . ltrim($req['file_path'], '/\\');
         $newAbsolutePath = $uploadDir . $safeFileName;
@@ -347,8 +347,8 @@ function approveRequirement($conn, string $requirementUuid, string $coordinatorU
         targetUuid: $requirementUuid
     );
 
-    // check if all requirements are now approved
-    // if so — log that student is ready to apply
+    
+    
     $stmt = $conn->prepare("
         SELECT COUNT(*) AS total,
                SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) AS approved
@@ -809,7 +809,7 @@ if ($action === 'fetch_students') {
         ];
     }, $getDetails);
 
-    // get ojt application status if student has already applied
+    
     $stmt = $conn->prepare("
         SELECT status
         FROM ojt_applications
@@ -822,7 +822,7 @@ if ($action === 'fetch_students') {
     $result = $stmt->get_result();
     $applicationStatus = $result->fetch_assoc();
 
-    // if student has already applied make showApplyModal to false and return application status
+    
 
     response([
         'status' => 'success',

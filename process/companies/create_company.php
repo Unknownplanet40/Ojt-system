@@ -51,7 +51,7 @@ if (!$conn || $conn->connect_error) {
 $data = $_POST;
 $data['program_uuids'] = $_POST['program_uuids'] ?? [];
 
-// auto-inject active batch if not provided
+
 if (empty($data['batch_uuid'])) {
     $result            = $conn->query("SELECT uuid FROM batches WHERE status = 'active' LIMIT 1");
     $row               = $result->fetch_assoc();

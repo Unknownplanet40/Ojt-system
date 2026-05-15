@@ -41,7 +41,7 @@ if (empty($_POST['csrf_token']) ||
 $userUuid = $_SESSION['user_uuid'];
 $profileUuid = $_SESSION['profile_uuid'];
 
-// Get Supervisor Details
+
 $stmt = $conn->prepare("
     SELECT 
         u.email, CASE WHEN u.is_active = 1 THEN 'active' ELSE 'inactive' END as account_status, u.last_login_at as last_login,
@@ -61,13 +61,13 @@ if (!$supervisor) {
     response(['status' => 'error', 'message' => 'Profile not found.']);
 }
 
-// Formatting
+
 $supervisor['full_name'] = $supervisor['first_name'] . ' ' . $supervisor['last_name'];
 $supervisor['initials'] = strtoupper(substr($supervisor['first_name'], 0, 1) . substr($supervisor['last_name'], 0, 1));
 $supervisor['status_label'] = ucfirst($supervisor['account_status']);
 $supervisor['created_at_label'] = date('M j, Y', strtotime($supervisor['created_at']));
 
-// Get Supervised Students
+
 $students = [];
 $stmt = $conn->prepare("
     SELECT 

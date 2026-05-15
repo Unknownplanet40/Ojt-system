@@ -301,7 +301,7 @@ function getStudents() {
             };
 
             if (student.profile_name === null || student.profile_name === "") {
-              student.profile_name = `https://placehold.co/64x64/483a0f/c6983d/png?text=${student.initials}&font=poppins`;
+              student.profile_name = `https:
             } else {
               student.profile_name = "../../../Assets/Images/profiles/" + student.profile_name;
             }
@@ -402,7 +402,7 @@ function viewStudentDetails(studentUuid) {
         };
 
         if (response.student.profile_name === null || response.student.profile_name === "") {
-          response.student.profile_name = `https://placehold.co/64x64/483a0f/c6983d/png?text=${response.student.initials}&font=poppins`;
+          response.student.profile_name = `https:
         } else {
           response.student.profile_name = "../../../Assets/Images/profiles/" + response.student.profile_name;
         }

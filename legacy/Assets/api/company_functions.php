@@ -2,9 +2,9 @@
 
 require_once 'ServerConfig.php';
 
-// Prevent direct access to this file
+
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    // Only allow AJAX requests
+    
     if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         $base = dirname($_SERVER['SCRIPT_NAME'], 3);
@@ -83,7 +83,7 @@ function createCompany($conn, array $data, string $actorUuid): array
         $errors['accreditation_status'] = 'Invalid accreditation status.';
     }
 
-    // check duplicate name
+    
     $stmt = $conn->prepare("SELECT id FROM companies WHERE name = ? LIMIT 1");
     $stmt->bind_param('s', $name);
     $stmt->execute();
@@ -128,7 +128,7 @@ function createCompany($conn, array $data, string $actorUuid): array
     $stmt->execute();
     $stmt->close();
 
-    // insert primary contact if provided
+    
     if (!empty($data['contact_name'])) {
         addCompanyContact($conn, $uuid, [
             'name'       => $data['contact_name'],
@@ -139,12 +139,12 @@ function createCompany($conn, array $data, string $actorUuid): array
         ]);
     }
 
-    // insert slots for active batch if provided
+    
     if (!empty($data['total_slots']) && !empty($data['batch_uuid'])) {
         setCompanySlots($conn, $uuid, $data['batch_uuid'], (int) $data['total_slots']);
     }
 
-    // insert accepted programs
+    
     if (!empty($data['program_uuids']) && is_array($data['program_uuids'])) {
         setAcceptedPrograms($conn, $uuid, $data['program_uuids']);
     }
@@ -186,7 +186,7 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
         $errors['accreditation_status'] = 'Invalid accreditation status.';
     }
 
-    // check duplicate name — exclude current company
+    
     $stmt = $conn->prepare("
         SELECT id FROM companies WHERE name = ? AND uuid != ? LIMIT 1
     ");
@@ -199,7 +199,7 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
         $errors['name'] = 'Another company with this name already exists.';
     }
 
-    // if blacklisted, reason is required
+    
     if ($status === 'blacklisted' && empty($data['blacklist_reason'])) {
         $errors['blacklist_reason'] = 'Provide a reason for blacklisting.';
     }
@@ -252,7 +252,7 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
 
     if (isset($data['contact_name']) || isset($data['contact_position']) ||
         isset($data['contact_email']) || isset($data['contact_phone'])) {
-        // update primary contact or add if none exists
+        
 
         $stmt = $conn->prepare("
             SELECT uuid FROM company_contacts
@@ -274,7 +274,7 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
                 'is_primary' => 1,
             ];
 
-            // update existing primary contact
+            
             $stmt = $conn->prepare("
                 UPDATE company_contacts
                 SET name = ?, position = ?, email = ?, phone = ?
@@ -291,7 +291,7 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
             $stmt->execute();
             $stmt->close();
         } else {
-            // add new primary contact
+            
             addCompanyContact($conn, $companyUuid, [
                 'name'       => $data['contact_name']     ?? '',
                 'position'   => $data['contact_position'] ?? '',
@@ -422,7 +422,7 @@ function getCompany($conn, string $companyUuid): ?array
         return null;
     }
 
-    // contacts
+    
     $stmt = $conn->prepare("
         SELECT * FROM company_contacts
         WHERE company_uuid = ?
@@ -433,7 +433,7 @@ function getCompany($conn, string $companyUuid): ?array
     $contacts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
-    // accepted programs
+    
     $stmt = $conn->prepare("
         SELECT p.uuid, p.code, p.name
         FROM company_accepted_programs cap
@@ -446,7 +446,7 @@ function getCompany($conn, string $companyUuid): ?array
     $programs = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
-    // documents
+    
     $stmt = $conn->prepare("
         SELECT * FROM company_documents
         WHERE company_uuid = ?
@@ -457,7 +457,7 @@ function getCompany($conn, string $companyUuid): ?array
     $documents = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
-    // slots per batch
+    
     $stmt = $conn->prepare("
         SELECT cs.*, b.school_year, b.semester,
                COUNT(DISTINCT sp.id) AS filled_slots
@@ -496,7 +496,7 @@ function addCompanyContact($conn, string $companyUuid, array $data): array
         return ['success' => false, 'error' => 'Contact name is required.'];
     }
 
-    // if setting as primary — unset all others first
+    
     if ($isPrimary === 1) {
         $stmt = $conn->prepare("
             UPDATE company_contacts SET is_primary = 0 WHERE company_uuid = ?
@@ -530,7 +530,7 @@ function addCompanyContact($conn, string $companyUuid, array $data): array
 
 function setCompanySlots($conn, string $companyUuid, string $batchUuid, int $totalSlots): void
 {
-    // upsert — update if exists, insert if not
+    
     $stmt = $conn->prepare("
         INSERT INTO company_slots (uuid, company_uuid, batch_uuid, total_slots)
         VALUES (?, ?, ?, ?)
@@ -545,13 +545,13 @@ function setCompanySlots($conn, string $companyUuid, string $batchUuid, int $tot
 
 function setAcceptedPrograms($conn, string $companyUuid, array $programUuids): void
 {
-    // delete existing
+    
     $stmt = $conn->prepare("DELETE FROM company_accepted_programs WHERE company_uuid = ?");
     $stmt->bind_param('s', $companyUuid);
     $stmt->execute();
     $stmt->close();
 
-    // insert new
+    
     if (empty($programUuids)) {
         return;
     }
@@ -585,13 +585,13 @@ function uploadCompanyDocument($conn, string $companyUuid, array $data, array $f
         return ['success' => false, 'error' => 'No file uploaded.'];
     }
 
-    // validate file type — PDF only
+    
     $allowedTypes = ['application/pdf'];
     if (!in_array($file['type'], $allowedTypes)) {
         return ['success' => false, 'error' => 'Only PDF files are allowed.'];
     }
 
-    // max 10MB
+    
     if ($file['size'] > 10 * 1024 * 1024) {
         return ['success' => false, 'error' => 'File must be 10MB or less.'];
     }
@@ -611,16 +611,16 @@ function uploadCompanyDocument($conn, string $companyUuid, array $data, array $f
         $fileName = "Document-{$companyUuid}-" . date('YmdHis') . ".pdf";
     }
 
-    // save file
+    
     $safeFileName = generateUuid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($file['name']));
 
     $absoluteDir  = dirname(__DIR__, 2) . '/uploads/company_documents/' . $docType . '/' . $companyUuid . '/';
     $absolutePath = $absoluteDir . $safeFileName;
 
-    // relative path stored in DB — from project root
+    
     $relativePath = 'uploads/company_documents/' . $docType . '/' . $companyUuid . '/' . $safeFileName;
 
-    // create folder if it doesn't exist
+    
     if (!is_dir($absoluteDir)) {
         mkdir($absoluteDir, 0755, true);
     }
@@ -650,7 +650,7 @@ function uploadCompanyDocument($conn, string $companyUuid, array $data, array $f
     $stmt->execute();
     $stmt->close();
 
-    // if MOA uploaded and company was pending — auto-update to active
+    
     if ($docType === 'moa') {
         $conn->query("
             UPDATE companies
@@ -767,7 +767,7 @@ function getCompanyStatuses($conn): array
 {
     $availableStatuses = [];
 
-    // get distinct accreditation statuses
+    
     $result = $conn->query("
         SELECT DISTINCT accreditation_status FROM companies
         WHERE accreditation_status IN ('pending', 'active', 'expired', 'blacklisted')
@@ -776,7 +776,7 @@ function getCompanyStatuses($conn): array
         $availableStatuses[] = $row['accreditation_status'];
     }
 
-    // get MOA-based statuses (expiring, expired) if any exist
+    
     $result = $conn->query("
         SELECT DISTINCT
           CASE

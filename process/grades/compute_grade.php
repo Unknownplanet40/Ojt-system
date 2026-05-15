@@ -73,7 +73,7 @@ if ($_SESSION['user_role'] === 'coordinator' && !studentBelongsToCoordinator($co
     response(['status' => 'error', 'message' => 'Unauthorized access to this student.']);
 }
 
-// parse weights from POST
+
 $weights = [];
 if (!empty($_POST['hours_weight']))   $weights['hours']   = (float) $_POST['hours_weight'];
 if (!empty($_POST['midterm_weight'])) $weights['midterm'] = (float) $_POST['midterm_weight'];

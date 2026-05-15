@@ -64,9 +64,9 @@ if (empty($batchUuid)) {
     response(['status' => 'error', 'message' => 'No active batch found.']);
 }
 
-// -----------------------------------------------
-// STUDENT — own journals
-// -----------------------------------------------
+
+
+
 if ($role === 'student') {
     $journals = getStudentJournals(
         $conn,
@@ -82,9 +82,9 @@ if ($role === 'student') {
     ]);
 }
 
-// -----------------------------------------------
-// COORDINATOR / ADMIN — all journals
-// -----------------------------------------------
+
+
+
 if (in_array($role, ['coordinator', 'admin'])) {
     $coordinatorUuid = $role === 'coordinator'
         ? $_SESSION['profile_uuid']
@@ -99,9 +99,9 @@ if (in_array($role, ['coordinator', 'admin'])) {
     ]);
 }
 
-// -----------------------------------------------
-// SUPERVISOR — assigned students only
-// -----------------------------------------------
+
+
+
 if ($role === 'supervisor') {
     $journals = getSupervisorJournals(
         $conn,

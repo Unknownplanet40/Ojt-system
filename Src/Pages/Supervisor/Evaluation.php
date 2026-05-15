@@ -25,14 +25,14 @@ $CurrentPage = "Evaluation";
     <style>
         .star-rating i {
             font-size: 1.5rem;
-            color: #dee2e6;
+            color: 
             cursor: pointer;
             transition: color 0.2s ease;
         }
         .star-rating i.active,
         .star-rating i:hover,
         .star-rating i:hover ~ i {
-            color: #ffc107;
+            color: 
         }
     </style>
 </head>

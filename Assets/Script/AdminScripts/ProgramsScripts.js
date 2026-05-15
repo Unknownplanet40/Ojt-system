@@ -392,7 +392,7 @@ $(document).ready(function () {
     const name = $("#programNameInput").val().trim();
     const department = $("#programDepartmentInput").val().trim();
     const requiredHours = $("#requiredHoursInput").val().trim();
-    //activateImmediatelySwitch
+    
     const activateImmediately = $("#activateImmediatelySwitch").is(":checked");
 
     if (!code || !name || !department || !requiredHours) {
@@ -424,6 +424,14 @@ $(document).ready(function () {
         if (response.status === "success") {
           ToastVersion(swalTheme, "Program created successfully.", "success", 3000);
           $("#NewProgramModal").modal("hide");
+          
+          
+          $("#programCodeInput").val("");
+          $("#programNameInput").val("");
+          $("#programDepartmentInput").val("");
+          $("#requiredHoursInput").val("486");
+          $("#activateImmediatelySwitch").prop("checked", false);
+
           getPrograms(showInactive);
         } else if (response.status === "critical") {
           ToastVersion(swalTheme, response.Details, "error", 5000);
@@ -438,5 +446,14 @@ $(document).ready(function () {
         $("#saveNewProgramBtn").prop("disabled", false).html("Save program");
       },
     });
+  });
+  
+  
+  $("#NewProgramModal").on("hidden.bs.modal", function () {
+    $("#programCodeInput").val("");
+    $("#programNameInput").val("");
+    $("#programDepartmentInput").val("");
+    $("#requiredHoursInput").val("486");
+    $("#activateImmediatelySwitch").prop("checked", false);
   });
 });

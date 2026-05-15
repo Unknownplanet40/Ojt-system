@@ -1,14 +1,14 @@
-// ---- config ----
+
 const maxVisibleToasts = 3;
 const maxActiveModals = 1;
 
-// ---- state ----
+
 const toastQueue = [];
 const modalQueue = [];
 let activeToasts = 0;
 let activeModals = 0;
 
-// ---- utils ----
+
 const VALID = {
   themes: ["bootstrap-5-light", "bootstrap-5-dark"],
   icons: ["info", "success", "error", "warning", "question"],
@@ -98,7 +98,7 @@ function hashToast(t) {
   });
 }
 
-// ---- queue processors ----
+
 function processToastQueue() {
   if (activeToasts >= maxVisibleToasts) return;
   if (toastQueue.length === 0) return;
@@ -132,10 +132,10 @@ function processModalQueue() {
   });
 }
 
-// ---- dedupe tracking ----
+
 const activeToastHashes = new Set();
 
-// ---- public API ----
+
 export function ToastVersion(theme = "bootstrap-5-light", title = "This is a toast notification!", icon = "info", timer = 3000, position = "top-end", topOffset = "none") {
   let themeToApply = normalize(theme, VALID.themes, "bootstrap-5-light");
   let iconToApply = normalize(icon, VALID.icons, "info");

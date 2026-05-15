@@ -26,32 +26,32 @@ function viewSupervisorProfile() {
         const p = response.profile;
         const students = response.students;
 
-        // Header Info
+        
         $("#ProfilePicture").attr("src", response.profileImage);
         $("#FullName").text(p.full_name);
         $("#Company").text(p.company_name || 'No Company Linked');
         $("#Status").text(p.status_label);
         $("#RoleBadge").text("Supervisor");
 
-        // Stats
+        
         $("#StudentCount").text(response.studentCount);
         $("#CompanyNameCard").text(p.company_name || "N/A");
         $("#lastLogin").text(p.last_login || "Never");
 
-        // Personal Information Section
+        
         $("#PIFullName").text(p.full_name);
         $("#PICompany").text(p.company_name || "N/A");
         $("#PIMobileNumber").text(p.mobile || 'N/A');
         $("#PIAccountCreated").text(p.created_at_label);
         $("#Email").text(p.email);
 
-        // Student List
+        
         const listContainer = $("#studentList");
         listContainer.empty();
 
         if (students.length > 0) {
           students.forEach((s) => {
-            const studentImg = s.profile_name ? `../../../Assets/Images/profiles/${s.profile_name}` : `https://placehold.co/40x40/C1C1C1/000000/png?text=${s.initials}&font=poppins`;
+            const studentImg = s.profile_name ? `../../../Assets/Images/profiles/${s.profile_name}` : `https:
             const studentItem = `
               <li class="list-group-item bg-transparent px-0 py-3 border-light border-opacity-10">
                 <div class="d-flex align-items-center gap-3">

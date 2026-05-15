@@ -209,7 +209,7 @@ function fetchProfileData() {
           $("#adminProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
         } else {
           const initials = profile.initials || "NA";
-          $("#adminProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
+          $("#adminProfilePhoto").attr("src", `https:
         }
 
         $("#firstName").val(profile.first_name);

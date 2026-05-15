@@ -29,7 +29,7 @@ $status = $_POST['status'] ?? '';
 $coordinator_uuid = $_POST['coordinator_uuid'] ?? '';
 $company_uuid = $_POST['company_uuid'] ?? '';
 
-// Build Query
+
 $query = "
     SELECT 
         v.*, 
@@ -77,33 +77,33 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
-// Start generating HTML
+
 $html = '
 <style>
-    body { font-family: "Helvetica", "Arial", sans-serif; font-size: 10pt; color: #333; }
-    .header-table { width: 100%; border-bottom: 2px solid #185FA5; margin-bottom: 30px; padding-bottom: 10px; }
+    body { font-family: "Helvetica", "Arial", sans-serif; font-size: 10pt; color: 
+    .header-table { width: 100%; border-bottom: 2px solid 
     .logo-td { width: 80px; text-align: left; }
     .logo-img { width: 70px; height: auto; }
     .school-info-td { text-align: left; padding-left: 15px; }
-    .school-name { font-size: 16pt; font-weight: bold; color: #185FA5; margin-bottom: 2px; }
-    .school-motto { font-style: italic; font-size: 8pt; color: #666; }
-    .school-address { font-size: 8pt; color: #777; margin-top: 4px; }
+    .school-name { font-size: 16pt; font-weight: bold; color: 
+    .school-motto { font-style: italic; font-size: 8pt; color: 
+    .school-address { font-size: 8pt; color: 
     
-    .report-title-section { margin-bottom: 30px; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
-    .report-title { font-size: 15pt; font-weight: bold; color: #333; text-transform: uppercase; margin-bottom: 5px; }
-    .report-desc { font-size: 9pt; color: #666; }
+    .report-title-section { margin-bottom: 30px; background: 
+    .report-title { font-size: 15pt; font-weight: bold; color: 
+    .report-desc { font-size: 9pt; color: 
     
     table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    table.data-table th { background: #185FA5; color: white; padding: 10px; text-align: left; font-size: 9pt; text-transform: uppercase; }
-    table.data-table td { border-bottom: 1px solid #eee; padding: 10px; font-size: 9pt; vertical-align: top; }
+    table.data-table th { background: 
+    table.data-table td { border-bottom: 1px solid 
     
     .status-badge { padding: 3px 8px; border-radius: 10px; font-size: 7pt; font-weight: bold; text-transform: uppercase; }
-    .bg-scheduled { background: #e3f2fd; color: #1565c0; }
-    .bg-completed { background: #e8f5e9; color: #2e7d32; }
-    .bg-cancelled { background: #ffebee; color: #c62828; }
+    .bg-scheduled { background: 
+    .bg-completed { background: 
+    .bg-cancelled { background: 
     
-    .footer { text-align: center; font-size: 8pt; color: #999; margin-top: 40px; border-top: 1px solid #eee; padding-top: 15px; }
-    .timestamp { color: #555; font-weight: bold; }
+    .footer { text-align: center; font-size: 8pt; color: 
+    .timestamp { color: 
 </style>
 
 <table class="header-table">
@@ -168,7 +168,7 @@ $html .= '
 </div>
 ';
 
-$mpdf = new Mpdf(['margin_left' => 15, 'margin_right' => 15, 'margin_top' => 15, 'margin_bottom' => 15, 'format' => 'A4-L']); // Landscape for more space
+$mpdf = new Mpdf(['margin_left' => 15, 'margin_right' => 15, 'margin_top' => 15, 'margin_bottom' => 15, 'format' => 'A4-L']); 
 $mpdf->SetTitle('Visitation Report - ' . date('Y-m-d'));
 $mpdf->WriteHTML($html);
 

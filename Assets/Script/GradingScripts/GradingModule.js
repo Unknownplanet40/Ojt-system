@@ -174,7 +174,7 @@ function showWeightTotal(weights) {
 }
 
 $(document).ready(() => {
-  // Load page data based on role
+  
   if (role === 'student') {
     apiRequest(ENDPOINTS.getGrade, { student_uuid: '' })
       .done((res) => {
@@ -212,7 +212,7 @@ $(document).ready(() => {
       .fail((xhr, status, error) => Errors(xhr, status, error));
   }
 
-  // Event handlers
+  
   $(document).on('click', '.js-open-workbench', function () {
     const studentUuid = $(this).data('student-uuid');
     apiRequest(ENDPOINTS.getGrade, { student_uuid: studentUuid })
@@ -333,7 +333,7 @@ $(document).ready(() => {
   });
 });
 
-// Render functions
+
 function renderCoordinatorOverview() {
   const $list = $('#gradingOverviewList');
   if (!$list.length) return;
@@ -563,7 +563,7 @@ function saveGrade(finalize = false) {
     });
 }
 
-// Add spin animation
+
 const style = document.createElement('style');
 style.textContent = `
   @keyframes spin {

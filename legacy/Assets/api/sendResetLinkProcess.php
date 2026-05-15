@@ -2,9 +2,9 @@
 
 require_once 'ServerConfig.php';
 
-// Prevent direct access to this file
+
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    // Only allow AJAX requests
+    
     if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         $base = dirname($_SERVER['SCRIPT_NAME'], 3);
@@ -103,7 +103,7 @@ require dirname(__DIR__, 2) . '/Libs/composer/vendor/autoload.php';
 
 $mail = new PHPMailer(true);
 
-//temporary
+
 $GmailUsername = 'Your Gmail Username';
 $GmailPassword = 'Your Gmail App Password';
 
@@ -176,7 +176,7 @@ try {
 
                                 <div style="text-align:center;margin-bottom:22px;">
                                     <div style="display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#E1F5EE,#F1FAF5);border:1px solid #CFE9DB;border-radius:18px;width:72px;height:72px;box-shadow:0 10px 20px rgba(15,110,86,0.08);">
-                                        <span style="font-size:30px;">&#128274;</span>
+                                        <span style="font-size:30px;">&
                                     </div>
                                 </div>
 

@@ -55,7 +55,7 @@ if (!in_array($role, ['supervisor', 'coordinator', 'admin'])) {
     response(['status' => 'error', 'message' => 'Unauthorized.']);
 }
 
-$action      = trim($_POST['action']       ?? '');  // approve, bulk_approve, reject
+$action      = trim($_POST['action']       ?? '');  
 $dtrUuid     = trim($_POST['dtr_uuid']     ?? '');
 $studentUuid = trim($_POST['student_uuid'] ?? '');
 $reason      = trim($_POST['reason']       ?? '');
@@ -67,7 +67,7 @@ if ($action === 'approve') {
         response(['status' => 'error', 'message' => 'DTR UUID is required.']);
     }
 
-    // supervisor scope check
+    
     if ($role === 'supervisor') {
         $stmt = $conn->prepare("
             SELECT d.uuid FROM dtr_entries d
@@ -98,7 +98,7 @@ if ($action === 'bulk_approve') {
         response(['status' => 'error', 'message' => 'Student UUID is required.']);
     }
 
-    // supervisors can only bulk approve assigned students
+    
     if ($role === 'supervisor') {
         $stmt = $conn->prepare("
             SELECT id FROM student_profiles
@@ -114,7 +114,7 @@ if ($action === 'bulk_approve') {
         $stmt->close();
     }
 
-    // optional specific UUIDs from POST
+    
     $dtrUuids = !empty($_POST['dtr_uuids'])
         ? (is_array($_POST['dtr_uuids']) ? $_POST['dtr_uuids'] : json_decode($_POST['dtr_uuids'], true))
         : [];

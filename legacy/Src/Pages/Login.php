@@ -12,7 +12,7 @@ $active_sem = (date("m") >= 6 && date("m") <= 11) ? "1st Semester" : "2nd Semest
 try {
     $conn = new mysqli($servername, $username, $password, $dbname);
     if ($conn->connect_error) {
-        // Fallback to defaults
+        
     } else {
         $result = $conn->query("SELECT school_year, semester FROM batches WHERE status = 'active' LIMIT 1");
         if ($result && $row = $result->fetch_assoc()) {
@@ -21,7 +21,7 @@ try {
         }
     }
 } catch (Exception $e) {
-    // Fallback to defaults
+    
 }
 
 if (isset($_SESSION['user'])) {

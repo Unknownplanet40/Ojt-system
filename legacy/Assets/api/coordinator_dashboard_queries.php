@@ -2,9 +2,9 @@
 
 require_once 'ServerConfig.php';
 
-// Prevent direct access to this file
+
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    // Only allow AJAX requests
+    
     if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         $base = dirname($_SERVER['SCRIPT_NAME'], 3);
@@ -104,9 +104,9 @@ function getCoordinatorStats_Dashboard($conn, string $coordinatorUuid, ?string $
     ");
     $activeOjt = (int) $result->fetch_assoc()['total'];
 
-    $pendingDtr          = 0; // getCoordinatorPendingDtr($conn, $coordinatorUuid)
-    $pendingApplications = 0; // getCoordinatorPendingApplications($conn, $coordinatorUuid)
-    $pendingRequirements = 0; // getCoordinatorPendingRequirements($conn, $coordinatorUuid)
+    $pendingDtr          = 0; 
+    $pendingApplications = 0; 
+    $pendingRequirements = 0; 
     $totalPending        = $pendingDtr + $pendingApplications + $pendingRequirements;
 
     $avgHours = 0;
@@ -129,7 +129,7 @@ function getCoordinatorNeedsAction($conn, string $coordinatorUuid, ?string $batc
     $safeCoord = $conn->real_escape_string($coordinatorUuid);
     $safeBatch = $conn->real_escape_string($batchUuid ?? '');
 
-    // students with no application yet
+    
     $result = $conn->query("
         SELECT COUNT(*) AS total
         FROM student_profiles sp
@@ -148,7 +148,7 @@ function getCoordinatorNeedsAction($conn, string $coordinatorUuid, ?string $batc
         ];
     }
 
-    // students never logged in
+    
     $result = $conn->query("
         SELECT COUNT(*) AS total
         FROM student_profiles sp
@@ -373,29 +373,29 @@ function getCoordinatorCompanies($conn, ?string $batchUuid): array
 
 function getCoordinatorUpcomingVisits($conn, string $coordinatorUuid): array
 {
-    // uncomment when coordinator_visits table is created:
-    // $safeCoord = $conn->real_escape_string($coordinatorUuid);
-    // $result = $conn->query("
-    //     SELECT cv.*, c.name AS company_name
-    //     FROM coordinator_visits cv
-    //     JOIN companies c ON cv.company_uuid = c.uuid
-    //     WHERE cv.coordinator_uuid = '{$safeCoord}'
-    //       AND cv.visit_date >= CURDATE()
-    //       AND cv.status = 'scheduled'
-    //     ORDER BY cv.visit_date ASC
-    //     LIMIT 5
-    // ");
-    // $visits = [];
-    // while ($row = $result->fetch_assoc()) {
-    //     $visits[] = [
-    //         'company_name' => $row['company_name'],
-    //         'visit_date'   => date('M j, Y', strtotime($row['visit_date'])),
-    //         'notes'        => $row['notes'] ?? '',
-    //     ];
-    // }
-    // return $visits;
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    return []; // empty until visits module is built
+    return []; 
 }
 
 function getActiveBatch($conn): ?array
@@ -430,7 +430,7 @@ function UUID_convert($conn, $uuid): ?string
     return $coordinatorProfileUuid;
 }
 
-//fetch_dashboard_data
+
 if ($action === 'fetch_dashboard_data') {
     $coordinatorProfileUuid = UUID_convert($conn, $_SESSION['user']['uuid']);
 

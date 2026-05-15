@@ -158,11 +158,11 @@ require_once "../../Assets/SystemInfo.php";
                         <div class="card border-0 rounded-4 bg-body-tertiary bg-opacity-50 mb-4">
                             <div class="card-body p-3">
                                 <div class="vstack gap-2 small">
-                                    <span><small class="text-secondary" id="charCheck">&#9864;</small> <span class="text-muted">At least 8 characters</span></span>
-                                    <span><small class="text-secondary" id="upperCheck">&#9864;</small> <span class="text-muted">At least one uppercase letter</span></span>
-                                    <span><small class="text-secondary" id="numberCheck">&#9864;</small> <span class="text-muted">At least one number</span></span>
-                                    <span><small class="text-secondary" id="specialCheck">&#9864;</small> <span class="text-muted">At least one special character</span></span>
-                                    <span><small class="text-secondary" id="matchCheck">&#9864;</small> <span class="text-muted">Passwords match</span></span>
+                                    <span><small class="text-secondary" id="charCheck">&
+                                    <span><small class="text-secondary" id="upperCheck">&
+                                    <span><small class="text-secondary" id="numberCheck">&
+                                    <span><small class="text-secondary" id="specialCheck">&
+                                    <span><small class="text-secondary" id="matchCheck">&
                                 </div>
                             </div>
                         </div>

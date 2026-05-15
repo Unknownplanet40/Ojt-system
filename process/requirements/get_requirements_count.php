@@ -25,7 +25,7 @@ $count = 0;
 $type  = 'info';
 
 if ($role === 'student') {
-    // Count not_submitted or returned
+    
     $stmt = $conn->prepare("
         SELECT COUNT(*) as total 
         FROM student_requirements 
@@ -41,7 +41,7 @@ if ($role === 'student') {
     $type = ($count > 0) ? 'danger' : 'success';
 
 } elseif ($role === 'coordinator') {
-    // Count submitted (pending review) for their students
+    
     $stmt = $conn->prepare("
         SELECT COUNT(*) as total 
         FROM student_requirements sr

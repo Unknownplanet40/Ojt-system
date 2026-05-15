@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// if session is empty, redirect to login page
+
 if (empty($_SESSION['user'])) {
     header("Location: ../Login");
     exit;

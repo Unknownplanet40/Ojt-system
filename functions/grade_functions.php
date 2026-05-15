@@ -8,16 +8,16 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 
 require_once __DIR__ . '/../helpers/helpers.php';
 
-// functions/grade_functions.php
-// -----------------------------------------------
-// Module:    Grade Computation
-// Primary:   Coordinator (computes + finalizes)
-// Secondary: Student (view own) · Admin (view all)
-// -----------------------------------------------
+
+
+
+
+
+
 require_once __DIR__ . '/evaluation_functions.php';
 require_once __DIR__ . '/dtr_functions.php';
 
-// default weights — must sum to 100
+
 const DEFAULT_WEIGHTS = [
     'hours'   => 20,
     'midterm' => 20,
@@ -99,10 +99,10 @@ function ensureGradeTableExists($conn): bool
 }
 
 
-// -----------------------------------------------
-// CHECK if student is ready for grading
-// all components must be present
-// -----------------------------------------------
+
+
+
+
 function isReadyForGrading(
     $conn,
     string $studentUuid,
@@ -110,19 +110,19 @@ function isReadyForGrading(
 ): array {
     $issues = [];
 
-    // check hours completion
+    
     $dtrSummary = getDtrSummary($conn, $studentUuid, $batchUuid);
     if (!$dtrSummary['is_complete']) {
         $issues[] = "Hours not yet complete ({$dtrSummary['percentage']}% of {$dtrSummary['required_hours']} hrs).";
     }
 
-    // check evaluations
+    
     $evalSummary = getEvaluationSummary($conn, $studentUuid, $batchUuid);
     if (!$evalSummary['has_midterm']) $issues[] = 'Midterm evaluation not yet submitted.';
     if (!$evalSummary['has_final'])   $issues[] = 'Final evaluation not yet submitted.';
     if (!$evalSummary['has_self'])    $issues[] = 'Self-evaluation not yet submitted.';
 
-    // check journal submissions
+    
     $stmt = $conn->prepare("
         SELECT
           COUNT(*) AS total_journals,
@@ -153,20 +153,20 @@ function isReadyForGrading(
 }
 
 
-// -----------------------------------------------
-// COMPUTE grade components
-// returns all scores without saving
-// -----------------------------------------------
+
+
+
+
 function computeGradeComponents(
     $conn,
     string $studentUuid,
     string $batchUuid,
     array  $weights = []
 ): array {
-    // merge with defaults
+    
     $weights = array_merge(DEFAULT_WEIGHTS, array_filter($weights));
 
-    // validate weights sum to 100
+    
     $weightSum = array_sum($weights);
     if (abs($weightSum - 100) > 0.01) {
         return [
@@ -175,20 +175,20 @@ function computeGradeComponents(
         ];
     }
 
-    // hours score — percentage of completion (capped at 100)
+    
     $dtrSummary  = getDtrSummary($conn, $studentUuid, $batchUuid);
     $hoursScore  = min(100, $dtrSummary['percentage']);
 
-    // evaluation scores — convert from 5-point to percentage
+    
     $evalSummary  = getEvaluationSummary($conn, $studentUuid, $batchUuid);
     $midtermScore = $evalSummary['midterm_pct'] ?? 0;
     $finalScore   = $evalSummary['final_pct']   ?? 0;
     $selfScore    = $evalSummary['self_pct']     ?? 0;
 
-    // journal score — based on approved journals vs expected weeks
+    
     $journalScore = computeJournalScore($conn, $studentUuid, $batchUuid);
 
-    // weighted total
+    
     $weightedScore = round(
         ($hoursScore   * $weights['hours']   / 100) +
         ($midtermScore * $weights['midterm'] / 100) +
@@ -203,35 +203,35 @@ function computeGradeComponents(
 
     return [
         'success'          => true,
-        // component scores
+        
         'hours_score'      => round($hoursScore,   2),
         'midterm_score'    => round($midtermScore,  2),
         'final_score'      => round($finalScore,    2),
         'journal_score'    => round($journalScore,  2),
         'self_score'       => round($selfScore,     2),
-        // weights used
+        
         'weights'          => $weights,
-        // result
+        
         'weighted_score'   => $weightedScore,
         'grade_equivalent' => $gradeEquivalent,
         'remarks'          => $remarks,
-        // context
+        
         'dtr_summary'      => $dtrSummary,
         'eval_summary'     => $evalSummary,
     ];
 }
 
 
-// -----------------------------------------------
-// COMPUTE journal score
-// approved journals / expected weeks * 100
-// -----------------------------------------------
+
+
+
+
 function computeJournalScore(
     $conn,
     string $studentUuid,
     string $batchUuid
 ): float {
-    // get OJT start date and required hours
+    
     $stmt = $conn->prepare("
         SELECT osc.start_date, p.required_hours, osc.working_hours_per_day
         FROM ojt_applications a
@@ -254,9 +254,9 @@ function computeJournalScore(
     $requiredHours = (int)   $row['required_hours'];
     $hoursPerDay   = (int)   ($row['working_hours_per_day'] ?? 8);
     $daysNeeded    = ceil($requiredHours / $hoursPerDay);
-    $weeksExpected = max(1, ceil($daysNeeded / 5)); // 5 working days per week
+    $weeksExpected = max(1, ceil($daysNeeded / 5)); 
 
-    // count approved journals
+    
     $stmt = $conn->prepare("
         SELECT COUNT(*) AS approved
         FROM weekly_journals
@@ -275,10 +275,10 @@ function computeJournalScore(
 }
 
 
-// -----------------------------------------------
-// SAVE / UPDATE grade (coordinator)
-// can be called multiple times before finalizing
-// -----------------------------------------------
+
+
+
+
 function saveGrade(
     $conn,
     string $studentUuid,
@@ -287,7 +287,7 @@ function saveGrade(
     array  $weights = [],
     string $coordinatorNotes = ''
 ): array {
-    // check not already finalized
+    
     $stmt = $conn->prepare("
         SELECT uuid, is_finalized FROM ojt_grades
         WHERE student_uuid = ? AND batch_uuid = ?
@@ -311,14 +311,14 @@ function saveGrade(
         ];
     }
 
-    // compute
+    
     $computed = computeGradeComponents($conn, $studentUuid, $batchUuid, $weights);
 
     if (!$computed['success']) {
         return $computed;
     }
 
-    // get application UUID
+    
     $stmt = $conn->prepare("
         SELECT uuid FROM ojt_applications
         WHERE student_uuid = ? AND batch_uuid = ? AND status = 'active'
@@ -391,10 +391,10 @@ function saveGrade(
 }
 
 
-// -----------------------------------------------
-// FINALIZE grade — locks it permanently
-// student can see grade after this
-// -----------------------------------------------
+
+
+
+
 function finalizeGrade(
     $conn,
     string $studentUuid,
@@ -403,7 +403,7 @@ function finalizeGrade(
     array  $weights = [],
     string $coordinatorNotes = ''
 ): array {
-    // save first with latest weights
+    
     $saveResult = saveGrade(
         $conn, $studentUuid, $batchUuid,
         $coordinatorUuid, $weights, $coordinatorNotes
@@ -422,7 +422,7 @@ function finalizeGrade(
         ];
     }
 
-    // finalize
+    
     $stmt = $conn->prepare("
         UPDATE ojt_grades
         SET is_finalized  = 1,
@@ -434,7 +434,7 @@ function finalizeGrade(
     $stmt->execute();
     $stmt->close();
 
-    // resolve coordinator profile UUID to user UUID for audit logging
+    
     $userStmt = $conn->prepare("SELECT user_uuid FROM coordinator_profiles WHERE uuid = ? LIMIT 1");
     $userStmt->bind_param('s', $coordinatorUuid);
     $userStmt->execute();
@@ -458,9 +458,9 @@ function finalizeGrade(
 }
 
 
-// -----------------------------------------------
-// GET grade for a student
-// -----------------------------------------------
+
+
+
 function getStudentGrade(
     $conn,
     string $studentUuid,
@@ -483,7 +483,7 @@ function getStudentGrade(
 
     if (!$row) return null;
 
-    // students only see finalized grades
+    
     if ($studentView && (int) $row['is_finalized'] === 0) {
         return null;
     }
@@ -492,9 +492,9 @@ function getStudentGrade(
 }
 
 
-// -----------------------------------------------
-// GET all grades — coordinator/admin view
-// -----------------------------------------------
+
+
+
 function getAllGrades(
     $conn,
     string $batchUuid,
@@ -539,10 +539,10 @@ function getAllGrades(
 }
 
 
-// -----------------------------------------------
-// GET grading overview — all students in batch
-// shows who is ready, pending, finalized
-// -----------------------------------------------
+
+
+
+
 function getGradingOverview(
     $conn,
     string $batchUuid,
@@ -664,10 +664,10 @@ function getGradingOverview(
 }
 
 
-// -----------------------------------------------
-// PERCENTAGE to grade equivalent
-// Philippine grading system
-// -----------------------------------------------
+
+
+
+
 function percentageToGrade(float $percentage): string
 {
     return match(true) {
@@ -685,9 +685,9 @@ function percentageToGrade(float $percentage): string
 }
 
 
-// -----------------------------------------------
-// GRADE remarks
-// -----------------------------------------------
+
+
+
 function gradeRemarks(string $grade): string
 {
     return match(true) {
@@ -698,9 +698,9 @@ function gradeRemarks(string $grade): string
 }
 
 
-// -----------------------------------------------
-// FORMAT grade row
-// -----------------------------------------------
+
+
+
 function formatGrade(array $row): array
 {
     $isFinalized = (int) $row['is_finalized'] === 1;
@@ -730,21 +730,21 @@ function formatGrade(array $row): array
         'finalized_by_name' => $row['finalized_by_name'] ?? null,
         'coordinator_notes' => $row['coordinator_notes'] ?? null,
 
-        // component scores
+        
         'hours_score'       => (float) $row['hours_score'],
         'midterm_score'     => (float) $row['midterm_score'],
         'final_score'       => (float) $row['final_score'],
         'journal_score'     => (float) $row['journal_score'],
         'self_score'        => (float) $row['self_score'],
 
-        // weights
+        
         'hours_weight'      => (float) $row['hours_weight'],
         'midterm_weight'    => (float) $row['midterm_weight'],
         'final_weight'      => (float) $row['final_weight'],
         'journal_weight'    => (float) $row['journal_weight'],
         'self_weight'       => (float) $row['self_weight'],
 
-        // weighted contributions
+        
         'hours_contribution'   => round($row['hours_score']   * $row['hours_weight']   / 100, 2),
         'midterm_contribution' => round($row['midterm_score'] * $row['midterm_weight'] / 100, 2),
         'final_contribution'   => round($row['final_score']   * $row['final_weight']   / 100, 2),

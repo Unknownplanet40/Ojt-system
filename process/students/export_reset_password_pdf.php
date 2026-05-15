@@ -6,13 +6,13 @@ if (session_status() === PHP_SESSION_NONE) {
 
 date_default_timezone_set('Asia/Manila');
 
-// Direct access is allowed to support PDF generation via browser
+
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
 require_once dirname(__DIR__, 2) . '/functions/student_functions.php';
 require_once dirname(__DIR__, 2) . '/Assets/SystemInfo.php';
 
-// Method check removed to allow GET requests for PDF downloads
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (empty($_POST['csrf_token']) ||
     $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? ''))) {
@@ -34,9 +34,9 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
-// Accept either:
-// 1) student_data (array/json), or
-// 2) direct POST fields: full_name, temp_password
+
+
+
 $studentData = $_POST['student_data'] ?? [];
 
 if (is_string($studentData)) {
@@ -79,41 +79,41 @@ $html = <<<HTML
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; background: #fff; }
+    body { font-family: Arial, sans-serif; font-size: 12px; color: 
     .page { padding: 40px; }
 
-    .header { text-align: center; border-bottom: 2px solid #0F6E56; padding-bottom: 16px; margin-bottom: 24px; }
+    .header { text-align: center; border-bottom: 2px solid 
     .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; margin-bottom: 22px; }
     .header-table td { vertical-align: middle; }
     .header-left { width: 20%; text-align: left; }
     .header-center { width: 60%; text-align: center; }
     .header-right { width: 20%; text-align: right; }
     .header-logo { width: 64px; height: 64px; object-fit: contain; }
-    .school-name { font-size: 15px; font-weight: bold; color: #0F6E56; margin-bottom: 4px; }
-    .school-meta { font-size: 10px; color: #64748b; margin-top: 2px; }
-    .doc-title { font-size: 20px; font-weight: bold; color: #111; margin-bottom: 4px; }
-    .doc-subtitle { font-size: 11px; color: #666; }
+    .school-name { font-size: 15px; font-weight: bold; color: 
+    .school-meta { font-size: 10px; color: 
+    .doc-title { font-size: 20px; font-weight: bold; color: 
+    .doc-subtitle { font-size: 11px; color: 
 
-    .notice-box { background: #FEF9EE; border: 1px solid #FDE68A; border-radius: 6px; padding: 12px 14px; margin-bottom: 24px; }
-    .notice-title { font-size: 11px; font-weight: bold; color: #92400E; margin-bottom: 4px; }
-    .notice-text { font-size: 11px; color: #92400E; line-height: 1.5; }
+    .notice-box { background: 
+    .notice-title { font-size: 11px; font-weight: bold; color: 
+    .notice-text { font-size: 11px; color: 
 
-    .credentials-box { background: #E1F5EE; border: 1.5px solid #1D9E75; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; text-align: center; }
-    .credentials-label { font-size: 11px; font-weight: bold; color: #0F6E56; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .credentials-box { background: 
+    .credentials-label { font-size: 11px; font-weight: bold; color: 
     .cred-row { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
-    .cred-key { font-size: 12px; color: #065F46; font-weight: 500; text-align: left; }
-    .cred-val { font-size: 13px; font-weight: bold; color: #0F6E56; font-family: 'Courier New', monospace; text-align: right; }
-    .pw-val { font-size: 22px; font-weight: bold; color: #0F6E56; font-family: 'Courier New', monospace; letter-spacing: 0.1em; margin-top: 8px; }
+    .cred-key { font-size: 12px; color: 
+    .cred-val { font-size: 13px; font-weight: bold; color: 
+    .pw-val { font-size: 22px; font-weight: bold; color: 
 
-    .steps-box { background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 6px; padding: 14px 16px; margin-bottom: 24px; }
-    .steps-title { font-size: 11px; font-weight: bold; color: #0369A1; margin-bottom: 8px; }
-    .step { font-size: 11px; color: #0369A1; margin-bottom: 5px; line-height: 1.4; }
+    .steps-box { background: 
+    .steps-title { font-size: 11px; font-weight: bold; color: 
+    .step { font-size: 11px; color: 
 
-    .footer { border-top: 1px solid #E5E7EB; padding-top: 12px; text-align: center; }
-    .footer-text { font-size: 10px; color: #616264; line-height: 1.6; }
-    .generated-info { font-size: 9px; color: #3e3f41; margin-top: 4px; text-align: right; }
-    .confidential { font-size: 10px; font-weight: bold; color: #EF4444; margin-bottom: 4px; }
-        .footer-contact { margin-top: 6px; font-size: 9px; color: #64748b; line-height: 1.45; }
+    .footer { border-top: 1px solid 
+    .footer-text { font-size: 10px; color: 
+    .generated-info { font-size: 9px; color: 
+    .confidential { font-size: 10px; font-weight: bold; color: 
+        .footer-contact { margin-top: 6px; font-size: 9px; color: 
   </style>
 </head>
 <body>
@@ -204,7 +204,7 @@ if (file_exists($mpdfPath)) {
         exit;
 
     } catch (Exception $e) {
-        // Fall through to basic PDF
+        
     }
 }
 

@@ -9,12 +9,12 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 require_once __DIR__ . '/../helpers/helpers.php';
 require_once __DIR__ . '/supervisor_functions.php';
 
-// -----------------------------------------------
-// GET all companies
-// -----------------------------------------------
+
+
+
 function getAllCompanies($conn, string $batchUuid = null): array
 {
-    // auto-fetch active batch if not provided
+    
     if (empty($batchUuid)) {
         $result    = $conn->query("SELECT uuid FROM batches WHERE status = 'active' LIMIT 1");
         $row       = $result->fetch_assoc();
@@ -94,9 +94,9 @@ function getAllCompanies($conn, string $batchUuid = null): array
     return $companies;
 }
 
-// -----------------------------------------------
-// GET single company
-// -----------------------------------------------
+
+
+
 function getCompany($conn, string $companyUuid, string $batchUuid = null): ?array
 {
     if (empty($batchUuid)) {
@@ -113,7 +113,7 @@ function getCompany($conn, string $companyUuid, string $batchUuid = null): ?arra
 
     if (!$company) return null;
 
-    // contacts
+    
     $stmt = $conn->prepare("
         SELECT * FROM company_contacts
         WHERE company_uuid = ?
@@ -124,7 +124,7 @@ function getCompany($conn, string $companyUuid, string $batchUuid = null): ?arra
     $contacts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
-    // accepted programs
+    
     $stmt = $conn->prepare("
         SELECT p.uuid, p.code, p.name
         FROM company_accepted_programs cap
@@ -137,7 +137,7 @@ function getCompany($conn, string $companyUuid, string $batchUuid = null): ?arra
     $programs = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
-    // documents — latest per type
+    
     $stmt = $conn->prepare("
         SELECT * FROM company_documents
         WHERE company_uuid = ?
@@ -150,7 +150,7 @@ function getCompany($conn, string $companyUuid, string $batchUuid = null): ?arra
 
     $supervisors = getAllSupervisors($conn, ['company_uuid' => $companyUuid]);
 
-    // slots per batch
+    
     $safeBatch = $conn->real_escape_string($batchUuid ?? '');
     $stmt = $conn->prepare("
         SELECT cs.total_slots, COUNT(DISTINCT sp.id) AS filled_slots
@@ -194,9 +194,9 @@ function getCompany($conn, string $companyUuid, string $batchUuid = null): ?arra
     ];
 }
 
-// -----------------------------------------------
-// CREATE company
-// -----------------------------------------------
+
+
+
 function createCompany($conn, array $data, string $actorUuid): array
 {
     $errors = [];
@@ -252,7 +252,7 @@ function createCompany($conn, array $data, string $actorUuid): array
         return ['success' => false, 'errors' => $errors];
     }
 
-    // check duplicate name
+    
     $stmt = $conn->prepare("SELECT id FROM companies WHERE name = ? LIMIT 1");
     $stmt->bind_param('s', $name);
     $stmt->execute();
@@ -284,7 +284,7 @@ function createCompany($conn, array $data, string $actorUuid): array
         $stmt->execute();
         $stmt->close();
 
-        // primary contact
+        
         if (!empty($data['contact_name'])) {
             $contactResult = addCompanyContact($conn, $uuid, [
                 'name'       => $data['contact_name'],
@@ -299,12 +299,12 @@ function createCompany($conn, array $data, string $actorUuid): array
             }
         }
 
-        // slots for active batch
+        
         if (!empty($data['total_slots']) && !empty($data['batch_uuid'])) {
             setCompanySlots($conn, $uuid, $data['batch_uuid'], (int)$data['total_slots']);
         }
 
-        // accepted programs
+        
         if (!empty($data['program_uuids']) && is_array($data['program_uuids'])) {
             setAcceptedPrograms($conn, $uuid, $data['program_uuids']);
         }
@@ -356,9 +356,9 @@ function createCompany($conn, array $data, string $actorUuid): array
     }
 }
 
-// -----------------------------------------------
-// UPDATE company
-// -----------------------------------------------
+
+
+
 function updateCompany($conn, string $companyUuid, array $data, string $actorUuid): array
 {
     $errors = [];
@@ -417,7 +417,7 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
         return ['success' => false, 'errors' => $errors];
     }
 
-    // check duplicate name — exclude current
+    
     $stmt = $conn->prepare("SELECT id FROM companies WHERE name = ? AND uuid != ? LIMIT 1");
     $stmt->bind_param('ss', $name, $companyUuid);
     $stmt->execute();
@@ -448,7 +448,7 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
         $stmt->execute();
         $stmt->close();
 
-        // update accepted programs
+        
         if (isset($data['program_uuids'])) {
             $uuids = is_array($data['program_uuids'])
                 ? $data['program_uuids']
@@ -456,7 +456,7 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
             setAcceptedPrograms($conn, $companyUuid, $uuids);
         }
 
-        // update slots if provided
+        
         if (isset($data['total_slots']) && !empty($data['batch_uuid'])) {
             setCompanySlots($conn, $companyUuid, $data['batch_uuid'], (int)$data['total_slots']);
         }
@@ -466,10 +466,10 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
                 $contactUuid = trim($contact['uuid'] ?? '');
 
                 if (empty($contactUuid)) {
-                    // new contact — add it
+                    
                     addCompanyContact($conn, $companyUuid, $contact);
                 } else {
-                    // existing contact — update it
+                    
                     updateCompanyContact($conn, $contactUuid, $contact, $companyUuid);
                 }
             }
@@ -535,7 +535,7 @@ function updateCompanyContact($conn, string $contactUuid, array $data, string $c
         return ['success' => false, 'error' => 'Contact name is required.'];
     }
 
-    // if setting as primary — unset all others first
+    
     if ($isPrimary === 1) {
         $stmt = $conn->prepare("
             UPDATE company_contacts SET is_primary = 0 WHERE company_uuid = ?
@@ -567,7 +567,7 @@ function updateCompanyContact($conn, string $contactUuid, array $data, string $c
 
 function deleteCompanyContact($conn, string $contactUuid, string $companyUuid): array
 {
-    // check how many contacts this company has
+    
     $stmt = $conn->prepare("
         SELECT COUNT(*) AS total FROM company_contacts WHERE company_uuid = ?
     ");
@@ -583,7 +583,7 @@ function deleteCompanyContact($conn, string $contactUuid, string $companyUuid): 
         ];
     }
 
-    // check if this contact is primary
+    
     $stmt = $conn->prepare("
         SELECT is_primary FROM company_contacts
         WHERE uuid = ? AND company_uuid = ?
@@ -598,7 +598,7 @@ function deleteCompanyContact($conn, string $contactUuid, string $companyUuid): 
         return ['success' => false, 'error' => 'Contact not found.'];
     }
 
-    // delete the contact
+    
     $stmt = $conn->prepare("
         DELETE FROM company_contacts WHERE uuid = ? AND company_uuid = ?
     ");
@@ -606,7 +606,7 @@ function deleteCompanyContact($conn, string $contactUuid, string $companyUuid): 
     $stmt->execute();
     $stmt->close();
 
-    // if deleted contact was primary — auto-assign first remaining as primary
+    
     if ((int) $contact['is_primary'] === 1) {
         $stmt = $conn->prepare("
             UPDATE company_contacts
@@ -623,9 +623,9 @@ function deleteCompanyContact($conn, string $contactUuid, string $companyUuid): 
     return ['success' => true];
 }
 
-// -----------------------------------------------
-// ADD company contact
-// -----------------------------------------------
+
+
+
 function addCompanyContact($conn, string $companyUuid, array $data): array
 {
     $name      = trim($data['name']      ?? '');
@@ -638,7 +638,7 @@ function addCompanyContact($conn, string $companyUuid, array $data): array
         return ['success' => false, 'error' => 'Contact name is required.'];
     }
 
-    // unset other primary contacts if setting as primary
+    
     if ($isPrimary === 1) {
         $stmt = $conn->prepare("
             UPDATE company_contacts SET is_primary = 0 WHERE company_uuid = ?
@@ -664,9 +664,9 @@ function addCompanyContact($conn, string $companyUuid, array $data): array
     return ['success' => true, 'uuid' => $uuid];
 }
 
-// -----------------------------------------------
-// SET company slots (upsert)
-// -----------------------------------------------
+
+
+
 function setCompanySlots($conn, string $companyUuid, string $batchUuid, int $totalSlots): void
 {
     $uuid = generateUuid();
@@ -680,12 +680,12 @@ function setCompanySlots($conn, string $companyUuid, string $batchUuid, int $tot
     $stmt->close();
 }
 
-// -----------------------------------------------
-// SET accepted programs (replace all)
-// -----------------------------------------------
+
+
+
 function setAcceptedPrograms($conn, string $companyUuid, array $programUuids): void
 {
-    // delete existing
+    
     $stmt = $conn->prepare("DELETE FROM company_accepted_programs WHERE company_uuid = ?");
     $stmt->bind_param('s', $companyUuid);
     $stmt->execute();
@@ -707,9 +707,9 @@ function setAcceptedPrograms($conn, string $companyUuid, array $programUuids): v
     $stmt->close();
 }
 
-// -----------------------------------------------
-// UPLOAD company document
-// -----------------------------------------------
+
+
+
 function uploadCompanyDocument(
     $conn,
     string $companyUuid,
@@ -779,7 +779,7 @@ function uploadCompanyDocument(
 
     error_log("[company upload] saved {$docType} for company {$companyUuid} as {$relativePath}");
 
-    // auto-activate if MOA uploaded and status is pending
+    
     if ($docType === 'moa') {
         $safe = $conn->real_escape_string($companyUuid);
         $conn->query("
@@ -802,9 +802,9 @@ function uploadCompanyDocument(
     return ['success' => true, 'uuid' => $uuid];
 }
 
-// -----------------------------------------------
-// GET available companies for student application
-// -----------------------------------------------
+
+
+
 function getAvailableCompanies($conn, string $batchUuid, string $programUuid): array
 {
     $safeBatch   = $conn->real_escape_string($batchUuid);
@@ -857,9 +857,9 @@ function getAvailableCompanies($conn, string $batchUuid, string $programUuid): a
     return $companies;
 }
 
-// -----------------------------------------------
-// GET Students associated with a company
-// -----------------------------------------------
+
+
+
 function getCompanyStudents($conn, string $companyUuid, string $batchUuid): array
 {
     if (empty($batchUuid)) {
@@ -868,7 +868,7 @@ function getCompanyStudents($conn, string $companyUuid, string $batchUuid): arra
         $batchUuid = $row['uuid'] ?? null;
     }
 
-    // only the important fields for the company view
+    
     $stmt = $conn->prepare("
         SELECT uuid, first_name, last_name, program, year_level, profile_path
         FROM student_profiles
@@ -889,9 +889,9 @@ function getCompanyStudents($conn, string $companyUuid, string $batchUuid): arra
 }
 
 
-// -----------------------------------------------
-// GET expiring MOAs
-// -----------------------------------------------
+
+
+
 function getExpiringMoas($conn, int $daysThreshold = 30): array
 {
     $result = $conn->query("
@@ -926,9 +926,9 @@ function getExpiringMoas($conn, int $daysThreshold = 30): array
     return $expiring;
 }
 
-// -----------------------------------------------
-// FORMAT company row
-// -----------------------------------------------
+
+
+
 function formatCompany(array $row): array
 {
     $moaExpiry    = $row['moa_expiry'] ?? null;

@@ -229,14 +229,24 @@ function validateBulkRows($conn, array $rows, string $batchUuid, string $coordin
             $errors[] = "Student number must be at least 9 characters long";
         }
 
-        if (!empty($mobile) && !preg_match('/^09\d{9}$/', str_replace([' ', '-', '(', ')'], '', $mobile))) {
-            $errors[] = 'Invalid mobile number format. Use 09XXXXXXXXX.';
-        } elseif (!empty($mobile) && strlen(str_replace([' ', '-', '(', ')'], '', $mobile)) != 11) {
-            $errors[] = 'Mobile number must be 11 digits long (including the leading 0).';
-        } elseif (!empty($mobile) && !preg_match('/^09\d{9}$/', str_replace([' ', '-', '(', ')'], '', $mobile))) {
-            $errors[] = 'Mobile number must start with 09 followed by 9 digits.';
-        } elseif (!empty($mobile) && preg_match('/[^0-9\s\-\(\)]/', $mobile)) {
-            $errors[] = 'Mobile number can only contain digits, spaces, dashes, and parentheses.';
+        
+        $mobileStr = (string)$mobile;
+        $mobileClean = str_replace([' ', '-', '(', ')'], '', $mobileStr);
+        if (!empty($mobileClean)) {
+            if (!preg_match('/^[0-9]+$/', $mobileClean)) {
+                $errors[] = 'Mobile number can only contain digits, spaces, dashes, and parentheses.';
+            } else {
+                
+                if (strlen($mobileClean) === 10 && substr($mobileClean, 0, 1) === '9') {
+                    $mobileClean = '0' . $mobileClean;
+                }
+
+                if (!preg_match('/^09\d{9}$/', $mobileClean)) {
+                    $errors[] = 'Mobile number must be 11 digits (09XXXXXXXXX) or 10 digits (9XXXXXXXXX).';
+                } else {
+                    $mobile = $mobileClean; 
+                }
+            }
         }
 
 
@@ -302,7 +312,7 @@ function createBulkStudents($conn, array $validRows, string $actorUuid, bool $sa
         $passwordHash = password_hash($tempPassword, PASSWORD_BCRYPT);
 
         try {
-            // Only attempt DB operations if saveToDb is true
+            
             if ($saveToDb) {
                 $conn->begin_transaction();
 
@@ -446,7 +456,7 @@ function generateBulkTemplate($conn, string $defaultCoordinatorUuid = null): str
         '(Optional)',
     ];
 
-    // Only add coordinator_name if we are NOT a specific coordinator (i.e., we are admin)
+    
     if ($defaultCoordinatorUuid === null) {
         $headers[] = 'coordinator_name';
         $instructions[] = "(Required - use: {$coordinatorList})";

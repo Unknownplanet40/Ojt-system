@@ -24,7 +24,7 @@ function getAdminDashboardData($conn): array
 
 function getAdminStatCards($conn, ?string $batchUuid): array
 {
-    // total students in active batch
+    
     $totalStudents = 0;
     if ($batchUuid) {
         $safeBatch     = $conn->real_escape_string($batchUuid);
@@ -36,7 +36,7 @@ function getAdminStatCards($conn, ?string $batchUuid): array
         $totalStudents = (int) $result->fetch_assoc()['total'];
     }
 
-    // active coordinators
+    
     $result             = $conn->query("
         SELECT COUNT(*) AS total
         FROM users
@@ -44,7 +44,7 @@ function getAdminStatCards($conn, ?string $batchUuid): array
     ");
     $totalCoordinators  = (int) $result->fetch_assoc()['total'];
 
-    // accredited companies
+    
     $result             = $conn->query("
         SELECT COUNT(*) AS total
         FROM companies
@@ -52,7 +52,7 @@ function getAdminStatCards($conn, ?string $batchUuid): array
     ");
     $totalCompanies     = (int) $result->fetch_assoc()['total'];
 
-    // active supervisors
+    
     $result             = $conn->query("
         SELECT COUNT(*) AS total
         FROM users
@@ -60,13 +60,13 @@ function getAdminStatCards($conn, ?string $batchUuid): array
     ");
     $totalSupervisors   = (int) $result->fetch_assoc()['total'];
 
-    // total users across all roles
+    
     $result             = $conn->query("
         SELECT COUNT(*) AS total FROM users WHERE is_active = 1
     ");
     $totalUsers         = (int) $result->fetch_assoc()['total'];
 
-    // MOA expiring within 30 days
+    
     $expiringMoas = getExpiringMoaCount($conn, 30);
 
     return [
@@ -132,7 +132,7 @@ function getAdminNeedsAttention($conn, ?string $batchUuid): array
 {
     $alerts = [];
 
-    // no active batch
+    
     $result = $conn->query("SELECT COUNT(*) AS total FROM batches WHERE status = 'active'");
     if ((int) $result->fetch_assoc()['total'] === 0) {
         $alerts[] = [
@@ -148,7 +148,7 @@ function getAdminNeedsAttention($conn, ?string $batchUuid): array
         ];
     }
 
-    // students never logged in
+    
     $result = $conn->query("
         SELECT COUNT(*) AS total
         FROM users
@@ -171,7 +171,7 @@ function getAdminNeedsAttention($conn, ?string $batchUuid): array
         ];
     }
 
-    // MOA expiring within 30 days
+    
     $count = getExpiringMoaCount($conn, 30);
     if ($count > 0) {
         $alerts[] = [
@@ -187,7 +187,7 @@ function getAdminNeedsAttention($conn, ?string $batchUuid): array
         ];
     }
 
-    // companies with no slots set for active batch
+    
     if ($batchUuid) {
         $safeBatch = $conn->real_escape_string($batchUuid);
         $result    = $conn->query("
@@ -217,7 +217,7 @@ function getAdminNeedsAttention($conn, ?string $batchUuid): array
         }
     }
 
-    // coordinators with no students assigned
+    
     $result = $conn->query("
         SELECT COUNT(*) AS total
         FROM coordinator_profiles cp
@@ -243,7 +243,7 @@ function getAdminNeedsAttention($conn, ?string $batchUuid): array
         ];
     }
 
-    // deactivated accounts
+    
     $result = $conn->query("
         SELECT COUNT(*) AS total FROM users WHERE is_active = 0
     ");

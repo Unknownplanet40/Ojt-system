@@ -39,7 +39,7 @@ if (empty($activeBatchUuid)) {
     $activeBatchUuid = $res->fetch_assoc()['uuid'] ?? null;
 }
 
-// 1. Placement Status Distribution
+
 $placementStats = [
     'pending' => 0,
     'active' => 0,
@@ -64,7 +64,7 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
-// 2. Program Distribution
+
 $programStats = [];
 $res = $conn->query("
     SELECT p.name, p.code, COUNT(sp.uuid) as count
@@ -81,7 +81,7 @@ while ($row = $res->fetch_assoc()) {
     ];
 }
 
-// 3. Monthly Activity (Audit Logs)
+
 $monthlyActivity = [];
 $res = $conn->query("
     SELECT DATE_FORMAT(created_at, '%b %Y') as month_label, COUNT(*) as count
@@ -94,7 +94,7 @@ while ($row = $res->fetch_assoc()) {
     $monthlyActivity[] = $row;
 }
 
-// 4. Top Companies (By Number of Students) with Real Ratings
+
 $topCompanies = [];
 $res = $conn->query("
     SELECT 
@@ -119,7 +119,7 @@ while ($row = $res->fetch_assoc()) {
     ];
 }
 
-// 5. Overall Completion Progress
+
 $completionData = [
     'rendered' => 0,
     'required' => 0

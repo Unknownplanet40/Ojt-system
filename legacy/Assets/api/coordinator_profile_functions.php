@@ -2,9 +2,9 @@
 
 require_once 'ServerConfig.php';
 
-// Prevent direct access to this file
+
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    // Only allow AJAX requests
+    
     if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         $base = dirname($_SERVER['SCRIPT_NAME'], 3);
@@ -113,7 +113,7 @@ function getCoordinatorProfile($conn, string $profileUuid): ?array
 
 function getCoordinatorStats($conn, string $profileUuid, string $batchUuid = null): array
 {
-    // auto-fetch active batch
+    
     if (empty($batchUuid)) {
         $result    = $conn->query("SELECT uuid, school_year, semester FROM batches WHERE status = 'active' LIMIT 1");
         $batchRow  = $result->fetch_assoc();
@@ -126,7 +126,7 @@ function getCoordinatorStats($conn, string $profileUuid, string $batchUuid = nul
     $safeBatch    = $conn->real_escape_string($batchUuid ?? '');
     $safeProfile  = $conn->real_escape_string($profileUuid);
 
-    // total students under this coordinator in active batch
+    
     $result = $conn->query("
         SELECT COUNT(*) AS total
         FROM student_profiles

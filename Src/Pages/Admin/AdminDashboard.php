@@ -2,7 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// time to manila asia
+
 date_default_timezone_set('Asia/Manila');
 
 require_once "../../../Assets/SystemInfo.php";

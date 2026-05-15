@@ -128,7 +128,7 @@ function getAllRequirementsOverview($conn, string $batchUuid, string $coordinato
             'all_approved'      => (int) $row['approved_count'] === 6,
             'has_pending'       => (int) $row['submitted_count'] > 0,
             'has_returned'      => (int) $row['returned_count'] > 0,
-            // per-doc status for dot matrix
+            
             'doc_statuses'      => [
                 'medical_certificate' => $row['medical_status']   ?? 'not_submitted',
                 'parental_consent'    => $row['consent_status']   ?? 'not_submitted',

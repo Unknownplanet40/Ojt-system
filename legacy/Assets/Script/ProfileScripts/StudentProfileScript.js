@@ -68,7 +68,7 @@ function getProfileData(uuid) {
           $("#adminProfilePhoto").attr("src", "../../../" + data.profile_path);
         } else {
           const initials = (data.first_name.charAt(0) + data.last_name.charAt(0)).toUpperCase();
-          const placeholderUrl = `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`;
+          const placeholderUrl = `https:
           $("#adminProfilePhoto").attr("src", placeholderUrl);
         }
 

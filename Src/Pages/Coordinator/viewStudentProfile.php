@@ -10,7 +10,7 @@ if (empty($_SESSION['user_uuid']) || ($_SESSION['user_role'] ?? '') !== 'coordin
 }
 
 $studentUuid = $_GET['uuid'] ?? '';
-$referrerPage = $_GET['from'] ?? 'mystudents'; // Default to MyStudents
+$referrerPage = $_GET['from'] ?? 'mystudents'; 
 if (empty($studentUuid)) {
     header("Location: ./MyStudents");
     exit;
@@ -30,7 +30,7 @@ $CurrentPage = "MyStudents";
     <script type="module" src="../../../Assets/Script/CoordinatorScripts/ViewStudentProfileScript.js"></script>
     <style>
         .nav-pills .nav-link.active {
-            color: #fff !important;
+            color: 
             background-color: var(--bs-primary) !important;
         }
         .nav-pills .nav-link:not(.active) {
@@ -38,7 +38,7 @@ $CurrentPage = "MyStudents";
         }
         .nav-pills .nav-link:hover:not(.active) {
             background-color: rgba(255, 255, 255, 0.1);
-            color: #fff !important;
+            color: 
         }
     </style>
     <title><?= $ShortTitle ?> - Student Profile</title>

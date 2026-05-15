@@ -37,10 +37,6 @@ function normalizeThemeSetting(string $theme): string
     return in_array($theme, ['light', 'dark', 'auto'], true) ? $theme : 'dark';
 }
 
-/**
- * Get a setting value. If $userUuid is provided, gets a per-user setting.
- * If null, gets a global setting.
- */
 function getAdminSetting(mysqli $conn, string $key, string $defaultValue = '', ?string $userUuid = null): string
 {
     if (!ensureAdminSettingsTable($conn)) {
@@ -64,10 +60,6 @@ function getAdminSetting(mysqli $conn, string $key, string $defaultValue = '', ?
     return (string)($row['setting_value'] ?? $defaultValue);
 }
 
-/**
- * Save a setting value. If $userUuid is provided, saves a per-user setting.
- * If null, saves a global setting.
- */
 function saveAdminSetting(mysqli $conn, string $key, string $value, string $actorUuid, ?string $userUuid = null): array
 {
     if (!ensureAdminSettingsTable($conn)) {
@@ -110,17 +102,11 @@ function saveAdminSetting(mysqli $conn, string $key, string $value, string $acto
     ];
 }
 
-/**
- * Get per-user theme setting.
- */
 function getUserTheme(mysqli $conn, string $userUuid): string
 {
     return normalizeThemeSetting(getAdminSetting($conn, 'theme', 'dark', $userUuid));
 }
 
-/**
- * Save per-user theme setting.
- */
 function saveUserTheme(mysqli $conn, string $theme, string $userUuid): array
 {
     $theme = normalizeThemeSetting($theme);
@@ -129,9 +115,6 @@ function saveUserTheme(mysqli $conn, string $theme, string $userUuid): array
     return $result;
 }
 
-/**
- * Get global system settings (backward-compatible).
- */
 function getUserSettings(mysqli $conn): array
 {
     return [
@@ -139,13 +122,186 @@ function getUserSettings(mysqli $conn): array
     ];
 }
 
-/**
- * Save global theme setting (backward-compatible).
- */
 function saveThemeSetting(mysqli $conn, string $theme, string $adminUuid): array
 {
     $theme = normalizeThemeSetting($theme);
     $result = saveAdminSetting($conn, 'theme', $theme, $adminUuid);
     $result['theme'] = $theme;
     return $result;
+}
+
+function ensureEmailConfigTable(mysqli $conn): bool
+{
+    $sql = "
+        CREATE TABLE IF NOT EXISTS email_config (
+            id INT UNSIGNED PRIMARY KEY DEFAULT 1,
+            smtp_host VARCHAR(255) DEFAULT '',
+            smtp_port INT DEFAULT 587,
+            smtp_user VARCHAR(255) DEFAULT '',
+            smtp_pass VARCHAR(255) DEFAULT '',
+            smtp_crypto VARCHAR(20) DEFAULT 'tls',
+            from_email VARCHAR(255) DEFAULT '',
+            from_name VARCHAR(255) DEFAULT '',
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ";
+
+    return (bool)$conn->query($sql);
+}
+
+function getEmailSettings(mysqli $conn): array
+{
+    if (!ensureEmailConfigTable($conn)) {
+        return [
+            'host' => '',
+            'port' => '587',
+            'user' => '',
+            'pass' => '',
+            'crypto' => 'tls',
+            'from_email' => '',
+            'from_name' => '',
+        ];
+    }
+
+    $sql = "SELECT * FROM email_config LIMIT 1";
+    $result = $conn->query($sql);
+    $data = $result ? $result->fetch_assoc() : null;
+
+    return [
+        'host' => (string)($data['smtp_host'] ?? ''),
+        'port' => (string)($data['smtp_port'] ?? '587'),
+        'user' => (string)($data['smtp_user'] ?? ''),
+        'pass' => (string)($data['smtp_pass'] ?? ''),
+        'crypto' => (string)($data['smtp_crypto'] ?? 'tls'),
+        'from_email' => (string)($data['from_email'] ?? ''),
+        'from_name' => (string)($data['from_name'] ?? ''),
+    ];
+}
+
+
+function saveEmailSettings(mysqli $conn, array $data, string $adminUuid): array
+{
+    if (!ensureEmailConfigTable($conn)) {
+        return ['success' => false, 'message' => 'Unable to prepare email settings storage.'];
+    }
+
+    $host = $data['host'] ?? '';
+    $port = (int)($data['port'] ?? 587);
+    $user = $data['user'] ?? '';
+    $pass = $data['pass'] ?? '';
+    $crypto = $data['crypto'] ?? 'tls';
+    $fromEmail = $data['from_email'] ?? '';
+    $fromName = $data['from_name'] ?? '';
+
+    
+    $stmt = $conn->prepare("
+        INSERT INTO email_config (id, smtp_host, smtp_port, smtp_user, smtp_pass, smtp_crypto, from_email, from_name)
+        VALUES (1, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            smtp_host = VALUES(smtp_host),
+            smtp_port = VALUES(smtp_port),
+            smtp_user = VALUES(smtp_user),
+            smtp_pass = VALUES(smtp_pass),
+            smtp_crypto = VALUES(smtp_crypto),
+            from_email = VALUES(from_email),
+            from_name = VALUES(from_name),
+            updated_at = CURRENT_TIMESTAMP
+    ");
+
+    if (!$stmt) {
+        return ['success' => false, 'message' => 'Failed to prepare email config update.'];
+    }
+
+    $stmt->bind_param('sisssss', $host, $port, $user, $pass, $crypto, $fromEmail, $fromName);
+    $success = $stmt->execute();
+    $stmt->close();
+
+    return $success ? ['success' => true, 'message' => 'Email settings saved.'] : ['success' => false, 'message' => 'Failed to execute email config update.'];
+}
+
+function getSystemConfig(mysqli $conn): array
+{
+    $sql = "SELECT * FROM system_config WHERE id = 1 LIMIT 1";
+    $result = $conn->query($sql);
+    $data = $result ? $result->fetch_assoc() : null;
+
+    if (!$data) {
+        return [
+            'long_title' => 'OJT Management System',
+            'short_title' => 'OJT-SMS',
+            'system_description' => '',
+            'author' => '',
+            'school_name' => 'Cavite State University - Imus Campus',
+            'school_motto' => '',
+            'school_address' => '',
+            'school_website' => '',
+            'school_email' => '',
+            'school_phone' => '',
+            'logo_1' => null,
+            'logo_2' => null,
+            'footer_note' => '',
+            'verification_note' => '',
+            'page_link' => '',
+        ];
+    }
+
+    return [
+        'long_title' => (string)($data['long_title'] ?? ''),
+        'short_title' => (string)($data['short_title'] ?? ''),
+        'system_description' => (string)($data['system_description'] ?? ''),
+        'author' => (string)($data['author'] ?? ''),
+        'school_name' => (string)($data['school_name'] ?? ''),
+        'school_motto' => (string)($data['school_motto'] ?? ''),
+        'school_address' => (string)($data['school_address'] ?? ''),
+        'school_website' => (string)($data['school_website'] ?? ''),
+        'school_email' => (string)($data['school_email'] ?? ''),
+        'school_phone' => (string)($data['school_phone'] ?? ''),
+        'logo_1' => $data['logo_1'] ? '../../../Assets/Images/systemImages/' . $data['logo_1'] : null,
+        'logo_2' => $data['logo_2'] ? '../../../Assets/Images/systemImages/' . $data['logo_2'] : null,
+        'footer_note' => (string)($data['footer_note'] ?? ''),
+        'verification_note' => (string)($data['verification_note'] ?? ''),
+        'page_link' => (string)($data['page_link'] ?? ''),
+    ];
+}
+
+
+function saveSystemConfig(mysqli $conn, array $data): array
+{
+    
+    $conn->query("INSERT IGNORE INTO system_config (id) VALUES (1)");
+
+    $stmt = $conn->prepare("
+        UPDATE system_config 
+        SET long_title = ?, short_title = ?, system_description = ?, author = ?,
+            school_name = ?, school_motto = ?, school_address = ?, 
+            school_website = ?, school_email = ?, school_phone = ?,
+            footer_note = ?, verification_note = ?, page_link = ?
+        WHERE id = 1
+    ");
+
+    if (!$stmt) {
+        return ['success' => false, 'message' => 'Failed to prepare system config update.'];
+    }
+
+    $stmt->bind_param('sssssssssssss', 
+        $data['long_title'], $data['short_title'], $data['system_description'], $data['author'],
+        $data['school_name'], $data['school_motto'], $data['school_address'],
+        $data['school_website'], $data['school_email'], $data['school_phone'],
+        $data['footer_note'], $data['verification_note'], $data['page_link']
+    );
+    
+    $success = $stmt->execute();
+    $stmt->close();
+
+    return $success ? ['success' => true, 'message' => 'Institutional profile saved.'] : ['success' => false, 'message' => 'Failed to update system config.'];
+}
+
+function updateSystemLogo(mysqli $conn, string $field, string $fileName): bool
+{
+    if (!in_array($field, ['logo_1', 'logo_2'])) return false;
+    $stmt = $conn->prepare("UPDATE system_config SET $field = ? WHERE id = 1");
+    $stmt->bind_param('s', $fileName);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
 }

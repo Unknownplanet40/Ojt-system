@@ -54,7 +54,7 @@ if (empty($profileUuid)) {
     response(['status' => 'error', 'message' => 'Profile UUID is required.']);
 }
 
-// coordinator scope check
+
 if ($_SESSION['user_role'] === 'coordinator') {
     if ($student['coordinator_uuid'] !== $_SESSION['profile_uuid']) {
         http_response_code(403);

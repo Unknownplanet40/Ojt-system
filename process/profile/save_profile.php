@@ -72,15 +72,15 @@ $data = [
     'last_name'    => trim($_POST['lastName']   ?? ''),
     'middle_name'  => trim($_POST['middleName'] ?? ''),
     'mobile'         => trim($_POST['contactNumber'] ?? ''),
-    // for Coordinator
+    
     'department'     => trim($_POST['department'] ?? ''),
     'employee_id'   => trim($_POST['employeeId'] ?? ''),
-    // for Student
+    
     'home_address' => trim($_POST['homeAddress'] ?? ''),
     'emergency_contact' => trim($_POST['emergencyContact'] ?? ''),
     'emergency_phone' => trim($_POST['emergencyPhone'] ?? ''),
     'section' => trim($_POST['section'] ?? ''),
-    // for Supervisor
+    
     'position' => trim($_POST['position'] ?? ''),
 ];
 

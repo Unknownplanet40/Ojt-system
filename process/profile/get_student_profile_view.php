@@ -39,7 +39,7 @@ if (empty($_POST['csrf_token']) ||
 $userUuid = $_SESSION['user_uuid'];
 $profileUuid = $_SESSION['profile_uuid'];
 
-// Get Student Details
+
 $stmt = $conn->prepare("
     SELECT 
         u.email, CASE WHEN u.is_active = 1 THEN 'active' ELSE 'inactive' END as account_status,
@@ -65,7 +65,7 @@ if (!$student) {
     response(['status' => 'error', 'message' => 'Profile not found.']);
 }
 
-// Formatting
+
 $student['full_name'] = $student['first_name'] . ' ' . $student['last_name'];
 $student['initials'] = strtoupper(substr($student['first_name'], 0, 1) . substr($student['last_name'], 0, 1));
 $student['status_label'] = ucfirst($student['account_status']);
@@ -73,14 +73,14 @@ $student['ojt_status_label'] = ucfirst($student['ojt_status'] ?? 'Not Started');
 $student['created_at_label'] = date('M j, Y', strtotime($student['created_at']));
 $student['supervisor_name'] = $student['sv_first'] ? $student['sv_first'] . ' ' . $student['sv_last'] : 'Not Assigned';
 
-// Get Hours Rendered
+
 $stmt = $conn->prepare("SELECT SUM(hours_rendered) as total FROM dtr_entries WHERE student_uuid = ? AND status = 'approved'");
 $stmt->bind_param('s', $profileUuid);
 $stmt->execute();
 $hours = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
 $stmt->close();
 
-// Get Requirements Progress
+
 $stmt = $conn->prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved FROM student_requirements WHERE student_uuid = ?");
 $stmt->bind_param('s', $profileUuid);
 $stmt->execute();

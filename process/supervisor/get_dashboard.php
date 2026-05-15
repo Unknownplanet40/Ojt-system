@@ -16,7 +16,7 @@ $supervisorUuid = $_SESSION['user_uuid'];
 try {
     $stats = getSupervisorDashboardStats($conn, $supervisorUuid);
     
-    // Get supervised students list (brief)
+    
     $stmt = $conn->prepare("
         SELECT 
             sp.uuid,
@@ -24,14 +24,13 @@ try {
             sp.last_name,
             sp.student_number,
             sp.program,
+            sp.profile_name,
             oa.status as application_status,
-            COALESCE(SUM(de.hours_rendered), 0) as total_hours
+            (SELECT COALESCE(SUM(hours_rendered), 0) FROM dtr_entries WHERE student_uuid = sp.uuid AND status = 'approved') as total_hours
         FROM student_profiles sp
         JOIN ojt_applications oa ON sp.uuid = oa.student_uuid
-        LEFT JOIN dtr_entries de ON sp.uuid = de.student_uuid AND de.status = 'approved'
         WHERE sp.supervisor_uuid = (SELECT uuid FROM supervisor_profiles WHERE user_uuid = ? LIMIT 1)
         AND oa.status = 'active'
-        GROUP BY sp.uuid
         ORDER BY total_hours DESC
         LIMIT 5
     ");

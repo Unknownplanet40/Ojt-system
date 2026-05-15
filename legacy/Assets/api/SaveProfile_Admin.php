@@ -2,9 +2,9 @@
 
 require_once 'ServerConfig.php';
 
-// Prevent direct access to this file
+
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    // Only allow AJAX requests
+    
     if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         $base = dirname($_SERVER['SCRIPT_NAME'], 3);
@@ -81,8 +81,8 @@ if ($ProfilePhoto) {
         $imageData = base64_decode($data[1]);
         $filename = __DIR__ . "/../Images/Profiles/" . $_SESSION['user']['uuid'] . "-" . time() . ".png";
         file_put_contents($filename, $imageData);
-        $ProfilePhoto = "Assets/Images/Profiles/" . $_SESSION['user']['uuid'] . "-" . time() . ".png"; // Store the path to the saved image
-        $progfileName = $_SESSION['user']['uuid'] . "-" . time() . ".png"; // Store the filename for database reference
+        $ProfilePhoto = "Assets/Images/Profiles/" . $_SESSION['user']['uuid'] . "-" . time() . ".png"; 
+        $progfileName = $_SESSION['user']['uuid'] . "-" . time() . ".png"; 
     } else {
         response([
             'status' => 'error',

@@ -67,18 +67,18 @@ require_once "../../Assets/SystemInfo.php";
                     </div>
                     <div class="mb-2 bg-dark p-3 rounded bg-opacity-75">
                         <div class="vstack ps-3">
-                            <span><small class="text-secondary" id="charCheck" style="font-size: 11px;">&#9864;</small>
+                            <span><small class="text-secondary" id="charCheck" style="font-size: 11px;">&
                                 <small class="text-muted" style="font-size: 11px;">At least 8 characters</small></span>
-                            <span><small class="text-secondary" id="upperCheck" style="font-size: 11px;">&#9864;</small>
+                            <span><small class="text-secondary" id="upperCheck" style="font-size: 11px;">&
                                 <small class="text-muted" style="font-size: 11px;">At least one uppercase
                                     letter</small></span>
                             <span><small class="text-secondary" id="numberCheck"
-                                    style="font-size: 11px;">&#9864;</small> <small class="text-muted"
+                                    style="font-size: 11px;">&
                                     style="font-size: 11px;">At least one number</small></span>
                             <span><small class="text-secondary" id="specialCheck"
-                                    style="font-size: 11px;">&#9864;</small> <small class="text-muted"
-                                    style="font-size: 11px;">At least one special character (e.g. !@#$%^&*)</small></span>
-                            <span><small class="text-secondary" id="matchCheck" style="font-size: 11px;">&#9864;</small>
+                                    style="font-size: 11px;">&
+                                    style="font-size: 11px;">At least one special character (e.g. !@
+                            <span><small class="text-secondary" id="matchCheck" style="font-size: 11px;">&
                                 <small class="text-muted" style="font-size: 11px;">Passwords match</small></span>
                         </div>
                     </div>
@@ -112,18 +112,18 @@ require_once "../../Assets/SystemInfo.php";
                     </div>
                     <div>
                         <div class="vstack ps-3 bg-dark rounded bg-opacity-75 p-3">
-                            <span><small class="text-secondary" id="vcharCheck" style="font-size: 11px;">&#9864;</small>
+                            <span><small class="text-secondary" id="vcharCheck" style="font-size: 11px;">&
                                 <small class="text-muted" style="font-size: 11px;">At least 8 characters</small></span>
-                            <span><small class="text-secondary" id="vupperCheck" style="font-size: 11px;">&#9864;</small>
+                            <span><small class="text-secondary" id="vupperCheck" style="font-size: 11px;">&
                                 <small class="text-muted" style="font-size: 11px;">At least one uppercase
                                     letter</small></span>
                             <span><small class="text-secondary" id="vnumberCheck"
-                                    style="font-size: 11px;">&#9864;</small> <small class="text-muted"
+                                    style="font-size: 11px;">&
                                     style="font-size: 11px;">At least one number</small></span>
                             <span><small class="text-secondary" id="vspecialCheck"
-                                    style="font-size: 11px;">&#9864;</small> <small class="text-muted"
-                                    style="font-size: 11px;">At least one special character (e.g. !@#$%^&*)</small></span>
-                            <span><small class="text-secondary" id="vmatchCheck" style="font-size: 11px;">&#9864;</small>
+                                    style="font-size: 11px;">&
+                                    style="font-size: 11px;">At least one special character (e.g. !@
+                            <span><small class="text-secondary" id="vmatchCheck" style="font-size: 11px;">&
                                 <small class="text-muted" style="font-size: 11px;">Passwords match</small></span>
                         </div>
                     </div>

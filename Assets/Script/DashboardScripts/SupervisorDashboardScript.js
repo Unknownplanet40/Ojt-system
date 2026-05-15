@@ -68,8 +68,8 @@ function fetchProfile() {
         const profile = response.profile;
         if (!profile.profile_name) {
           const initials = profile.initials || "SV";
-          $("#navProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
-          $("#dropdownProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
+          $("#navProfilePhoto").attr("src", `https:
+          $("#dropdownProfilePhoto").attr("src", `https:
         } else {
           $("#navProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
           $("#dropdownProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);

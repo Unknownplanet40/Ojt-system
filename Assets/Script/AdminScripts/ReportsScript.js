@@ -113,7 +113,7 @@ function fetchReportsData() {
             if (response.status === "success") {
                 const d = response.data;
 
-                // Update Stats
+                
                 $("#statTotalPlacements").text(d.placement.total);
                 $("#statActivePartners").text(d.companies.length);
                 $("#statTotalHours").text(Math.round(d.progress.rendered).toLocaleString());
@@ -122,12 +122,12 @@ function fetchReportsData() {
                 $("#statCompletionRate").text(completionRate.toFixed(1) + "%");
                 $("#completionBar").css("width", completionRate + "%");
 
-                // Update Activity Chart
+                
                 activityChart.data.labels = d.activity.map(a => a.month_label);
                 activityChart.data.datasets[0].data = d.activity.map(a => a.count);
                 activityChart.update();
 
-                // Update Placement Chart
+                
                 placementChart.data.datasets[0].data = [
                     d.placement.active,
                     d.placement.pending,
@@ -135,12 +135,12 @@ function fetchReportsData() {
                 ];
                 placementChart.update();
 
-                // Update Program Chart
+                
                 programChart.data.labels = d.programs.map(p => p.code);
                 programChart.data.datasets[0].data = d.programs.map(p => p.count);
                 programChart.update();
 
-                // Update Top Companies Cards
+                
                 const companyContainer = $("#topCompaniesContainer");
                 companyContainer.empty();
                 
@@ -218,7 +218,7 @@ $(document).ready(function () {
         
         btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Generating...');
         
-        // Use a form submission for the download
+        
         const form = $('<form>', {
             action: "../../../process/admin/export_reports_pdf",
             method: "POST"
@@ -232,7 +232,7 @@ $(document).ready(function () {
         form.submit();
         form.remove();
 
-        // Restore button after a short delay
+        
         setTimeout(() => {
             btn.prop('disabled', false).html(originalHtml);
             ToastVersion(swalTheme, "Report generated successfully.", "success", 3000, "top-end");

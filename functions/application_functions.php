@@ -407,7 +407,7 @@ function transitionApplication(
 
     $currentStatus = $app['status'];
 
-    // validate transition is allowed
+    
     $allowed = VALID_TRANSITIONS[$currentStatus] ?? [];
     if (!in_array($newStatus, $allowed)) {
         return [
@@ -416,7 +416,7 @@ function transitionApplication(
         ];
     }
 
-    // validate actor role
+    
     $expectedActor = TRANSITION_ACTOR[$newStatus] ?? null;
     if ($expectedActor && $expectedActor !== 'system' && $expectedActor !== $actorRole) {
         return [
@@ -425,17 +425,17 @@ function transitionApplication(
         ];
     }
 
-    // coordinator scope — can only act on own students
+    
     if ($actorRole === 'coordinator' && $app['coordinator_uuid'] !== $actorProfileUuid) {
         return ['success' => false, 'error' => 'Unauthorized.'];
     }
 
-    // student scope — can only act on own application
+    
     if ($actorRole === 'student' && $app['student_uuid'] !== $actorProfileUuid) {
         return ['success' => false, 'error' => 'Unauthorized.'];
     }
 
-    // require reason for certain transitions
+    
     if (in_array($newStatus, ['needs_revision', 'rejected', 'withdrawn']) && empty($reason)) {
         return ['success' => false, 'error' => 'A reason is required for this action.'];
     }
@@ -471,7 +471,7 @@ function transitionApplication(
         $stmt->close();
 
         if ($newStatus === 'approved') {
-            // reserve slot — set company_uuid on student profile
+            
             $stmt = $conn->prepare(" 
                 UPDATE student_profiles
                 SET company_uuid = ?
@@ -481,7 +481,7 @@ function transitionApplication(
             $stmt->execute();
             $stmt->close();
 
-            // auto-generate endorsement letter on approval
+            
             require_once __DIR__ . '/endorsement_functions.php';
             $letter = generateEndorsementLetter($conn, $appUuid, $actorUserUuid);
             if (!$letter['success']) {
@@ -490,7 +490,7 @@ function transitionApplication(
         }
 
         if (in_array($newStatus, ['rejected', 'withdrawn'])) {
-            // release slot and supervisor assignment
+            
             $stmt = $conn->prepare(" 
                 UPDATE student_profiles
                 SET company_uuid = NULL,
@@ -502,7 +502,7 @@ function transitionApplication(
             $stmt->close();
         }
 
-        // log status history
+        
         logApplicationStatus($conn, $appUuid, $currentStatus, $newStatus, $reason, $actorUserUuid);
 
         logActivity(
@@ -636,7 +636,7 @@ function formatApplication(array $row): array
         'created_at'        => date('M j, Y', strtotime($row['created_at'])),
         'updated_at'        => date('M j, Y g:i A', strtotime($row['updated_at'] ?? $row['created_at'])),
         'time_ago'          => timeAgo($row['updated_at'] ?? $row['created_at']),
-        // what actions are available — used by JS to show/hide buttons
+        
         'can_withdraw'      => in_array($status, ['pending', 'needs_revision']),
         'can_resubmit'      => $status === 'needs_revision',
         'is_terminal'       => in_array($status, ['rejected', 'withdrawn', 'active']),

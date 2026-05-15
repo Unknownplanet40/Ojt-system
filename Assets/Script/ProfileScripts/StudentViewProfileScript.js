@@ -26,14 +26,14 @@ function viewStudentProfile() {
         const p = response.profile;
         const s = response.stats;
 
-        // Header Info
+        
         $("#ProfilePicture").attr("src", response.profileImage);
         $("#FullName").text(p.full_name);
         $("#Program").text(p.program_name + " (" + p.program_code + ")");
         $("#Status").text(p.status_label);
         $("#RoleBadge").text("Student");
 
-        // Stats Cards
+        
         $("#HoursRendered").text(s.hours);
         $("#ReqProgress").text(`${s.requirements_approved}/${s.requirements_total}`);
         $("#OJTStatusBadge").text(p.ojt_status_label);
@@ -41,14 +41,14 @@ function viewStudentProfile() {
         const reqPercent = s.requirements_total > 0 ? (s.requirements_approved / s.requirements_total) * 100 : 0;
         $("#ReqProgressBar").css("width", `${reqPercent}%`);
 
-        // Personal Information Section
+        
         $("#PIFullName").text(p.full_name);
         $("#PIStudentNumber").text(p.student_number);
         $("#PIMobileNumber").text(p.mobile || 'N/A');
         $("#PIAccountCreated").text(p.created_at_label);
         $("#Email").text(p.email);
 
-        // OJT Details Section
+        
         $("#Company").text(p.company_name || "Not Assigned");
         $("#Supervisor").text(p.supervisor_name);
         $("#OJTStatusDetail").text(p.ojt_status_label);

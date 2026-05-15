@@ -27,19 +27,19 @@ function viewAdminProfile() {
         const s = response.stats;
         const logs = response.logs;
 
-        // Header Info
+        
         $("#ProfilePicture").attr("src", response.profileImage);
         $("#FullName").text(p.full_name);
         $("#EmailHeader").text(p.email);
         $("#Status").text(p.status_label);
         $("#RoleBadge").text("Administrator");
 
-        // Stats Cards
+        
         $("#TotalUsers").text(s.total_users);
         $("#TotalStudents").text(s.total_students);
         $("#TotalCompanies").text(s.total_companies);
 
-        // Personal Information Section
+        
         $("#PIFullName").text(p.full_name);
         $("#PIEmail").text(p.email);
         $("#PIEmployeeID").text(p.employee_id || 'N/A');
@@ -47,7 +47,7 @@ function viewAdminProfile() {
         $("#PIAccountCreated").text(p.created_at_label);
         $("#lastLogin").text(p.last_login_label || "Never");
 
-        // Audit Logs List
+        
         const listContainer = $("#auditLogsList");
         listContainer.empty();
 

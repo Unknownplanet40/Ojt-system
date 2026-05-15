@@ -50,12 +50,12 @@ if (!$conn || $conn->connect_error) {
 
 $data = $_POST;
 
-// coordinator defaults to themselves
+
 if ($_SESSION['user_role'] === 'coordinator') {
     $data['coordinator_uuid'] = $_SESSION['profile_uuid'];
 }
 
-// auto-inject active batch
+
 if (empty($data['batch_uuid'])) {
     $result = $conn->query("SELECT uuid FROM batches WHERE status = 'active' LIMIT 1");
     $row = $result ? $result->fetch_assoc() : null;

@@ -61,7 +61,7 @@ body.forgot-password-page .container {
   }
 }
 
-/* Forgot password / email flow */
+
 .fp-shell {
   width: min(100%, 720px);
 }
@@ -87,7 +87,7 @@ body.forgot-password-page .container {
   color: var(--bs-success-text-emphasis) !important;
 }
 
-/* DTR list cards */
+
 .dtr-list {
   max-height: min(72vh, 760px);
   overflow-y: auto;
@@ -628,7 +628,7 @@ body.forgot-password-page .container {
   }
 }
 
-/* Custom scrollbar styles */
+
 :root {
   --scrollbar-size: 10px;
   --scrollbar-track: rgba(var(--bs-dark-rgb), 0.35);
@@ -832,7 +832,7 @@ body.forgot-password-page .container {
   }
 }
 
-/* ===== Glassmorphic (iOS-style) ===== */
+
 :root {
   --glass-bg-light: rgba(255, 255, 255, 0.08);
   --glass-bg-dark: rgba(20, 20, 20, 0.35);
@@ -843,7 +843,7 @@ body.forgot-password-page .container {
   --glass-highlight: rgba(255, 255, 255, 0.25);
 }
 
-/* auto switch using Bootstrap dark mode */
+
 [data-bs-theme="dark"] {
   --glass-bg: var(--glass-bg-dark);
   --glass-border: var(--glass-border-dark);
@@ -855,7 +855,7 @@ body.forgot-password-page .container {
   --glass-border: var(--glass-border-light);
 }
 
-/* main glass container */
+
 .glass-ui {
   position: relative;
   background: var(--glass-bg) !important;
@@ -873,7 +873,7 @@ body.forgot-password-page .container {
   overflow: hidden;
 }
 
-/* subtle gradient sheen (liquid feel) */
+
 .glass-ui::before {
   content: "";
   position: absolute;
@@ -890,13 +890,13 @@ body.forgot-password-page .container {
   pointer-events: none;
 }
 
-/* optional: stronger effect for modal */
+
 .glass-ui-strong {
   backdrop-filter: blur(22px) saturate(200%);
   -webkit-backdrop-filter: blur(22px) saturate(200%);
 }
 
-/* progress bar tweak */
+
 .glass-progress {
   background: linear-gradient(
     90deg,
@@ -907,13 +907,13 @@ body.forgot-password-page .container {
 }
 
 
-/* ===== Liquid edge distortion ===== */
+
 .glass-ui {
   --mx: 50%;
   --my: 50%;
 }
 
-/* distortion layer */
+
 .glass-ui::before {
   content: "";
   position: absolute;
@@ -921,7 +921,7 @@ body.forgot-password-page .container {
 
   pointer-events: none;
 
-  /* highlight / refraction */
+  
   background:
     radial-gradient(
       circle at var(--mx) var(--my),
@@ -931,7 +931,7 @@ body.forgot-password-page .container {
       transparent 40%
     );
 
-  /* edge mask → keeps distortion near edges */
+  
   -webkit-mask-image: radial-gradient(
     circle at center,
     transparent 30%,

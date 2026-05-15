@@ -507,7 +507,7 @@ function formatCoordinator(array $row): array
 
 function getCoordinatorDashboardStats($conn, string $coordinatorUserUuid): array
 {
-    // 1. Get coordinator profile uuid
+    
     $stmt = $conn->prepare("SELECT uuid FROM coordinator_profiles WHERE user_uuid = ? LIMIT 1");
     $stmt->bind_param('s', $coordinatorUserUuid);
     $stmt->execute();
@@ -520,14 +520,14 @@ function getCoordinatorDashboardStats($conn, string $coordinatorUserUuid): array
 
     $coordinatorUuid = $coordinator['uuid'];
 
-    // 2. Total Students
+    
     $stmt = $conn->prepare("SELECT COUNT(*) as count FROM student_profiles WHERE coordinator_uuid = ?");
     $stmt->bind_param('s', $coordinatorUuid);
     $stmt->execute();
     $totalStudents = $stmt->get_result()->fetch_assoc()['count'];
     $stmt->close();
 
-    // 3. Active OJT
+    
     $stmt = $conn->prepare("
         SELECT COUNT(*) as count 
         FROM student_profiles sp
@@ -539,7 +539,7 @@ function getCoordinatorDashboardStats($conn, string $coordinatorUserUuid): array
     $activeOjt = $stmt->get_result()->fetch_assoc()['count'];
     $stmt->close();
 
-    // 4. Pending Approvals (Requirements + Applications + DTR Override + Journals)
+    
     $stmt = $conn->prepare("
         SELECT 
             (SELECT COUNT(*) FROM student_requirements sr 
@@ -554,7 +554,7 @@ function getCoordinatorDashboardStats($conn, string $coordinatorUserUuid): array
     $pendingApprovals = $stmt->get_result()->fetch_assoc()['count'];
     $stmt->close();
 
-    // 5. Avg Hours Rendered
+    
     $stmt = $conn->prepare("
         SELECT AVG(hours_count) as avg_hours FROM (
             SELECT COALESCE(SUM(de.hours_rendered), 0) as hours_count
@@ -569,10 +569,10 @@ function getCoordinatorDashboardStats($conn, string $coordinatorUserUuid): array
     $avgHours = $stmt->get_result()->fetch_assoc()['avg_hours'] ?? 0;
     $stmt->close();
 
-    // 6. "Need your action" items
+    
     $actions = [];
     
-    // Students without applications
+    
     $stmt = $conn->prepare("
         SELECT COUNT(*) as count 
         FROM student_profiles sp
@@ -592,7 +592,7 @@ function getCoordinatorDashboardStats($conn, string $coordinatorUserUuid): array
     }
     $stmt->close();
 
-    // Pending requirements
+    
     $stmt = $conn->prepare("
         SELECT COUNT(DISTINCT sp.uuid) as count 
         FROM student_profiles sp
@@ -612,7 +612,7 @@ function getCoordinatorDashboardStats($conn, string $coordinatorUserUuid): array
     }
     $stmt->close();
 
-    // 7. Recent Students (All assigned, Active students first)
+    
     $stmt = $conn->prepare("
         SELECT 
             sp.uuid, sp.first_name, sp.last_name, sp.student_number, sp.program, sp.profile_name,
@@ -632,7 +632,7 @@ function getCoordinatorDashboardStats($conn, string $coordinatorUserUuid): array
     }
     $stmt->close();
 
-    // 8. Hours Progress (ONLY students with active OJT)
+    
     $stmt = $conn->prepare("
         SELECT 
             sp.first_name, sp.last_name, 
@@ -655,7 +655,7 @@ function getCoordinatorDashboardStats($conn, string $coordinatorUserUuid): array
     $stmt->close();
 
 
-    // 9. Partner Companies
+    
     $stmt = $conn->prepare("
         SELECT c.uuid, c.name, COUNT(sp.id) as student_count
         FROM companies c
@@ -673,7 +673,7 @@ function getCoordinatorDashboardStats($conn, string $coordinatorUserUuid): array
     }
     $stmt->close();
 
-    // 10. Upcoming Visits
+    
     $stmt = $conn->prepare("
         SELECT cv.*, c.name as company_name
         FROM coordinator_visits cv

@@ -44,9 +44,9 @@ function CardtoShow(cardId) {
 }
 
 function Errors(xhr, status, error) {
-  // xhr: The XMLHttpRequest object that was used to make the request.
-  // status: A string describing the type of error that occurred. Possible values include "timeout", "error", "abort", and "parsererror".
-  // error: An optional exception object, if one occurred.
+  
+  
+  
 
   const payload = xhr?.responseJSON || null;
 

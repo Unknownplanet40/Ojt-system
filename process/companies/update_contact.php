@@ -70,7 +70,7 @@ if (empty($contactUuid) || empty($companyUuid)) {
     response(['status' => 'error', 'message' => 'Contact UUID and Company UUID are required.']);
 }
 
-$action = trim($_POST['action'] ?? 'update'); // 'add' or 'update'
+$action = trim($_POST['action'] ?? 'update'); 
 
 if ($action === 'add') {
     $result = addCompanyContact($conn, $companyUuid, $_POST);

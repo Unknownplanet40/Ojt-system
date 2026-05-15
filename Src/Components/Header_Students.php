@@ -12,7 +12,7 @@ $stmtActiveApp->execute();
 $hasActiveApplication = (bool)$stmtActiveApp->get_result()->fetch_assoc();
 $stmtActiveApp->close();
 
-// If page requires active application and student doesn't have one, show locked overlay or redirect
+
 if (!$hasActiveApplication && in_array($CurrentPage, ['DTR', 'Journal', 'Evaluations'])) {
     $isLockedPage = true;
 } else {
