@@ -54,7 +54,7 @@ if (!isset($_SESSION['user_uuid'])) {
 
 $role = $_SESSION['user_role'];
 
-// student always sees own grade
+
 $studentUuid = $role === 'student'
     ? $_SESSION['profile_uuid']
     : trim($_POST['student_uuid'] ?? '');

@@ -402,23 +402,42 @@ Bridge table between companies and programs.
 - `created_at` (DATETIME, default: `NOW()`)
 - `updated_at` (DATETIME, default: `NOW()` on update)
 
-### `admin_settings`
+### `system_config`
 
-Stores admin system-wide settings and preferences.
+Stores institutional branding, app identity, and system-wide configuration initialized during the Setup Wizard.
 
 - `id` (PK, auto-increment)
-- `setting_key` (VARCHAR unique)
-- `setting_value` (LONGTEXT, JSON-encoded for complex values)
-- `updated_by` → `users.uuid` (admin who made the change)
+- `long_title` (VARCHAR) — System Long Title (App Name)
+- `short_title` (VARCHAR) — Short Title
+- `system_description` (TEXT)
+- `author` (VARCHAR)
+- `school_name` (VARCHAR)
+- `school_motto` (VARCHAR)
+- `school_address` (VARCHAR)
+- `school_website` (VARCHAR)
+- `school_email` (VARCHAR)
+- `school_phone` (VARCHAR)
+- `logo_1` (VARCHAR) — Path to primary logo
+- `logo_2` (VARCHAR) — Path to secondary logo
+- `footer_note` (VARCHAR)
+- `verification_note` (TEXT)
+- `page_link` (VARCHAR)
+- `is_setup_locked` (TINYINT) — Indicates if the initial setup wizard is complete
 - `updated_at` (DATETIME, default: `NOW()` on update)
 
-**Example settings:**
-- `theme` — `"light"` | `"dark"` | `"auto"`
-- `email_smtp_host` — SMTP server host (e.g., `smtp.gmail.com`)
-- `email_smtp_port` — SMTP port (e.g., `587`)
-- `email_address` — Sender email address
-- `email_app_password` — OAuth2/App-specific password (encrypted)
-- `email_from_name` — Sender display name
+### `email_config`
+
+Stores SMTP configuration and sender details for system emails.
+
+- `id` (PK, auto-increment)
+- `smtp_host` (VARCHAR) — SMTP server host (e.g., `smtp.gmail.com`)
+- `smtp_port` (INT) — SMTP port (e.g., `587`)
+- `smtp_user` (VARCHAR) — SMTP username
+- `smtp_pass` (VARCHAR) — SMTP password / App Password
+- `smtp_crypto` (VARCHAR) — Encryption method (`tls`, `ssl`)
+- `from_email` (VARCHAR) — Sender email address
+- `from_name` (VARCHAR) — Sender display name
+- `updated_at` (DATETIME, default: `NOW()` on update)
 
 ## Key relationships
 

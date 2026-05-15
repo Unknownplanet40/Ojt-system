@@ -51,11 +51,14 @@ function checkServer() {
       }
 
       if (isDatabaseExistError) {
-        // goto setup page if database does not exist
+        
         $("#status").text("Database not found. Redirecting to setup page...");
         $("#dot").addClass("d-none");
         ToastVersion(swalTheme, "Database not found. Redirecting to setup page...", "warning");
         BGcircleTheme(true, "warning", "fast");
+        setTimeout(function() {
+            window.location.href = "./Src/Pages/Setup.php";
+        }, 1500);
       } else {
         $("#status").text(errorMessage);
         $("#dot").addClass("d-none");
@@ -76,7 +79,7 @@ function checkServer() {
     });
 }
 
-// detecting host environment
+
 function detectHostingEnvironment() {
   const hostname = window.location.hostname;
 

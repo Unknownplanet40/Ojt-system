@@ -82,7 +82,7 @@ $(document).ready(function () {
 
     loadJournals();
 
-    // Filtering
+    
     $('#journalStatusFilter').change(function() {
         currentStatusFilter = $(this).val();
         renderJournals();
@@ -97,7 +97,7 @@ $(document).ready(function () {
         loadJournals();
     });
 
-    // New Entry Modal
+    
     $('#newJournalEntryBtn, #emptyStateNewJournalBtn').click(function() {
         $('#journalEntryForm')[0].reset();
         $('#journalEntryUuid').val('');
@@ -114,7 +114,7 @@ $(document).ready(function () {
         $('#journalEntryModal').modal('show');
     });
 
-    // Save/Submit Journal
+    
     $('#saveJournalEntryBtn').click(function() {
         let btn = $(this);
         let ogText = btn.text();
@@ -202,7 +202,7 @@ $(document).ready(function () {
         }
     });
 
-    // View Details
+    
     $(document).on('click', '.view-journal-btn', function() {
         let uuid = $(this).data('uuid');
         let journal = journalsCache.find(j => j.uuid === uuid);
@@ -233,7 +233,7 @@ $(document).ready(function () {
         $('#viewJournalModal').modal('show');
     });
 
-    // Edit Resubmit Button
+    
     $('#editReturnedJournalBtn').click(function() {
         let uuid = $(this).data('uuid');
         let journal = journalsCache.find(j => j.uuid === uuid);
@@ -261,11 +261,11 @@ $(document).ready(function () {
         $('#journalEntryModal').modal('show');
     });
 
-    // Export Journal Button
+    
     $('#exportJournalBtn').click(function() {
         let currentJournalUuid = journalsCache.find(j => j.uuid === ($('.view-journal-btn').data('uuid') || ''))?.uuid;
         
-        // Find the currently open modal's journal UUID
+        
         let openJournal = null;
         journalsCache.forEach(journal => {
             if (journal.uuid) {

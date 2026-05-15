@@ -108,7 +108,7 @@ function loginUser($conn, string $email, string $password): array
         ];
     }
 
-    // update last login
+    
     $stmt = $conn->prepare("UPDATE users SET last_login_at = NOW() WHERE uuid = ?");
     $stmt->bind_param('s', $user['uuid']);
     $stmt->execute();
@@ -135,7 +135,7 @@ function buildSession($conn, array $user): void
     $_SESSION['user_role']            = $user['role'];
     $_SESSION['must_change_password'] = (int) $user['must_change_password'];
 
-    // Load per-user theme from user_settings
+    
     require_once __DIR__ . '/../functions/settings_functions.php';
     $_SESSION['theme_preference'] = getUserTheme($conn, $user['uuid']);
 
@@ -499,23 +499,23 @@ function getStudentProfile($conn, string $userUuid): ?array
         'profile_path'          => $row['profile_path']     ?? null,
         'profile_name'          => $row['profile_name']     ?? null,
 
-        // program
+        
         'program_uuid'          => $row['program_uuid'],
         'program_code'          => $row['program_code']     ?? '—',
         'program_name'          => $row['program_name']     ?? '—',
         'required_hours'        => (int) ($row['required_hours'] ?? 486),
 
-        // batch
+        
         'batch_uuid'            => $row['batch_uuid'],
         'batch_label'           => $row['school_year']
                                      ? "AY {$row['school_year']} {$row['semester']} Semester"
                                      : '—',
 
-        // coordinator
+        
         'coordinator_uuid'      => $row['coordinator_uuid'],
         'coordinator_name'      => $row['coordinator_name'] ?? '—',
 
-        // company
+        
         'company_uuid'          => $row['company_uuid'],
         'company_name'          => $row['company_name']     ?? null,
 
@@ -578,7 +578,7 @@ function getSupervisorProfile($conn, string $userUuid): ?array
         'email'          => $row['email'],
         'is_active'      => (int) $row['is_active'],
 
-        // company
+        
         'company_uuid'   => $row['company_uuid'],
         'company_name'   => $row['company_name'] ?? '—',
         'work_setup'     => $row['work_setup']   ?? '—',
@@ -832,7 +832,7 @@ function sendResetLink($conn, string $email): array
     $stmt->execute();
     $stmt->close();
 
-    // generate token
+    
     $token     = bin2hex(random_bytes(32));
     $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
@@ -853,7 +853,7 @@ function sendResetLink($conn, string $email): array
         ];
     }
 
-    // build reset link
+    
     $resetLink = 'http://localhost/ojt-system/Src/Pages/ForgotPassword?token=' . $token;
 
     return [
@@ -1057,29 +1057,44 @@ function resetPassword($conn, string $token, string $newPassword, string $confir
     ];
 }
 
-function sendResetEmail(string $toEmail, string $resetLink, string $expiresAt): bool
+function sendResetEmail($conn, string $toEmail, string $resetLink, string $expiresAt)
 {
     require_once dirname(__DIR__, 1) . '/Libs/composer/vendor/autoload.php';
 
-    // temporary - replace with database-stored email credentials in production
-    //$gmailUser = 'your gmail address';
-    //$gmailPass = 'your gmail password'; // won't work, you must create an app password for this to work
-
-    require_once './credentials.php'; // contains $gmailUser and $gmailPass variables
+    $stmt = $conn->query("SELECT * FROM email_config LIMIT 1");
+    if (!$stmt) {
+        return "Failed to fetch email configuration from the database.";
+    }
     
+    $config = $stmt->fetch_assoc();
+
+    if (!$config || empty($config['smtp_host']) || empty($config['smtp_user']) || empty($config['smtp_pass'])) {
+        return "System email is not configured. Please contact the administrator.";
+    }
+
     try {
         $mail = new PHPMailer(true);
         $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';
+        $mail->Host       = $config['smtp_host'];
         $mail->SMTPAuth   = true;
-        $mail->Username   = $gmailUser;
-        $mail->Password   = $gmailPass;
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
+        $mail->Username   = $config['smtp_user'];
+        $mail->Password   = $config['smtp_pass'];
+        
+        $crypto = strtolower($config['smtp_crypto'] ?? 'tls');
+        if ($crypto === 'ssl') {
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        } else {
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        }
+        
+        $mail->Port       = (int)$config['smtp_port'];
 
-        $mail->setFrom($gmailUser, 'OJT System');
+        $fromEmail = !empty($config['from_email']) ? $config['from_email'] : $config['smtp_user'];
+        $fromName  = !empty($config['from_name']) ? $config['from_name'] : 'OJT System';
+
+        $mail->setFrom($fromEmail, $fromName);
         $mail->addAddress($toEmail);
-        $mail->addReplyTo($gmailUser, 'OJT System');
+        $mail->addReplyTo($fromEmail, $fromName);
 
         $mail->isHTML(true);
         $mail->Subject = 'Reset Your OJT System Password';
@@ -1091,7 +1106,7 @@ function sendResetEmail(string $toEmail, string $resetLink, string $expiresAt): 
 
     } catch (Exception $e) {
         error_log('PHPMailer error: ' . $e->getMessage());
-        return false;
+        return "Failed to send email. Please try again later.";
     }
 }
 
@@ -1149,7 +1164,7 @@ function buildResetEmailHtml(string $resetLink, string $expiresAt): string
 
                                      <div style="text-align:center;margin-bottom:22px;">
                                         <div style="display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#E1F5EE,#F1FAF5);border:1px solid #CFE9DB;border-radius:18px;width:72px;height:72px;box-shadow:0 10px 20px rgba(15,110,86,0.08);">
-                                            <span style="font-size:30px;">&#128274;</span>
+                                            <span style="font-size:30px;">&
                                         </div>
                                     </div>
                                     <h2 style="margin:0 0 8px;color:#0f172a;font-size:22px;font-weight:700;text-align:center;">Reset your password</h2>

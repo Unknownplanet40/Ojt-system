@@ -34,7 +34,7 @@ if (empty($_POST['csrf_token']) ||
     response(['status' => 'error', 'message' => 'Invalid request.']);
 }
 
-// Check authorization - admin or coordinator (for their own students)
+
 if (!isset($_SESSION['user_uuid'])) {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);
@@ -65,7 +65,7 @@ if (empty($userUuid)) {
     response(['status' => 'error', 'message' => 'User UUID is required.']);
 }
 
-// If coordinator, verify the student is assigned to them
+
 if ($isCoordinator) {
     $coordinatorUuid = $_SESSION['profile_uuid'] ?? '';
     $stmt = $conn->prepare("

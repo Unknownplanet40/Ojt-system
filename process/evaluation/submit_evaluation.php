@@ -61,9 +61,9 @@ if (empty($batchUuid)) {
     response(['status' => 'error', 'message' => 'No active batch found.']);
 }
 
-// -----------------------------------------------
-// SUPERVISOR — midterm or final
-// -----------------------------------------------
+
+
+
 if ($role === 'supervisor') {
     $studentUuid = trim($_POST['student_uuid'] ?? '');
     $evalType    = trim($_POST['eval_type']    ?? '');
@@ -101,9 +101,9 @@ if ($role === 'supervisor') {
     ]);
 }
 
-// -----------------------------------------------
-// STUDENT — self evaluation
-// -----------------------------------------------
+
+
+
 if ($role === 'student') {
     $result = submitSelfEvaluation(
         $conn,

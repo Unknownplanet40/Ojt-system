@@ -79,8 +79,8 @@ function fetchProfile() {
         const profile = response.profile;
         if (!profile.profile_name) {
           const initials = profile.initials || "NA";
-          $("#navProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
-          $("#dropdownProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
+          $("#navProfilePhoto").attr("src", `https:
+          $("#dropdownProfilePhoto").attr("src", `https:
         } else {
           $("#navProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
           $("#dropdownProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
@@ -134,7 +134,7 @@ function fetchDashboardData() {
       if (response.status === "success") {
         const data = response.data;
         
-        // Update Stats
+        
         $("#TotalUsersCounts").text(data.stats.total_students);
         $("#TotalUsersStatus").text("Assigned students");
         
@@ -147,19 +147,19 @@ function fetchDashboardData() {
         $("#avgHoursRendered").text(data.stats.avg_hours);
         $("#avgHoursRenderedStatus").text("Avg. per student");
 
-        // Render Actions
+        
         renderActions(data.actions);
         
-        // Render Recent Students
+        
         renderRecentStudents(data.recent_students);
         
-        // Render Progress
+        
         renderHoursProgress(data.progress);
         
-        // Render Companies
+        
         renderPartnerCompanies(data.companies);
         
-        // Render Visits
+        
         renderUpcomingVisits(data.visits);
       } else {
         ToastVersion(swalTheme, response.message, "error", 3000, "top-end");

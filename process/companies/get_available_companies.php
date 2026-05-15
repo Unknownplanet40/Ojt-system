@@ -48,7 +48,7 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
-// students, coordinators, and admins can call this
+
 $allowedRoles = ['student', 'coordinator', 'admin'];
 if (!in_array($_SESSION['user_role'], $allowedRoles)) {
     http_response_code(403);

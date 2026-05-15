@@ -6,13 +6,13 @@ if (session_status() === PHP_SESSION_NONE) {
 
 date_default_timezone_set('Asia/Manila');
 
-// Direct access is allowed to support PDF generation via browser
+
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
 require_once dirname(__DIR__, 2) . '/functions/student_functions.php';
 require_once dirname(__DIR__, 2) . '/Assets/SystemInfo.php';
 
-// Method check removed to allow GET requests for PDF downloads
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (empty($_POST['csrf_token']) ||
     $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? ''))) {
@@ -42,7 +42,7 @@ if (empty($studentData) && isset($_GET['uuid'])) {
             'program'        => $student['program_name'],
             'year_level'     => $student['year_level'],
             'section'        => $student['section'],
-            'temp_password'  => '********' // Password hidden for general profile export
+            'temp_password'  => '********' 
         ];
     }
 }
@@ -80,49 +80,49 @@ $html = <<<HTML
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; background: #fff; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 12px; color: 
     .page { padding: 40px; }
 
-    .header { text-align: center; border-bottom: 2px solid #0F6E56; padding-bottom: 16px; margin-bottom: 24px; }
+    .header { text-align: center; border-bottom: 2px solid 
     .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; margin-bottom: 22px; }
     .header-table td { vertical-align: middle; }
     .header-left { width: 20%; text-align: left; }
     .header-center { width: 60%; text-align: center; }
     .header-right { width: 20%; text-align: right; }
     .header-logo { width: 64px; height: 64px; object-fit: contain; }
-    .school-name { font-size: 15px; font-weight: bold; color: #0F6E56; margin-bottom: 4px; }
-    .school-meta { font-size: 10px; color: #64748b; margin-top: 2px; }
-    .doc-title { font-size: 20px; font-weight: bold; color: #111; margin-bottom: 4px; }
-    .doc-subtitle { font-size: 11px; color: #666; }
+    .school-name { font-size: 15px; font-weight: bold; color: 
+    .school-meta { font-size: 10px; color: 
+    .doc-title { font-size: 20px; font-weight: bold; color: 
+    .doc-subtitle { font-size: 11px; color: 
 
-    .notice-box { background: #FEF9EE; border: 1px solid #FDE68A; border-radius: 6px; padding: 12px 14px; margin-bottom: 24px; }
-    .notice-title { font-size: 11px; font-weight: bold; color: #92400E; margin-bottom: 4px; }
-    .notice-text { font-size: 11px; color: #92400E; line-height: 1.5; }
+    .notice-box { background: 
+    .notice-title { font-size: 11px; font-weight: bold; color: 
+    .notice-text { font-size: 11px; color: 
 
-    .credentials-box { background: #E1F5EE; border: 1.5px solid #1D9E75; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; text-align: center; }
-    .credentials-label { font-size: 11px; font-weight: bold; color: #0F6E56; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .credentials-box { background: 
+    .credentials-label { font-size: 11px; font-weight: bold; color: 
     .cred-row { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
-    .cred-key { font-size: 12px; color: #065F46; font-weight: 500; text-align: left; }
-    .cred-val { font-size: 13px; font-weight: bold; color: #0F6E56; font-family: 'Courier New', monospace; text-align: center; }
-    .pw-val { font-size: 18px; font-weight: bold; color: #0F6E56; font-family: 'Courier New', monospace; letter-spacing: 0.1em; margin-top: 6px; }
+    .cred-key { font-size: 12px; color: 
+    .cred-val { font-size: 13px; font-weight: bold; color: 
+    .pw-val { font-size: 18px; font-weight: bold; color: 
 
-    .section-title { font-size: 12px; font-weight: bold; color: #374151; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 1px solid #E5E7EB; }
+    .section-title { font-size: 12px; font-weight: bold; color: 
     .info-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-    .info-table td { padding: 8px 10px; border-bottom: 1px solid #F3F4F6; font-size: 12px; }
-    .info-table td:first-child { color: #6B7280; width: 40%; font-weight: 500; }
-    .info-table td:last-child { color: #111827; font-weight: 600; }
+    .info-table td { padding: 8px 10px; border-bottom: 1px solid 
+    .info-table td:first-child { color: 
+    .info-table td:last-child { color: 
     .info-table tr:last-child td { border-bottom: none; }
 
-    .steps-box { background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 6px; padding: 14px 16px; margin-bottom: 24px; }
-    .steps-title { font-size: 11px; font-weight: bold; color: #0369A1; margin-bottom: 8px; }
-    .step { font-size: 11px; color: #0369A1; margin-bottom: 5px; line-height: 1.4; }
+    .steps-box { background: 
+    .steps-title { font-size: 11px; font-weight: bold; color: 
+    .step { font-size: 11px; color: 
 
-    .footer { border-top: 1px solid #E5E7EB; padding-top: 12px; text-align: center; }
-    .footer-text { font-size: 10px; color: #616264; line-height: 1.6; }
-    .generated-info { font-size: 9px; color: #3e3f41; margin-top: 4px; text-align: right; }
-    .confidential { font-size: 10px; font-weight: bold; color: #EF4444; margin-bottom: 4px; }
-    .divider { border: none; border-top: 1px solid #E5E7EB; margin: 16px 0; }
-        .footer-contact { margin-top: 6px; font-size: 9px; color: #64748b; line-height: 1.45; }
+    .footer { border-top: 1px solid 
+    .footer-text { font-size: 10px; color: 
+    .generated-info { font-size: 9px; color: 
+    .confidential { font-size: 10px; font-weight: bold; color: 
+    .divider { border: none; border-top: 1px solid 
+        .footer-contact { margin-top: 6px; font-size: 9px; color: 
   </style>
 </head>
 <body>
@@ -229,12 +229,12 @@ if (file_exists($mpdfPath)) {
         exit;
 
     } catch (Exception $e) {
-        // fall through to Option 2
+        
     }
 }
 
 
-// Option 2: Generate a very basic PDF using raw PDF syntax (without external libraries)
+
 generateSimplePdf($fullName, $email, $tempPassword, $studentNumber, $program, $yearLevel, $section, $generatedAt, $schoolName, $longTitle, $schoolMotto, $schoolAddress, $schoolWebsite, $schoolEmail, $schoolPhone, $documentFooterNote, $documentVerificationNote);
 
 function generateSimplePdf(
@@ -304,57 +304,57 @@ function buildRawPdf(
         return $objNum;
     };
 
-    // catalog
-    $catalogId = $addObj(''); // placeholder
-    $pagesId   = $addObj(''); // placeholder
-    $pageId    = $addObj(''); // placeholder
+    
+    $catalogId = $addObj(''); 
+    $pagesId   = $addObj(''); 
+    $pageId    = $addObj(''); 
     $fontId    = $addObj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
     $fontBoldId = $addObj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>');
     $fontMonoId = $addObj('<< /Type /Font /Subtype /Type1 /BaseFont /Courier-Bold >>');
 
-    // build page content stream
+    
     $stream = '';
 
-    // helper functions for stream
+    
     $setFont = fn ($id, $size) => "BT\n/F{$id} {$size} Tf\n";
     $text    = fn ($x, $y, $txt) => "{$x} {$y} Td ({$txt}) Tj\n";
     $line    = fn ($x1, $y1, $x2, $y2) => "{$x1} {$y1} m {$x2} {$y2} l S\n";
     $rect    = fn ($x, $y, $w, $h) => "{$x} {$y} {$w} {$h} re f\n";
 
-    // set color helper
+    
     $color    = fn ($r, $g, $b) => ($r / 255) . ' ' . ($g / 255) . ' ' . ($b / 255) . " rg\n";
     $colorStr = fn ($r, $g, $b) => ($r / 255) . ' ' . ($g / 255) . ' ' . ($b / 255) . " RG\n";
 
-    // ---- build content ----
+    
     $s = '';
 
-    // green header bar
-    $s .= $color(15, 110, 86); // #0F6E56
+    
+    $s .= $color(15, 110, 86); 
     $s .= "0 {$pageHeight} {$pageWidth} -80 re f\n";
 
-    // header text — white
+    
     $s .= "1 1 1 rg\n";
     $s .= "BT /F2 14 Tf " . ($margin) . " " . ($pageHeight - 35) . " Td ({$schoolName}) Tj ET\n";
     $s .= "BT /F2 18 Tf " . ($margin) . " " . ($pageHeight - 56) . " Td (Student Account Credentials) Tj ET\n";
     $s .= "BT /F1 9 Tf " . ($margin) . " " . ($pageHeight - 72) . " Td (Generated: {$generatedAt}) Tj ET\n";
 
-    // reset to black
+    
     $s .= "0 0 0 rg\n";
     $cy = $pageHeight - 110;
 
-    // notice box
-    $s .= "1 0.97 0.93 rg\n"; // light yellow
+    
+    $s .= "1 0.97 0.93 rg\n"; 
     $s .= "{$margin} " . ($cy - 50) . " " . ($pageWidth - ($margin * 2)) . " 60 re f\n";
     $s .= "0 0 0 rg\n";
     $s .= "BT /F2 9 Tf " . ($margin + 8) . " " . ($cy + 2) . " Td (IMPORTANT: This document contains sensitive login credentials. Keep confidential.) Tj ET\n";
     $s .= "BT /F1 9 Tf " . ($margin + 8) . " " . ($cy - 12) . " Td (Change your password immediately upon first login.) Tj ET\n";
     $cy -= 70;
 
-    // credentials box
-    $s .= "0.88 0.96 0.93 rg\n"; // light green
+    
+    $s .= "0.88 0.96 0.93 rg\n"; 
     $s .= "{$margin} " . ($cy - 85) . " " . ($pageWidth - ($margin * 2)) . " 95 re f\n";
 
-    // green border
+    
     $s .= $colorStr(15, 110, 86);
     $s .= "2 w\n";
     $s .= "{$margin} " . ($cy - 85) . " " . ($pageWidth - ($margin * 2)) . " 95 re S\n";
@@ -364,11 +364,11 @@ function buildRawPdf(
     $s .= "BT /F2 10 Tf " . ($margin + 8) . " " . ($cy + 2) . " Td (LOGIN CREDENTIALS) Tj ET\n";
     $s .= "0 0 0 rg\n";
 
-    // email
+    
     $s .= "BT /F1 10 Tf " . ($margin + 8) . " " . ($cy - 16) . " Td (Email Address:) Tj ET\n";
     $s .= "BT /F2 10 Tf 200 " . ($cy - 16) . " Td ({$email}) Tj ET\n";
 
-    // password
+    
     $s .= "BT /F1 10 Tf " . ($margin + 8) . " " . ($cy - 34) . " Td (Temporary Password:) Tj ET\n";
     $s .= $color(15, 110, 86);
     $s .= "BT /F3 20 Tf 200 " . ($cy - 40) . " Td ({$tempPassword}) Tj ET\n";
@@ -376,12 +376,12 @@ function buildRawPdf(
 
     $cy -= 110;
 
-    // student info section
+    
     $s .= $color(15, 110, 86);
     $s .= "BT /F2 11 Tf {$margin} {$cy} Td (STUDENT INFORMATION) Tj ET\n";
     $s .= "0 0 0 rg\n";
 
-    // underline
+    
     $cy -= 6;
     $s .= $colorStr(15, 110, 86);
     $s .= "1 w {$margin} {$cy} " . ($pageWidth - ($margin * 2)) . " 0 l S\n";
@@ -397,7 +397,7 @@ function buildRawPdf(
     ];
 
     foreach ($rows as $row) {
-        // alternate row background
+        
         static $alt = false;
         if ($alt) {
             $s .= "0.97 0.97 0.97 rg\n";
@@ -413,8 +413,8 @@ function buildRawPdf(
 
     $cy -= 14;
 
-    // login steps box
-    $s .= "0.94 0.97 1 rg\n"; // light blue
+    
+    $s .= "0.94 0.97 1 rg\n"; 
     $s .= "{$margin} " . ($cy - 100) . " " . ($pageWidth - ($margin * 2)) . " 110 re f\n";
     $s .= "0 0 0 rg\n";
 
@@ -434,7 +434,7 @@ function buildRawPdf(
 
     $cy -= 120;
 
-    // footer line
+    
     $s .= "0.9 0.9 0.9 RG 1 w\n";
     $s .= "{$margin} " . ($margin + 30) . " " . ($pageWidth - ($margin * 2)) . " 0 l S\n";
     $s .= "0 0 0 RG 0 w\n";
@@ -446,11 +446,11 @@ function buildRawPdf(
     $s .= "BT /F1 8 Tf {$margin} " . ($margin + 6) . " Td (Generated by {$longTitle}. Do not reproduce or distribute.) Tj ET\n";
     $s .= "BT /F1 7 Tf {$margin} " . ($margin - 6) . " Td ({$footerLine}) Tj ET\n";
 
-    // content stream object
+    
     $streamLen = strlen($s);
     $contentId = $addObj("<< /Length {$streamLen} >>\nstream\n{$s}\nendstream");
 
-    // update page object
+    
     $objects[$pageId] = "<< /Type /Page /Parent {$pagesId} 0 R "
         . "/MediaBox [0 0 {$pageWidth} {$pageHeight}] "
         . "/Contents {$contentId} 0 R "
@@ -459,7 +459,7 @@ function buildRawPdf(
     $objects[$pagesId] = "<< /Type /Pages /Kids [{$pageId} 0 R] /Count 1 >>";
     $objects[$catalogId] = "<< /Type /Catalog /Pages {$pagesId} 0 R >>";
 
-    // build PDF file
+    
     $out     = "%PDF-1.4\n";
     $offsets = [];
 
@@ -468,7 +468,7 @@ function buildRawPdf(
         $out .= "{$num} 0 obj\n{$content}\nendobj\n";
     }
 
-    // cross-reference table
+    
     $xrefOffset = strlen($out);
     $out .= "xref\n0 " . ($objNum + 1) . "\n";
     $out .= "0000000000 65535 f \n";

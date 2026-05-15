@@ -58,7 +58,7 @@ $data = [
 
 $result = createProgram($conn, $data, $_SESSION['user_uuid']);
 
-sleep(rand(1, 3)); // Simulate processing delay
+sleep(rand(1, 3)); 
 
 if (!$result['success']) {
     response([

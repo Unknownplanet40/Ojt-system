@@ -207,7 +207,7 @@ function getSupervisors() {
       supervisors.forEach((supervisor) => {
         const profileImage = supervisor.profile_name
           ? `../../../Assets/Images/profiles/${supervisor.profile_name}`
-          : `https://placehold.co/64x64/483a0f/c6983d/png?text=${supervisor.initials}&font=poppins`;
+          : `https:
 
         tableBody.append(`
           <tr class="js-supervisor-row" data-profile-uuid="${supervisor.profile_uuid}" style="cursor: pointer;">

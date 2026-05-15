@@ -229,7 +229,7 @@ $(document).ready(function () {
         });
     });
 
-    // Handle URL parameters for direct actions from dashboard
+    
     const urlParams = new URLSearchParams(window.location.search);
     const visitUuid = urlParams.get('uuid');
     const action = urlParams.get('action');
@@ -255,7 +255,7 @@ $(document).ready(function () {
             } else if (action === 'manage') {
                 $('.btn-view-visit[data-uuid="' + visitUuid + '"]').first().click();
             }
-        }, 1000); // Wait for visits to load
+        }, 1000); 
     }
 });
 
@@ -415,7 +415,7 @@ function renderVisits(visits) {
         container.append(card);
     });
     
-    // Animate cards
+    
     anime({
         targets: '.visit-card-anim',
         translateY: [20, 0],

@@ -37,5 +37,7 @@ response([
     'status' => 'success',
     'settings' => [
         'theme' => getUserTheme($conn, $_SESSION['user_uuid']),
+        'email' => getEmailSettings($conn),
+        'institutional' => getSystemConfig($conn),
     ],
 ]);

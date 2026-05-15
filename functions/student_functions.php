@@ -189,7 +189,7 @@ function getStudent($conn, string $profileUuid): ?array
 
     $student = formatStudent($row);
 
-    // add extra fields only in detail view
+    
     $student['home_address']          = $row['home_address']      ?? '';
     $student['emergency_contact']     = $row['emergency_contact'] ?? '';
     $student['emergency_phone']       = $row['emergency_phone']   ?? '';
@@ -230,7 +230,7 @@ function createStudent($conn, array $data, string $actorUuid): array
     $coordinatorUuid = trim($data['coordinator_uuid']  ?? '');
     $batchUuid       = trim($data['batch_uuid']        ?? '');
 
-    // validate
+    
     if (empty($email)) {
         $errors['email'] = 'Email is required.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -264,7 +264,7 @@ function createStudent($conn, array $data, string $actorUuid): array
         return ['success' => false, 'errors' => $errors];
     }
 
-    // check email not already used
+    
     $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
     $stmt->bind_param('s', $email);
     $stmt->execute();
@@ -274,7 +274,7 @@ function createStudent($conn, array $data, string $actorUuid): array
     }
     $stmt->close();
 
-    // check student number not already used
+    
     $stmt = $conn->prepare("SELECT id FROM student_profiles WHERE student_number = ? LIMIT 1");
     $stmt->bind_param('s', $studentNumber);
     $stmt->execute();
@@ -284,7 +284,7 @@ function createStudent($conn, array $data, string $actorUuid): array
     }
     $stmt->close();
 
-    // check batch is active
+    
     $stmt = $conn->prepare("SELECT uuid FROM batches WHERE uuid = ? AND status = 'active' LIMIT 1");
     $stmt->bind_param('s', $batchUuid);
     $stmt->execute();
@@ -294,17 +294,17 @@ function createStudent($conn, array $data, string $actorUuid): array
     }
     $stmt->close();
 
-    // generate credentials
+    
     $userUuid     = generateUuid();
     $profileUuid  = generateUuid();
     $tempPassword = generateTempPassword();
     $passwordHash = password_hash($tempPassword, PASSWORD_BCRYPT);
 
-    // transaction
+    
     $conn->begin_transaction();
 
     try {
-        // insert user
+        
         $stmt = $conn->prepare("
             INSERT INTO users
               (uuid, email, password_hash, role, is_active, must_change_password, created_by)
@@ -314,7 +314,7 @@ function createStudent($conn, array $data, string $actorUuid): array
         $stmt->execute();
         $stmt->close();
 
-        // insert student profile
+        
         $stmt = $conn->prepare("
             INSERT INTO student_profiles
               (uuid, user_uuid, student_number, last_name, first_name, middle_name,
@@ -340,7 +340,7 @@ function createStudent($conn, array $data, string $actorUuid): array
         return ['success' => false, 'errors' => ['general' => 'Failed to create account. Please try again.', 'details' => $e->getMessage()]];
     }
 
-    // initialize requirements after successful creation
+    
     initializeRequirements($conn, $profileUuid, $batchUuid);
 
     logActivity(

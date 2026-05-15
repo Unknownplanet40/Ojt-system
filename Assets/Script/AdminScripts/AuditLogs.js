@@ -97,7 +97,7 @@ function formatMetaValue(value) {
   }
 
   const stringValue = String(value);
-  const looksLikeUrl = /^https?:\/\//i.test(stringValue);
+  const looksLikeUrl = /^https?:\/\
   if (looksLikeUrl) {
     return `<a href="${escapeHtml(stringValue)}" target="_blank" rel="noopener noreferrer">${escapeHtml(stringValue)}</a>`;
   }
@@ -164,7 +164,7 @@ function renderAuditRows(logs = []) {
     const isActivitySource = String(log.source || "") === "activity";
     const isLoginSource = String(log.source || "") === "login";
     
-    // Icons
+    
     let moduleIcon = 'bi-box';
     let moduleColor = 'text-primary';
     if(log.module_label === 'auth') { moduleIcon = 'bi-shield-lock'; moduleColor = 'text-danger'; }

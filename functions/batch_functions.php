@@ -170,7 +170,7 @@ function createBatch($conn, array $data, string $actorUuid): array
     $requiredHours = (int) ($data['required_hours'] ?? 486);
     $activateNow   = (int) ($data['activate_now']   ?? 0);
 
-    // validate
+    
     if (empty($schoolYear)) {
         $errors['school_year'] = 'School year is required.';
     } elseif (!preg_match('/^\d{4}-\d{4}$/', $schoolYear)) {
@@ -206,7 +206,7 @@ function createBatch($conn, array $data, string $actorUuid): array
         return ['success' => false, 'errors' => $errors];
     }
 
-    // check duplicate school year + semester
+    
     $stmt = $conn->prepare("
         SELECT id FROM batches
         WHERE school_year = ? AND semester = ?
@@ -224,7 +224,7 @@ function createBatch($conn, array $data, string $actorUuid): array
         ];
     }
 
-    // generate UUID in PHP — MariaDB 10.4 has no LAST_INSERT_UUID()
+    
     $batchUuid = generateUuid();
 
     $stmt = $conn->prepare("
@@ -250,7 +250,7 @@ function createBatch($conn, array $data, string $actorUuid): array
         targetUuid: $batchUuid
     );
 
-    // activate immediately if toggled
+    
     if ($activateNow === 1) {
         activateBatch($conn, $batchUuid, $actorUuid);
     }
@@ -260,7 +260,7 @@ function createBatch($conn, array $data, string $actorUuid): array
 
 function updateBatch($conn, string $batchUuid, array $data, string $actorUuid): array
 {
-    // fetch current batch
+    
     $stmt = $conn->prepare("SELECT status FROM batches WHERE uuid = ? LIMIT 1");
     $stmt->bind_param('s', $batchUuid);
     $stmt->execute();
@@ -311,7 +311,7 @@ function updateBatch($conn, string $batchUuid, array $data, string $actorUuid): 
         return ['success' => false, 'errors' => $errors];
     }
 
-    // check duplicate — exclude current batch
+    
     $stmt = $conn->prepare("
         SELECT id FROM batches
         WHERE school_year = ? AND semester = ? AND uuid != ?
@@ -380,7 +380,7 @@ function activateBatch($conn, string $batchUuid, string $actorUuid): array
         return ['success' => false, 'error' => 'A closed batch cannot be reactivated.'];
     }
 
-    // close current active batch first
+    
     $stmt = $conn->prepare("
         UPDATE batches
         SET status    = 'closed',
@@ -392,7 +392,7 @@ function activateBatch($conn, string $batchUuid, string $actorUuid): array
     $stmt->execute();
     $stmt->close();
 
-    // activate new batch
+    
     $stmt = $conn->prepare("
         UPDATE batches
         SET status       = 'active',
@@ -418,7 +418,7 @@ function activateBatch($conn, string $batchUuid, string $actorUuid): array
 
 function closeBatch($conn, string $batchUuid, string $confirmText, string $actorUuid): array
 {
-    // Done in JS for better UX — but keep this check here as a fallback in case JS fails or is bypassed
+    
     if (strtoupper(trim($confirmText)) !== 'CLOSE') {
         return ['success' => false, 'error' => 'Type CLOSE to confirm.'];
     }

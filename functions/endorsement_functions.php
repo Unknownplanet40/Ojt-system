@@ -150,38 +150,38 @@ function buildEndorsementPdf(array $data): array
 <meta charset="UTF-8">
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.55; color: #111827; background: #fff; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.55; color: 
     .page { padding: 44px 50px 38px; }
 
-    .header { text-align: center; border-bottom: 2px solid #0F6E56; padding-bottom: 16px; margin-bottom: 22px; }
+    .header { text-align: center; border-bottom: 2px solid 
     .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 8px; margin-bottom: 18px; }
     .header-table td { vertical-align: middle; }
     .header-left { width: 20%; text-align: left; }
     .header-center { width: 60%; text-align: center; }
     .header-right { width: 20%; text-align: right; }
     .header-logo { width: 60px; height: 60px; object-fit: contain; }
-    .school-name { font-size: 15px; font-weight: 700; color: #0F6E56; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
-    .school-meta { font-size: 10px; color: #64748b; margin-top: 2px; }
-    .doc-title { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 4px; letter-spacing: .01em; }
-    .doc-subtitle { font-size: 11px; color: #6b7280; }
-    .doc-meta { font-size: 10px; color: #64748b; margin-top: 2px; }
+    .school-name { font-size: 15px; font-weight: 700; color: 
+    .school-meta { font-size: 10px; color: 
+    .doc-title { font-size: 18px; font-weight: 700; color: 
+    .doc-subtitle { font-size: 11px; color: 
+    .doc-meta { font-size: 10px; color: 
 
-    .date-line { text-align: right; margin-bottom: 18px; font-size: 12px; color: #374151; }
+    .date-line { text-align: right; margin-bottom: 18px; font-size: 12px; color: 
     .addressee { margin-bottom: 18px; }
-    .addressee-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #6b7280; margin-bottom: 2px; }
-    .addressee strong { font-size: 13px; color: #111827; }
-    .addressee p { font-size: 12px; color: #374151; margin-top: 2px; }
+    .addressee-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: 
+    .addressee strong { font-size: 13px; color: 
+    .addressee p { font-size: 12px; color: 
     .salutation { margin-bottom: 14px; font-size: 12px; }
     .body-text { margin-bottom: 12px; text-align: justify; }
-    .highlight { font-weight: 700; color: #111827; }
-    .ref-box { background: #f8fafc; border: 1px solid #dbe3ea; border-left: 4px solid #0F6E56; border-radius: 6px; padding: 10px 14px; margin: 18px 0 16px; font-size: 11px; color: #334155; }
+    .highlight { font-weight: 700; color: 
+    .ref-box { background: 
     .closing { margin-top: 18px; margin-bottom: 36px; }
     .sig-block { margin-top: 8px; }
-    .sig-name { font-size: 12px; font-weight: 700; color: #111827; margin-bottom: 2px; }
-    .sig-title { font-size: 11px; color: #374151; line-height: 1.45; }
-    .footer { margin-top: 24px; padding-top: 10px; border-top: 1px solid #cbd5e1; text-align: center; font-size: 9.5px; color: #64748b; line-height: 1.5; }
-    .footer strong { color: #334155; }
-    .footer-contact { margin-top: 6px; font-size: 9px; color: #64748b; }
+    .sig-name { font-size: 12px; font-weight: 700; color: 
+    .sig-title { font-size: 11px; color: 
+    .footer { margin-top: 24px; padding-top: 10px; border-top: 1px solid 
+    .footer strong { color: 
+    .footer-contact { margin-top: 6px; font-size: 9px; color: 
 </style>
 </head>
 <body>
@@ -283,11 +283,11 @@ function buildEndorsementPdf(array $data): array
 </html>
 HTML;
 
-    // save PDF
+    
     $studentUuid = $data['student_uuid'];
     $fileName    = 'Endorsement_' . $data['student_number'] . '_' . date('Ymd') . '.pdf';
 
-    // compute project root and upload paths (use one level up from functions/)
+    
     $projectRoot  = dirname(__DIR__);
     $absoluteDir  = $projectRoot . '/uploads/endorsements/' . $studentUuid . '/';
     $relativePath = 'uploads/endorsements/' . $studentUuid . '/' . $fileName;
@@ -298,7 +298,7 @@ HTML;
         }
     }
 
-    // use mPDF if available
+    
     $autoload = $projectRoot . '/libs/composer/vendor/autoload.php';
     if (file_exists($autoload)) {
         require_once $autoload;
@@ -312,7 +312,7 @@ HTML;
                 'margin_right'  => 0,
             ]);
             $mpdf->WriteHTML($html);
-            $mpdf->Output($absoluteDir . $fileName, 'F'); // F = save to file
+            $mpdf->Output($absoluteDir . $fileName, 'F'); 
             return [
                 'success'       => true,
                 'file_name'     => $fileName,
@@ -323,7 +323,7 @@ HTML;
         }
     }
 
-    // fallback — save raw HTML as PDF placeholder
+    
     file_put_contents($absoluteDir . $fileName, $html);
     return [
         'success'       => true,
@@ -369,7 +369,7 @@ function confirmOjtStart(
     $supervisorUuid = trim($data['supervisor_uuid']     ?? '');
     $hoursPerDay    = (int) ($data['working_hours_per_day'] ?? 8);
 
-    // validate
+    
     $errors = [];
 
     if (empty($startDate)) {
@@ -386,7 +386,7 @@ function confirmOjtStart(
         return ['success' => false, 'errors' => $errors];
     }
 
-    // fetch application
+    
     $stmt = $conn->prepare("
         SELECT a.uuid, a.status, a.student_uuid, a.batch_uuid, a.company_uuid,
                sp.coordinator_uuid
@@ -414,7 +414,7 @@ function confirmOjtStart(
         ];
     }
 
-    // verify supervisor belongs to the student's company
+    
     $stmt = $conn->prepare("
         SELECT svp.uuid, svp.company_uuid
         FROM supervisor_profiles svp
@@ -433,7 +433,7 @@ function confirmOjtStart(
         return ['success' => false, 'error' => 'Supervisor not found or inactive.'];
     }
 
-    // compute expected end if not provided
+    
     if (empty($expectedEnd) && !empty($startDate)) {
         $stmt = $conn->prepare("
             SELECT p.required_hours
@@ -448,14 +448,14 @@ function confirmOjtStart(
 
         $requiredHours = (int) ($prog['required_hours'] ?? 486);
         $workingDays   = ceil($requiredHours / $hoursPerDay);
-        // add working days to start date (rough estimate — no weekends excluded)
+        
         $expectedEnd   = date('Y-m-d', strtotime($startDate . " +{$workingDays} days"));
     }
 
     $conn->begin_transaction();
 
     try {
-        // save OJT start record
+        
         $startUuid = generateUuid();
         $stmt = $conn->prepare("
             INSERT INTO ojt_start_confirmations
@@ -484,7 +484,7 @@ function confirmOjtStart(
         $stmt->execute();
         $stmt->close();
 
-        // update application to active after start details are saved
+        
         $stmt = $conn->prepare(" 
             UPDATE ojt_applications
             SET status = 'active',
@@ -495,7 +495,7 @@ function confirmOjtStart(
         $stmt->execute();
         $stmt->close();
 
-        // link supervisor to student profile
+        
         $stmt = $conn->prepare("
             UPDATE student_profiles
             SET supervisor_uuid = ?
@@ -512,7 +512,7 @@ function confirmOjtStart(
         return ['success' => false, 'error' => 'Failed to confirm OJT start: ' . $e->getMessage()];
     }
 
-    // log status history
+    
     logApplicationStatus(
         $conn,
         $applicationUuid,

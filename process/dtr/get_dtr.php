@@ -55,7 +55,9 @@ $filters     = [];
 
 if (!empty($_POST['status']))       $filters['status']       = $_POST['status'];
 if (!empty($_POST['month']))        $filters['month']        = $_POST['month'];
-if (isset($_POST['is_backdated']))  $filters['is_backdated'] = (int) $_POST['is_backdated'];
+if (isset($_POST['is_backdated']) && $_POST['is_backdated'] !== '') {
+    $filters['is_backdated'] = (int) $_POST['is_backdated'];
+}
 
 if (empty($batchUuid)) {
     $result    = $conn->query("SELECT uuid FROM batches WHERE status = 'active' LIMIT 1");

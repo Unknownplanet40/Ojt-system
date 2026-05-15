@@ -116,7 +116,7 @@ $CurrentPage = "Settings";
                         </div>
 
                         <!-- Background Opacity -->
-                        <div class="settings-section">
+                        <div class="settings-section d-none">
                             <div class="section-header">
                                 <div class="section-header-icon">
                                     <i class="bi bi-transparency"></i>
@@ -190,27 +190,42 @@ $CurrentPage = "Settings";
 
                                 <div class="form-row">
                                     <div class="form-group-custom">
-                                        <label for="emailAddress">Email Address <span style="color: #dc3545;">*</span></label>
-                                        <input type="email" class="form-control-custom" id="emailAddress" 
-                                               placeholder="sender@example.com" style="width: 100%;">
-                                        <div class="form-text">The sender email address</div>
+                                        <label for="emailSmtpUser">SMTP Username <span style="color: #dc3545;">*</span></label>
+                                        <input type="text" class="form-control-custom" id="emailSmtpUser" 
+                                               placeholder="e.g., user@gmail.com" style="width: 100%;">
+                                        <div class="form-text">Your SMTP login username</div>
                                     </div>
                                     <div class="form-group-custom">
-                                        <label for="emailFromName">From Name <span style="color: #dc3545;">*</span></label>
-                                        <input type="text" class="form-control-custom" id="emailFromName" 
-                                               placeholder="e.g., OJT System" style="width: 100%;">
-                                        <div class="form-text">Display name for emails</div>
+                                        <label for="emailSmtpPass">SMTP Password <span style="color: #dc3545;">*</span></label>
+                                        <input type="password" class="form-control-custom" id="emailSmtpPass" 
+                                               placeholder="Enter your SMTP password" style="width: 100%;">
+                                        <div class="form-text">App-specific password recommended</div>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group-custom">
+                                        <label for="emailSmtpCrypto">Encryption <span style="color: #dc3545;">*</span></label>
+                                        <select class="form-control-custom" id="emailSmtpCrypto" style="width: 100%;">
+                                            <option class="CustomOption" value="tls" selected>TLS (Recommended)</option>
+                                            <option class="CustomOption" value="ssl">SSL</option>
+                                            <option class="CustomOption" value="none">None</option>
+                                        </select>
+                                        <div class="form-text">Choose your SMTP encryption type</div>
+                                    </div>
+                                    <div class="form-group-custom">
+                                        <label for="emailFromEmail">Sender Email <span style="color: #dc3545;">*</span></label>
+                                        <input type="email" class="form-control-custom" id="emailFromEmail" 
+                                               placeholder="noreply@example.com" style="width: 100%;">
+                                        <div class="form-text">The email address shown to recipients</div>
                                     </div>
                                 </div>
 
                                 <div class="form-group-custom">
-                                    <label for="emailAppPassword">App Password <span style="color: #dc3545;">*</span></label>
-                                    <input type="password" class="form-control-custom" id="emailAppPassword" 
-                                           placeholder="Enter your app-specific password" style="width: 100%; max-width: 400px;">
-                                    <div class="form-text">
-                                        For Gmail: Use an App Password (not your regular password)<br>
-                                        For others: Use your SMTP password or authentication token
-                                    </div>
+                                    <label for="emailFromName">From Name <span style="color: #dc3545;">*</span></label>
+                                    <input type="text" class="form-control-custom" id="emailFromName" 
+                                           placeholder="e.g., OJT Management System" style="width: 100%; max-width: 400px;">
+                                    <div class="form-text">Display name for sent emails</div>
                                 </div>
 
                                 <div class="action-buttons">
@@ -227,6 +242,125 @@ $CurrentPage = "Settings";
                     <div class="tab-pane fade" id="settings-system" role="tabpanel"
                         aria-labelledby="settings-system-tab" tabindex="0">
                         
+                        <!-- Institutional Profile -->
+                        <div class="settings-section">
+                            <div class="section-header">
+                                <div class="section-header-icon">
+                                    <i class="bi bi-building"></i>
+                                </div>
+                                <div class="section-header-text">
+                                    <h5>Institutional Profile</h5>
+                                    <p>Manage school identity and contact details</p>
+                                </div>
+                            </div>
+
+                            <form id="institutionalForm" enctype="multipart/form-data">
+                                <div class="info-box mb-4">
+                                    <i class="bi bi-window-sidebar"></i>
+                                    System Application Identity
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group-custom" style="flex: 2;">
+                                        <label for="instLongTitle">System Long Title <span style="color: #dc3545;">*</span></label>
+                                        <input type="text" class="form-control-custom" id="instLongTitle" name="long_title" placeholder="e.g. On-The-Job Training Management System" style="width: 100%;" required>
+                                    </div>
+                                    <div class="form-group-custom" style="flex: 1;">
+                                        <label for="instShortTitle">Short Title <span style="color: #dc3545;">*</span></label>
+                                        <input type="text" class="form-control-custom" id="instShortTitle" name="short_title" placeholder="e.g. OJT-MS" style="width: 100%;" required>
+                                    </div>
+                                    <div class="form-group-custom" style="flex: 1;">
+                                        <label for="instAuthor">System Author</label>
+                                        <input type="text" class="form-control-custom" id="instAuthor" name="author" placeholder="e.g. IT Department" style="width: 100%;">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group-custom">
+                                    <label for="instSystemDescription">Brief System Description</label>
+                                    <textarea class="form-control-custom" id="instSystemDescription" name="system_description" rows="2" placeholder="Describe the purpose of this system..." style="width: 100%;"></textarea>
+                                </div>
+
+                                <div class="info-box mb-4 mt-4">
+                                    <i class="bi bi-bank"></i>
+                                    Institution Details
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group-custom" style="flex: 2;">
+                                        <label for="instSchoolName">School Name <span style="color: #dc3545;">*</span></label>
+                                        <input type="text" class="form-control-custom" id="instSchoolName" name="school_name" placeholder="e.g. University of Technology" style="width: 100%;" required>
+                                    </div>
+                                    <div class="form-group-custom" style="flex: 1;">
+                                        <label for="instSchoolMotto">School Motto</label>
+                                        <input type="text" class="form-control-custom" id="instSchoolMotto" name="school_motto" placeholder="e.g. Excellence and Innovation" style="width: 100%;">
+                                    </div>
+                                </div>
+
+                                <div class="form-group-custom">
+                                    <label for="instSchoolAddress">Complete Address</label>
+                                    <input type="text" class="form-control-custom" id="instSchoolAddress" name="school_address" placeholder="123 University Ave, City, State, ZIP" style="width: 100%;">
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group-custom">
+                                        <label for="instSchoolEmail">Official Email</label>
+                                        <input type="email" class="form-control-custom" id="instSchoolEmail" name="school_email" placeholder="contact@school.edu" style="width: 100%;">
+                                    </div>
+                                    <div class="form-group-custom">
+                                        <label for="instSchoolPhone">Contact Number</label>
+                                        <input type="text" class="form-control-custom" id="instSchoolPhone" name="school_phone" placeholder="+1 234 567 8900" style="width: 100%;">
+                                    </div>
+                                    <div class="form-group-custom">
+                                        <label for="instSchoolWebsite">Website URL</label>
+                                        <input type="url" class="form-control-custom" id="instSchoolWebsite" name="school_website" placeholder="https://www.school.edu" style="width: 100%;">
+                                    </div>
+                                </div>
+
+                                <div class="info-box mb-4 mt-4">
+                                    <i class="bi bi-file-earmark-richtext"></i>
+                                    Document Formatting & Branding
+                                </div>
+                                <div class="form-text mb-3" style="margin-top: -15px;">These logos and notes will appear on generated PDFs, emails, and official system documents.</div>
+
+                                <div class="form-row mb-3">
+                                    <div class="form-group-custom">
+                                        <label for="instLogo1">Primary Logo (Left Side)</label>
+                                        <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem;">
+                                            <div style="width: 60px; height: 60px; border-radius: 8px; border: 1px dashed rgba(var(--bs-body-color-rgb), 0.2); display: flex; align-items: center; justify-content: center; overflow: hidden; background: rgba(var(--bs-body-color-rgb), 0.02); flex-shrink: 0;">
+                                                <img id="logo1Preview" src="https://placehold.co/128x128/0F6E56/FFFFFF?text=LOGO" onerror="this.src='https://placehold.co/128x128/0F6E56/FFFFFF?text=LOGO'" style="width: 100%; height: 100%; object-fit: contain;" alt="Logo 1">
+                                            </div>
+                                            <input type="file" class="form-control-custom" id="instLogo1" name="logo_1" accept="image/*" style="flex: 1;">
+                                        </div>
+                                    </div>
+                                    <div class="form-group-custom">
+                                        <label for="instLogo2">Secondary Logo (Right Side)</label>
+                                        <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem;">
+                                            <div style="width: 60px; height: 60px; border-radius: 8px; border: 1px dashed rgba(var(--bs-body-color-rgb), 0.2); display: flex; align-items: center; justify-content: center; overflow: hidden; background: rgba(var(--bs-body-color-rgb), 0.02); flex-shrink: 0;">
+                                                <img id="logo2Preview" src="https://placehold.co/128x128/0F6E56/FFFFFF?text=LOGO" onerror="this.src='https://placehold.co/128x128/0F6E56/FFFFFF?text=LOGO'" style="width: 100%; height: 100%; object-fit: contain;" alt="Logo 2">
+                                            </div>
+                                            <input type="file" class="form-control-custom" id="instLogo2" name="logo_2" accept="image/*" style="flex: 1;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group-custom">
+                                        <label for="instPageLink">Institutional Portal Link</label>
+                                        <input type="url" class="form-control-custom" id="instPageLink" name="page_link" placeholder="e.g. portal.school.edu" style="width: 100%;">
+                                    </div>
+                                    <div class="form-group-custom">
+                                        <label for="instFooterNote">Document Footer Note</label>
+                                        <input type="text" class="form-control-custom" id="instFooterNote" name="footer_note" placeholder="e.g. Officially issued by the OJT Office" style="width: 100%;">
+                                    </div>
+                                </div>
+
+                                <div class="form-group-custom">
+                                    <label for="instVerificationNote">Verification / E-Signature Note</label>
+                                    <textarea class="form-control-custom" id="instVerificationNote" name="verification_note" rows="2" placeholder="e.g. Not valid without a dry seal. Verify authenticity at the Coordinator's office." style="width: 100%;"></textarea>
+                                </div>
+                            </form>
+                        </div>
+
                         <!-- Environment Info -->
                         <div class="settings-section">
                             <div class="section-header">
@@ -291,7 +425,7 @@ $CurrentPage = "Settings";
                                         <div style="font-weight: 500; color: var(--bs-body-color);">Clear Activity Log</div>
                                         <div style="font-size: 0.85rem; color: var(--bs-secondary-color);">Permanently deletes all entries from activity_log table</div>
                                     </div>
-                                    <button class="btn-action" style="background: rgba(220, 53, 69, 0.2); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.3);">
+                                    <button class="btn-action" id="clearActivityLogBtn" style="background: rgba(220, 53, 69, 0.2); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.3);">
                                         <i class="bi bi-trash"></i> Clear
                                     </button>
                                 </div>
@@ -300,7 +434,7 @@ $CurrentPage = "Settings";
                                         <div style="font-weight: 500; color: var(--bs-body-color);">Clear Login Audit Log</div>
                                         <div style="font-size: 0.85rem; color: var(--bs-secondary-color);">Permanently deletes all entries from login_audit_log table</div>
                                     </div>
-                                    <button class="btn-action" style="background: rgba(220, 53, 69, 0.2); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.3);">
+                                    <button class="btn-action" id="clearLoginLogBtn" style="background: rgba(220, 53, 69, 0.2); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.3);">
                                         <i class="bi bi-trash"></i> Clear
                                     </button>
                                 </div>

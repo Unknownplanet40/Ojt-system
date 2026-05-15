@@ -77,9 +77,9 @@ function fetchProfile() {
         const profile = response.profile;
         if (!profile.profile_name) {
           const initials = profile.initials || "NA";
-          $("#navProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
-          $("#dropdownProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
-          $("#DashboardProfilePhotoS").attr("src", `https://placehold.co/40x40/483a0f/c6983d/png?text=${initials}&font=poppins`);
+          $("#navProfilePhoto").attr("src", `https:
+          $("#dropdownProfilePhoto").attr("src", `https:
+          $("#DashboardProfilePhotoS").attr("src", `https:
         } else {
           $("#navProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
           $("#dropdownProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
@@ -146,13 +146,13 @@ function fetchDashboardStats() {
       if (response.status === "success") {
         const { stats, recent_dtr, ojt_details, batch_info, requirements_list } = response;
 
-        // Update Batch Info
+        
         if (batch_info) {
           $("#currentSemesterLabel").text(batch_info.semester + " Semester");
           $("#currentAcademicYearLabel").text(batch_info.school_year);
         }
 
-        // Update OJT Details Card & My OJT Details Card
+        
         if (ojt_details && ojt_details.app_status === 'active') {
           $("#activeOjtSection, #ojtDetailsCardSection").fadeIn(500);
           
@@ -180,9 +180,9 @@ function fetchDashboardStats() {
           $("#activeOjtSection, #ojtDetailsCardSection").hide();
         }
 
-        // Update Statistics
+        
         if (stats) {
-          // Hours Rendered
+          
           const dtr = stats.dtr;
           $("#hoursPercentBadge, #mainHoursPercent").text(dtr.percentage + "%");
           $("#renderedHoursCount, #mainRenderedHours, #mainRenderedTotal").text(dtr.total_approved);
@@ -191,27 +191,27 @@ function fetchDashboardStats() {
           $("#mainHoursProgressBar").css("width", dtr.percentage + "%").attr("aria-valuenow", dtr.percentage);
           $("#mainRemainingHours").text(dtr.remaining_hours);
 
-          // Days Remaining & Est. End
+          
           const hasActiveOjt = ojt_details && ojt_details.app_status === 'active';
           $("#daysRemainingCount").text(hasActiveOjt && dtr.remaining_hours > 0 ? Math.ceil(dtr.remaining_hours / (dtr.hours_per_day || 8)) : "—");
           $("#estimatedEndDate").text(hasActiveOjt && dtr.estimated_completion ? "Est. end " + dtr.estimated_completion : "Placement pending");
 
-          // Journals
+          
           $("#journalsCount").text(stats.journals.approved);
           $("#journalProgressBar").css("width", stats.journals.percent + "%").attr("aria-valuenow", stats.journals.percent);
 
-          // Requirements
+          
           $("#reqApprovedCount").text(stats.requirements.approved);
           $("#reqTotalCount").text(`of ${stats.requirements.total} approved`);
           $("#reqProgressBar").css("width", stats.requirements.percent + "%").attr("aria-valuenow", stats.requirements.percent);
 
-          // Mini Stats
+          
           $("#daysLoggedCount").text(dtr.approved_count);
           $("#avgHoursCount").text(dtr.approved_count > 0 ? (dtr.total_approved / dtr.approved_count).toFixed(1) : "0");
           $("#pendingDtrCount").text(dtr.pending_count);
         }
 
-        // Render Recent DTR List
+        
         const dtrList = $("#dtrList");
         dtrList.empty();
         if (recent_dtr && recent_dtr.length > 0) {
@@ -236,7 +236,7 @@ function fetchDashboardStats() {
           dtrList.html('<div class="text-center p-4 text-body-secondary small">No recent logs found</div>');
         }
 
-        // Render Requirements (Mini List)
+        
         const reqList = $("#requirementsList");
         reqList.empty();
         if (requirements_list && requirements_list.length > 0) {
@@ -275,7 +275,7 @@ $(document).ready(function () {
     ToastVersion(swalTheme, "Dashboard updated", "success", 2000, "top-end");
   });
 
-  // Quick Actions
+  
   $("#quickLogTime, #LogTimeBtn").on("click", function() {
     window.location.href = "DTR";
   });

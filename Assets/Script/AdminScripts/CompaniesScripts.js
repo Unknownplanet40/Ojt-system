@@ -343,7 +343,7 @@ function getCompanies() {
         companiesCache = companies || [];
         batchCache = batch || null;
 
-        // create accepted programs checkboxes for create company modal
+        
         acceptedProgramscontainer.empty();
         if (programs && programs.length > 0) {
           programs.forEach((program) => {
@@ -578,7 +578,7 @@ function SaveChanges(uuid, batchUuid, data, type = "update") {
   });
 }
 
-function viewCompanydetails(uuid, batchUuid, batchLabel) {
+function viewCompanydetails(uuid, batchUuid, batchLabel, afterLoadedCallback = null) {
   if (!uuid) {
     ToastVersion(swalTheme, "Invalid company identifier.", "error", 3000, "top-end", "8");
     return;
@@ -610,6 +610,13 @@ function viewCompanydetails(uuid, batchUuid, batchLabel) {
       swal.close();
       if (response.status === "success") {
         $("#ViewCompanyModal").modal("show");
+        
+        // If there's a callback (e.g. to show supervisor password), execute it after a small delay
+        
+        if (afterLoadedCallback && typeof afterLoadedCallback === "function") {
+            setTimeout(afterLoadedCallback, 600);
+        }
+
         $("#viewCompanyName").text(response.data.company.name);
         $("#viewCompanyIndustry").text(response.data.company.industry);
         $("#viewCompanyEmail").text(response.data.company.email);
@@ -935,32 +942,65 @@ $(document).ready(function () {
         if (response.status === "success") {
           $("#NewCompanyModal").modal("hide");
           getCompanies();
-          viewCompanydetails(response.uuid, batchUuid, $("#activeBatchLabel").text());
+          
+          const showPasswordModal = () => {
+            Swal.fire({
+              title: '<h4 class="fw-bold mb-0">Supervisor Credentials</h4>',
+              html: `
+                        <div class="text-start p-2">
+                            <div class="alert bg-primary-subtle border-primary-subtle text-primary mb-3">
+                                <i class="bi bi-info-circle-fill me-2"></i>
+                                Please save these credentials. This password will only be shown once.
+                            </div>
+                            <div class="mb-2"><strong>Name:</strong> ${response.supervisor_full_name}</div>
+                            <div class="mb-2"><strong>Email:</strong> ${response.supervisor_email}</div>
+                            <div class="p-3 bg-dark bg-opacity-10 rounded border border-dashed text-center mt-3">
+                                <div class="small text-muted mb-1">TEMPORARY PASSWORD</div>
+                                <div class="h3 mb-0 font-monospace text-primary fw-bold">${response.supervisor_temp_password}</div>
+                            </div>
+                        </div>
+                    `,
+              icon: "success",
+              showCancelButton: true,
+              confirmButtonText: '<i class="bi bi-check2-circle me-2"></i> I have saved it',
+              cancelButtonText: '<i class="bi bi-download me-2"></i> Export Credentials',
+              customClass: {
+                popup: "glass-ui glass-ui-strong rounded-4 border-0 shadow-lg",
+                confirmButton: "btn btn-primary px-4 py-2 rounded-3 shadow-sm me-2",
+                cancelButton: "btn btn-outline-secondary px-4 py-2 rounded-3 shadow-sm",
+                title: "text-primary",
+              },
+              buttonsStyling: false,
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+            }).then((result) => {
+              if (result.dismiss === Swal.DismissReason.cancel) {
+                
+                const content = `SUPERVISOR CREDENTIALS\n` +
+                                `======================\n` +
+                                `Name: ${response.supervisor_full_name}\n` +
+                                `Email: ${response.supervisor_email}\n` +
+                                `Temporary Password: ${response.supervisor_temp_password}\n\n` +
+                                `Login URL: ${window.location.origin}/Src/Pages/LoginPage.php\n` +
+                                `Note: Please change your password upon first login.`;
+                
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `supervisor_credentials_${response.supervisor_email}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                
+                showPasswordModal();
+              }
+            });
+          };
 
-          const tempPassword = escapeHtml(response.supervisor_temp_password || "—");
-          const supervisorName = escapeHtml(response.supervisor_full_name || "—");
-          const supervisorEmailSafe = escapeHtml(response.supervisor_email || "—");
-
-          Swal.fire({
-            icon: "success",
-            title: "Company and supervisor created",
-            html: `
-              <div class="text-start">
-                <p class="mb-2"><strong>Supervisor:</strong> ${supervisorName}</p>
-                <p class="mb-2"><strong>Email:</strong> ${supervisorEmailSafe}</p>
-                <p class="mb-0"><strong>Temporary password:</strong> <code>${tempPassword}</code></p>
-              </div>
-            `,
-            confirmButtonText: "Got it",
-            customClass: {
-              popup: "bg-blur-5 bg-semi-transparent border-1 rounded-3 shadow-lg",
-              container: "overflow-hidden",
-              confirmButton: "btn btn-success px-4 py-2 rounded-3"
-            },
-            buttonsStyling: false,
-            showClass: { popup: "bounce-in-fwd" },
-            hideClass: { popup: "slide-out-blurred-bottom" },
-          });
+          viewCompanydetails(response.uuid, batchUuid, $("#activeBatchLabel").text(), showPasswordModal);
           ToastVersion(swalTheme, response.message, "success", 3000, "top-end", "8");
         } else if (response.status === "critical") {
           ToastVersion(swalTheme, response.Details, "error", 3000, "top-end", "8");
@@ -976,7 +1016,15 @@ $(document).ready(function () {
   });
 
   $("#cancelNewCompanyBtn").click(function () {
-    $("#NewCompanyModal").find("input[type='text'], input[type='email'], input[type='tel'], select").val("");
-    $("#acceptedProgramsContainer").empty();
+    $("#NewCompanyModal").modal("hide");
+  });
+
+  $("#NewCompanyModal").on("hidden.bs.modal", function () {
+    const $modal = $(this);
+    $modal.find("input[type='text'], input[type='email'], input[type='tel'], input[type='number'], input[type='url'], select, textarea").val("");
+    $modal.find("input[type='checkbox']").prop("checked", false);
+    
+    
+    $("#companyblocklistedreason").closest(".mb-3").addClass("d-none");
   });
 });

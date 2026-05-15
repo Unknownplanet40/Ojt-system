@@ -65,7 +65,7 @@ if (!$visit) {
     response(['status' => 'error', 'message' => 'Visit not found.']);
 }
 
-// coordinator scope check
+
 if ($_SESSION['user_role'] === 'coordinator' &&
     $visit['coordinator_uuid'] !== $_SESSION['profile_uuid']) {
     http_response_code(403);

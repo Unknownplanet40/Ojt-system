@@ -1,8 +1,8 @@
 <?php
 
-// Prevent direct access to this file
+
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    // Only allow AJAX requests
+    
     if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         $base = dirname($_SERVER['SCRIPT_NAME'], 3);

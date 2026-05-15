@@ -54,7 +54,7 @@ if (!in_array($_SESSION['user_role'], ['coordinator', 'admin'])) {
 }
 
 $journalUuid = trim($_POST['journal_uuid'] ?? '');
-$action      = trim($_POST['action']       ?? ''); // remark, approve, return
+$action      = trim($_POST['action']       ?? ''); 
 $remarks     = trim($_POST['remarks']      ?? '');
 $returnReason = trim($_POST['return_reason'] ?? '');
 

@@ -55,7 +55,7 @@ if (empty($batchUuid)) {
     response(['status' => 'error', 'message' => 'No active batch found.']);
 }
 
-// get active application UUID
+
 $stmt = $conn->prepare("
     SELECT uuid FROM ojt_applications
     WHERE student_uuid = ? AND batch_uuid = ? AND status = 'active'

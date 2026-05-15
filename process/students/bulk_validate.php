@@ -48,19 +48,19 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
-// check file uploaded
+
 if (empty($_FILES['bulk_file']) || $_FILES['bulk_file']['error'] !== UPLOAD_ERR_OK) {
     response(['status' => 'error', 'message' => 'No file uploaded.']);
 }
 
 $file = $_FILES['bulk_file'];
 
-// max 5MB
+
 if ($file['size'] > 5 * 1024 * 1024) {
     response(['status' => 'error', 'message' => 'File must be 5MB or less.']);
 }
 
-// max 500 rows check happens after parsing
+
 $rows = parseBulkFile($file);
 
 if (isset($rows['error'])) {
@@ -75,7 +75,7 @@ if (count($rows) > 500) {
     response(['status' => 'error', 'message' => 'File exceeds 500 row limit. Split into smaller files.']);
 }
 
-// get active batch
+
 $result    = $conn->query("SELECT uuid FROM batches WHERE status = 'active' LIMIT 1");
 $batchRow  = $result->fetch_assoc();
 $batchUuid = $batchRow['uuid'] ?? null;
@@ -84,15 +84,15 @@ if (!$batchUuid) {
     response(['status' => 'error', 'message' => 'No active batch found. Create and activate a batch first.']);
 }
 
-// coordinator UUID
+
 $coordinatorUuid = trim($_POST['coordinator_uuid'] ?? '');
 
-// If user is a coordinator, force their UUID as the default
+
 if ($_SESSION['user_role'] === 'coordinator') {
     $coordinatorUuid = $_SESSION['profile_uuid'];
 }
 
-// optional fallback: resolve coordinator by name
+
 if (empty($coordinatorUuid)) {
     $coordinatorName = trim($_POST['coordinator_name'] ?? '');
     if (!empty($coordinatorName)) {
@@ -104,11 +104,11 @@ if (empty($coordinatorUuid)) {
     }
 }
 
-// validate rows
+
 $result = validateBulkRows($conn, $rows, $batchUuid, $coordinatorUuid);
 
-// store valid rows in session for the confirm step
-// so we don't re-validate on confirm
+
+
 $_SESSION['bulk_valid_rows']  = $result['valid_rows'];
 $_SESSION['bulk_batch_uuid']  = $batchUuid;
 

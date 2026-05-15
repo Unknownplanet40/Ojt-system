@@ -7,18 +7,18 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 require_once __DIR__ . '/../helpers/helpers.php';
 
-// functions/journal_functions.php
-// -----------------------------------------------
-// Module:    Weekly Journal
-// Primary:   Student (writes) · Coordinator (reviews)
-// Secondary: Supervisor (view only)
-// -----------------------------------------------
 
 
-// -----------------------------------------------
-// COMPUTE week number from OJT start date
-// week 1 = first week of OJT
-// -----------------------------------------------
+
+
+
+
+
+
+
+
+
+
 function ensureWeeklyJournalsSchema($conn): bool
 {
     $columns = [
@@ -59,13 +59,13 @@ function computeWeekNumber(string $startDate, string $weekStart): int
 }
 
 
-// -----------------------------------------------
-// VALIDATE week range
-// - week_start must be Monday
-// - week_end must be Friday (same week)
-// - range must be within OJT period
-// - no duplicate week for same student + batch
-// -----------------------------------------------
+
+
+
+
+
+
+
 function validateWeekRange(
     $conn,
     string $studentUuid,
@@ -91,17 +91,17 @@ function validateWeekRange(
     $endTs   = strtotime($weekEnd);
     $today   = strtotime(date('Y-m-d'));
 
-    // week_start must not be in the future
+    
     if ($startTs > $today) {
         $errors['week_start'] = 'Week start cannot be a future date.';
     }
 
-    // week_end must be after week_start
+    
     if ($endTs <= $startTs) {
         $errors['week_end'] = 'Week end must be after week start.';
     }
 
-    // range must be 7 days or less
+    
     $rangeDays = ($endTs - $startTs) / 86400;
     if ($rangeDays > 7) {
         $errors['week_end'] = 'Week range cannot exceed 7 days.';
@@ -111,7 +111,7 @@ function validateWeekRange(
         return ['valid' => false, 'errors' => $errors];
     }
 
-    // check OJT start date — week must be within OJT period
+    
     $stmt = $conn->prepare("
         SELECT osc.start_date
         FROM ojt_applications a
@@ -142,7 +142,7 @@ function validateWeekRange(
         return ['valid' => false, 'errors' => $errors];
     }
 
-    // check duplicate week — same student + batch + week_start
+    
     $stmt = $conn->prepare("
         SELECT uuid FROM weekly_journals
         WHERE student_uuid = ?
@@ -171,9 +171,9 @@ function validateWeekRange(
 }
 
 
-// -----------------------------------------------
-// SUBMIT journal (student)
-// -----------------------------------------------
+
+
+
 function submitJournal(
     $conn,
     string $studentUuid,
@@ -201,14 +201,14 @@ function submitJournal(
         return ['success' => false, 'errors' => $errors];
     }
 
-    // validate week range
+    
     $weekCheck = validateWeekRange($conn, $studentUuid, $batchUuid, $weekStart, $weekEnd);
 
     if (!$weekCheck['valid']) {
         return ['success' => false, 'errors' => $weekCheck['errors']];
     }
 
-    // get active application UUID
+    
     $stmt = $conn->prepare("
         SELECT uuid FROM ojt_applications
         WHERE student_uuid = ? AND batch_uuid = ? AND status = 'active'
@@ -251,7 +251,7 @@ function submitJournal(
     $stmt->execute();
     $stmt->close();
 
-    // resolve student profile UUID to user UUID for audit logging
+    
     $userStmt = $conn->prepare("SELECT user_uuid FROM student_profiles WHERE uuid = ? LIMIT 1");
     $userStmt->bind_param('s', $studentUuid);
     $userStmt->execute();
@@ -276,9 +276,9 @@ function submitJournal(
 }
 
 
-// -----------------------------------------------
-// EDIT journal (student — only if returned)
-// -----------------------------------------------
+
+
+
 function editJournal(
     $conn,
     string $journalUuid,
@@ -319,7 +319,7 @@ function editJournal(
         return ['success' => false, 'errors' => ['accomplishments' => 'Accomplishments field is required.']];
     }
 
-    // re-validate week range — exclude current journal from duplicate check
+    
     $weekCheck = validateWeekRange(
         $conn,
         $studentUuid,
@@ -363,7 +363,7 @@ function editJournal(
     $stmt->execute();
     $stmt->close();
 
-    // resolve student profile UUID to user UUID for audit logging
+    
     $userStmt = $conn->prepare("SELECT user_uuid FROM student_profiles WHERE uuid = ? LIMIT 1");
     $userStmt->bind_param('s', $studentUuid);
     $userStmt->execute();
@@ -384,10 +384,10 @@ function editJournal(
 }
 
 
-// -----------------------------------------------
-// REVIEW journal (coordinator)
-// action: remark only / approve / return
-// -----------------------------------------------
+
+
+
+
 function reviewJournal(
     $conn,
     string $journalUuid,
@@ -401,7 +401,7 @@ function reviewJournal(
         return ['success' => false, 'error' => 'Invalid action.'];
     }
 
-    // fetch journal + verify coordinator owns this student
+    
     $stmt = $conn->prepare("
         SELECT wj.uuid, wj.status, wj.student_uuid, wj.week_number,
                sp.coordinator_uuid
@@ -427,16 +427,16 @@ function reviewJournal(
         return ['success' => false, 'error' => 'Approved journals cannot be returned or re-approved.'];
     }
 
-    // return requires a reason
+    
     if ($action === 'return' && empty($returnReason)) {
         return ['success' => false, 'error' => 'Return reason is required.'];
     }
 
-    // build update based on action
+    
     $newStatus    = match($action) {
         'approve' => 'approved',
         'return'  => 'returned',
-        default   => $journal['status'], // remark — status unchanged
+        default   => $journal['status'], 
     };
 
     $stmt = $conn->prepare("
@@ -460,7 +460,7 @@ function reviewJournal(
     $stmt->execute();
     $stmt->close();
 
-    // resolve coordinator profile UUID to user UUID for audit logging
+    
     $userStmt = $conn->prepare("SELECT user_uuid FROM coordinator_profiles WHERE uuid = ? LIMIT 1");
     $userStmt->bind_param('s', $coordinatorUuid);
     $userStmt->execute();
@@ -487,9 +487,9 @@ function reviewJournal(
 }
 
 
-// -----------------------------------------------
-// GET student journals
-// -----------------------------------------------
+
+
+
 function getStudentJournals(
     $conn,
     string $studentUuid,
@@ -530,10 +530,10 @@ function getStudentJournals(
 }
 
 
-// -----------------------------------------------
-// GET all journals — coordinator view
-// all students under coordinator
-// -----------------------------------------------
+
+
+
+
 function getAllJournals(
     $conn,
     string $batchUuid,
@@ -592,10 +592,10 @@ function getAllJournals(
 }
 
 
-// -----------------------------------------------
-// GET journals for supervisor
-// only assigned students — view only
-// -----------------------------------------------
+
+
+
+
 function getSupervisorJournals(
     $conn,
     string $supervisorUuid,
@@ -642,9 +642,9 @@ function getSupervisorJournals(
 }
 
 
-// -----------------------------------------------
-// GET single journal
-// -----------------------------------------------
+
+
+
 function getJournal($conn, string $journalUuid): ?array
 {
     $stmt = $conn->prepare("
@@ -683,9 +683,9 @@ function getJournal($conn, string $journalUuid): ?array
 }
 
 
-// -----------------------------------------------
-// FORMAT journal row
-// -----------------------------------------------
+
+
+
 function formatJournal(array $row): array
 {
     $status = $row['status'];
@@ -723,7 +723,7 @@ function formatJournal(array $row): array
                                    : null,
         'submitted_at'        => date('M j, Y g:i A', strtotime($row['submitted_at'])),
         'time_ago'            => timeAgo($row['submitted_at']),
-        // action flags
+        
         'can_edit'            => $status === 'returned',
         'can_view'            => true,
     ];

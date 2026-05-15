@@ -388,7 +388,7 @@ body {
   }
 }
 
-/* Custom scrollbar styles */
+
 :root {
   --scrollbar-size: 10px;
   --scrollbar-track: rgba(var(--bs-dark-rgb), 0.35);

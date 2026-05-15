@@ -339,8 +339,8 @@ function fetchProfile() {
 
         if (!profile.profile_name) {
           const initials = profile.initials || "NA";
-          $("#navProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
-          $("#dropdownProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
+          $("#navProfilePhoto").attr("src", `https:
+          $("#dropdownProfilePhoto").attr("src", `https:
         } else {
           $("#navProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
           $("#dropdownProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
@@ -541,7 +541,7 @@ function tableDropdown() {
       const parentCell = toggleBtn.closest("td, th");
       const responsiveHost = toggleBtn.closest(".table-responsive");
 
-      // reset all previous open dropdown layers first
+      
       $(".customDropdown").not(menu).hide().closest("td, th").css({ position: "", zIndex: "" });
 
       const willOpen = !menu.is(":visible");
@@ -551,11 +551,11 @@ function tableDropdown() {
       }
 
       if (responsiveHost.length) {
-        // prevent clipping inside Bootstrap table-responsive wrappers
+        
         responsiveHost.css({ overflowY: "visible" });
       }
 
-      // elevate current table cell above neighboring rows
+      
       parentCell.css({ position: "relative", zIndex: "20" });
 
       if (!menu.data("dropdown-origin-parent")) {

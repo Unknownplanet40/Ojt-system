@@ -38,7 +38,7 @@ if (empty($journalUuid)) {
     response(['status' => 'error', 'message' => 'Missing journal UUID.']);
 }
 
-// Get journal data
+
 $journal = getJournal($conn, $journalUuid);
 
 if (!$journal) {
@@ -46,13 +46,13 @@ if (!$journal) {
     response(['status' => 'error', 'message' => 'Journal not found.']);
 }
 
-// Authorization check - ONLY STUDENTS CAN EXPORT
+
 $studentProfileUuid = $journal['student_uuid'] ?? '';
 $userRole = $_SESSION['user_role'] ?? '';
 $userProfileUuid = $_SESSION['profile_uuid'] ?? '';
 $authorized = false;
 
-// Only students who own the journal can export
+
 if ($userRole === 'student' && $studentProfileUuid === $userProfileUuid) {
     $authorized = true;
 }
@@ -62,10 +62,10 @@ if (!$authorized) {
     response(['status' => 'error', 'message' => 'Only students can export their journals.']);
 }
 
-// Get student info
+
 $student = getStudent($conn, $journal['student_uuid']);
 
-// Format journal data
+
 $studentName = htmlspecialchars($student['full_name'] ?? 'Unknown Student');
 $studentNumber = htmlspecialchars($student['student_number'] ?? '—');
 $programName = htmlspecialchars($student['program_name'] ?? '—');
@@ -115,7 +115,7 @@ $roleofCreator = ucfirst($userRole);
 $LogoPath1 = $SchoolLogoLeft ?? 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
 $LogoPath2 = $SchoolLogoRight ?? 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
 
-// Determine which fields to display based on status
+
 $reviewSection = '';
 if ($status === 'APPROVED' || $status === 'RETURNED') {
     $reviewSection = "
@@ -143,41 +143,41 @@ $html = <<<HTML
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 11px; color: #1a1a1a; background: #fff; }
+    body { font-family: Arial, sans-serif; font-size: 11px; color: 
     .page { padding: 40px; }
 
-    .header { text-align: center; border-bottom: 2px solid #0F6E56; padding-bottom: 16px; margin-bottom: 24px; }
+    .header { text-align: center; border-bottom: 2px solid 
     .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; margin-bottom: 22px; }
     .header-table td { vertical-align: middle; }
     .header-left { width: 20%; text-align: left; }
     .header-center { width: 60%; text-align: center; }
     .header-right { width: 20%; text-align: right; }
     .header-logo { width: 64px; height: 64px; object-fit: contain; }
-    .doc-title { font-size: 18px; font-weight: bold; color: #111; margin-bottom: 4px; }
-    .doc-subtitle { font-size: 10px; color: #666; margin-bottom: 3px; }
+    .doc-title { font-size: 18px; font-weight: bold; color: 
+    .doc-subtitle { font-size: 10px; color: 
 
-    .student-info { background: #E1F5EE; border: 1.5px solid #1D9E75; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; }
-    .info-label { font-size: 10px; color: #0F6E56; font-weight: bold; text-transform: uppercase; letter-spacing: 0.06em; }
+    .student-info { background: 
+    .info-label { font-size: 10px; color: 
     .info-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .info-key { font-size: 10px; color: #065F46; font-weight: 500; }
-    .info-val { font-size: 11px; color: #0F6E56; font-weight: 600; }
+    .info-key { font-size: 10px; color: 
+    .info-val { font-size: 11px; color: 
 
-    .week-info { background: #F3F4F6; border: 1px solid #D1D5DB; border-radius: 6px; padding: 12px 14px; margin-bottom: 16px; }
-    .section-title { font-size: 11px; font-weight: bold; color: #374151; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #E5E7EB; margin-top: 16px; }
-    .section-content { font-size: 10px; color: #374151; line-height: 1.6; margin-bottom: 12px; padding: 10px; background: #FAFAFA; border-left: 3px solid #0F6E56; border-radius: 2px; }
+    .week-info { background: 
+    .section-title { font-size: 11px; font-weight: bold; color: 
+    .section-content { font-size: 10px; color: 
 
-    .review-section { background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 6px; padding: 14px 16px; margin-top: 16px; }
-    .review-title { font-size: 11px; font-weight: bold; color: #0369A1; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .review-section { background: 
+    .review-title { font-size: 11px; font-weight: bold; color: 
     .info-table { width: 100%; border-collapse: collapse; font-size: 10px; }
-    .info-table td { padding: 6px 8px; border-bottom: 1px solid #E5E7EB; }
-    .info-table td:first-child { color: #6B7280; width: 30%; font-weight: 500; }
-    .info-table td:last-child { color: #111827; font-weight: 500; }
+    .info-table td { padding: 6px 8px; border-bottom: 1px solid 
+    .info-table td:first-child { color: 
+    .info-table td:last-child { color: 
     .info-table tr:last-child td { border-bottom: none; }
 
-    .footer { border-top: 1px solid #E5E7EB; padding-top: 10px; text-align: center; margin-top: 20px; }
-    .footer-text { font-size: 9px; color: #616264; line-height: 1.5; }
-    .generated-info { font-size: 8px; color: #3e3f41; margin-top: 3px; text-align: right; }
-    .footer-contact { margin-top: 4px; font-size: 8px; color: #64748b; line-height: 1.4; }
+    .footer { border-top: 1px solid 
+    .footer-text { font-size: 9px; color: 
+    .generated-info { font-size: 8px; color: 
+    .footer-contact { margin-top: 4px; font-size: 8px; color: 
   </style>
 </head>
 <body>
@@ -194,7 +194,7 @@ $html = <<<HTML
           <div style="font-size: 14px; font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.04em;">{$schoolName}</div>
           <div style="font-size: 10px; color: #64748b; margin-top: 2px;">{$schoolMotto}</div>
           <div style="font-size: 11px; color: #475569; margin-top: 3px;\">Weekly Journal Record</div>
-          <div style="font-size: 10px; color: #64748b; margin-top: 2px;\">{$longTitle}</div>
+          <div style="font-size: 10px; color: 
           <div style=\"font-size: 10px; color: #64748b; margin-top: 2px;\">Generated on {$generatedAt}</div>
         </td>
         <td class="header-right">

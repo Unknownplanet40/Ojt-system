@@ -44,7 +44,7 @@ $(document).ready(function () {
 
     function renderEvaluationCard(evalData, type, unlockStatus) {
         if (!evalData) {
-            // Not submitted yet
+            
             return `
                 <div class="col-12 col-md-6">
                     <div class="card h-100 border-0 shadow-sm bg-blur-5 bg-semi-transparent">
@@ -64,7 +64,7 @@ $(document).ready(function () {
             `;
         }
 
-        // Submitted
+        
         let criteriaHtml = '';
         evalData.criteria.forEach(c => {
             criteriaHtml += `
@@ -123,7 +123,7 @@ $(document).ready(function () {
         $container.append(midterm);
         $container.append(final);
 
-        // Handle Self Evaluation
+        
         renderSelfEvaluation(data.evaluations.self, data.unlock_status.self);
     }
 
@@ -131,7 +131,7 @@ $(document).ready(function () {
         $selfSection.show();
 
         if (selfEval) {
-            // Already submitted
+            
             let criteriaHtml = '';
             selfEval.criteria.forEach(c => {
                 criteriaHtml += `
@@ -172,7 +172,7 @@ $(document).ready(function () {
                 ` : ''}
             `);
         } else if (unlockStatus.unlocked) {
-            // Show Form
+            
             let formHtml = `
                 <div class="alert alert-info border-0 bg-info-subtle text-info-emphasis d-flex align-items-center mb-4">
                     <i class="bi bi-info-circle me-3 fs-4"></i>
@@ -225,7 +225,7 @@ $(document).ready(function () {
 
             $selfContent.html(formHtml);
 
-            // Bind interactions
+            
             $(".star-rating.interactive i").on("click", function() {
                 const val = $(this).data("val");
                 const container = $(this).parent();
@@ -245,7 +245,7 @@ $(document).ready(function () {
             $("#submitSelfEvalBtn").on("click", submitSelfEvaluation);
 
         } else {
-            // Locked
+            
             $selfContent.html(`
                 <div class="text-center py-5">
                     <div class="avatar avatar-xl bg-secondary-subtle text-secondary rounded-circle mb-3 d-inline-flex align-items-center justify-content-center" style="width:64px;height:64px;">
@@ -262,7 +262,7 @@ $(document).ready(function () {
         const $btn = $(this);
         const data = $("#selfEvalForm").serialize() + "&csrf_token=" + encodeURIComponent(csrfToken);
 
-        // Validation
+        
         let valid = true;
         $(".star-rating.interactive").each(function() {
             const inputId = $(this).data("input");

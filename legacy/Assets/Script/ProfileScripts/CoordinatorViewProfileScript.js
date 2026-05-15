@@ -65,7 +65,7 @@ function fetchProfileData(uuid) {
                     <img src="${
                       student.profile_path
                         ? "../../../" + student.profile_path
-                        : "https://placehold.co/48x48/C1C1C1/000000/png?text=" + student.initials + "&font=poppins"
+                        : "https:
                     }"
                       alt="profile picture"
                       class="rounded-circle flex-shrink-0 border border-2 border-light-subtle shadow-sm"

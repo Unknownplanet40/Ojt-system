@@ -138,7 +138,7 @@ $(document).ready(function () {
       success: function (response) {
         if (response.status === "success") {
           const companyData = response.company;
-          const c = companyData.company; // The formatted company object
+          const c = companyData.company; 
           const students = response.students;
 
           $("#detCompanyName").text(c.name);
@@ -155,7 +155,7 @@ $(document).ready(function () {
 
           $("#detCompanySetup").text(c.work_setup ? c.work_setup.toUpperCase() : "N/A");
 
-          // Programs
+          
           const progContainer = $("#detCompanyPrograms");
           progContainer.empty();
           const programs = companyData.accepted_programs || [];
@@ -169,7 +169,7 @@ $(document).ready(function () {
             progContainer.append('<small class="text-white-50 italic">No programs listed</small>');
           }
 
-          // Supervisors
+          
           const supervisorContainer = $("#detSupervisorList");
           supervisorContainer.empty();
           const supervisors = companyData.supervisors || [];
@@ -186,7 +186,7 @@ $(document).ready(function () {
             supervisorContainer.append('<div class="text-white-50 small italic">No supervisors assigned</div>');
           }
 
-          // Contacts
+          
           const contactContainer = $("#detContactInfo");
           contactContainer.empty();
           const contacts = companyData.contacts || [];
@@ -204,7 +204,7 @@ $(document).ready(function () {
             contactContainer.append('<div class="text-white-50 small italic">No contact info</div>');
           }
 
-          // MOA Status
+          
           const moaContainer = $("#detMoaStatus");
           moaContainer.empty();
           const moaStatus = c.moa_status || 'none';
@@ -225,19 +225,19 @@ $(document).ready(function () {
             moaContainer.append('<div class="text-white-50 small">No MOA on file</div>');
           }
 
-          // Students
+          
           $("#detStudentCount").text(students.length);
           const studentContainer = $("#detStudentList");
           studentContainer.empty();
 
-          // Store current company UUID for upload
+          
           $("#currentCompanyUuid").val(c.uuid);
 
           if (students.length > 0) {
             students.forEach((s) => {
               const profileImg = s.profile_name
                 ? `../../../Assets/Images/profiles/${s.profile_name}`
-                : `https://placehold.co/32x32/C1C1C1/000000/png?text=${s.first_name.charAt(
+                : `https:
                     0
                   )}${s.last_name.charAt(0)}&font=poppins`;
 
@@ -274,7 +274,7 @@ $(document).ready(function () {
     });
   });
 
-  // Upload MOA Logic
+  
   $("#uploadMoABtn").on("click", function () {
     $("#moaFileInput").click();
   });

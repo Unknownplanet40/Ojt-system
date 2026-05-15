@@ -107,32 +107,32 @@ $html = <<<HTML
 <head>
   <meta charset="UTF-8">
   <style>
-    body { font-family: Arial, sans-serif; font-size: 11px; color: #111827; margin: 24px; }
-    .header { text-align: center; border-bottom: 2px solid #0F6E56; padding-bottom: 10px; margin-bottom: 16px; }
+    body { font-family: Arial, sans-serif; font-size: 11px; color: 
+    .header { text-align: center; border-bottom: 2px solid 
     .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 8px; margin-bottom: 12px; }
     .header-table td { vertical-align: middle; }
     .header-left { width: 20%; text-align: left; }
     .header-center { width: 60%; text-align: center; }
     .header-right { width: 20%; text-align: right; }
     .header-logo { width: 52px; height: 52px; object-fit: contain; }
-    .school-name { font-size: 14px; font-weight: bold; color: #0F6E56; }
-    .school-meta { font-size: 10px; color: #64748b; margin-top: 2px; }
+    .school-name { font-size: 14px; font-weight: bold; color: 
+    .school-meta { font-size: 10px; color: 
     .title { font-size: 18px; font-weight: bold; margin-top: 4px; }
-    .subtitle { font-size: 10px; color: #6B7280; margin-top: 3px; }
+    .subtitle { font-size: 10px; color: 
 
-    .meta { margin-bottom: 14px; font-size: 10px; color: #374151; }
-    .meta strong { color: #111827; }
+    .meta { margin-bottom: 14px; font-size: 10px; color: 
+    .meta strong { color: 
 
-    .notice { background: #FEF9EE; border: 1px solid #FDE68A; border-radius: 6px; padding: 10px; margin-bottom: 14px; color: #92400E; }
+    .notice { background: 
 
     table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #E5E7EB; padding: 6px 7px; vertical-align: top; }
-    th { background: #F3F4F6; text-transform: uppercase; font-size: 9px; letter-spacing: 0.04em; color: #374151; }
+    th, td { border: 1px solid 
+    th { background: 
     td { font-size: 10px; }
-    td.password { font-family: "Courier New", monospace; font-weight: bold; color: #065F46; }
+    td.password { font-family: "Courier New", monospace; font-weight: bold; color: 
 
-    .footer { margin-top: 14px; border-top: 1px solid #E5E7EB; padding-top: 8px; font-size: 9px; color: #6B7280; text-align: right; }
-    .footer-contact { margin-top: 5px; font-size: 8px; color: #64748b; line-height: 1.4; text-align: left; }
+    .footer { margin-top: 14px; border-top: 1px solid 
+    .footer-contact { margin-top: 5px; font-size: 8px; color: 
   </style>
 </head>
 <body>
@@ -167,7 +167,7 @@ $html = <<<HTML
   <table>
     <thead>
       <tr>
-        <th>#</th>
+        <th>
         <th>Student Name</th>
         <th>Email</th>
         <th>Student No.</th>

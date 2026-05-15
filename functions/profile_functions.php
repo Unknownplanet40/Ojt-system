@@ -26,7 +26,7 @@ function getProfileImageDirectory(): array
         }
     }
 
-    // default location if neither exists yet
+    
     return [
         'absolute_dir' => $projectRoot . '/Assets/Images/Profiles/',
         'relative_dir' => 'Assets/Images/Profiles',
@@ -58,7 +58,7 @@ function resolveOldProfileImagePath(?string $oldFilePath): ?string
         }
     }
 
-    // fallback: if only filename is stored, resolve in active image directory
+    
     $fileName = basename($normalized);
     if ($fileName === '' || $fileName === '.' || $fileName === '..') {
         return null;
@@ -70,7 +70,7 @@ function resolveOldProfileImagePath(?string $oldFilePath): ?string
 
 function saveProfileImage(string $base64Data, string $userUuid, string $oldFilePath = null): ?array
 {
-    // decode base64 — handle data URI prefix
+    
     if (str_contains($base64Data, ',')) {
         $base64Data = explode(',', $base64Data)[1];
     }
@@ -81,7 +81,7 @@ function saveProfileImage(string $base64Data, string $userUuid, string $oldFileP
         return null;
     }
 
-    // validate it's actually an image
+    
     $finfo    = new finfo(FILEINFO_MIME_TYPE);
     $mimeType = $finfo->buffer($imageData);
 
@@ -89,7 +89,7 @@ function saveProfileImage(string $base64Data, string $userUuid, string $oldFileP
         return null;
     }
 
-    // determine extension from mime type
+    
     $ext = match($mimeType) {
         'image/jpeg', 'image/jpg' => 'jpg',
         'image/webp'              => 'webp',
@@ -103,12 +103,12 @@ function saveProfileImage(string $base64Data, string $userUuid, string $oldFileP
     $absolutePath = $absoluteDir . $fileName;
     $relativePath = $dirInfo['relative_dir'] . '/' . $fileName;
 
-    // create directory if not exists
+    
     if (!is_dir($absoluteDir)) {
         mkdir($absoluteDir, 0755, true);
     }
 
-    // delete old image if exists
+    
     if ($oldFilePath) {
         $oldAbsolutePath = resolveOldProfileImagePath($oldFilePath);
         if ($oldAbsolutePath && file_exists($oldAbsolutePath)) {
@@ -116,7 +116,7 @@ function saveProfileImage(string $base64Data, string $userUuid, string $oldFileP
         }
     }
 
-    // save new image
+    
     if (file_put_contents($absolutePath, $imageData) === false) {
         return null;
     }
@@ -147,12 +147,12 @@ function saveAdminProfile($conn, string $userUuid, array $data, ?string $base64I
         return ['success' => false, 'errors' => $errors];
     }
 
-    // handle image upload
+    
     $profilePath = null;
     $profileName = null;
 
     if (!empty($base64Image)) {
-        // get current image path for deletion
+        
         $stmt = $conn->prepare("SELECT profile_path FROM admin_profiles WHERE user_uuid = ? LIMIT 1");
         $stmt->bind_param('s', $userUuid);
         $stmt->execute();
@@ -169,7 +169,7 @@ function saveAdminProfile($conn, string $userUuid, array $data, ?string $base64I
         $profileName = $imageResult['file_name'];
     }
 
-    // check if profile exists
+    
     $stmt = $conn->prepare("SELECT id FROM admin_profiles WHERE user_uuid = ? LIMIT 1");
     $stmt->bind_param('s', $userUuid);
     $stmt->execute();
@@ -177,7 +177,7 @@ function saveAdminProfile($conn, string $userUuid, array $data, ?string $base64I
     $stmt->close();
 
     if ($exists) {
-        // UPDATE
+        
         if ($profilePath) {
             $stmt = $conn->prepare("
                 UPDATE admin_profiles
@@ -204,7 +204,7 @@ function saveAdminProfile($conn, string $userUuid, array $data, ?string $base64I
             $stmt->bind_param('sssss', $firstName, $lastName, $middleName, $mobile, $userUuid);
         }
     } else {
-        // INSERT
+        
         $profileUuid = generateUuid();
         $stmt = $conn->prepare("
                         INSERT INTO admin_profiles
@@ -227,7 +227,7 @@ function saveAdminProfile($conn, string $userUuid, array $data, ?string $base64I
     $stmt->execute();
     $stmt->close();
 
-    // update session name
+    
     $_SESSION['user_name']       = trim($firstName . ' ' . $lastName);
     $_SESSION['user_first_name'] = $firstName;
     $_SESSION['user_initials']   = strtoupper(substr($firstName, 0, 1) . substr($lastName, 0, 1));
@@ -249,7 +249,7 @@ function saveAdminProfile($conn, string $userUuid, array $data, ?string $base64I
     ];
 }
 
-// -----------------------------------------------
+
 function saveCoordinatorProfile($conn, string $userUuid, array $data, ?string $base64Image = null): array
 {
     $errors = [];
@@ -272,7 +272,7 @@ function saveCoordinatorProfile($conn, string $userUuid, array $data, ?string $b
         return ['success' => false, 'errors' => $errors];
     }
 
-    // handle image
+    
     $profilePath = null;
     $profileName = null;
 
@@ -293,7 +293,7 @@ function saveCoordinatorProfile($conn, string $userUuid, array $data, ?string $b
         $profileName = $imageResult['file_name'];
     }
 
-    // check exists
+    
     $stmt = $conn->prepare("SELECT id FROM coordinator_profiles WHERE user_uuid = ? LIMIT 1");
     $stmt->bind_param('s', $userUuid);
     $stmt->execute();
@@ -376,11 +376,11 @@ function saveCoordinatorProfile($conn, string $userUuid, array $data, ?string $b
 }
 
 
-// -----------------------------------------------
-// SAVE student profile
-// students can only edit personal info
-// program, batch, coordinator — coordinator-only
-// -----------------------------------------------
+
+
+
+
+
 function saveStudentProfile($conn, string $userUuid, array $data, ?string $base64Image = null): array
 {
     $errors = [];
@@ -405,7 +405,7 @@ function saveStudentProfile($conn, string $userUuid, array $data, ?string $base6
         return ['success' => false, 'errors' => $errors];
     }
 
-    // handle image
+    
     $profilePath = null;
     $profileName = null;
 
@@ -426,7 +426,7 @@ function saveStudentProfile($conn, string $userUuid, array $data, ?string $base6
         $profileName = $imageResult['file_name'];
     }
 
-    // check exists
+    
     $stmt = $conn->prepare("SELECT id FROM student_profiles WHERE user_uuid = ? LIMIT 1");
     $stmt->bind_param('s', $userUuid);
     $stmt->execute();
@@ -495,8 +495,8 @@ function saveStudentProfile($conn, string $userUuid, array $data, ?string $base6
         $stmt->execute();
         $stmt->close();
     }
-    // note: student profiles are created by coordinator
-    // so INSERT is not needed here — only UPDATE
+    
+    
 
     $_SESSION['user_name']       = trim($firstName . ' ' . $lastName);
     $_SESSION['user_first_name'] = $firstName;
@@ -520,9 +520,9 @@ function saveStudentProfile($conn, string $userUuid, array $data, ?string $base6
 }
 
 
-// -----------------------------------------------
-// SAVE supervisor profile
-// -----------------------------------------------
+
+
+
 function saveSupervisorProfile($conn, string $userUuid, array $data, ?string $base64Image = null): array
 {
     $errors = [];
@@ -544,7 +544,7 @@ function saveSupervisorProfile($conn, string $userUuid, array $data, ?string $ba
         return ['success' => false, 'errors' => $errors];
     }
 
-    // handle image
+    
     $profilePath = null;
     $profileName = null;
 
@@ -565,7 +565,7 @@ function saveSupervisorProfile($conn, string $userUuid, array $data, ?string $ba
         $profileName = $imageResult['file_name'];
     }
 
-    // check exists
+    
     $stmt = $conn->prepare("SELECT id FROM supervisor_profiles WHERE user_uuid = ? LIMIT 1");
     $stmt->bind_param('s', $userUuid);
     $stmt->execute();
@@ -622,7 +622,7 @@ function saveSupervisorProfile($conn, string $userUuid, array $data, ?string $ba
         $stmt->execute();
         $stmt->close();
     }
-    // supervisors are created by coordinator — no INSERT needed
+    
 
     $_SESSION['user_name']       = trim($firstName . ' ' . $lastName);
     $_SESSION['user_first_name'] = $firstName;
@@ -646,9 +646,9 @@ function saveSupervisorProfile($conn, string $userUuid, array $data, ?string $ba
 }
 
 
-// -----------------------------------------------
-// SAVE profile by role — single entry point
-// -----------------------------------------------
+
+
+
 function saveProfileByRole($conn, string $userUuid, string $role, array $data, ?string $base64Image = null): array
 {
     return match($role) {

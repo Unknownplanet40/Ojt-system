@@ -72,7 +72,7 @@ $(document).ready(function () {
   });
 
   $("#employeeId").on("input", function () {
-    // pattern: EMP-0000-00000000
+    
     let value = $(this)
       .val()
       .toUpperCase()

@@ -525,7 +525,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                             <div class="card-body py-3 p-md-4">
                                 <div
                                     class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3">
-                                    <img src="https://placehold.co/40x40?text=No+Photo" alt="Profile"
+                                    <img src="https:
                                         id="DashboardProfilePhoto" class="rounded-circle mx-3"
                                         style="width: 40px; height: 40px; object-fit: cover" />
                                     <div class="flex-grow-1 min-w-0">

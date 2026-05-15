@@ -301,7 +301,7 @@ function createStudent() {
         $("#createdStudentTempPassword").text(response.temp_password);
         $("#StudentCreatedModal").attr("data-profile-uuid", response.profile_uuid).modal("show");
         loadStudents();
-        // Clear fields
+        
         $("#CreateStudentModal input, #CreateStudentModal select").val("");
       } else {
         toast("error", response.message);
@@ -454,7 +454,7 @@ $(document).ready(function () {
 
     const formData = new FormData();
     formData.append("csrf_token", csrfToken);
-    formData.append("bulk_file", file); // Match backend field name
+    formData.append("bulk_file", file); 
 
     const btn = $(this);
     const ogText = btn.html();
@@ -549,13 +549,13 @@ $(document).ready(function () {
         if (response.status === "success") {
           $("#bulkCreationModal").modal("hide");
           
-          // Populate success modal
+          
           $("#bulkBatchLabelCurrent").text("Current Batch");
           $("#bulkAccountsCreatedCount").text(response.created_count);
           $("#bulkSuccessCreatedCount").text(response.created_count);
           $("#bulkSuccessFailedCount").text(response.failed_count);
           
-          // Populate created accounts table
+          
           const createdTable = $("#bulkCreatedAccountsTable tbody");
           createdTable.empty();
           if (response.created && response.created.length > 0) {
@@ -570,7 +570,7 @@ $(document).ready(function () {
             });
           }
           
-          // Show failed rows if any
+          
           if (response.failed_count > 0 && response.failed && response.failed.length > 0) {
             $("#bulkFailedRowsContainer").removeClass("d-none");
             const failedTable = $("#bulkFailedRowsTableBody");
@@ -587,12 +587,12 @@ $(document).ready(function () {
             $("#bulkFailedRowsContainer").addClass("d-none");
           }
           
-          // Show success modal
+          
           $("#bulkSuccessModal").modal("show");
 
           toast("success", response.message || "Accounts created successfully.");
           
-          // Reset UI for next time
+          
           $("#validationResults").hide();
           $("#bulkCsvFile").val("");
         } else {

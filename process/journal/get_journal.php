@@ -62,7 +62,7 @@ if (!$journal) {
 
 $role = $_SESSION['user_role'];
 
-// scope check
+
 if ($role === 'student' && $journal['student_uuid'] !== $_SESSION['profile_uuid']) {
     http_response_code(403);
     response(['status' => 'error', 'message' => 'Unauthorized.']);

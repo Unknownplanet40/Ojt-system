@@ -31,14 +31,14 @@ if (empty($activeBatchUuid)) {
     $activeBatchUuid = $res->fetch_assoc()['uuid'] ?? null;
 }
 
-// Fetch Batch Details
+
 $stmt = $conn->prepare("SELECT * FROM batches WHERE uuid = ?");
 $stmt->bind_param('s', $activeBatchUuid);
 $stmt->execute();
 $batch = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-// 1. Placement Statistics
+
 $placementStats = ['pending' => 0, 'active' => 0, 'completed' => 0, 'total' => 0];
 $stmt = $conn->prepare("SELECT status, COUNT(*) as count FROM ojt_applications WHERE batch_uuid = ? GROUP BY status");
 $stmt->bind_param('s', $activeBatchUuid);
@@ -52,7 +52,7 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
-// 2. Program Stats
+
 $programStats = [];
 $res = $conn->query("
     SELECT p.name, p.code, COUNT(sp.uuid) as count
@@ -65,7 +65,7 @@ while ($row = $res->fetch_assoc()) {
     $programStats[] = $row;
 }
 
-// 3. Overall Hours
+
 $res = $conn->query("SELECT SUM(hours_rendered) as total FROM dtr_entries WHERE status = 'approved' AND batch_uuid = '{$activeBatchUuid}'");
 $totalRendered = (float)($res->fetch_assoc()['total'] ?? 0);
 
@@ -73,7 +73,7 @@ $res = $conn->query("SELECT SUM(p.required_hours) as total FROM student_profiles
 $totalRequired = (float)($res->fetch_assoc()['total'] ?? 0);
 $completionPercent = $totalRequired > 0 ? round(($totalRendered / $totalRequired) * 100, 1) : 0;
 
-// 4. Company Partners with Ratings
+
 $companies = [];
 $res = $conn->query("
     SELECT 
@@ -91,7 +91,7 @@ while ($row = $res->fetch_assoc()) {
     $companies[] = $row;
 }
 
-// Start generating HTML
+
 $html = '
 <style>
     body { font-family: "Helvetica", "Arial", sans-serif; font-size: 10pt; color: #333; }
@@ -265,7 +265,7 @@ $html .= '
 </div>
 ';
 
-// Create mPDF instance
+
 $mpdf = new Mpdf([
     'margin_left' => 15,
     'margin_right' => 15,
@@ -277,6 +277,6 @@ $mpdf = new Mpdf([
 $mpdf->SetTitle('OJT Analytics Report - ' . $batch['school_year']);
 $mpdf->WriteHTML($html);
 
-// Output
+
 $filename = 'OJT_Analytics_Report_' . date('Ymd_His') . '.pdf';
 $mpdf->Output($filename, 'D');

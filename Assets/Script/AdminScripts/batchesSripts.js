@@ -494,7 +494,7 @@ function loadBatches() {
             batchesContainer.append(batchCard);
           });
 
-          // Attach event listeners for the dynamically created buttons
+          
           batches.forEach((batch) => {
             $(`#viewStudentsBtn-${batch.uuid}`).on("click", function () {
               loadBatchStudents(batch.uuid);

@@ -94,7 +94,7 @@ function createProgram($conn, array $data, string $actorUuid): array
     $hours      = (int) ($data['required_hours']           ?? 486);
     $isActive   = (int) ($data['is_active']                ?? 1);
 
-    // validate
+    
     if (empty($code)) {
         $errors['code'] = 'Program code is required.';
     } elseif (!preg_match('/^[A-Z0-9]+$/', $code)) {
@@ -115,7 +115,7 @@ function createProgram($conn, array $data, string $actorUuid): array
         return ['success' => false, 'errors' => $errors];
     }
 
-    // check duplicate code
+    
     $stmt = $conn->prepare("SELECT id FROM programs WHERE code = ? LIMIT 1");
     $stmt->bind_param('s', $code);
     $stmt->execute();
@@ -187,7 +187,7 @@ function updateProgram($conn, string $programUuid, array $data, string $actorUui
         return ['success' => false, 'errors' => $errors];
     }
 
-    // check duplicate code — exclude current
+    
     $stmt = $conn->prepare("
         SELECT id FROM programs WHERE code = ? AND uuid != ? LIMIT 1
     ");

@@ -453,7 +453,7 @@ function Row3(data1, data2, data3) {
     $("#noVisitsScheduled").removeClass("d-none");
     upcomingVisitsList.addClass("d-none");
   } else {
-    // temporary until the schedule visit button is functional
+    
     $("#noVisitsScheduled").addClass("d-none");
     upcomingVisitsList.removeClass("d-none");
     data3.upcoming_visits.forEach((visit) => {

@@ -49,7 +49,7 @@ if (!$result['success']) {
     response([
         'status'  => $result['status'] ?? 'error',
         'message' => $result['message'],
-        'error'   => $result['error'] ?? null, // Include error details if available
+        'error'   => $result['error'] ?? null, 
     ]);
 }
 

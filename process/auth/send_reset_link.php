@@ -50,15 +50,16 @@ if (!$result['success']) {
 }
 
 $emailSent = sendResetEmail(
-    toEmail:   $result['email'],
-    resetLink: $result['reset_link'],
-    expiresAt: $result['expires_at']
+    $conn,
+    $result['email'],
+    $result['reset_link'],
+    $result['expires_at']
 );
 
-if (!$emailSent) {
+if ($emailSent !== true) {
     response([
         'status'  => 'critical',
-        'message' => 'Failed to send email. Please try again later.',
+        'message' => is_string($emailSent) ? $emailSent : 'Failed to send email. Please try again later.',
     ]);
 }
 

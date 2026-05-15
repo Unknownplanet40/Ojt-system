@@ -84,48 +84,48 @@ $html = <<<HTML
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; background: #fff; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 12px; color: 
     .page { padding: 40px; }
 
-    .header { text-align: center; border-bottom: 2px solid #0F6E56; padding-bottom: 16px; margin-bottom: 24px; }
+    .header { text-align: center; border-bottom: 2px solid 
     .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; margin-bottom: 22px; }
     .header-table td { vertical-align: middle; }
     .header-left { width: 20%; text-align: left; }
     .header-center { width: 60%; text-align: center; }
     .header-right { width: 20%; text-align: right; }
     .header-logo { width: 64px; height: 64px; object-fit: contain; }
-    .school-name { font-size: 15px; font-weight: bold; color: #0F6E56; margin-bottom: 4px; }
-    .school-meta { font-size: 10px; color: #64748b; margin-top: 2px; }
-    .doc-title { font-size: 20px; font-weight: bold; color: #111; margin-bottom: 4px; }
-    .doc-subtitle { font-size: 11px; color: #666; }
+    .school-name { font-size: 15px; font-weight: bold; color: 
+    .school-meta { font-size: 10px; color: 
+    .doc-title { font-size: 20px; font-weight: bold; color: 
+    .doc-subtitle { font-size: 11px; color: 
 
-    .notice-box { background: #FEF9EE; border: 1px solid #FDE68A; border-radius: 6px; padding: 12px 14px; margin-bottom: 24px; }
-    .notice-title { font-size: 11px; font-weight: bold; color: #92400E; margin-bottom: 4px; }
-    .notice-text { font-size: 11px; color: #92400E; line-height: 1.5; }
+    .notice-box { background: 
+    .notice-title { font-size: 11px; font-weight: bold; color: 
+    .notice-text { font-size: 11px; color: 
 
-    .credentials-box { background: #E1F5EE; border: 1.5px solid #1D9E75; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; text-align: center; }
-    .credentials-label { font-size: 11px; font-weight: bold; color: #0F6E56; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .credentials-box { background: 
+    .credentials-label { font-size: 11px; font-weight: bold; color: 
     .cred-row { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
-    .cred-key { font-size: 12px; color: #065F46; font-weight: 500; text-align: left; }
-    .cred-val { font-size: 13px; font-weight: bold; color: #0F6E56; font-family: 'Courier New', monospace; text-align: center; }
-    .pw-val { font-size: 18px; font-weight: bold; color: #0F6E56; font-family: 'Courier New', monospace; letter-spacing: 0.1em; margin-top: 6px; }
+    .cred-key { font-size: 12px; color: 
+    .cred-val { font-size: 13px; font-weight: bold; color: 
+    .pw-val { font-size: 18px; font-weight: bold; color: 
 
-    .section-title { font-size: 12px; font-weight: bold; color: #374151; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 1px solid #E5E7EB; }
+    .section-title { font-size: 12px; font-weight: bold; color: 
     .info-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-    .info-table td { padding: 8px 10px; border-bottom: 1px solid #F3F4F6; font-size: 12px; }
-    .info-table td:first-child { color: #6B7280; width: 40%; font-weight: 500; }
-    .info-table td:last-child { color: #111827; font-weight: 600; }
+    .info-table td { padding: 8px 10px; border-bottom: 1px solid 
+    .info-table td:first-child { color: 
+    .info-table td:last-child { color: 
     .info-table tr:last-child td { border-bottom: none; }
 
-    .steps-box { background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 6px; padding: 14px 16px; margin-bottom: 24px; }
-    .steps-title { font-size: 11px; font-weight: bold; color: #0369A1; margin-bottom: 8px; }
-    .step { font-size: 11px; color: #0369A1; margin-bottom: 5px; line-height: 1.4; }
+    .steps-box { background: 
+    .steps-title { font-size: 11px; font-weight: bold; color: 
+    .step { font-size: 11px; color: 
 
-    .footer { border-top: 1px solid #E5E7EB; padding-top: 12px; text-align: center; }
-    .footer-text { font-size: 10px; color: #616264; line-height: 1.6; }
-    .generated-info { font-size: 9px; color: #3e3f41; margin-top: 4px; text-align: right; }
-    .confidential { font-size: 10px; font-weight: bold; color: #EF4444; margin-bottom: 4px; }
-    .footer-contact { margin-top: 6px; font-size: 9px; color: #64748b; line-height: 1.45; }
+    .footer { border-top: 1px solid 
+    .footer-text { font-size: 10px; color: 
+    .generated-info { font-size: 9px; color: 
+    .confidential { font-size: 10px; font-weight: bold; color: 
+    .footer-contact { margin-top: 6px; font-size: 9px; color: 
   </style>
 </head>
 <body>
@@ -149,8 +149,10 @@ $html = <<<HTML
         </td>
       </tr>
     </table>
-  </div>
+HTML;
 
+if ($tempPassword !== '—' && !empty($tempPassword)) {
+    $html .= <<<HTML
   <div class="notice-box">
     <div class="notice-title">⚠ Important Notice</div>
     <div class="notice-text">
@@ -170,6 +172,10 @@ $html = <<<HTML
     </div>
     <div class="pw-val">{$tempPassword}</div>
   </div>
+HTML;
+}
+
+$html .= <<<HTML
 
   <div class="section-title">Coordinator Information</div>
   <table class="info-table">

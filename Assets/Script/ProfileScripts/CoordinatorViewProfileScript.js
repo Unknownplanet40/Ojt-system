@@ -29,33 +29,33 @@ function viewCoordinatorProfile() {
         const b = response.activeBatch;
         const students = response.students;
 
-        // Header Info
+        
         $("#ProfilePicture").attr("src", response.profileImage);
         $("#FullName").text(p.full_name);
         $("#DepartmentHeader").text(p.department);
         $("#Status").text(p.status_label);
         $("#EmployeeID").text(p.employee_id);
 
-        // Stats
+        
         $("#StudentCount").text(p.assigned_students);
         $("#activeBatch").text(b ? `AY ${b.school_year} ${b.semester} Sem` : "No Active Batch");
         $("#lastLogin").text(p.last_login || "Never");
 
-        // Personal Information Section
+        
         $("#PIEmployeeID").text(p.employee_id);
         $("#PIFullName").text(p.full_name);
         $("#PIDepartment").text(p.department);
         $("#PIMobileNumber").text(p.mobile);
         $("#PIAccountCreated").text(p.created_at);
 
-        // Student List
+        
         $("#BatchInfo").text(b ? `AY ${b.school_year} ${b.semester} Sem` : "N/A");
         const listContainer = $("#studentList");
         listContainer.empty();
 
         if (students.length > 0) {
           students.forEach((s) => {
-            const studentImg = s.profile_name ? `../../../Assets/Images/profiles/${s.profile_name}` : `https://placehold.co/40x40/C1C1C1/000000/png?text=${s.initials}&font=poppins`;
+            const studentImg = s.profile_name ? `../../../Assets/Images/profiles/${s.profile_name}` : `https:
             const studentItem = `
               <li class="list-group-item bg-transparent px-0 py-3 border-light border-opacity-10">
                 <div class="d-flex align-items-center gap-3">

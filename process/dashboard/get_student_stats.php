@@ -47,21 +47,21 @@ if (empty($batchUuid)) {
     response(['status' => 'error', 'message' => 'No active batch found.']);
 }
 
-// 1. DTR Summary & Recent Logs
+
 $dtrSummary = getDtrSummary($conn, $studentUuid, $batchUuid);
 $recentDtr  = array_slice(getStudentDtrEntries($conn, $studentUuid, $batchUuid), 0, 10);
 
-// 2. Journal Stats
+
 $journals = getStudentJournals($conn, $studentUuid, $batchUuid);
 $totalJournals = count($journals);
 $approvedJournals = count(array_filter($journals, fn($j) => $j['status'] === 'approved'));
 
-// 3. Requirements Stats
+
 $requirements = getStudentRequirements($conn, $studentUuid, $batchUuid);
 $totalReqs = count($requirements);
 $approvedReqs = count(array_filter($requirements, fn($r) => $r['status'] === 'approved'));
 
-// 4. OJT Placement Details
+
 $stmt = $conn->prepare("
     SELECT 
         c.name AS company_name,
@@ -90,7 +90,7 @@ $stmt->execute();
 $ojtDetails = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-// 5. Batch Info
+
 $stmt = $conn->prepare("SELECT semester, school_year FROM batches WHERE uuid = ?");
 $stmt->bind_param('s', $batchUuid);
 $stmt->execute();
@@ -104,7 +104,7 @@ response([
         'journals' => [
             'total' => $totalJournals,
             'approved' => $approvedJournals,
-            'percent' => $totalJournals > 0 ? round(($approvedJournals / 24) * 100, 1) : 0 // Assuming 24 weeks target
+            'percent' => $totalJournals > 0 ? round(($approvedJournals / 24) * 100, 1) : 0 
         ],
         'requirements' => [
             'total' => $totalReqs,
@@ -115,5 +115,5 @@ response([
     'recent_dtr' => $recentDtr,
     'ojt_details' => $ojtDetails,
     'batch_info' => $batchInfo,
-    'requirements_list' => array_slice($requirements, 0, 5) // Just top 5 for the dashboard card
+    'requirements_list' => array_slice($requirements, 0, 5) 
 ]);

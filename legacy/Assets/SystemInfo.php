@@ -1,5 +1,5 @@
 <?php
-// temporary system info file, will be replaced by database values in the future
+
 
 $LongTitle = "On-The-Job Training Management System";
 $ShortTitle = "OJT Management System";

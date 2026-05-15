@@ -12,7 +12,7 @@ $(document).ready(function () {
 
     loadJournals();
 
-    // Filters
+    
     $('.filter-btn').click(function() {
         $('.filter-btn').removeClass('active bg-primary bg-opacity-10 text-primary border-primary');
         $(this).addClass('active bg-primary bg-opacity-10 text-primary border-primary');
@@ -29,7 +29,7 @@ $(document).ready(function () {
         loadJournals();
     });
 
-    // View Details for Review
+    
     $(document).on('click', '.review-journal-btn', function() {
         let uuid = $(this).data('uuid');
         let journal = journalsCache.find(j => j.uuid === uuid);

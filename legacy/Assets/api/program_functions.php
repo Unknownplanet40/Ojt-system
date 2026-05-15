@@ -2,9 +2,9 @@
 
 require_once 'ServerConfig.php';
 
-// Prevent direct access to this file
+
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
-    // Only allow AJAX requests
+    
     if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         $base = dirname($_SERVER['SCRIPT_NAME'], 3);
@@ -95,7 +95,7 @@ function createProgram($conn, array $data, string $adminUuid): array
         return ['success' => false, 'errors' => $errors];
     }
 
-    // check duplicate code
+    
     $stmt = $conn->prepare("SELECT id FROM programs WHERE code = ? LIMIT 1");
     $stmt->bind_param('s', $code);
     $stmt->execute();
@@ -153,7 +153,7 @@ function editProgram($conn, string $programUuid, array $data, string $adminUuid)
         return ['success' => false, 'errors' => $errors];
     }
 
-    // check duplicate code — exclude current program
+    
     $stmt = $conn->prepare("SELECT id FROM programs WHERE code = ? AND uuid != ? LIMIT 1");
     $stmt->bind_param('ss', $code, $programUuid);
     $stmt->execute();

@@ -100,18 +100,18 @@ require_once "../../Assets/SystemInfo.php";
                     </div>
                     <div>
                         <div class="vstack ps-3">
-                            <span><small class="text-secondary" id="charCheck" style="font-size: 11px;">&#9864;</small>
+                            <span><small class="text-secondary" id="charCheck" style="font-size: 11px;">&
                                 <small class="text-muted" style="font-size: 11px;">At least 8 characters</small></span>
-                            <span><small class="text-secondary" id="upperCheck" style="font-size: 11px;">&#9864;</small>
+                            <span><small class="text-secondary" id="upperCheck" style="font-size: 11px;">&
                                 <small class="text-muted" style="font-size: 11px;">At least one uppercase
                                     letter</small></span>
                             <span><small class="text-secondary" id="numberCheck"
-                                    style="font-size: 11px;">&#9864;</small> <small class="text-muted"
+                                    style="font-size: 11px;">&
                                     style="font-size: 11px;">At least one number</small></span>
                             <span><small class="text-secondary" id="specialCheck"
-                                    style="font-size: 11px;">&#9864;</small> <small class="text-muted"
+                                    style="font-size: 11px;">&
                                     style="font-size: 11px;">At least one special character</small></span>
-                            <span><small class="text-secondary" id="matchCheck" style="font-size: 11px;">&#9864;</small>
+                            <span><small class="text-secondary" id="matchCheck" style="font-size: 11px;">&
                                 <small class="text-muted" style="font-size: 11px;">Passwords match</small></span>
                         </div>
                     </div>

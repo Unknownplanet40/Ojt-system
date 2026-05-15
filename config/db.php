@@ -11,11 +11,39 @@ $username = getenv('DB_USER') !== false ? getenv('DB_USER') : 'root';
 $password = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
 $dbname = getenv('DB_NAME') !== false ? getenv('DB_NAME') : 'ojt_system';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+$conn = @new mysqli($host, $username, $password);
 
 if ($conn->connect_error) {
     http_response_code(500);
-    exit('Database connection failed: ' . $conn->connect_error);
+    exit('Critical: MySQL server connection failed. Please ensure XAMPP/MySQL is running.');
+}
+
+$db_check = $conn->query("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '$dbname'");
+$db_exists = $db_check && $db_check->num_rows > 0;
+
+$is_setup_complete = false;
+if ($db_exists) {
+    $conn->select_db($dbname);
+    $table_check = $conn->query("SHOW TABLES LIKE 'system_config'");
+    if ($table_check && $table_check->num_rows > 0) {
+        $setup_check = $conn->query("SELECT is_setup_locked FROM system_config WHERE id = 1");
+        if ($setup_check && $setup_check->num_rows > 0) {
+            $is_setup_complete = (int)$setup_check->fetch_assoc()['is_setup_locked'] === 1;
+        }
+    }
+}
+
+if (!$is_setup_complete) {
+    $current_uri = $_SERVER['REQUEST_URI'];
+    $is_setup_page = str_contains($current_uri, 'Src/Pages/Setup') || str_contains($current_uri, 'process/setup/');
+    
+    if (!$is_setup_page) {
+        $base_path = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+        $base_path = preg_replace('/(\/Src\/Pages|\/process\/.*)$/', '', $base_path);
+        
+        header("Location: $base_path/Src/Pages/Setup.php");
+        exit;
+    }
 }
 
 $conn->set_charset('utf8mb4');

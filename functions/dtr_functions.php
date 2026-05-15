@@ -6,12 +6,12 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     exit;
 }
 
-// functions/dtr_functions.php
-// -----------------------------------------------
-// Module:    DTR — Daily Time Record
-// Primary:   Student (logs) · Supervisor (approves)
-// Secondary: Coordinator (monitors + override)
-// -----------------------------------------------
+
+
+
+
+
+
 require_once __DIR__ . '/../helpers/helpers.php';
 
 const DTR_CUTOFF_HOUR       = 23;
@@ -563,7 +563,7 @@ function getSupervisorPendingDtr($conn, string $supervisorUuid, string $batchUui
     $safeSupervisor = $conn->real_escape_string($supervisorUuid);
     $safeBatch      = $conn->real_escape_string($batchUuid);
 
-    $result = $conn->query("\n        SELECT\n          d.*,\n          sp.first_name,\n          sp.last_name,\n          sp.student_number,\n          p.code AS program_code\n        FROM dtr_entries d\n        JOIN student_profiles sp\n          ON d.student_uuid = sp.uuid\n          AND sp.supervisor_uuid = '{$safeSupervisor}'\n        LEFT JOIN programs p ON sp.program_uuid = p.uuid\n        WHERE d.batch_uuid = '{$safeBatch}'\n          AND d.status = 'pending'\n        ORDER BY d.is_backdated ASC, d.entry_date DESC\n    ");
+    $result = $conn->query("\n        SELECT\n          d.*,\n          sp.first_name,\n          sp.last_name,\n          sp.student_number,\n          p.code AS program_code\n        FROM dtr_entries d\n        JOIN student_profiles sp\n          ON d.student_uuid = sp.uuid\n          AND sp.supervisor_uuid = '{$safeSupervisor}'\n        LEFT JOIN programs p ON sp.program_uuid = p.uuid\n        WHERE d.batch_uuid = '{$safeBatch}'\n          AND d.status = 'pending'\n        ORDER BY d.entry_date DESC, d.submitted_at DESC\n    ");
 
     $entries = [];
     while ($row = $result->fetch_assoc()) {

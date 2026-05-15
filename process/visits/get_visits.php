@@ -77,14 +77,14 @@ if ($role === 'coordinator') {
         $filters
     );
 } else {
-    // admin — can filter by coordinator
+    
     if (!empty($_POST['coordinator_uuid'])) {
         $filters['coordinator_uuid'] = $_POST['coordinator_uuid'];
     }
     $visits = getAllVisits($conn, $batchUuid, $filters);
 }
 
-// summary counts
+
 $scheduled = count(array_filter($visits, fn($v) => $v['status'] === 'scheduled'));
 $completed = count(array_filter($visits, fn($v) => $v['status'] === 'completed'));
 $cancelled = count(array_filter($visits, fn($v) => $v['status'] === 'cancelled'));

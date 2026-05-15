@@ -59,7 +59,7 @@ if (empty($visitUuid)) {
     response(['status' => 'error', 'message' => 'Visit UUID is required.']);
 }
 
-// students_observed comes as JSON string or array
+
 $studentsObserved = $_POST['students_observed'] ?? [];
 if (is_string($studentsObserved)) {
     $studentsObserved = json_decode($studentsObserved, true) ?? [];

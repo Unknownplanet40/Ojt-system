@@ -1,0 +1,79 @@
+import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
+import { MatchsystemThemes, SwalTheme, BGcircleTheme } from "../SystemTheme.js";
+import { Errors } from "../ErrorFunctions.js";
+
+MatchsystemThemes(true);
+let swalTheme = SwalTheme();
+BGcircleTheme(true);
+
+const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
+const userRole = $('meta[name="user-Role"]').attr("content") || "";
+
+if (!csrfToken || !userRole || userRole !== "student") {
+  window.location.href = "../../../Src/Pages/Login";
+}
+
+function viewStudentProfile() {
+  $.ajax({
+    url: "../../../process/profile/get_student_profile_view",
+    type: "POST",
+    data: {
+      csrf_token: csrfToken,
+    },
+    dataType: "json",
+    success: function (response) {
+      if (response.status === "success") {
+        const p = response.profile;
+        const s = response.stats;
+
+        // Header Info
+        $("#ProfilePicture").attr("src", response.profileImage);
+        $("#FullName").text(p.full_name);
+        $("#Program").text(p.program_name + " (" + p.program_code + ")");
+        $("#Status").text(p.status_label);
+        $("#RoleBadge").text("Student");
+
+        // Stats Cards
+        $("#HoursRendered").text(s.hours);
+        $("#ReqProgress").text(`${s.requirements_approved}/${s.requirements_total}`);
+        $("#OJTStatusBadge").text(p.ojt_status_label);
+        
+        const reqPercent = s.requirements_total > 0 ? (s.requirements_approved / s.requirements_total) * 100 : 0;
+        $("#ReqProgressBar").css("width", `${reqPercent}%`);
+
+        // Personal Information Section
+        $("#PIFullName").text(p.full_name);
+        $("#PIStudentNumber").text(p.student_number);
+        $("#PIMobileNumber").text(p.mobile || 'N/A');
+        $("#PIAccountCreated").text(p.created_at_label);
+        $("#Email").text(p.email);
+
+        
+        $("#Company").text(p.company_name || "Not Assigned");
+        $("#Supervisor").text(p.supervisor_name);
+        $("#OJTStatusDetail").text(p.ojt_status_label);
+
+      } else {
+        Errors(response.message);
+      }
+    },
+    error: function () {
+      Errors("An error occurred while fetching profile data.");
+    },
+    complete: function () {
+        $("#pageLoader").fadeOut();
+    }
+  });
+}
+
+$(document).ready(function () {
+  viewStudentProfile();
+
+  $("#editprofileBtn").on("click", function () {
+    window.location.href = "../../../Src/Pages/Students/Student_Profile?action=edit";
+  });
+
+  $("#changepasswordBtn").on("click", function () {
+    window.location.href = "../../../Src/Pages/ChangePassword";
+  });
+});

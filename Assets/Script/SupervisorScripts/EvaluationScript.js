@@ -96,13 +96,13 @@ $(document).ready(function () {
         });
     }
 
-    // Star Rating Logic
+    
     $(".star-rating i").on("click", function() {
         const val = $(this).data("val");
         const container = $(this).parent();
         const inputId = container.data("input");
         
-        // Update stars visually
+        
         container.find("i").removeClass("text-warning");
         container.find("i").each(function() {
             if ($(this).data("val") <= val) {
@@ -110,12 +110,12 @@ $(document).ready(function () {
             }
         });
 
-        // Set hidden input value
+        
         $("#" + inputId).val(val);
         $("#badge-" + inputId).text(val + " / 5").removeClass("bg-secondary bg-danger").addClass("bg-primary");
     });
 
-    // Reset stars helper
+    
     function resetStars() {
         $(".star-rating i").removeClass("text-warning");
         $(".star-rating").each(function() {
@@ -125,7 +125,7 @@ $(document).ready(function () {
         });
     }
 
-    // Open Modal
+    
     $(document).on("click", ".evaluate-btn", function () {
         const studentUuid = $(this).data("uuid");
         const studentName = $(this).data("name");
@@ -142,12 +142,12 @@ $(document).ready(function () {
         $evalModal.show();
     });
 
-    // Submit Evaluation
+    
     $("#submitEvalBtn").on("click", function () {
         const $btn = $(this);
         const data = $("#evaluationForm").serialize() + "&csrf_token=" + encodeURIComponent(csrfToken);
 
-        // Validation
+        
         let valid = true;
         $(".star-rating").each(function() {
             const inputId = $(this).data("input");

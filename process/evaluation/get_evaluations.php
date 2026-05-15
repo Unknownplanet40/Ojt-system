@@ -60,9 +60,9 @@ if (empty($batchUuid)) {
     response(['status' => 'error', 'message' => 'No active batch found.']);
 }
 
-// -----------------------------------------------
-// STUDENT — own evaluations + unlock status
-// -----------------------------------------------
+
+
+
 if ($role === 'student') {
     $data = getStudentEvaluations($conn, $_SESSION['profile_uuid'], $batchUuid);
 
@@ -72,14 +72,14 @@ if ($role === 'student') {
     ]);
 }
 
-// -----------------------------------------------
-// SUPERVISOR — assigned students' evaluations
-// -----------------------------------------------
+
+
+
 if ($role === 'supervisor') {
     $studentUuid = trim($_POST['student_uuid'] ?? '');
 
     if (empty($studentUuid)) {
-        // return all assigned students' eval status
+        
         $safeBatch      = $conn->real_escape_string($batchUuid);
         $safeSupervisor = $conn->real_escape_string($_SESSION['profile_uuid']);
 
@@ -134,14 +134,14 @@ if ($role === 'supervisor') {
         ]);
     }
 
-    // specific student
+    
     $data = getStudentEvaluations($conn, $studentUuid, $batchUuid);
     response(['status' => 'success', 'data' => $data]);
 }
 
-// -----------------------------------------------
-// COORDINATOR / ADMIN — all evaluations
-// -----------------------------------------------
+
+
+
 if (in_array($role, ['coordinator', 'admin'])) {
     $coordinatorUuid = $role === 'coordinator'
         ? $_SESSION['profile_uuid']
@@ -150,7 +150,7 @@ if (in_array($role, ['coordinator', 'admin'])) {
     $studentUuid = trim($_POST['student_uuid'] ?? '');
 
     if (!empty($studentUuid)) {
-        // single student detail
+        
         $data    = getStudentEvaluations($conn, $studentUuid, $batchUuid);
         $summary = getEvaluationSummary($conn, $studentUuid, $batchUuid);
 
@@ -161,7 +161,7 @@ if (in_array($role, ['coordinator', 'admin'])) {
         ]);
     }
 
-    // all evaluations overview
+    
     $evaluations = getAllEvaluations($conn, $batchUuid, $coordinatorUuid);
 
     response([

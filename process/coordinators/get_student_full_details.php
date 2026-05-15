@@ -46,13 +46,13 @@ if ($student['coordinator_uuid'] !== $_SESSION['profile_uuid']) {
 }
 
 $requirements = getStudentRequirements($conn, $studentUuid, $student['batch_uuid']);
-$recentDtr    = getStudentDtrEntries($conn, $studentUuid, $student['batch_uuid']); // last 10 entries
+$recentDtr    = getStudentDtrEntries($conn, $studentUuid, $student['batch_uuid']); 
 $journals     = getStudentJournals($conn, $studentUuid, $student['batch_uuid']);
 
 $totalHours = 0;
 foreach ($recentDtr as $entry) {
     if ($entry['status'] === 'approved') {
-        // This is only for the last 10. We need total hours.
+        
         $totalHours += (float) $entry['hours_rendered'];
     }
 }

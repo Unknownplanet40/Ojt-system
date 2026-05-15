@@ -363,13 +363,13 @@ $CurrentPage = "Settings";
 
             .settings-nav-item.active {
                 background: var(--bs-primary);
-                color: #fff;
+                color: 
                 border-color: var(--bs-primary);
                 box-shadow: 0 4px 14px rgba(var(--bs-primary-rgb), 0.25);
             }
 
             .settings-nav-item.active span {
-                color: #fff;
+                color: 
             }
 
             .settings-content {

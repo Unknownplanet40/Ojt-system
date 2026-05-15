@@ -29,14 +29,14 @@ $(document).ready(function () {
         const $btn = $(this);
         const originalHtml = $btn.html();
         
-        // Show loading state
+        
         $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Exporting...');
         
         const status = $('#statusFilter').val();
         const coordinator_uuid = $('#coordinatorFilter').val();
         const company_uuid = $('#companyFilter').val();
         
-        // Create a hidden form and submit it to trigger download
+        
         const $form = $('<form>', {
             action: '../../../process/visits/export_visits_pdf',
             method: 'POST',
@@ -63,7 +63,7 @@ $(document).ready(function () {
         $form.submit();
         $form.remove();
 
-        // Reset button after a delay
+        
         setTimeout(() => {
             $btn.prop('disabled', false).html(originalHtml);
             ToastVersion(swalTheme, 'Visit report generated successfully.', 'success', 2000, 'top-end');
@@ -124,9 +124,9 @@ $(document).ready(function () {
 });
 
 function loadFilters() {
-    // Admin can see all active coordinators and companies
-    // For simplicity, we extract unique coordinators/companies from the main visits response initially,
-    // or we could hit an endpoint if it existed.
+    
+    
+    
 }
 
 function loadVisits() {
@@ -177,7 +177,7 @@ function updateFilterOptions(visits) {
         }
     });
     
-    // Sort and append
+    
     let sortedCoords = Array.from(coords.entries()).sort();
     let sortedComps = Array.from(comps.entries()).sort();
     
@@ -272,7 +272,7 @@ function renderVisits(visits) {
         container.append(card);
     });
     
-    // Animate cards
+    
     anime({
         targets: '.visit-card-anim',
         translateY: [20, 0],

@@ -36,7 +36,7 @@ if (empty($_POST['csrf_token']) ||
 
 $userUuid = $_SESSION['user_uuid'];
 
-// Get Admin Details with Profile
+
 $stmt = $conn->prepare("
     SELECT 
         u.email, CASE WHEN u.is_active = 1 THEN 'active' ELSE 'inactive' END as account_status, u.created_at, u.last_login_at as last_login,
@@ -54,7 +54,7 @@ if (!$admin) {
     response(['status' => 'error', 'message' => 'Profile not found.']);
 }
 
-// Formatting
+
 $admin['full_name'] = !empty($admin['first_name']) ? $admin['first_name'] . ' ' . $admin['last_name'] : $_SESSION['user_name'];
 $initials = !empty($admin['first_name']) ? strtoupper(substr($admin['first_name'], 0, 1) . substr($admin['last_name'], 0, 1)) : $_SESSION['user_initials'];
 $admin['initials'] = $initials;
@@ -62,13 +62,13 @@ $admin['status_label'] = ucfirst($admin['account_status']);
 $admin['created_at_label'] = date('M j, Y', strtotime($admin['created_at']));
 $admin['last_login_label'] = $admin['last_login'] ? date('M j, Y h:i A', strtotime($admin['last_login'])) : 'Never';
 
-// System Stats
+
 $stats = [];
 $stats['total_users'] = $conn->query("SELECT COUNT(*) FROM users")->fetch_row()[0];
 $stats['total_students'] = $conn->query("SELECT COUNT(*) FROM student_profiles")->fetch_row()[0];
 $stats['total_companies'] = $conn->query("SELECT COUNT(*) FROM companies")->fetch_row()[0];
 
-// Recent Logs (brief)
+
 $logs = [];
 $stmt = $conn->prepare("
     SELECT event_type, description, created_at 

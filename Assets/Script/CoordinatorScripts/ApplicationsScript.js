@@ -168,15 +168,15 @@ $(document).ready(function() {
         });
     }
 
-    // Load full details for a single app
+    
     $(document).on('click', '.view-details-btn', function() {
         let uuid = $(this).data('uuid');
         
-        // Find application from cache to populate basic data
+        
         let app = applicationsCache.find(a => a.uuid === uuid);
         if(!app) return;
         
-        // Populate modal
+        
         $('#stuName, #stuNamec1, #stuNamem2c1').text(app.full_name);
         $('#stuNum, #stuNumc1, #stuNumm2c1').text(app.student_number);
         $('#stuProg, #stuProgc1, #stuProgm2c1').text(app.program_code);
@@ -194,13 +194,13 @@ $(document).ready(function() {
         $('#stuPreferredDeptc3').text(app.preferred_department || '—');
         $('#coverletterc3').text(app.cover_letter || 'No cover letter provided.');
 
-        // Fetch requirements status
+        
         loadStudentRequirements(app.student_uuid);
         
-        // Update manage link
+        
         $('#manageRequirementsLink').attr('href', `Requirements?student_uuid=${app.student_uuid}`);
 
-        // Adjust action buttons based on status
+        
         $('#returnBtn, #rejectBtn, #approveBtn, #endorseBtn, #startBtn').addClass('d-none');
         
         if (app.status === 'pending') {
@@ -210,11 +210,11 @@ $(document).ready(function() {
         } else if (app.status === 'endorsed') {
             $('#startBtn').removeClass('d-none');
         } else if (app.status === 'needs_revision') {
-            // Still pending student action, but can reject if needed
+            
             $('#rejectBtn').removeClass('d-none');
         }
         
-        // Set UUID to all modals
+        
         $('#ReviewModal, #ApproveModal, #ReturnModal, #RejectModal, #EndorseModal, #StartModal').data('application-uuid', uuid);
         $('#StartModal').data('company-uuid', app.company_uuid);
 
@@ -243,22 +243,22 @@ $(document).ready(function() {
         $('#StartModal').modal('show');
     });
 
-    // Ensure Back buttons that target the ReviewModal repopulate it from cache
+    
     $(document).on('click', '[data-bs-target="#ReviewModal"]', function (e) {
         try {
-            // The button may live inside another modal (StartModal, ApproveModal, etc.)
+            
             const $srcModal = $(this).closest('.modal');
             let uuid = $srcModal.data('application-uuid') || $('#ReviewModal').data('application-uuid');
             if (!uuid) return;
 
             const app = applicationsCache.find(a => a.uuid === uuid);
             if (!app) {
-                // Attempt network fallback to fetch application details then open modal
+                
                 fetchApplicationAndPopulate(uuid);
                 return;
             }
 
-            // Repopulate review modal fields (same as view-details handler)
+            
             $('#stuName, #stuNamec1, #stuNamem2c1').text(app.full_name);
             $('#stuNum, #stuNumc1, #stuNumm2c1').text(app.student_number);
             $('#stuProg, #stuProgc1, #stuProgm2c1').text(app.program_code);
@@ -276,10 +276,10 @@ $(document).ready(function() {
             $('#stuPreferredDeptc3').text(app.preferred_department || '—');
             $('#coverletterc3').text(app.cover_letter || 'No cover letter provided.');
 
-            // Fetch latest requirements for the student
+            
             loadStudentRequirements(app.student_uuid);
 
-            // Adjust action buttons
+            
             $('#returnBtn, #rejectBtn, #approveBtn, #endorseBtn, #startBtn').addClass('d-none');
             if (app.status === 'pending') {
                 $('#returnBtn, #rejectBtn, #approveBtn').removeClass('d-none');
@@ -291,10 +291,10 @@ $(document).ready(function() {
                 $('#rejectBtn').removeClass('d-none');
             }
 
-            // Ensure modals have the application uuid
+            
             $('#ReviewModal, #ApproveModal, #ReturnModal, #RejectModal, #EndorseModal, #StartModal').data('application-uuid', uuid);
         } catch (err) {
-            // silently ignore
+            
             console.error('Failed to repopulate ReviewModal from Back button', err);
         }
     });
@@ -350,7 +350,7 @@ $(document).ready(function() {
         });
     }
 
-        // Network fallback: fetch application details by UUID when it's not present in cache
+        
         function fetchApplicationAndPopulate(uuid) {
             if (!uuid) return;
             $.ajax({
@@ -361,12 +361,12 @@ $(document).ready(function() {
                 success: function (response) {
                     if (response.status === 'success' && response.application) {
                         const app = response.application;
-                        // add to cache if not exists
+                        
                         if (!applicationsCache.find(a => a.uuid === app.uuid)) {
                             applicationsCache.push(app);
                         }
 
-                        // populate fields (same as view-details)
+                        
                         $('#stuName, #stuNamec1, #stuNamem2c1').text(app.full_name || (app.first_name && app.last_name ? app.first_name + ' ' + app.last_name : 'N/A'));
                         $('#stuNum, #stuNumc1, #stuNumm2c1').text(app.student_number || 'N/A');
                         $('#stuProg, #stuProgc1, #stuProgm2c1').text(app.program_code || 'N/A');
@@ -408,7 +408,7 @@ $(document).ready(function() {
             });
         }
 
-    // Helper for Actions
+    
     function updateApplicationStatus(modalId, newStatus, reasonOrNote = '', additionalData = {}) {
         let uuid = $(modalId).data('application-uuid');
         let btn = $(modalId).find('.btn:contains("Confirm"), .btn:contains("Reject"), .btn:contains("Issue"), .btn:contains("Return")').last();
@@ -534,7 +534,7 @@ $(document).ready(function() {
                 if (response.status === 'success') {
                     renderRequirementsStatus(response.requirements);
                     
-                    // If not all approved, maybe disable approve button?
+                    
                     if (!response.can_apply) {
                         $('#approveBtn').prop('disabled', true).attr('title', 'All 6 requirements must be approved first.');
                     } else {

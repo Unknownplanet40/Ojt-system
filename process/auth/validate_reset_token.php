@@ -52,5 +52,5 @@ if (!$result['success']) {
 response([
     'status'     => 'success',
     'message'    => 'Token is valid.',
-    'expires_at' => $result['expires_at'], // datetime string for JS Date()
+    'expires_at' => $result['expires_at'], 
 ]);

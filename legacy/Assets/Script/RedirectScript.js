@@ -52,7 +52,7 @@ function checkServer() {
       }
 
       if (isDatabaseExistError) {
-        // goto setup page if database does not exist
+        
         $("#status").text("Database not found. Redirecting to setup page...");
         $("#dot").addClass("d-none");
         ToastVersion(swalTheme, "Database not found. Redirecting to setup page...", "warning");
