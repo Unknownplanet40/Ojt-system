@@ -1,3 +1,8 @@
+import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
+import { SwalTheme } from "../SystemTheme.js";
+
+let swalTheme = SwalTheme();
+
 $(document).ready(function () {
     const $container = $("#evaluationsContainer");
     const $selfSection = $("#selfEvalSection");
@@ -192,12 +197,12 @@ $(document).ready(function () {
                             <span>${label}</span>
                             <span class="badge bg-secondary rounded-pill" id="badge-${key}">0 / 5</span>
                         </label>
-                        <div class="star-rating interactive d-flex gap-2" data-input="${key}">
-                            <i class="bi bi-star-fill" data-val="1"></i>
-                            <i class="bi bi-star-fill" data-val="2"></i>
-                            <i class="bi bi-star-fill" data-val="3"></i>
-                            <i class="bi bi-star-fill" data-val="4"></i>
+                        <div class="star-rating interactive d-flex flex-row-reverse justify-content-end gap-2" data-input="${key}">
                             <i class="bi bi-star-fill" data-val="5"></i>
+                            <i class="bi bi-star-fill" data-val="4"></i>
+                            <i class="bi bi-star-fill" data-val="3"></i>
+                            <i class="bi bi-star-fill" data-val="2"></i>
+                            <i class="bi bi-star-fill" data-val="1"></i>
                         </div>
                         <input type="hidden" name="${key}" id="${key}" required>
                     </div>
@@ -273,7 +278,7 @@ $(document).ready(function () {
         });
 
         if (!valid) {
-            Swal.fire("Missing Ratings", "Please provide a rating for all criteria.", "warning");
+            ToastVersion(swalTheme, "Please provide a rating for all criteria.", "warning");
             return;
         }
 
@@ -286,10 +291,10 @@ $(document).ready(function () {
             dataType: "json",
             success: function (res) {
                 if (res.status === "success") {
-                    Swal.fire("Success", res.message, "success");
+                    ToastVersion(swalTheme, res.message, "success");
                     loadEvaluations();
                 } else {
-                    Swal.fire("Error", res.message, "error");
+                    ToastVersion(swalTheme, res.message, "error");
                     $btn.prop("disabled", false).text('Submit Self-Evaluation');
                 }
             },

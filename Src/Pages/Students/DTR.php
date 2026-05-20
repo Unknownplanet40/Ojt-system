@@ -10,8 +10,12 @@ if (empty($_SESSION['user_uuid']) || ($_SESSION['user_role'] ?? '') !== 'student
 }
 
 require_once "../../../Assets/SystemInfo.php";
+require_once "../../../functions/settings_functions.php";
 
 $CurrentPage = "DTR";
+$maintenanceStatus = isFeatureMaintenanceActive($conn, 'dtr');
+$disableDtr = $maintenanceStatus['active'];
+$dtrDisableReason = $maintenanceStatus['reason'];
 $greeting = "Good day";
 $currentHour = date("H");
 if ($currentHour >= 5 && $currentHour < 12) {
@@ -107,6 +111,85 @@ if ($currentHour >= 5 && $currentHour < 12) {
                             <textarea class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="backdateReason" name="backdate_reason" rows="2" placeholder="Required only for backdated entries" style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
                             <div class="invalid-feedback d-block small" id="backdateReasonError"></div>
                         </div>
+
+                        <!-- Location & Identity Verification Block -->
+                        <div class="card bg-blur-5 bg-semi-transparent border border-light border-opacity-10 shadow-sm mt-3 rounded-4 overflow-hidden" id="verificationSection" style="--blur-lvl: <?= $opacitylvl ?>;">
+                            <div class="card-body p-3">
+                                <div class="mb-3 d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h6 class="mb-0 fw-600 text-uppercase small letter-spacing text-success">
+                                            <i class="bi bi-shield-check me-1"></i>Location & Identity Verification
+                                        </h6>
+                                        <small class="text-white-50 d-block">Required for daily verification</small>
+                                    </div>
+                                    <div id="overallVerificationBadge">
+                                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill small">Pending Capture</span>
+                                    </div>
+                                </div>
+                                <hr class="my-2 opacity-10">
+                                
+                                <div class="row g-3">
+                                    <!-- GPS Location Column -->
+                                    <div class="col-12 col-md-6 border-end border-light border-opacity-10 pe-md-3">
+                                        <div class="d-flex flex-column h-100 justify-content-between">
+                                            <div>
+                                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                                    <span class="fw-medium small text-white-50">GPS Coordinates</span>
+                                                    <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 text-success small" id="retryGpsBtn" style="font-size: 0.75rem;">
+                                                        <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                                                    </button>
+                                                </div>
+                                                <div class="p-3 rounded-3 bg-dark bg-opacity-20 border border-light border-opacity-10 d-flex flex-column align-items-center text-center justify-content-center" id="gpsStatusContainer" style="min-height: 140px;">
+                                                    <div class="spinner-border spinner-border-sm text-success mb-2" role="status" id="gpsSpinner"></div>
+                                                    <span class="small" id="gpsStatusText">Acquiring GPS coordinates...</span>
+                                                    <div class="mt-2 d-none" id="gpsCoordsDisplay">
+                                                        <code class="text-white small" id="latDisplay">--</code>, 
+                                                        <code class="text-white small" id="lngDisplay">--</code>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" id="clockInLatitude" name="clock_in_latitude" value="">
+                                            <input type="hidden" id="clockInLongitude" name="clock_in_longitude" value="">
+                                            <input type="hidden" id="clockOutLatitude" name="clock_out_latitude" value="">
+                                            <input type="hidden" id="clockOutLongitude" name="clock_out_longitude" value="">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Photo Verification Column -->
+                                    <div class="col-12 col-md-6 ps-md-3">
+                                        <div class="d-flex flex-column align-items-center text-center justify-content-center">
+                                            <span class="fw-medium small text-white-50 mb-2 align-self-start">Identity Photo Capture</span>
+                                            
+                                            <!-- Camera / Selfie Frame -->
+                                            <div class="position-relative overflow-hidden rounded-3 border border-light border-opacity-10 bg-dark bg-opacity-20 d-flex align-items-center justify-content-center" style="width: 100%; max-width: 200px; height: 150px; min-height: 150px;" id="cameraFrame">
+                                                <video id="webcamVideo" class="w-100 h-100 object-fit-cover d-none" autoplay playsinline></video>
+                                                <img id="selfiePreviewImg" class="w-100 h-100 object-fit-cover d-none" alt="Selfie Preview">
+                                                <div id="cameraPlaceholder" class="vstack gap-1 align-items-center text-center py-3">
+                                                    <i class="bi bi-camera fs-3 text-white-30"></i>
+                                                    <small class="text-white-30 small" style="font-size: 0.7rem;">Camera not active</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Action Buttons -->
+                                            <div class="w-100 mt-2 d-flex gap-2 justify-content-center">
+                                                <button type="button" class="btn btn-xs btn-outline-info rounded-pill px-3 py-1 text-uppercase fw-semibold" id="startCameraBtn" style="font-size: 0.7rem;">
+                                                    <i class="bi bi-camera-video me-1"></i>Start Camera
+                                                </button>
+                                                <button type="button" class="btn btn-xs btn-success rounded-pill px-3 py-1 text-uppercase fw-semibold d-none" id="captureSelfieBtn" style="font-size: 0.7rem;">
+                                                    <i class="bi bi-camera-fill me-1"></i>Capture
+                                                </button>
+                                                <button type="button" class="btn btn-xs btn-outline-danger rounded-pill px-3 py-1 text-uppercase fw-semibold d-none" id="retakeSelfieBtn" style="font-size: 0.7rem;">
+                                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Retake
+                                                </button>
+                                            </div>
+                                            
+                                            <input type="hidden" id="selfiePhotoData" name="selfie_photo_data" value="">
+                                            <canvas id="selfieCanvas" class="d-none" width="640" height="480"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer border-0 pt-0">
@@ -121,6 +204,38 @@ if ($currentHour >= 5 && $currentHour < 12) {
         <main class="d-flex flex-column flex-grow-1 overflow-auto">
             <?php require_once "../../Components/Header_Students.php"; ?>
             <div class="container-fluid p-4 w-100" id="dashboardContent">
+                <?php if ($disableDtr): ?>
+                    <div class="alert alert-warning border-0 rounded-4 shadow-sm p-4 mb-4 d-flex align-items-center bg-blur-5 bg-semi-transparent" style="--blur-lvl: <?= $opacitylvl ?>;">
+                        <div class="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center text-warning me-3" style="width: 50px; height: 50px; min-width: 50px;">
+                            <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="alert-heading fw-bold mb-1">DTR Submission Locked</h5>
+                            <p class="mb-0 text-body-secondary small"><?= htmlspecialchars($dtrDisableReason) ?></p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($maintenanceStatus['upcoming'] ?? false): ?>
+                    <div class="alert alert-info border-0 rounded-4 shadow-sm p-4 mb-4 d-flex align-items-center bg-blur-5 bg-semi-transparent ojt-maintenance-upcoming-banner" 
+                         style="--blur-lvl: <?= $opacitylvl ?>;"
+                         data-start="<?= htmlspecialchars($maintenanceStatus['start']) ?>"
+                         data-end="<?= htmlspecialchars($maintenanceStatus['end']) ?>">
+                        <div class="rounded-circle bg-info bg-opacity-25 d-flex align-items-center justify-content-center text-info me-3" style="width: 50px; height: 50px; min-width: 50px;">
+                            <i class="bi bi-clock-history fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading fw-bold mb-1 text-info">Upcoming Scheduled Maintenance</h5>
+                            <p class="mb-0 text-body-secondary small">
+                                The DTR Submission system will undergo maintenance starting from <strong><?= date('F j, Y, g:i A', strtotime($maintenanceStatus['start'])) ?></strong> until <strong><?= date('g:i A', strtotime($maintenanceStatus['end'])) ?></strong>.
+                            </p>
+                        </div>
+                        <div class="ms-auto text-end countdown-wrapper ps-3">
+                            <div class="small text-muted mb-1 text-uppercase fw-bold">Starts In</div>
+                            <div class="fw-bold fs-5 text-info countdown-timer">--:--:--</div>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 <div class="row g-3 mb-4 align-items-stretch">
                     <div class="col-12 col-xl-8">
                         <div class="card h-100 border-0 shadow-sm rounded-4 bg-blur-5 bg-semi-transparent" style="--blur-lvl: <?= $opacitylvl ?>;">
@@ -136,7 +251,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                     </div>
                                     <div class="ms-md-auto d-flex gap-2 flex-wrap">
                                         <button class="btn btn-outline-secondary rounded-pill px-3" id="dashboardRefreshBtn"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
-                                        <button class="btn btn-success rounded-pill px-3" id="newDtrEntryBtn"><i class="bi bi-plus-lg me-1"></i>Log entry</button>
+                                        <button class="btn btn-success rounded-pill px-3" id="newDtrEntryBtn" <?php echo $disableDtr ? 'disabled' : ''; ?>><i class="bi bi-plus-lg me-1"></i>Log entry</button>
                                     </div>
                                 </div>
                             </div>
@@ -233,13 +348,55 @@ if ($currentHour >= 5 && $currentHour < 12) {
                             </div>
                             <h5 class="mb-2">No DTR entries yet</h5>
                             <p class="text-muted mb-3">Your recorded time entries will appear here as soon as you submit them.</p>
-                            <button class="btn btn-success rounded-pill px-4" id="emptyStateNewEntryBtn"><i class="bi bi-plus-lg me-1"></i>Log your first entry</button>
+                            <button class="btn btn-success rounded-pill px-4" id="emptyStateNewEntryBtn" <?php echo $disableDtr ? 'disabled' : ''; ?>><i class="bi bi-plus-lg me-1"></i>Log your first entry</button>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const banners = document.querySelectorAll(".ojt-maintenance-upcoming-banner");
+        banners.forEach(banner => {
+            const startStr = banner.dataset.start;
+            if (!startStr) return;
+            
+            const formattedStart = startStr.replace(" ", "T");
+            const startTime = new Date(formattedStart).getTime();
+            const timerEl = banner.querySelector(".countdown-timer");
+            
+            function updateTimer() {
+                const now = new Date().getTime();
+                const distance = startTime - now;
+                
+                if (distance <= 0) {
+                    window.location.reload();
+                    return;
+                }
+                
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                let displayStr = "";
+                if (days > 0) {
+                    displayStr += days + "d ";
+                }
+                displayStr += String(hours).padStart(2, '0') + "h " + 
+                              String(minutes).padStart(2, '0') + "m " + 
+                              String(seconds).padStart(2, '0') + "s";
+                              
+                timerEl.textContent = displayStr;
+            }
+            
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        });
+    });
+    </script>
 </body>
 
 </html>

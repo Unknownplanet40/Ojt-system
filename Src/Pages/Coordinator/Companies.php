@@ -174,6 +174,54 @@ $CurrentPage = "Companies";
                                     <!-- Dynamic Contact Info -->
                                 </div>
                                 <hr class="border-light border-opacity-10 my-3">
+                                <h6 class="text-uppercase fw-bold text-primary small mb-3">Slots Capacity</h6>
+                                <div class="d-flex align-items-center gap-2 mb-3">
+                                    <i class="bi bi-people-fill text-primary fs-5"></i>
+                                    <div>
+                                        <div class="small text-white-50">Current Capacity</div>
+                                        <div class="fw-bold" id="detSlotsDisplay">0 / 0 Slots (0 Remaining)</div>
+                                    </div>
+                                </div>
+                                <div class="input-group input-group-sm mb-2">
+                                    <span class="input-group-text bg-transparent text-white border-light border-opacity-20">Total Slots</span>
+                                    <input type="number" class="form-control bg-transparent text-white border-light border-opacity-20 shadow-none" id="detSlotsInput" min="0" placeholder="e.g. 10">
+                                    <button class="btn btn-primary btn-sm px-3" type="button" id="detUpdateSlotsBtn">
+                                        <i class="bi bi-save me-1"></i>Save
+                                    </button>
+                                </div>
+                                <hr class="border-light border-opacity-10 my-3">
+                                <h6 class="text-uppercase fw-bold text-primary small mb-3">Geofencing limits</h6>
+                                <div class="vstack gap-2 mb-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <small class="text-white-50">Latitude</small>
+                                        <span class="fw-bold small" id="detLatitudeDisplay">Not Set</span>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <small class="text-white-50">Longitude</small>
+                                        <span class="fw-bold small" id="detLongitudeDisplay">Not Set</span>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <small class="text-white-50">Radius</small>
+                                        <span class="fw-bold small" id="detRadiusDisplay">Not Set</span>
+                                    </div>
+                                </div>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <input type="number" step="any" class="form-control form-control-sm bg-transparent text-white border-light border-opacity-20 shadow-none" id="detLatitudeInput" placeholder="Latitude">
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="number" step="any" class="form-control form-control-sm bg-transparent text-white border-light border-opacity-20 shadow-none" id="detLongitudeInput" placeholder="Longitude">
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control bg-transparent text-white border-light border-opacity-20 shadow-none" id="detRadiusInput" placeholder="Radius (meters)" min="10" value="100">
+                                            <button class="btn btn-primary btn-sm px-3" type="button" id="detUpdateGeofenceBtn">
+                                                <i class="bi bi-save me-1"></i>Save Limits
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr class="border-light border-opacity-10 my-3">
                                 <h6 class="text-uppercase fw-bold text-primary small mb-3">MOA Status</h6>
                                 <div id="detMoaStatus">
                                     <!-- Dynamic MOA Status -->

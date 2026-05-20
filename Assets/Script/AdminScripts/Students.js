@@ -301,7 +301,7 @@ function getStudents() {
             };
 
             if (student.profile_name === null || student.profile_name === "") {
-              student.profile_name = `https:
+              student.profile_name = `https://placehold.co/64x64/483a0f/c6983d/png?text=${student.initials}&font=poppins`;
             } else {
               student.profile_name = "../../../Assets/Images/profiles/" + student.profile_name;
             }
@@ -402,7 +402,7 @@ function viewStudentDetails(studentUuid) {
         };
 
         if (response.student.profile_name === null || response.student.profile_name === "") {
-          response.student.profile_name = `https:
+          response.student.profile_name = `https://placehold.co/64x64/483a0f/c6983d/png?text=${response.student.initials}&font=poppins`;
         } else {
           response.student.profile_name = "../../../Assets/Images/profiles/" + response.student.profile_name;
         }
@@ -1306,86 +1306,87 @@ function createBulkAccounts() {
   });
 }
 
-async function downloadBulkCredentialsCsv($button = null) {
+function downloadBulkCredentialsCsv($button = null) {
   const $btn = $button && $button.length ? $button : null;
   const originalHtml = $btn ? $btn.html() : "";
-  try {
-    if ($btn) {
-      $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Downloading...');
-    }
-
-    const response = await fetch("../../../process/students/bulk_export_csv", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "X-Requested-With": "XMLHttpRequest",
-      },
-      body: new URLSearchParams({ csrf_token: csrfToken }),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      ToastVersion(swalTheme, text || "Failed to export CSV credentials.", "error", 3500, "top-end");
-      return;
-    }
-
-    const fileName = getDownloadFileNameFromResponse(response, "bulk_created_accounts.csv");
-    const blob = await response.blob();
-    downloadBlobFile(blob, fileName);
-    ToastVersion(swalTheme, "CSV credentials downloaded successfully.", "success", 2500, "top-end");
-  } catch (error) {
-    Errors({ status: 0 }, "error", error?.message || error);
-  } finally {
-    if ($btn) {
-      $btn.prop("disabled", false).html(originalHtml);
-    }
+  if ($btn) {
+    $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Downloading...');
   }
+  $.ajax({
+    url: "../../../process/students/bulk_export_csv",
+    method: "POST",
+    data: { csrf_token: csrfToken },
+    xhrFields: { responseType: "blob" },
+    success: function (blob, _status, xhr) {
+      const contentType = (xhr.getResponseHeader("Content-Type") || "").toLowerCase();
+      if (contentType.includes("application/json")) {
+        const reader = new FileReader();
+        reader.onload = function () {
+          try {
+            const json = JSON.parse(String(reader.result || "{}"));
+            ToastVersion(swalTheme, json.message || "Failed to export CSV credentials.", "error", 3500, "top-end");
+          } catch {
+            ToastVersion(swalTheme, "Failed to export CSV credentials.", "error", 3500, "top-end");
+          }
+        };
+        reader.readAsText(blob);
+        return;
+      }
+      const contentDisposition = xhr.getResponseHeader("Content-Disposition") || "";
+      const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\"]+)/i);
+      const fileName = (fileNameMatch ? decodeURIComponent(fileNameMatch[1].trim()) : "") || "bulk_created_accounts.csv";
+      downloadBlobFile(blob, fileName);
+      ToastVersion(swalTheme, "CSV credentials downloaded successfully.", "success", 2500, "top-end");
+    },
+    error: function (xhr, status, error) {
+      Errors(xhr, status, error);
+    },
+    complete: function () {
+      if ($btn) $btn.prop("disabled", false).html(originalHtml);
+    },
+  });
 }
 
-async function downloadBulkCredentialsPdf($button = null) {
+function downloadBulkCredentialsPdf($button = null) {
   const $btn = $button && $button.length ? $button : null;
   const originalHtml = $btn ? $btn.html() : "";
-  try {
-    if ($btn) {
-      $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Downloading...');
-    }
-
-    const response = await fetch("../../../process/students/bulk_export_pdf", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "X-Requested-With": "XMLHttpRequest",
-      },
-      body: new URLSearchParams({ csrf_token: csrfToken }),
-    });
-
-    const contentType = (response.headers.get("Content-Type") || "").toLowerCase();
-    if (!response.ok || contentType.includes("application/json")) {
-      let message = "Failed to export PDF credentials.";
-      try {
-        const json = await response.json();
-        message = json.message || message;
-      } catch {
-        const text = await response.text();
-        message = text || message;
-      }
-      ToastVersion(swalTheme, message, "error", 3500, "top-end");
-      return;
-    }
-
-    const fileName = getDownloadFileNameFromResponse(response, "bulk_created_accounts.pdf");
-    const blob = await response.blob();
-    downloadBlobFile(blob, fileName);
-    ToastVersion(swalTheme, "PDF credentials downloaded successfully.", "success", 2500, "top-end");
-  } catch (error) {
-    Errors({ status: 0 }, "error", error?.message || error);
-  } finally {
-    if ($btn) {
-      $btn.prop("disabled", false).html(originalHtml);
-    }
+  if ($btn) {
+    $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Downloading...');
   }
+  $.ajax({
+    url: "../../../process/students/bulk_export_pdf",
+    method: "POST",
+    data: { csrf_token: csrfToken },
+    xhrFields: { responseType: "blob" },
+    success: function (blob, _status, xhr) {
+      const contentType = (xhr.getResponseHeader("Content-Type") || "").toLowerCase();
+      if (contentType.includes("application/json")) {
+        const reader = new FileReader();
+        reader.onload = function () {
+          try {
+            const json = JSON.parse(String(reader.result || "{}"));
+            ToastVersion(swalTheme, json.message || "Failed to export PDF credentials.", "error", 3500, "top-end");
+          } catch {
+            const text = String(reader.result || "");
+            ToastVersion(swalTheme, text || "Failed to export PDF credentials.", "error", 3500, "top-end");
+          }
+        };
+        reader.readAsText(blob);
+        return;
+      }
+      const contentDisposition = xhr.getResponseHeader("Content-Disposition") || "";
+      const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\"]+)/i);
+      const fileName = (fileNameMatch ? decodeURIComponent(fileNameMatch[1].trim()) : "") || "bulk_created_accounts.pdf";
+      downloadBlobFile(blob, fileName);
+      ToastVersion(swalTheme, "PDF credentials downloaded successfully.", "success", 2500, "top-end");
+    },
+    error: function (xhr, status, error) {
+      Errors(xhr, status, error);
+    },
+    complete: function () {
+      if ($btn) $btn.prop("disabled", false).html(originalHtml);
+    },
+  });
 }
 
 $(document).ready(function () {
@@ -1592,65 +1593,52 @@ $(document).ready(function () {
     if ($downloadButton.prop("disabled")) {
       return;
     }
+    showTemplateDownloadLoading();
+    $downloadButton
+      .prop("disabled", true)
+      .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Downloading...');
 
-    (async () => {
-      showTemplateDownloadLoading();
-      $downloadButton
-        .prop("disabled", true)
-        .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Downloading...');
-
-      try {
-        const response = await fetch("../../../process/students/bulk_download_template", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "X-Requested-With": "XMLHttpRequest",
-          },
-          body: new URLSearchParams({ csrf_token: csrfToken }),
-        });
-
-        const contentType = (response.headers.get("Content-Type") || "").toLowerCase();
-
-        if (!response.ok) {
-          if (contentType.includes("application/json")) {
-            const errorJson = await response.json();
-            ToastVersion(swalTheme, errorJson.message || "Failed to download template.", "warning", 3500, "top-end");
-          } else {
-            ToastVersion(swalTheme, "Failed to download template.", "error", 3500, "top-end");
-          }
-          return;
-        }
-
+    $.ajax({
+      url: "../../../process/students/bulk_download_template",
+      method: "POST",
+      data: { csrf_token: csrfToken },
+      xhrFields: { responseType: "blob" },
+      success: function (blob, _status, xhr) {
+        const contentType = (xhr.getResponseHeader("Content-Type") || "").toLowerCase();
         if (contentType.includes("application/json")) {
-          const errorJson = await response.json();
-          ToastVersion(swalTheme, errorJson.message || "Failed to download template.", "warning", 3500, "top-end");
+          const reader = new FileReader();
+          reader.onload = function () {
+            try {
+              const errorJson = JSON.parse(String(reader.result || "{}"));
+              ToastVersion(swalTheme, errorJson.message || "Failed to download template.", "warning", 3500, "top-end");
+            } catch {
+              ToastVersion(swalTheme, "Failed to download template.", "error", 3500, "top-end");
+            }
+          };
+          reader.readAsText(blob);
           return;
         }
-
-        const contentDisposition = response.headers.get("Content-Disposition") || "";
-        const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
-        const fileNameFromHeader = fileNameMatch ? decodeURIComponent(fileNameMatch[1].trim()) : "";
-        const fileName = fileNameFromHeader || "student_bulk_import_template.csv";
-        const blob = await response.blob();
-
-        try {
-          await saveTemplateBlob(blob, fileName);
-        } catch (downloadError) {
+        const contentDisposition = xhr.getResponseHeader("Content-Disposition") || "";
+        const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\"]+)/i);
+        const fileName = (fileNameMatch ? decodeURIComponent(fileNameMatch[1].trim()) : "") || "student_bulk_import_template.csv";
+        saveTemplateBlob(blob, fileName).catch(function (downloadError) {
           if (downloadError && (downloadError.name === "AbortError" || downloadError.name === "NotAllowedError")) {
             ToastVersion(swalTheme, "Download cancelled.", "info", 2500, "top-end");
           } else {
             ToastVersion(swalTheme, downloadError?.message || "Failed to save the file.", "error", 3500, "top-end");
           }
-        }
-      } catch (error) {
-        Errors({ status: 0 }, "error", error?.message || error);
-      } finally {
+        });
+      },
+      error: function (xhr, status, error) {
+        Errors(xhr, status, error);
+      },
+      complete: function () {
         closeTemplateDownloadLoading();
         $downloadButton.prop("disabled", false).html("Download Template");
-      }
-    })();
+      },
+    });
   });
+
 
   $("#validatePreviewBtn").click(function () {
     validateAndPreviewBulkFile();

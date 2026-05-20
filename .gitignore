@@ -4,3 +4,4 @@ functions/credentials.php
 scratch/
 plan/
 .agents/
+libs/composer/vendor/

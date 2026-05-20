@@ -11,6 +11,7 @@ date_default_timezone_set('Asia/Manila');
 require_once dirname(__DIR__, 2) . '/config/db.php';
 require_once dirname(__DIR__, 2) . '/functions/student_functions.php';
 require_once dirname(__DIR__, 2) . '/Assets/SystemInfo.php';
+require_once dirname(__DIR__, 2) . '/helpers/helpers.php';
 
 
 
@@ -42,7 +43,7 @@ if (empty($studentData) && isset($_GET['uuid'])) {
             'program'        => $student['program_name'],
             'year_level'     => $student['year_level'],
             'section'        => $student['section'],
-            'temp_password'  => '********' 
+            'temp_password'  => isset($_GET['temp_password']) ? $_GET['temp_password'] : '********' 
         ];
     }
 }
@@ -80,49 +81,43 @@ $html = <<<HTML
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 12px; color: 
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #1e293b; }
     .page { padding: 40px; }
 
-    .header { text-align: center; border-bottom: 2px solid 
-    .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; margin-bottom: 22px; }
+    .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 22px; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; }
     .header-table td { vertical-align: middle; }
     .header-left { width: 20%; text-align: left; }
     .header-center { width: 60%; text-align: center; }
     .header-right { width: 20%; text-align: right; }
     .header-logo { width: 64px; height: 64px; object-fit: contain; }
-    .school-name { font-size: 15px; font-weight: bold; color: 
-    .school-meta { font-size: 10px; color: 
-    .doc-title { font-size: 20px; font-weight: bold; color: 
-    .doc-subtitle { font-size: 11px; color: 
 
-    .notice-box { background: 
-    .notice-title { font-size: 11px; font-weight: bold; color: 
-    .notice-text { font-size: 11px; color: 
+    .notice-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; }
+    .notice-title { font-size: 11px; font-weight: bold; color: #92400e; margin-bottom: 6px; }
+    .notice-text { font-size: 11px; color: #78350f; }
 
-    .credentials-box { background: 
-    .credentials-label { font-size: 11px; font-weight: bold; color: 
+    .credentials-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 14px 16px; margin-bottom: 16px; }
+    .credentials-label { font-size: 11px; font-weight: bold; color: #166534; margin-bottom: 10px; }
     .cred-row { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
-    .cred-key { font-size: 12px; color: 
-    .cred-val { font-size: 13px; font-weight: bold; color: 
-    .pw-val { font-size: 18px; font-weight: bold; color: 
+    .cred-key { font-size: 12px; color: #64748b; font-weight: bold; }
+    .cred-val { font-size: 13px; font-weight: bold; color: #1e293b; }
+    .pw-val { font-size: 18px; font-weight: bold; color: #166534; font-family: monospace; margin-top: 4px; }
 
-    .section-title { font-size: 12px; font-weight: bold; color: 
+    .section-title { font-size: 12px; font-weight: bold; color: #374151; margin-top: 14px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #e5e7eb; }
     .info-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-    .info-table td { padding: 8px 10px; border-bottom: 1px solid 
-    .info-table td:first-child { color: 
-    .info-table td:last-child { color: 
+    .info-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; }
+    .info-table td:first-child { color: #64748b; font-weight: bold; width: 140px; }
+    .info-table td:last-child { color: #1e293b; }
     .info-table tr:last-child td { border-bottom: none; }
 
-    .steps-box { background: 
-    .steps-title { font-size: 11px; font-weight: bold; color: 
-    .step { font-size: 11px; color: 
+    .steps-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 14px 16px; margin-bottom: 20px; }
+    .steps-title { font-size: 11px; font-weight: bold; color: #1e40af; margin-bottom: 8px; }
+    .step { font-size: 11px; color: #1e3a8a; margin-bottom: 5px; }
 
-    .footer { border-top: 1px solid 
-    .footer-text { font-size: 10px; color: 
-    .generated-info { font-size: 9px; color: 
-    .confidential { font-size: 10px; font-weight: bold; color: 
-    .divider { border: none; border-top: 1px solid 
-        .footer-contact { margin-top: 6px; font-size: 9px; color: 
+    .footer { border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 20px; }
+    .footer-text { font-size: 10px; color: #64748b; margin-bottom: 4px; }
+    .generated-info { font-size: 9px; color: #94a3b8; }
+    .confidential { font-size: 10px; font-weight: bold; color: #dc2626; margin-bottom: 6px; }
+    .footer-contact { margin-top: 6px; font-size: 9px; color: #94a3b8; }
   </style>
 </head>
 <body>
@@ -235,6 +230,11 @@ if (file_exists($mpdfPath)) {
 
 
 
+function pdfEscape(string $text): string {
+    $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
+    return str_replace(['\\', '(', ')', "\r", "\n"], ['\\\\', '\(', '\)', '', ''], $text);
+}
+
 generateSimplePdf($fullName, $email, $tempPassword, $studentNumber, $program, $yearLevel, $section, $generatedAt, $schoolName, $longTitle, $schoolMotto, $schoolAddress, $schoolWebsite, $schoolEmail, $schoolPhone, $documentFooterNote, $documentVerificationNote);
 
 function generateSimplePdf(
@@ -290,6 +290,16 @@ function buildRawPdf(
     string $documentFooterNote,
     string $documentVerificationNote
 ): string {
+    $fullNameEsc      = pdfEscape($fullName);
+    $emailEsc         = pdfEscape($email);
+    $tempPasswordEsc  = pdfEscape($tempPassword);
+    $studentNumberEsc = pdfEscape($studentNumber);
+    $programEsc       = pdfEscape($program);
+    $yearLevelEsc     = pdfEscape($yearLevel);
+    $sectionEsc       = pdfEscape($section);
+    $generatedAtEsc   = pdfEscape($generatedAt);
+    $schoolNameEsc    = pdfEscape($schoolName);
+
     $pageWidth  = 595;
     $pageHeight = 842;
     $margin     = 50;
@@ -334,9 +344,9 @@ function buildRawPdf(
 
     
     $s .= "1 1 1 rg\n";
-    $s .= "BT /F2 14 Tf " . ($margin) . " " . ($pageHeight - 35) . " Td ({$schoolName}) Tj ET\n";
+    $s .= "BT /F2 14 Tf " . ($margin) . " " . ($pageHeight - 35) . " Td ({$schoolNameEsc}) Tj ET\n";
     $s .= "BT /F2 18 Tf " . ($margin) . " " . ($pageHeight - 56) . " Td (Student Account Credentials) Tj ET\n";
-    $s .= "BT /F1 9 Tf " . ($margin) . " " . ($pageHeight - 72) . " Td (Generated: {$generatedAt}) Tj ET\n";
+    $s .= "BT /F1 9 Tf " . ($margin) . " " . ($pageHeight - 72) . " Td (Generated: {$generatedAtEsc}) Tj ET\n";
 
     
     $s .= "0 0 0 rg\n";
@@ -366,12 +376,12 @@ function buildRawPdf(
 
     
     $s .= "BT /F1 10 Tf " . ($margin + 8) . " " . ($cy - 16) . " Td (Email Address:) Tj ET\n";
-    $s .= "BT /F2 10 Tf 200 " . ($cy - 16) . " Td ({$email}) Tj ET\n";
+    $s .= "BT /F2 10 Tf 200 " . ($cy - 16) . " Td ({$emailEsc}) Tj ET\n";
 
     
     $s .= "BT /F1 10 Tf " . ($margin + 8) . " " . ($cy - 34) . " Td (Temporary Password:) Tj ET\n";
     $s .= $color(15, 110, 86);
-    $s .= "BT /F3 20 Tf 200 " . ($cy - 40) . " Td ({$tempPassword}) Tj ET\n";
+    $s .= "BT /F3 20 Tf 200 " . ($cy - 40) . " Td ({$tempPasswordEsc}) Tj ET\n";
     $s .= "0 0 0 rg\n";
 
     $cy -= 110;
@@ -389,11 +399,11 @@ function buildRawPdf(
     $cy -= 18;
 
     $rows = [
-        ['Full Name',      $fullName],
-        ['Student Number', $studentNumber],
-        ['Program',        $program],
-        ['Year Level',     $yearLevel],
-        ['Section',        $section],
+        ['Full Name',      $fullNameEsc],
+        ['Student Number', $studentNumberEsc],
+        ['Program',        $programEsc],
+        ['Year Level',     $yearLevelEsc],
+        ['Section',        $sectionEsc],
     ];
 
     foreach ($rows as $row) {

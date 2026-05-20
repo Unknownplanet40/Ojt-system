@@ -1,18 +1,18 @@
 # OJT Management System
 
-A comprehensive, web-based On-the-Job Training management platform built specifically for academic institutions in the Philippines. The system handles the complete OJT lifecycle—from student pre-requirements submission and company accreditation, to daily DTR tracking, evaluations, and final grade computation—all under one unified roof.
+A web-based OJT management platform built for Philippine academic institutions. Covers the full cycle — pre-requirements, company accreditation, DTR tracking, evaluations, and grade computation — in one system.
 
-Featuring a modern, high-performance "Liquid Glass" UI, the system is designed to be intuitive, responsive, and secure.
-
-> **Status:** Final Release (v1.0)
+> **Status:** Final Release (v1.20) — This project is no longer actively maintained. It serves as a reference implementation for common OJT management patterns and workflows. Forks and contributions are welcome under the project license.
 
 ## 💡 System Highlights
 
-- **Paperless Workflow**: Eliminate physical forms. All requirements, MOAs, evaluations, and daily time records (DTRs) are digitized, submitted, and approved online.
-- **Secure Architecture**: Built with a guarded file-serving mechanism and strict role-based access controls to ensure sensitive academic and corporate data remains confidential.
-- **Automated Digital Credentials**: Instantly generate and download secure, PDF-based login credentials for your institutional partners and faculty members.
-- **Institutional Branding**: The built-in setup wizard allows you to customize the system's logos, application name, and official contact information to reflect your school's unique identity.
-- **Real-Time Progress Tracking**: Coordinators and students can monitor training hours, weekly journals, and milestone evaluations at a glance through dedicated, interactive dashboards.
+- **Paperless Workflow**: Requirements, MOAs, evaluations, and DTRs are submitted and approved online — no physical forms.
+- **Role-Based Access Control**: Strict permission boundaries between Admin, Coordinator, Student, and Supervisor roles. Sensitive data stays where it belongs.
+- **PDF Credential Generation**: Generate and download login credentials for institutional partners and faculty on demand.
+- **Professional Certificates & Reports**: Generate highly polished, production-ready, landscape A4 certificates and verification print reports with embedded QR codes natively via mPDF.
+- **Setup Wizard**: First-launch wizard handles institutional branding — logos, app name, contact info — before anyone else touches the system.
+- **Rich Interactive Analytics**: Interactive charts (using Chart.js) visualizing student enrollment/completion curves, program completion rates, company evaluation distributions, weekly attendance patterns, and supervisor skill matrices.
+- **Robust Backup & System Recovery**: Backup system files and profile pictures into a `.zip` archive, restore database and files sequentially, and perform secure, multi-tier system resets.
 
 ---
 
@@ -45,6 +45,30 @@ Here is a glimpse of the OJT Management System in action. *(Screenshots to be ad
 ![Supervisor Evaluation](./Assets/Images/Previews/supervisor.png)
 *Streamlined approval of student entries and submission of milestone performance evaluations.*
 
+### 7. Interactive Analytics & Reports
+![Interactive Analytics](./Assets/Images/Previews/analytics.png)
+*Admin and Coordinator dashboards featuring rich Chart.js visual analytics, enrollment curves, and evaluation radar charts.*
+
+### 8. System Backup, Recovery & Danger Zone Reset
+![System Backup & Reset](./Assets/Images/Previews/backup_reset.png)
+*The secure Admin settings dashboard containing SQL/ZIP file exports, sequential restores, and the 3-tier verification system reset.*
+
+### 9. Secure Certificate Verification Portal
+![Certificate Verification](./Assets/Images/Previews/certificate_verification.png)
+*Public-facing verification interface showcasing real-time digital credential authenticity verification and backend audit logging.*
+
+---
+
+## About
+
+This is a rebuild of an older project, not a production system. It demonstrates common OJT management patterns — workflows, role structures, UI approaches — and is meant to be read, forked, and learned from.
+
+All institution names, logos, and sample data are fictional. No affiliation with any real school or org.
+
+The code ships as-is. Before deploying it anywhere real, you'll need to harden it, review the security model, and run it through whatever compliance process applies to your institution. That part isn't covered here.
+
+Forks and contributions are welcome under the project license. For questions, open an issue or check the `LICENSE` file.
+
 ---
 
 ## 🎯 Who this is for
@@ -61,6 +85,22 @@ The platform provides dedicated, focused workspaces tailored to each specific ro
 - **Coordinators** monitor assigned students, approve requirements, review daily DTRs and weekly journals, conduct visits, and compute final grades using a weighted rubric.
 - **Students** maintain their profiles, submit pre-OJT documents, log daily time-in/time-out, submit weekly reflections, and track their progress towards the required hours.
 - **Supervisors** oversee assigned interns, approve/reject DTR entries, review weekly journals, and submit milestone evaluations (Midterm and Final).
+
+### 🆕 Recently Added Features
+
+- **Rich Interactive Analytics (Chart.js)**:
+  * *Admin Workspace:* Dynamic multi-dataset lines plotting enrollment vs. completion curves (last 6 months), horizontal bar charts showing program-by-program completion rates, and company star-rating distributions.
+  * *Coordinator Workspace:* Daily time logging patterns (past 30 days) and a skill radar chart mapping average intern grades across core evaluation metrics (Technical, Work Attitude, Communication, Teamwork, Problem Solving).
+- **Sequential Backup & Restore System**:
+  * *Disclaimer warning:* Settings page now alerts admins that SQL dumps do not backup uploaded assets.
+  * *Uploads & Profiles ZIP Export:* Admins can backup all uploaded requirements, MOAs, and profile pictures into a single, downloadable `.zip` file on demand (only accessible after running a database backup).
+  * *Locked Import Flow:* Restoring uploaded assets is protected and is only enabled *after* a successful database (`.sql`) restore has been completed in the current session.
+- **Danger Zone System Reset**:
+  * Clean-slates the database (wipes all tables and executes a fresh `init.sql`), deletes all files in the `uploads/` and `profiles/` folders, and destroys active sessions to redirect users back to the Setup Wizard.
+  * Multi-tier security challenge: requires the Admin Password, checking off three warning acknowledgments, and typing `"WIPE MY SYSTEM"` exactly.
+- **Verification Audit Logs**:
+  * Added active database logging to trace every certificate check. Captures the verification outcome (`valid`, `expired`, `revoked`), the user's IP, their browser user agent, and the scan source (e.g. `qr_code`). Stores them securely in `certificate_verifications` and `verification_logs`.
+  * Logs immutable certificate revocation entries in `certificate_revocation_logs`.
 
 ---
 
@@ -195,23 +235,18 @@ Recommended editor settings:
 - Trim trailing whitespace on save
 - Use 4-space indent for PHP/JS
 
-## 🔁 About the recent automated comment cleanup
-
-This repository was processed by an automated script that removed code comments across most files while preserving the `libs/` folder. For safety:
-
-- Every file modified by the script has a `.bak` backup in the same directory. To restore a file, rename `filename.php.bak` back to `filename.php` or copy contents back as needed.
-- The cleanup may have removed useful inline documentation. If you want comments preserved in specific files or folders, open an issue or submit a PR and include the paths to protect.
-
-## 📝 Changelog (high level)
-
-- v1.0 — Initial public release: core OJT workflows, roles, and export features.
-- v1.1 — Maintenance: dependency updates, security hardening, and UI refinements.
-- v1.2 — Documentation: README and installer improvements; automated comment cleanup performed (May 15, 2026).
-
-If you'd like a detailed changelog for each release, open an issue and we can add a `CHANGELOG.md`.
+<picture align="center">
+  <source media="(prefers-color-scheme: dark)" srcset="./Assets/Images/Previews/dev-note-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="./Assets/Images/Previews/dev-note.svg">
+  <img src="./Assets/Images/Previews/dev-note.svg" alt="Developer Note" style="width:100%; max-width:600px; margin-top:2rem;">
+</picture>
 
 ## 📫 Support
 
 For bugs, feature requests, or help deploying the system, please open an issue in this repository or contact the maintainer listed in `LICENSE`.
+
+---
+
+
 
 

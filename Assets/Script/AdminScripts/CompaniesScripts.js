@@ -417,6 +417,9 @@ function editCompany(uuid, batchUuid) {
         $("#Editcompanyworksetup").val(response.data.company.work_setup);
         $("#Editcompanyaccreditationstatus").val(response.data.company.accreditation_status);
         $("#Editcompanytotalslots").val(response.data.total_slots);
+        $("#Editcompanylatitude").val(response.data.company.latitude);
+        $("#Editcompanylongitude").val(response.data.company.longitude);
+        $("#Editcompanygeofenceradius").val(response.data.company.geofence_radius || 100);
         const primaryContact = (response.data.contacts && response.data.contacts.length > 0) ? response.data.contacts[0] : null;
         $("#Editcompanycontactname").val(primaryContact ? primaryContact.name : "");
         $("#Editcompanycontactemail").val(primaryContact ? primaryContact.email : "");
@@ -486,6 +489,9 @@ function editCompany(uuid, batchUuid) {
               phone: $("#Editcompanycontact").val().trim(),
               website: $("#Editcompanywebsite").val().trim(),
               blacklist_reason: $("#Editcompanyblocklistedreason").val().trim(),
+              latitude: $("#Editcompanylatitude").val(),
+              longitude: $("#Editcompanylongitude").val(),
+              geofence_radius: $("#Editcompanygeofenceradius").val(),
 
               program_uuids: acceptedProgramUuids,
 
@@ -639,6 +645,9 @@ function viewCompanydetails(uuid, batchUuid, batchLabel, afterLoadedCallback = n
         $("#viewCompanyFilledSlots").text(response.data.filled_slots);
         $("#viewCompanyRemainingSlots").text(response.data.remaining_slots);
         $("#viewCompanyMOAExpiry").text(response.data.company.moa_expiry ? response.data.company.moa_expiry : "Not Available");
+        $("#viewCompanyLatitude").text(response.data.company.latitude !== null ? response.data.company.latitude : "Not Set");
+        $("#viewCompanyLongitude").text(response.data.company.longitude !== null ? response.data.company.longitude : "Not Set");
+        $("#viewCompanyGeofenceRadius").text(response.data.company.geofence_radius !== null ? `${response.data.company.geofence_radius} meters` : "100 meters");
         $("#viewContactName").text(response.data.contacts[0].name);
         $("#viewContactEmail").text(response.data.contacts[0].email);
         $("#viewContactNumber").text(response.data.contacts[0].phone);
@@ -691,14 +700,17 @@ function viewCompanydetails(uuid, batchUuid, batchLabel, afterLoadedCallback = n
         if (response.students && response.students.length > 0) {
           response.students.forEach((student) => {
             const studentName = student.full_name || student.name || [student.first_name, student.last_name].filter(Boolean).join(" ") || "—";
-            const studentProgram = student.program || "—";
-            const studentYearLevel = student.year_level || "—";
+            let subtitleParts = [];
+            if (student.program && student.program.trim() !== "") subtitleParts.push(student.program);
+            if (student.year_level && String(student.year_level).trim() !== "") subtitleParts.push(`Year ${student.year_level}`);
+            const studentSubtitle = subtitleParts.length > 0 ? subtitleParts.join(" - ") : "Not Specified";
+            
             const studentElement = `
                   <div class="alert bg-blur-5 bg-semi-transparent bg-secondary-subtle text-body d-flex align-items-center gap-2 mb-2 py-2 px-3" role="alert">
                     <i class="bi bi-person flex-shrink-0"></i>
                     <div class="d-flex flex-column flex-grow-1 min-w-0">
                       <span class="fw-medium small">${studentName}</span>
-                      <small class="text-muted">${studentProgram} - ${studentYearLevel}</small>
+                      <small class="text-muted">${studentSubtitle}</small>
                     </div>
                   </div>
                 `;
@@ -911,6 +923,9 @@ $(document).ready(function () {
       accreditation_status: accreditationStatus,
       total_slots: totalSlots,
       blacklist_reason: blacklistReason,
+      latitude: $("#companylatitude").val(),
+      longitude: $("#companylongitude").val(),
+      geofence_radius: $("#companygeofenceradius").val(),
       program_uuids: acceptedProgramUuids,
       contact_name: contactName,
       contact_position: contactPosition,

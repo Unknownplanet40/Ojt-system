@@ -1,7 +1,7 @@
 {
-  "name": "Internship Management System",
+  "name": "On The Job Training Management System",
   "short_name": "OJTMS",
-  "version": "1.19.0",
+  "version": "1.20.0",
   "description": "A web-based application designed to streamline the management of internship programs, providing tools for students, supervisors, and administrators to efficiently handle tasks such as application processing, progress tracking, and communication.",
   "lang": "en-US",
   "dir": "ltr",
@@ -20,8 +20,8 @@
       ],
       "actions": [
         {
-          "action": "open",
-          "title": "Open App",
+          "action": "Login",
+          "title": "Login",
           "icon": "Images/Icons/Icon-x72.png"
         },
         {
@@ -50,22 +50,22 @@
       "form_factor": "wide"
     },
     {
-      "src": "Images/Previews/admindash.png",
-      "sizes": "1365x644",
+      "src": "Images/Previews/admin.png",
+      "sizes": "1365x1354",
       "type": "image/png",
       "purpose": "any",
       "form_factor": "wide"
     },
     {
-      "src": "Images/Previews/Batch.png",
-      "sizes": "1365x740",
+      "src": "Images/Previews/coordinator.png",
+      "sizes": "1365x1053",
       "type": "image/png",
       "purpose": "any",
       "form_factor": "wide"
     },
     {
-      "src": "Images/Previews/Programs.png",
-      "sizes": "1365x739",
+      "src": "Images/Previews/setup.png",
+      "sizes": "1365x1449",
       "type": "image/png",
       "purpose": "any",
       "form_factor": "wide"

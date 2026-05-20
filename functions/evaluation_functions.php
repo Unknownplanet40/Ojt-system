@@ -233,7 +233,7 @@ function submitSupervisorEvaluation(
           updated_at       = NOW()
     ");
     $stmt->bind_param(
-        'ssssssiiiiiids',
+        'ssssssiiiiids',
         $uuid,
         $studentUuid,
         $app['uuid'],

@@ -37,6 +37,9 @@ function getAllCompanies($conn, string $batchUuid = null): array
           c.accreditation_status,
           c.blacklist_reason,
           c.created_at,
+          c.latitude,
+          c.longitude,
+          c.geofence_radius,
 
           -- primary contact
           cc.name  AS contact_name,
@@ -270,16 +273,25 @@ function createCompany($conn, array $data, string $actorUuid): array
     $phone           = trim($data['phone']            ?? '');
     $website         = trim($data['website']          ?? '');
     $blacklistReason = trim($data['blacklist_reason'] ?? '');
+    $latitude        = isset($data['latitude']) && $data['latitude'] !== '' ? (float)$data['latitude'] : null;
+    $longitude       = isset($data['longitude']) && $data['longitude'] !== '' ? (float)$data['longitude'] : null;
+    $geofenceRadius  = isset($data['geofence_radius']) && $data['geofence_radius'] !== '' ? (int)$data['geofence_radius'] : 100;
 
     $conn->begin_transaction();
 
     try {
-        $stmt = $conn->prepare("\n        INSERT INTO companies\n          (uuid, name, industry, address, city, email, phone,\n           website, work_setup, accreditation_status, blacklist_reason, created_by)\n        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n    ");
+        $stmt = $conn->prepare("
+        INSERT INTO companies
+          (uuid, name, industry, address, city, email, phone,
+           website, work_setup, accreditation_status, blacklist_reason, created_by,
+           latitude, longitude, geofence_radius)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
         $stmt->bind_param(
-            'ssssssssssss',
+            'ssssssssssssddi',
             $uuid, $name, $industry, $address, $city,
             $email, $phone, $website, $setup, $status,
-            $blacklistReason, $actorUuid
+            $blacklistReason, $actorUuid, $latitude, $longitude, $geofenceRadius
         );
         $stmt->execute();
         $stmt->close();
@@ -434,16 +446,36 @@ function updateCompany($conn, string $companyUuid, array $data, string $actorUui
     $phone           = trim($data['phone']            ?? '');
     $website         = trim($data['website']          ?? '');
     $blacklistReason = trim($data['blacklist_reason'] ?? '');
+    $latitude        = isset($data['latitude']) && $data['latitude'] !== '' ? (float)$data['latitude'] : null;
+    $longitude       = isset($data['longitude']) && $data['longitude'] !== '' ? (float)$data['longitude'] : null;
+    $geofenceRadius  = isset($data['geofence_radius']) && $data['geofence_radius'] !== '' ? (int)$data['geofence_radius'] : 100;
 
     $conn->begin_transaction();
 
     try {
-        $stmt = $conn->prepare("\n        UPDATE companies\n        SET name                 = ?,\n            industry             = ?,\n            address              = ?,\n            city                 = ?,\n            email                = ?,\n            phone                = ?,\n            website              = ?,\n            work_setup           = ?,\n            accreditation_status = ?,\n            blacklist_reason     = ?\n        WHERE uuid = ?\n    ");
+        $stmt = $conn->prepare("
+        UPDATE companies
+        SET name                 = ?,
+            industry             = ?,
+            address              = ?,
+            city                 = ?,
+            email                = ?,
+            phone                = ?,
+            website              = ?,
+            work_setup           = ?,
+            accreditation_status = ?,
+            blacklist_reason     = ?,
+            latitude             = ?,
+            longitude            = ?,
+            geofence_radius      = ?
+        WHERE uuid = ?
+    ");
         $stmt->bind_param(
-            'sssssssssss',
+            'ssssssssssddis',
             $name, $industry, $address, $city,
             $email, $phone, $website, $setup,
-            $status, $blacklistReason, $companyUuid
+            $status, $blacklistReason, $latitude, $longitude, $geofenceRadius,
+            $companyUuid
         );
         $stmt->execute();
         $stmt->close();
@@ -678,6 +710,19 @@ function setCompanySlots($conn, string $companyUuid, string $batchUuid, int $tot
     $stmt->bind_param('sssi', $uuid, $companyUuid, $batchUuid, $totalSlots);
     $stmt->execute();
     $stmt->close();
+
+    // Auto-dismiss pending slot request alerts for this company
+    $stmt2 = $conn->prepare("
+        UPDATE system_alerts sa
+        JOIN supervisor_profiles sp ON sa.created_by = sp.user_uuid
+        SET sa.is_active = 0
+        WHERE sp.company_uuid = ?
+          AND sa.title LIKE 'Slot Request from %'
+          AND sa.is_active = 1
+    ");
+    $stmt2->bind_param('s', $companyUuid);
+    $stmt2->execute();
+    $stmt2->close();
 }
 
 
@@ -870,10 +915,11 @@ function getCompanyStudents($conn, string $companyUuid, string $batchUuid): arra
 
     
     $stmt = $conn->prepare("
-        SELECT uuid, first_name, last_name, program, year_level, profile_path
-        FROM student_profiles
-        WHERE company_uuid = ? AND batch_uuid = ?
-        ORDER BY last_name ASC, first_name ASC
+        SELECT sp.uuid, sp.first_name, sp.last_name, p.name AS program, p.code AS program_code, sp.year_level, sp.profile_path
+        FROM student_profiles sp
+        LEFT JOIN programs p ON sp.program_uuid = p.uuid
+        WHERE sp.company_uuid = ? AND sp.batch_uuid = ?
+        ORDER BY sp.last_name ASC, sp.first_name ASC
     ");
     $stmt->bind_param('ss', $companyUuid, $batchUuid);
     $stmt->execute();
@@ -957,6 +1003,9 @@ function formatCompany(array $row): array
         'filled_slots'         => (int) ($row['filled_slots'] ?? 0),
         'remaining_slots'      => max(0, (int)($row['total_slots'] ?? 0) - (int)($row['filled_slots'] ?? 0)),
         'accepted_programs'    => $row['accepted_programs'] ?? '—',
+        'latitude'             => isset($row['latitude']) && $row['latitude'] !== null ? (float)$row['latitude'] : null,
+        'longitude'            => isset($row['longitude']) && $row['longitude'] !== null ? (float)$row['longitude'] : null,
+        'geofence_radius'      => isset($row['geofence_radius']) && $row['geofence_radius'] !== null ? (int)$row['geofence_radius'] : 100,
         'moa_expiry'           => $moaExpiry
                                     ? date('M j, Y', strtotime($moaExpiry))
                                     : null,

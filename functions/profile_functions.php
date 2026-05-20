@@ -7,6 +7,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once __DIR__ . '/../helpers/helpers.php';
+require_once __DIR__ . '/auth_functions.php';
 
 function getProfileImageDirectory(): array
 {
@@ -242,6 +243,9 @@ function saveAdminProfile($conn, string $userUuid, array $data, ?string $base64I
         targetUuid: $userUuid
     );
 
+    // Trigger welcome email check
+    checkAndSendWelcomeEmail($conn, $userUuid, 'admin');
+
     return [
         'success'      => true,
         'profile_path' => $profilePath,
@@ -367,6 +371,9 @@ function saveCoordinatorProfile($conn, string $userUuid, array $data, ?string $b
         actorUuid: $userUuid,
         targetUuid: $userUuid
     );
+
+    // Trigger welcome email check
+    checkAndSendWelcomeEmail($conn, $userUuid, 'coordinator');
 
     return [
         'success'      => true,
@@ -512,6 +519,9 @@ function saveStudentProfile($conn, string $userUuid, array $data, ?string $base6
         targetUuid: $userUuid
     );
 
+    // Trigger welcome email check
+    checkAndSendWelcomeEmail($conn, $userUuid, 'student');
+
     return [
         'success'      => true,
         'profile_path' => $profilePath,
@@ -637,6 +647,9 @@ function saveSupervisorProfile($conn, string $userUuid, array $data, ?string $ba
         actorUuid: $userUuid,
         targetUuid: $userUuid
     );
+
+    // Trigger welcome email check
+    checkAndSendWelcomeEmail($conn, $userUuid, 'supervisor');
 
     return [
         'success'      => true,

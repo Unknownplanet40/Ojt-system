@@ -187,6 +187,41 @@ $CurrentPage = "Companies";
                             </div>
                         </div>
 
+                        <!-- Geofencing & Location Verification Card -->
+                        <div class="card bg-blur-5 bg-semi-transparent border-0 shadow-sm mb-4 rounded-4 overflow-hidden"
+                            style="--blur-lvl: 0.70">
+                            <div class="card-body p-4">
+                                <div class="mb-4">
+                                    <h6 class="mb-1 fw-600 text-uppercase small letter-spacing">Geofencing & Location Verification</h6>
+                                    <small class="text-muted d-block">Configure GPS limits for student Daily Time Record (DTR) clock-in/out</small>
+                                </div>
+                                <hr class="my-3 opacity-25">
+                                <div class="row row-cols-1 row-cols-md-3 g-3">
+                                    <div class="col">
+                                        <div>
+                                            <label for="companylatitude" class="form-label fw-medium small">Latitude</label>
+                                            <input type="number" step="any" class="form-control border rounded-3"
+                                                id="companylatitude" placeholder="e.g. 14.599512">
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="companylongitude" class="form-label fw-medium small">Longitude</label>
+                                            <input type="number" step="any" class="form-control border rounded-3"
+                                                id="companylongitude" placeholder="e.g. 120.984222">
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="companygeofenceradius" class="form-label fw-medium small">Geofence Radius <span class="text-muted fw-normal">(meters)</span></label>
+                                            <input type="number" class="form-control border rounded-3"
+                                                id="companygeofenceradius" placeholder="e.g. 100" min="10" value="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Accepted Programs Card -->
                         <div class="card bg-blur-5 bg-semi-transparent border-0 shadow-sm mb-4 rounded-4 overflow-hidden"
                             style="--blur-lvl: 0.70">
@@ -465,6 +500,41 @@ $CurrentPage = "Companies";
                             </div>
                         </div>
 
+                        <!-- Geofencing & Location Verification Card -->
+                        <div class="card bg-blur-5 bg-semi-transparent border-0 shadow-sm mb-4 rounded-4 overflow-hidden"
+                            style="--blur-lvl: 0.70">
+                            <div class="card-body p-4">
+                                <div class="mb-4">
+                                    <h6 class="mb-1 fw-600 text-uppercase small letter-spacing">Geofencing & Location Verification</h6>
+                                    <small class="text-muted d-block">Configure GPS limits for student Daily Time Record (DTR) clock-in/out</small>
+                                </div>
+                                <hr class="my-3 opacity-25">
+                                <div class="row row-cols-1 row-cols-md-3 g-3">
+                                    <div class="col">
+                                        <div>
+                                            <label for="Editcompanylatitude" class="form-label fw-medium small">Latitude</label>
+                                            <input type="number" step="any" class="form-control border rounded-3"
+                                                id="Editcompanylatitude" placeholder="e.g. 14.599512">
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="Editcompanylongitude" class="form-label fw-medium small">Longitude</label>
+                                            <input type="number" step="any" class="form-control border rounded-3"
+                                                id="Editcompanylongitude" placeholder="e.g. 120.984222">
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <label for="Editcompanygeofenceradius" class="form-label fw-medium small">Geofence Radius <span class="text-muted fw-normal">(meters)</span></label>
+                                            <input type="number" class="form-control border rounded-3"
+                                                id="Editcompanygeofenceradius" placeholder="e.g. 100" min="10" value="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Accepted Programs Card -->
                         <div class="card bg-blur-5 bg-semi-transparent border-0 shadow-sm mb-4 rounded-4 overflow-hidden"
                             style="--blur-lvl: 0.70">
@@ -701,6 +771,29 @@ $CurrentPage = "Companies";
                                                 <span class="fw-500" id="viewCompanyMOAExpiry">-</span>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Geofencing & Location Verification Details Card -->
+                        <div class="card bg-blur-5 bg-semi-transparent border-0 shadow-sm rounded-3 mb-3"
+                            style="--blur-lvl: 0.50">
+                            <div class="card-body p-3">
+                                <h6 class="mb-3 fw-600 text-uppercase small letter-spacing">Geofencing & Location Limits</h6>
+                                <hr class="my-2 opacity-25">
+                                <div class="row row-cols-1 row-cols-sm-3 g-3">
+                                    <div class="col">
+                                        <small class="text-muted d-block mb-1">Latitude</small>
+                                        <span class="d-block fw-500" id="viewCompanyLatitude">Not Set</span>
+                                    </div>
+                                    <div class="col">
+                                        <small class="text-muted d-block mb-1">Longitude</small>
+                                        <span class="d-block fw-500" id="viewCompanyLongitude">Not Set</span>
+                                    </div>
+                                    <div class="col">
+                                        <small class="text-muted d-block mb-1">Geofence Radius</small>
+                                        <span class="d-block fw-500" id="viewCompanyGeofenceRadius">Not Set</span>
                                     </div>
                                 </div>
                             </div>

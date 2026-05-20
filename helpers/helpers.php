@@ -101,3 +101,94 @@ function ordinal(int $n): string
     $v = $n % 100;
     return $n . ($suffixes[($v - 20) % 10] ?? $suffixes[$v] ?? $suffixes[0]);
 }
+
+function getAppBaseUrl(): string
+{
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+    return rtrim($scheme . '://' . $host . '/Ojt-system', '/');
+}
+
+function buildAppUrl(string $path): string
+{
+    return rtrim(getAppBaseUrl(), '/') . '/' . ltrim($path, '/');
+}
+
+function buildCertificateVerificationUrl(string $token): string
+{
+    return buildAppUrl('/Src/Pages/Public/VerifyCertificate.php?token=' . rawurlencode($token));
+}
+
+class Logger
+{
+    private $db = null;
+
+    public function __construct()
+    {
+        try {
+            if (class_exists('Database')) {
+                $this->db = Database::getInstance();
+            }
+        } catch (Throwable $e) {
+            $this->db = null;
+        }
+    }
+
+    public function log($level, $message, $module = null, $meta = null)
+    {
+        $metaJson = null;
+        if ($meta !== null) {
+            $metaJson = is_string($meta) ? $meta : json_encode($meta);
+        }
+
+        $formatted = sprintf(
+            '[%s] [%s] %s%s%s',
+            date('Y-m-d H:i:s'),
+            strtoupper((string) $level),
+            (string) $message,
+            $module ? ' | Module: ' . $module : '',
+            $metaJson ? ' | Meta: ' . $metaJson : ''
+        );
+
+        error_log($formatted);
+
+        if ($this->db) {
+            try {
+                $actorUuid = $_SESSION['user_uuid'] ?? null;
+                $query = 'INSERT INTO activity_log (actor_uuid, event_type, description, module, meta) VALUES (?, ?, ?, ?, ?)';
+                $stmt = $this->db->prepare($query);
+                $stmt->execute([$actorUuid, $level, $message, $module, $metaJson]);
+            } catch (Throwable $e) {
+                try {
+                    $actorUuid = $_SESSION['user_uuid'] ?? null;
+                    $query = 'INSERT INTO activity_log (user_uuid, event_type, description) VALUES (?, ?, ?)';
+                    $stmt = $this->db->prepare($query);
+                    $stmt->execute([$actorUuid, $level, $message]);
+                } catch (Throwable $fallbackEx) {
+                    error_log('Logger DB insertion fallback failed: ' . $fallbackEx->getMessage());
+                }
+            }
+        }
+    }
+
+    public function error($message, $module = null, $meta = null)
+    {
+        $this->log('error', $message, $module, $meta);
+    }
+
+    public function info($message, $module = null, $meta = null)
+    {
+        $this->log('info', $message, $module, $meta);
+    }
+
+    public function warn($message, $module = null, $meta = null)
+    {
+        $this->log('warning', $message, $module, $meta);
+    }
+
+    public function debug($message, $module = null, $meta = null)
+    {
+        $this->log('debug', $message, $module, $meta);
+    }
+}

@@ -97,7 +97,7 @@ function formatMetaValue(value) {
   }
 
   const stringValue = String(value);
-  const looksLikeUrl = /^https?:\/\
+  const looksLikeUrl = /^https?:\/\//
   if (looksLikeUrl) {
     return `<a href="${escapeHtml(stringValue)}" target="_blank" rel="noopener noreferrer">${escapeHtml(stringValue)}</a>`;
   }
@@ -254,59 +254,48 @@ function openAuditDetailModal(log) {
   $("#auditLogDetailsModal").modal("show");
 }
 
-async function exportAuditLogsCsv() {
+function exportAuditLogsCsv() {
   const filters = collectFilters();
-  const payload = {
-    csrf_token: csrfToken,
-    ...filters,
-  };
-
-  try {
-    const response = await fetch("../../../process/audit_logs/export_audit_logs_csv", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "X-Requested-With": "XMLHttpRequest",
-      },
-      body: new URLSearchParams(payload),
-    });
-
-    const contentType = (response.headers.get("Content-Type") || "").toLowerCase();
-
-    if (!response.ok || contentType.includes("application/json")) {
-      let message = "Failed to export audit logs.";
-      try {
-        const json = await response.json();
-        message = json.message || message;
-      } catch {
-        const text = await response.text();
-        message = text || message;
+  $.ajax({
+    url: "../../../process/audit_logs/export_audit_logs_csv",
+    method: "POST",
+    data: { csrf_token: csrfToken, ...filters },
+    xhrFields: { responseType: "blob" },
+    success: function (blob, _status, xhr) {
+      const contentType = (xhr.getResponseHeader("Content-Type") || "").toLowerCase();
+      if (contentType.includes("application/json")) {
+        const reader = new FileReader();
+        reader.onload = function () {
+          try {
+            const json = JSON.parse(String(reader.result || "{}"));
+            ToastVersion(swalTheme, json.message || "Failed to export audit logs.", "error", 3500, "top-end");
+          } catch {
+            ToastVersion(swalTheme, "Failed to export audit logs.", "error", 3500, "top-end");
+          }
+        };
+        reader.readAsText(blob);
+        return;
       }
-      ToastVersion(swalTheme, message, "error", 3500, "top-end");
-      return;
-    }
-
-    const contentDisposition = response.headers.get("Content-Disposition") || "";
-    const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
-    const fileNameFromHeader = fileNameMatch ? decodeURIComponent(fileNameMatch[1].trim()) : "";
-    const fileName = fileNameFromHeader || `audit_logs_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "_")}.csv`;
-
-    const blob = await response.blob();
-    const blobUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = blobUrl;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(blobUrl);
-
-    ToastVersion(swalTheme, "Filtered audit logs exported successfully.", "success", 2500, "top-end");
-  } catch (error) {
-    Errors({ status: 0 }, "error", error?.message || error);
-  }
+      const contentDisposition = xhr.getResponseHeader("Content-Disposition") || "";
+      const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\"]+)/i);
+      const fileNameFromHeader = fileNameMatch ? decodeURIComponent(fileNameMatch[1].trim()) : "";
+      const fileName = fileNameFromHeader || `audit_logs_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "_")}.csv`;
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      ToastVersion(swalTheme, "Filtered audit logs exported successfully.", "success", 2500, "top-end");
+    },
+    error: function (xhr, status, error) {
+      Errors(xhr, status, error);
+    },
+  });
 }
+
 
 function upsertSelectOptions(selector, options, emptyLabel, selectedValue = "") {
   const $select = $(selector);

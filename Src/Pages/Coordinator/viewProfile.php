@@ -57,9 +57,11 @@ $CurrentPage = "viewProfile";
 
                                             <div class="w-100 text-center text-sm-start">
                                                 <h3 class="fw-bold mb-1" id="FullName"><?= ucfirst($_SESSION['user_name']) ?></h3>
-                                                <p class="text-body-secondary mb-3 d-flex align-items-center justify-content-center justify-content-sm-start gap-2">
-                                                    <i class="bi bi-envelope"></i>
-                                                    <span id="EmailHeader"><?= htmlspecialchars($_SESSION['user_email']) ?></span>
+                                                <p class="text-body-secondary mb-3 d-flex flex-wrap align-items-center justify-content-center justify-content-sm-start gap-2">
+                                                    <span class="d-inline-flex align-items-center gap-2 mw-100">
+                                                        <i class="bi bi-envelope flex-shrink-0"></i>
+                                                        <span id="EmailHeader" class="text-break"><?= htmlspecialchars($_SESSION['user_email']) ?></span>
+                                                    </span>
                                                     <span class="d-none d-sm-inline">&bull;</span>
                                                     <span id="DepartmentHeader">---</span>
                                                 </p>

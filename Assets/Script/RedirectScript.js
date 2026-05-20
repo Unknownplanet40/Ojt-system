@@ -32,6 +32,14 @@ function checkServer() {
         }
       } else if (response.status === "critical") {
         window.location.href = "./Src/Pages/ErrorPage.php?error=CE00";
+      } else if (response.code === "SETUP_INCOMPLETE") {
+        $("#status").text(response.message);
+        $("#dot").addClass("d-none");
+        ToastVersion(swalTheme, response.message, "warning");
+        BGcircleTheme(true, "warning", "fast");
+        setTimeout(function () {
+          window.location.href = response.redirect_url;
+        }, 1500);
       } else {
         jqXHR.status = 500;
         jqXHR.responseJSON = response;
@@ -41,6 +49,7 @@ function checkServer() {
     .fail(function (xhr, textStatus) {
       let errorMessage = "An error occurred while checking server status.";
       let isDatabaseExistError = false;
+      let RedirectToSetup = false;
       if (textStatus === "timeout") {
         errorMessage = "Request timed out. Please check your network connection.";
       } else if (xhr.status === 0) {
@@ -50,15 +59,33 @@ function checkServer() {
         isDatabaseExistError = xhr.responseJSON.isDatabaseExistError || false;
       }
 
+      try {
+        const jsonResponse = JSON.parse(xhr.responseText);
+        console.log("Parsed JSON Response:", jsonResponse);
+
+        if (jsonResponse.code === "SETUP_INCOMPLETE") {
+          $("#status").text("Initializing setup... Please wait.");
+          $("#dot").addClass("d-none");
+          ToastVersion(swalTheme, jsonResponse.message, "warning");
+          BGcircleTheme(true, "cv", "fast");
+          RedirectToSetup = true;
+        }
+      } catch (e) {
+        console.log("Response is not valid JSON:", xhr.responseText);
+      }
+
       if (isDatabaseExistError) {
-        
         $("#status").text("Database not found. Redirecting to setup page...");
         $("#dot").addClass("d-none");
         ToastVersion(swalTheme, "Database not found. Redirecting to setup page...", "warning");
         BGcircleTheme(true, "warning", "fast");
-        setTimeout(function() {
-            window.location.href = "./Src/Pages/Setup.php";
+        setTimeout(function () {
+          window.location.href = "./Src/Pages/Setup";
         }, 1500);
+      } else if (RedirectToSetup) {
+        setTimeout(function () {
+          window.location.href = "./Src/Pages/Setup";
+        }, 3500);
       } else {
         $("#status").text(errorMessage);
         $("#dot").addClass("d-none");
@@ -79,46 +106,49 @@ function checkServer() {
     });
 }
 
+function detectHostingEnvironment(customHostname = null) {
+  const hostname = customHostname !== null ? customHostname : window.location.hostname;
 
-function detectHostingEnvironment() {
-  const hostname = window.location.hostname;
-
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'local';
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return "local";
   }
 
-  if (hostname.endsWith('.ngrok.io') || hostname.endsWith('.ngrok-free.app')) {
-    return 'ngrok';
+  if (hostname.endsWith(".ngrok.io") || hostname.endsWith(".ngrok-free.app")) {
+    return "ngrok";
   }
 
-  if (hostname.endsWith('.vercel.app')) {
-    return 'vercel';
+  if (hostname.endsWith(".vercel.app")) {
+    return "vercel";
   }
 
-  if (hostname === 'github.io' || hostname.endsWith('.github.io')) {
-    return 'github';
+  if (hostname === "github.io" || hostname.endsWith(".github.io")) {
+    return "github";
   }
 
-  return 'production';
+  if (hostname.endsWith(".pages.dev")) {
+    return "github";
+  }
+
+  return "production";
 }
 
 $(document).ready(function () {
-
   const hostingEnvironment = detectHostingEnvironment();
-  if (hostingEnvironment === 'github') {
-    $("#status").text("It seems you are running this application on GitHub Pages, which does not support server-side functionality. Please run this application on a local server or a hosting service that supports PHP.");
+
+  if (hostingEnvironment === "github") {
+    $("#status").text("This app requires PHP, which GitHub Pages does not support. Please run it on a local server or any hosting that supports PHP.");
     $("#dot").addClass("d-none");
     $("#version1").removeClass("d-none");
     BGcircleTheme(true, "warning", "fast");
-  } else if (hostingEnvironment === 'ngrok' || hostingEnvironment === 'vercel') {
-    $("#status").text("It seems you are running this application on a hosting service that may have restrictions on server-side functionality. Please ensure that your hosting service supports PHP and that the server is properly configured.");
+  } else if (hostingEnvironment === "ngrok" || hostingEnvironment === "vercel") {
+    $("#status").text("This application requires PHP, but your hosting service doesn't support it or has it disabled. Please use a hosting provider with proper PHP support.");
     $("#dot").addClass("d-none");
     $("#version1").removeClass("d-none");
     BGcircleTheme(true, "warning", "fast");
     setTimeout(function () {
       checkServer();
     }, 10000);
-  } else if (hostingEnvironment === 'local') {
+  } else if (hostingEnvironment === "local") {
     window.location.href = "./Src/Pages/Login";
   } else {
     checkServer();

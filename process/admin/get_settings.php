@@ -33,11 +33,12 @@ if (!$conn || $conn->connect_error) {
     ], 500);
 }
 
+$userSettings = getUserSettings($conn);
+
 response([
     'status' => 'success',
-    'settings' => [
-        'theme' => getUserTheme($conn, $_SESSION['user_uuid']),
+    'settings' => array_merge($userSettings, [
         'email' => getEmailSettings($conn),
         'institutional' => getSystemConfig($conn),
-    ],
+    ]),
 ]);

@@ -23,6 +23,22 @@ if ($conn->connect_error) {
     response(['status' => 'error', 'message' => 'Database connection failed: ' . $conn->connect_error], 500);
 }
 
+$db_check = $conn->query("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '$dbname'");
+if ($db_check && $db_check->num_rows > 0) {
+    $conn->select_db($dbname);
+    $table_check = $conn->query("SHOW TABLES LIKE 'system_config'");
+    if ($table_check && $table_check->num_rows > 0) {
+        $setup_check = $conn->query("SELECT is_setup_locked FROM system_config WHERE id = 1");
+        if ($setup_check && $setup_check->num_rows > 0) {
+            $is_locked = (int)$setup_check->fetch_assoc()['is_setup_locked'] === 1;
+            if ($is_locked) {
+                $conn->close();
+                response(['status' => 'error', 'message' => 'System is already configured and setup is locked.'], 403);
+            }
+        }
+    }
+}
+
 
 if (!$conn->query("CREATE DATABASE IF NOT EXISTS `$dbname` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")) {
     response(['status' => 'error', 'message' => 'Failed to create database: ' . $conn->error], 500);
@@ -32,7 +48,7 @@ $conn->select_db($dbname);
 $conn->set_charset('utf8mb4');
 
 
-$schemaFile = __DIR__ . '/../../ojt_system Complete db schema.sql';
+$schemaFile = __DIR__ . '/../../config/init.sql';
 if (!file_exists($schemaFile)) {
     response(['status' => 'error', 'message' => 'Schema file not found.'], 500);
 }

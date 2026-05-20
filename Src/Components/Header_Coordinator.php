@@ -127,6 +127,17 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
                 </div>
               </a>
             </li>
+            <li>
+              <a class="dropdown-item <?= $CurrentPage === 'Certificates' ? 'nav-active' : '' ?>" href="../Coordinator/CertificateManagement">
+                 <div class="hstack">
+                  <i class="bi bi-patch-check me-2"></i>
+                  <div class="vstack">
+                    <span>Certificates</span>
+                    <small class="text-muted" style="font-size: 0.7em">View, search, revoke, and generate OJT certificates.</small>
+                  </div>
+                </div>
+              </a>
+            </li>
           </ul>
         </li>
                 <li class="nav-item dropdown">
@@ -215,3 +226,4 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
     </div>
   </div>
 </nav>
+<?php require_once __DIR__ . '/AlertBanner.php'; ?>

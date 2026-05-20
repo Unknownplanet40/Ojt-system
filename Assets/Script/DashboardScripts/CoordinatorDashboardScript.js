@@ -6,6 +6,7 @@ MatchsystemThemes(true);
 let swalTheme = SwalTheme();
 BGcircleTheme(true);
 let letPageLoad = true;
+let weeklyAttendanceChart, supervisorScoreMatrixChart;
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 const userUUID = $('meta[name="user-UUID"]').attr("content") || "";
@@ -79,8 +80,8 @@ function fetchProfile() {
         const profile = response.profile;
         if (!profile.profile_name) {
           const initials = profile.initials || "NA";
-          $("#navProfilePhoto").attr("src", `https:
-          $("#dropdownProfilePhoto").attr("src", `https:
+          $("#navProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
+          $("#dropdownProfilePhoto").attr("src", `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
         } else {
           $("#navProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
           $("#dropdownProfilePhoto").attr("src", "../../../Assets/Images/profiles/" + profile.profile_name);
@@ -161,6 +162,24 @@ function fetchDashboardData() {
         
         
         renderUpcomingVisits(data.visits);
+
+        // Update charts
+        if (data.weekly_attendance && weeklyAttendanceChart) {
+          weeklyAttendanceChart.data.labels = data.weekly_attendance.map(a => a.day);
+          weeklyAttendanceChart.data.datasets[0].data = data.weekly_attendance.map(a => a.hours);
+          weeklyAttendanceChart.update();
+        }
+
+        if (data.score_matrix && supervisorScoreMatrixChart) {
+          supervisorScoreMatrixChart.data.datasets[0].data = [
+            data.score_matrix['Technical'] || 0,
+            data.score_matrix['Attitude'] || 0,
+            data.score_matrix['Communication'] || 0,
+            data.score_matrix['Teamwork'] || 0,
+            data.score_matrix['Problem Solving'] || 0
+          ];
+          supervisorScoreMatrixChart.update();
+        }
       } else {
         ToastVersion(swalTheme, response.message, "error", 3000, "top-end");
       }
@@ -306,11 +325,87 @@ function renderUpcomingVisits(visits) {
   list.html(items.join(""));
 }
 
+function initDashboardCharts() {
+  const canvasAttendance = document.getElementById('weeklyAttendanceChart');
+  const canvasMatrix = document.getElementById('supervisorScoreMatrixChart');
+  if (!canvasAttendance || !canvasMatrix) return;
+
+  const ctxAttendance = canvasAttendance.getContext('2d');
+  const ctxMatrix = canvasMatrix.getContext('2d');
+
+  const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+  const textColor = isDark ? '#adb5bd' : '#495057';
+  const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+
+  Chart.defaults.color = textColor;
+  Chart.defaults.font.family = "'Inter', sans-serif";
+
+  weeklyAttendanceChart = new Chart(ctxAttendance, {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Hours Rendered',
+        data: [],
+        backgroundColor: '#198754',
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { grid: { color: gridColor }, beginAtZero: true },
+        x: { grid: { display: false } }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+
+  supervisorScoreMatrixChart = new Chart(ctxMatrix, {
+    type: 'radar',
+    data: {
+      labels: ['Technical', 'Attitude', 'Communication', 'Teamwork', 'Problem Solving'],
+      datasets: [{
+        label: 'Average Score',
+        data: [0, 0, 0, 0, 0],
+        backgroundColor: 'rgba(186, 117, 23, 0.2)',
+        borderColor: '#BA7517',
+        pointBackgroundColor: '#BA7517',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          grid: { color: gridColor },
+          angleLines: { color: gridColor },
+          pointLabels: {
+            color: textColor,
+            font: { size: 11, weight: 'bold' }
+          },
+          suggestedMin: 0,
+          suggestedMax: 5,
+          ticks: { stepSize: 1, backdropColor: 'transparent', color: textColor }
+        }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+}
+
 
 $(document).ready(function () {
   if (!letPageLoad) return;
   DashboardEsentialElements();
   fetchProfile();
+  initDashboardCharts();
   fetchDashboardData();
 
   if (Onlypage === "CoordinatorDashboard") {

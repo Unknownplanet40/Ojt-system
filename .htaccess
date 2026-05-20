@@ -5,7 +5,7 @@ RewriteRule ^ /%1 [R=301,L]
 
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^([a-zA-Z0-9_/]+)$ $1.php [L]
+RewriteRule ^([a-zA-Z0-9_\-/]+)$ $1.php [L]
 
 # SPA routing (Single Page Application)
 # RewriteCond %{REQUEST_FILENAME} !-f
@@ -13,7 +13,10 @@ RewriteRule ^([a-zA-Z0-9_/]+)$ $1.php [L]
 # RewriteRule ^(.*)$ index.php [QSA,L]
 
 # Prevent directory listing
-Options -Indexes
+Options -Indexes -MultiViews +FollowSymLinks
+AddDefaultCharset UTF-8
+ServerSignature Off
+DefaultLanguage en
 
 # Custom error pages
 ErrorDocument 403 /Ojt-system/Src/Pages/Errorpage.php?error=403
@@ -27,3 +30,8 @@ DirectoryIndex index.php index.html
 # Force HTTPS (uncomment if you want to enforce HTTPS)
 # RewriteCond %{HTTPS} off
 # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+RewriteCond %{HTTP_HOST} !^localhost$ [NC]
+RewriteCond %{HTTP_HOST} !^127\.0\.0\.1$
+RewriteCond %{HTTP_HOST} !^www\. [NC]
+RewriteRule ^(.*)$ http://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

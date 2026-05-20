@@ -25,17 +25,19 @@ $CurrentPage = "Evaluations";
     <style>
         .star-rating i {
             font-size: 1.5rem;
-            color: 
+            color: #dee2e6;
             cursor: pointer;
             transition: color 0.2s ease;
         }
-        .star-rating.interactive i.active,
+        .star-rating.interactive:hover i {
+            color: #dee2e6 !important;
+        }
         .star-rating.interactive i:hover,
         .star-rating.interactive i:hover ~ i {
-            color: 
+            color: #ffc107 !important;
         }
         .star-rating.readonly i.text-warning {
-            color: 
+            color: #ffc107 !important;
         }
     </style>
 </head>

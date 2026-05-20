@@ -92,6 +92,25 @@ function canAccessStudentDtr($conn, string $studentUuid, string $actorRole, stri
     return false;
 }
 
+function verifyGeofenceServer(float $studentLat, float $studentLon, float $companyLat, float $companyLon, int $allowedRadiusMeters): array {
+    $earthRadius = 6371000; // Radius of the earth in meters
+
+    $latDelta = deg2rad($companyLat - $studentLat);
+    $lonDelta = deg2rad($companyLon - $studentLon);
+
+    $a = sin($latDelta / 2) * sin($latDelta / 2) +
+         cos(deg2rad($studentLat)) * cos(deg2rad($companyLat)) *
+         sin($lonDelta / 2) * sin($lonDelta / 2);
+         
+    $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+    $distance = $earthRadius * $c;
+
+    return [
+        'is_within' => $distance <= $allowedRadiusMeters,
+        'distance' => round($distance, 2)
+    ];
+}
+
 function submitDtrEntry(
     $conn,
     string $studentUuid,
@@ -164,17 +183,74 @@ function submitDtrEntry(
         return ['success' => false, 'errors' => ['time_out' => 'Computed hours must be greater than 0.']];
     }
 
+    // Fetch company coordinates
+    $companyGeofence = null;
+    $stmt = $conn->prepare("
+        SELECT c.latitude, c.longitude, c.geofence_radius, c.work_setup
+        FROM ojt_applications o
+        JOIN companies c ON o.company_uuid = c.uuid
+        WHERE o.uuid = ?
+        LIMIT 1
+    ");
+    $stmt->bind_param('s', $applicationUuid);
+    $stmt->execute();
+    $companyGeofence = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    $clockInLatitude   = isset($data['clock_in_latitude']) && $data['clock_in_latitude'] !== '' ? (float)$data['clock_in_latitude'] : null;
+    $clockInLongitude  = isset($data['clock_in_longitude']) && $data['clock_in_longitude'] !== '' ? (float)$data['clock_in_longitude'] : null;
+    $clockOutLatitude  = isset($data['clock_out_latitude']) && $data['clock_out_latitude'] !== '' ? (float)$data['clock_out_latitude'] : null;
+    $clockOutLongitude = isset($data['clock_out_longitude']) && $data['clock_out_longitude'] !== '' ? (float)$data['clock_out_longitude'] : null;
+
+    if ($companyGeofence && $companyGeofence['latitude'] !== null && $companyGeofence['longitude'] !== null) {
+        $allowedRadius = (int)($companyGeofence['geofence_radius'] ?? 100);
+        
+        // 1. Clock-in Location Verification
+        if ($clockInLatitude !== null && $clockInLongitude !== null) {
+            $distCheck = verifyGeofenceServer($clockInLatitude, $clockInLongitude, (float)$companyGeofence['latitude'], (float)$companyGeofence['longitude'], $allowedRadius);
+            if (!$distCheck['is_within']) {
+                return [
+                    'success' => false,
+                    'errors' => [
+                        'entry_date' => "Location Verification Failed: You are outside the registered company premises ({$distCheck['distance']}m away, limit is {$allowedRadius}m)."
+                    ]
+                ];
+            }
+        }
+    }
+
     $uuid = generateUuid();
+    
+    $selfiePhoto = null;
+    if (!empty($data['selfie_photo_data'])) {
+        $selfiePhoto = saveSelfiePhoto($data['selfie_photo_data'], $studentUuid);
+    }
+    $clockInPhoto  = $selfiePhoto;
+    $clockOutPhoto = $selfiePhoto;
+
     $conn->begin_transaction();
 
     try {
-        $stmt = $conn->prepare("\n            INSERT INTO dtr_entries\n              (uuid, student_uuid, application_uuid, batch_uuid,\n               entry_date, time_in, time_out, lunch_break_minutes,\n               hours_rendered, activities,\n               is_backdated, backdate_reason, status)\n            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')\n        ");
+        $stmt = $conn->prepare("
+            INSERT INTO dtr_entries
+              (uuid, student_uuid, application_uuid, batch_uuid,
+               entry_date, time_in, time_out, lunch_break_minutes,
+               hours_rendered, activities,
+               is_backdated, backdate_reason, status,
+               clock_in_latitude, clock_in_longitude,
+               clock_out_latitude, clock_out_longitude,
+               clock_in_photo, clock_out_photo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)
+        ");
         $stmt->bind_param(
-            'sssssssidsis',
+            'sssssssidsisddddss',
             $uuid, $studentUuid, $applicationUuid, $batchUuid,
             $entryDate, $timeIn, $timeOut, $lunchMinutes,
             $hoursRendered, $activities,
-            $isBackdated, $backdateReason
+            $isBackdated, $backdateReason,
+            $clockInLatitude, $clockInLongitude,
+            $clockOutLatitude, $clockOutLongitude,
+            $clockInPhoto, $clockOutPhoto
         );
         $stmt->execute();
         $stmt->close();
@@ -184,6 +260,9 @@ function submitDtrEntry(
             'hours_rendered' => $hoursRendered,
             'is_backdated'   => $isBackdated,
             'reason'         => $isBackdated ? $backdateReason : null,
+            'latitude'       => $clockInLatitude,
+            'longitude'      => $clockInLongitude,
+            'has_selfie'     => !empty($selfiePhoto),
         ]);
 
         $conn->commit();
@@ -228,17 +307,107 @@ function editDtrEntry(
     }
 
     $hoursRendered = computeHoursRendered($timeIn, $timeOut, $lunchMinutes);
-    $isResubmission = $entry['status'] === 'rejected';
+    $clockInLatitude   = isset($data['clock_in_latitude']) && $data['clock_in_latitude'] !== '' ? (float)$data['clock_in_latitude'] : ($entry['clock_in_latitude'] !== null ? (float)$entry['clock_in_latitude'] : null);
+    $clockInLongitude  = isset($data['clock_in_longitude']) && $data['clock_in_longitude'] !== '' ? (float)$data['clock_in_longitude'] : ($entry['clock_in_longitude'] !== null ? (float)$entry['clock_in_longitude'] : null);
+    $clockOutLatitude  = isset($data['clock_out_latitude']) && $data['clock_out_latitude'] !== '' ? (float)$data['clock_out_latitude'] : ($entry['clock_out_latitude'] !== null ? (float)$entry['clock_out_latitude'] : null);
+    $clockOutLongitude = isset($data['clock_out_longitude']) && $data['clock_out_longitude'] !== '' ? (float)$data['clock_out_longitude'] : ($entry['clock_out_longitude'] !== null ? (float)$entry['clock_out_longitude'] : null);
+
+    // Fetch company coordinates
+    $companyGeofence = null;
+    $stmt = $conn->prepare("
+        SELECT c.latitude, c.longitude, c.geofence_radius, c.work_setup
+        FROM ojt_applications o
+        JOIN companies c ON o.company_uuid = c.uuid
+        WHERE o.uuid = ?
+        LIMIT 1
+    ");
+    $stmt->bind_param('s', $entry['application_uuid']);
+    $stmt->execute();
+    $companyGeofence = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($companyGeofence && $companyGeofence['latitude'] !== null && $companyGeofence['longitude'] !== null) {
+        $allowedRadius = (int)($companyGeofence['geofence_radius'] ?? 100);
+        
+        if ($clockInLatitude !== null && $clockInLongitude !== null) {
+            $distCheck = verifyGeofenceServer($clockInLatitude, $clockInLongitude, (float)$companyGeofence['latitude'], (float)$companyGeofence['longitude'], $allowedRadius);
+            if (!$distCheck['is_within']) {
+                return [
+                    'success' => false,
+                    'errors' => [
+                        'time_out' => "Location Verification Failed: You are outside the registered company premises ({$distCheck['distance']}m away, limit is {$allowedRadius}m)."
+                    ]
+                ];
+            }
+        }
+    }
+
+    $clockInPhoto  = $entry['clock_in_photo'];
+    $clockOutPhoto = $entry['clock_out_photo'];
+    if (!empty($data['selfie_photo_data'])) {
+        $selfiePhoto = saveSelfiePhoto($data['selfie_photo_data'], $studentUuid);
+        if ($selfiePhoto) {
+            $clockInPhoto  = $selfiePhoto;
+            $clockOutPhoto = $selfiePhoto;
+        }
+    }
+
+    $isResubmission = ($entry['status'] === 'rejected');
+
     $conn->begin_transaction();
 
     try {
         if ($isResubmission) {
             $pendingStatus = 'pending';
-            $stmt = $conn->prepare("\n                UPDATE dtr_entries\n                SET time_in = ?,\n                    time_out = ?,\n                    lunch_break_minutes = ?,\n                    hours_rendered = ?,\n                    activities = ?,\n                    status = ?,\n                    rejection_reason = NULL,\n                    approved_by = NULL,\n                    approved_at = NULL,\n                    approved_by_role = NULL,\n                    submitted_at = NOW()\n                WHERE uuid = ?\n            ");
-            $stmt->bind_param('ssidsss', $timeIn, $timeOut, $lunchMinutes, $hoursRendered, $activities, $pendingStatus, $dtrUuid);
+            $stmt = $conn->prepare("
+                UPDATE dtr_entries
+                SET time_in = ?,
+                    time_out = ?,
+                    lunch_break_minutes = ?,
+                    hours_rendered = ?,
+                    activities = ?,
+                    status = ?,
+                    rejection_reason = NULL,
+                    approved_by = NULL,
+                    approved_at = NULL,
+                    approved_by_role = NULL,
+                    submitted_at = NOW(),
+                    clock_in_latitude = ?,
+                    clock_in_longitude = ?,
+                    clock_out_latitude = ?,
+                    clock_out_longitude = ?,
+                    clock_in_photo = ?,
+                    clock_out_photo = ?
+                WHERE uuid = ?
+            ");
+            $stmt->bind_param(
+                'ssidssddddsss',
+                $timeIn, $timeOut, $lunchMinutes, $hoursRendered, $activities, $pendingStatus,
+                $clockInLatitude, $clockInLongitude, $clockOutLatitude, $clockOutLongitude,
+                $clockInPhoto, $clockOutPhoto, $dtrUuid
+            );
         } else {
-            $stmt = $conn->prepare("\n                UPDATE dtr_entries\n                SET time_in = ?,\n                    time_out = ?,\n                    lunch_break_minutes = ?,\n                    hours_rendered = ?,\n                    activities = ?\n                WHERE uuid = ?\n            ");
-            $stmt->bind_param('ssidss', $timeIn, $timeOut, $lunchMinutes, $hoursRendered, $activities, $dtrUuid);
+            $stmt = $conn->prepare("
+                UPDATE dtr_entries
+                SET time_in = ?,
+                    time_out = ?,
+                    lunch_break_minutes = ?,
+                    hours_rendered = ?,
+                    activities = ?,
+                    clock_in_latitude = ?,
+                    clock_in_longitude = ?,
+                    clock_out_latitude = ?,
+                    clock_out_longitude = ?,
+                    clock_in_photo = ?,
+                    clock_out_photo = ?
+                WHERE uuid = ?
+            ");
+            $stmt->bind_param(
+                'ssidsddddsss',
+                $timeIn, $timeOut, $lunchMinutes, $hoursRendered, $activities,
+                $clockInLatitude, $clockInLongitude, $clockOutLatitude, $clockOutLongitude,
+                $clockInPhoto, $clockOutPhoto, $dtrUuid
+            );
         }
         $stmt->execute();
         $stmt->close();
@@ -251,6 +420,8 @@ function editDtrEntry(
             'hours_rendered' => $hoursRendered,
             'from_status'    => $entry['status'],
             'to_status'      => $isResubmission ? 'pending' : $entry['status'],
+            'latitude'       => $clockInLatitude,
+            'longitude'      => $clockInLongitude,
         ]);
 
         $conn->commit();
@@ -544,7 +715,28 @@ function getAllDtrEntries(
     }
 
     $where = implode(' AND ', $conditions);
-    $result = $conn->query("\n        SELECT\n          d.*,\n          sp.first_name,\n          sp.last_name,\n          sp.student_number,\n          p.code AS program_code,\n          CONCAT(svp.first_name, ' ', svp.last_name) AS approved_by_name,\n          CONCAT(cp.first_name, ' ', cp.last_name) AS coord_approved_by_name\n        FROM dtr_entries d\n        JOIN student_profiles sp ON d.student_uuid = sp.uuid\n        LEFT JOIN programs p ON sp.program_uuid = p.uuid\n        LEFT JOIN supervisor_profiles svp ON d.approved_by = svp.uuid AND d.approved_by_role = 'supervisor'\n        LEFT JOIN coordinator_profiles cp ON d.approved_by = cp.uuid AND d.approved_by_role = 'coordinator'\n        WHERE {$where}\n        ORDER BY d.entry_date DESC, d.submitted_at DESC\n    ");
+    $result = $conn->query("
+        SELECT
+          d.*,
+          sp.first_name,
+          sp.last_name,
+          sp.student_number,
+          p.code AS program_code,
+          CONCAT(svp.first_name, ' ', svp.last_name) AS approved_by_name,
+          CONCAT(cp.first_name, ' ', cp.last_name) AS coord_approved_by_name,
+          c.latitude AS company_lat,
+          c.longitude AS company_lon,
+          c.geofence_radius AS company_radius,
+          c.name AS company_name
+        FROM dtr_entries d
+        JOIN student_profiles sp ON d.student_uuid = sp.uuid
+        LEFT JOIN programs p ON sp.program_uuid = p.uuid
+        LEFT JOIN supervisor_profiles svp ON d.approved_by = svp.uuid AND d.approved_by_role = 'supervisor'
+        LEFT JOIN coordinator_profiles cp ON d.approved_by = cp.uuid AND d.approved_by_role = 'coordinator'
+        LEFT JOIN companies c ON sp.company_uuid = c.uuid
+        WHERE {$where}
+        ORDER BY d.entry_date DESC, d.submitted_at DESC
+    ");
 
     $entries = [];
     while ($row = $result->fetch_assoc()) {
@@ -552,6 +744,12 @@ function getAllDtrEntries(
         $entry['full_name']      = $row['first_name'] . ' ' . $row['last_name'];
         $entry['student_number'] = $row['student_number'];
         $entry['program_code']   = $row['program_code'] ?? '—';
+        $entry['geofence'] = [
+            'latitude'     => $row['company_lat'] !== null ? (float)$row['company_lat'] : null,
+            'longitude'    => $row['company_lon'] !== null ? (float)$row['company_lon'] : null,
+            'radius'       => $row['company_radius'] !== null ? (int)$row['company_radius'] : 100,
+            'company_name' => $row['company_name'] ?? 'Company'
+        ];
         $entries[]               = $entry;
     }
 
@@ -588,12 +786,19 @@ function getSupervisorDtrHistory($conn, string $supervisorUuid, string $batchUui
           sp.first_name,
           sp.last_name,
           sp.student_number,
-          p.code AS program_code
+          p.code AS program_code,
+          CONCAT(svp.first_name, ' ', svp.last_name) AS approved_by_name,
+          CONCAT(cp.first_name, ' ', cp.last_name) AS coord_approved_by_name,
+          c.latitude AS company_lat,
+          c.longitude AS company_lon,
+          c.geofence_radius AS company_radius,
+          c.name AS company_name
         FROM dtr_entries d
-        JOIN student_profiles sp
-          ON d.student_uuid = sp.uuid
-          AND sp.supervisor_uuid = '{$safeSupervisor}'
+        JOIN student_profiles sp ON d.student_uuid = sp.uuid AND sp.supervisor_uuid = '{$safeSupervisor}'
         LEFT JOIN programs p ON sp.program_uuid = p.uuid
+        LEFT JOIN supervisor_profiles svp ON d.approved_by = svp.uuid AND d.approved_by_role = 'supervisor'
+        LEFT JOIN coordinator_profiles cp ON d.approved_by = cp.uuid AND d.approved_by_role = 'coordinator'
+        LEFT JOIN companies c ON sp.company_uuid = c.uuid
         WHERE d.batch_uuid = '{$safeBatch}'
           AND d.status IN ('approved', 'rejected')
         ORDER BY d.entry_date DESC, d.submitted_at DESC
@@ -606,6 +811,12 @@ function getSupervisorDtrHistory($conn, string $supervisorUuid, string $batchUui
         $entry['full_name']      = $row['first_name'] . ' ' . $row['last_name'];
         $entry['student_number'] = $row['student_number'];
         $entry['program_code']   = $row['program_code'] ?? '—';
+        $entry['geofence'] = [
+            'latitude'     => $row['company_lat'] !== null ? (float)$row['company_lat'] : null,
+            'longitude'    => $row['company_lon'] !== null ? (float)$row['company_lon'] : null,
+            'radius'       => $row['company_radius'] !== null ? (int)$row['company_radius'] : 100,
+            'company_name' => $row['company_name'] ?? 'Company'
+        ];
         $entries[]               = $entry;
     }
 
@@ -676,5 +887,42 @@ function formatDtrEntry(array $row): array
         'can_delete'          => $status === 'pending',
         'can_bulk_approve'    => $status === 'pending' && !$isBackdated,
         'flagged'             => $isBackdated,
+        'clock_in_latitude'   => $row['clock_in_latitude'] !== null ? (float)$row['clock_in_latitude'] : null,
+        'clock_in_longitude'  => $row['clock_in_longitude'] !== null ? (float)$row['clock_in_longitude'] : null,
+        'clock_out_latitude'  => $row['clock_out_latitude'] !== null ? (float)$row['clock_out_latitude'] : null,
+        'clock_out_longitude' => $row['clock_out_longitude'] !== null ? (float)$row['clock_out_longitude'] : null,
+        'clock_in_photo'      => $row['clock_in_photo'] ?? null,
+        'clock_out_photo'     => $row['clock_out_photo'] ?? null,
     ];
 }
+
+function saveSelfiePhoto(string $base64Data, string $studentUuid): ?string {
+    if (empty($base64Data)) {
+        return null;
+    }
+    
+    if (strpos($base64Data, 'data:image') === 0) {
+        $parts = explode(',', $base64Data);
+        $base64Data = $parts[1] ?? '';
+    }
+    
+    $decodedData = base64_decode($base64Data);
+    if (!$decodedData) {
+        return null;
+    }
+    
+    $uploadDir = dirname(__DIR__) . '/uploads/selfies/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+    
+    $fileName = 'selfie_' . $studentUuid . '_' . time() . '_' . uniqid() . '.jpg';
+    $filePath = $uploadDir . $fileName;
+    
+    if (file_put_contents($filePath, $decodedData)) {
+        return 'uploads/selfies/' . $fileName;
+    }
+    
+    return null;
+}
+

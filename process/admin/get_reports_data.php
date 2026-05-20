@@ -94,6 +94,87 @@ while ($row = $res->fetch_assoc()) {
     $monthlyActivity[] = $row;
 }
 
+// Enrollment vs Completion curves data
+$enrollmentCurve = [];
+$res = $conn->query("
+    SELECT DATE_FORMAT(created_at, '%b %Y') as month_label, COUNT(*) as count
+    FROM users
+    WHERE role = 'student' AND created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+    GROUP BY month_label
+    ORDER BY MIN(created_at) ASC
+");
+while ($row = $res->fetch_assoc()) {
+    $enrollmentCurve[$row['month_label']] = (int)$row['count'];
+}
+
+$completionCurve = [];
+$res = $conn->query("
+    SELECT DATE_FORMAT(updated_at, '%b %Y') as month_label, COUNT(*) as count
+    FROM ojt_applications
+    WHERE status = 'completed' AND updated_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+    GROUP BY month_label
+    ORDER BY MIN(updated_at) ASC
+");
+while ($row = $res->fetch_assoc()) {
+    $completionCurve[$row['month_label']] = (int)$row['count'];
+}
+
+// Generate unified monthly labels for 6 months
+$unifiedCurves = [];
+for ($i = 5; $i >= 0; $i--) {
+    $lbl = date('%b %Y', strtotime("-$i months"));
+    // fix the percent sign in date formatting
+    $lbl = date('M Y', strtotime("-$i months"));
+    $enrollCount = $enrollmentCurve[$lbl] ?? 0;
+    $compCount = $completionCurve[$lbl] ?? 0;
+    $unifiedCurves[] = [
+        'month' => $lbl,
+        'enrolled' => $enrollCount,
+        'completed' => $compCount
+    ];
+}
+
+// Company rating distributions
+$ratingDistributions = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
+$res = $conn->query("
+    SELECT ROUND(total_score) as rating, COUNT(*) as count
+    FROM evaluations
+    WHERE eval_type IN ('midterm', 'final') AND submitted_by_role = 'supervisor' AND batch_uuid = '{$activeBatchUuid}'
+    GROUP BY rating
+");
+while ($row = $res->fetch_assoc()) {
+    $r = (int)$row['rating'];
+    if (isset($ratingDistributions[$r])) {
+        $ratingDistributions[$r] = (int)$row['count'];
+    }
+}
+
+// Program completion rates
+$programCompletions = [];
+$res = $conn->query("
+    SELECT 
+        p.code,
+        COUNT(sp.uuid) as total_students,
+        SUM(CASE WHEN EXISTS (
+            SELECT 1 FROM dtr_entries de 
+            WHERE de.student_uuid = sp.uuid AND de.status = 'approved'
+            HAVING SUM(de.hours_rendered) >= p.required_hours
+        ) THEN 1 ELSE 0 END) as completed_students
+    FROM programs p
+    LEFT JOIN student_profiles sp ON sp.program_uuid = p.uuid AND sp.batch_uuid = '{$activeBatchUuid}'
+    GROUP BY p.uuid
+");
+while ($row = $res->fetch_assoc()) {
+    $tot = (int)$row['total_students'];
+    $comp = (int)$row['completed_students'];
+    $pct = $tot > 0 ? round(($comp / $tot) * 100, 1) : 0;
+    $programCompletions[] = [
+        'code' => $row['code'],
+        'total' => $tot,
+        'completed' => $comp,
+        'rate' => $pct
+    ];
+}
 
 $topCompanies = [];
 $res = $conn->query("
@@ -146,6 +227,9 @@ response([
         'programs' => $programStats,
         'activity' => $monthlyActivity,
         'companies' => $topCompanies,
-        'progress' => $completionData
+        'progress' => $completionData,
+        'curves' => $unifiedCurves,
+        'ratings' => $ratingDistributions,
+        'program_completions' => $programCompletions
     ]
 ]);

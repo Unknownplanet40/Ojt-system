@@ -7,6 +7,8 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once __DIR__ . '/../helpers/helpers.php';
+require_once __DIR__ . '/email_functions.php';
+require_once __DIR__ . '/settings_functions.php';
 
 function generateCoordinatorTempPassword(): string
 {
@@ -361,13 +363,31 @@ function deactivateCoordinator($conn, string $userUuid, string $actorUuid): arra
     $stmt->close();
 
     logActivity(
-        conn: $conn,
-        eventType: 'account_deactivated',
-        description: "Deactivated coordinator account of {$row['first_name']} {$row['last_name']}",
-        module: 'coordinators',
-        actorUuid: $actorUuid,
-        targetUuid: $userUuid
+        $conn,
+        'account_deactivated',
+        "Deactivated coordinator account of {$row['first_name']} {$row['last_name']}",
+        'coordinators',
+        $actorUuid,
+        $userUuid
     );
+
+    // Notify Coordinator
+    $smtpConfig = getEmailSettings($conn);
+    $sysConfig = getSystemConfig($conn);
+    $schoolName = $sysConfig['school_name'] ?: 'OJT Management System';
+    
+    $title = "Account Status Update: Deactivated";
+    $content = "
+        <p>Hello <b>{$row['first_name']}</b>,</p>
+        <p>Your Coordinator account on the {$schoolName} portal has been <b>Deactivated</b>.</p>
+        <div style='background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; margin: 20px 0;'>
+            <p style='margin: 0; color: #991b1b;'><b>Note:</b> Access to the dashboard and student management tools has been suspended.</p>
+        </div>
+        <p>If this was not expected, please reach out to the system administrator for more information.</p>
+    ";
+    
+    $emailBody = getEmailTemplate($title, $content, $schoolName);
+    sendSystemEmail($smtpConfig, $row['email'] ?? '', $title, $emailBody);
 
     return ['success' => true];
 }
@@ -693,6 +713,59 @@ function getCoordinatorDashboardStats($conn, string $coordinatorUserUuid): array
     }
     $stmt->close();
 
+    // Weekly attendance pattern (last 30 days of approved DTRs)
+    $stmt = $conn->prepare("
+        SELECT DAYNAME(de.entry_date) as day_name, SUM(de.hours_rendered) as hours
+        FROM dtr_entries de
+        JOIN student_profiles sp ON de.student_uuid = sp.uuid
+        WHERE sp.coordinator_uuid = ? AND de.status = 'approved' AND de.entry_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        GROUP BY DAYOFWEEK(de.entry_date)
+        ORDER BY DAYOFWEEK(de.entry_date) ASC
+    ");
+    $stmt->bind_param('s', $coordinatorUuid);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $attendancePattern = [];
+    while($row = $res->fetch_assoc()) {
+        $attendancePattern[$row['day_name']] = (float)$row['hours'];
+    }
+    $stmt->close();
+
+    // Fill missing days with 0
+    $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    $unifiedAttendance = [];
+    foreach ($daysOfWeek as $day) {
+        $unifiedAttendance[] = [
+            'day' => $day,
+            'hours' => $attendancePattern[$day] ?? 0
+        ];
+    }
+
+    // Supervisor score matrix
+    $stmt = $conn->prepare("
+        SELECT 
+            COALESCE(AVG(e.technical_skills), 0) as technical_skills,
+            COALESCE(AVG(e.work_attitude), 0) as work_attitude,
+            COALESCE(AVG(e.communication), 0) as communication,
+            COALESCE(AVG(e.teamwork), 0) as teamwork,
+            COALESCE(AVG(e.problem_solving), 0) as problem_solving
+        FROM evaluations e
+        JOIN student_profiles sp ON e.student_uuid = sp.uuid
+        WHERE sp.coordinator_uuid = ? AND e.submitted_by_role = 'supervisor' AND e.eval_type IN ('midterm', 'final')
+    ");
+    $stmt->bind_param('s', $coordinatorUuid);
+    $stmt->execute();
+    $scores = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    $scoreMatrix = [
+        'Technical' => round((float)$scores['technical_skills'], 2),
+        'Attitude' => round((float)$scores['work_attitude'], 2),
+        'Communication' => round((float)$scores['communication'], 2),
+        'Teamwork' => round((float)$scores['teamwork'], 2),
+        'Problem Solving' => round((float)$scores['problem_solving'], 2)
+    ];
+
     return [
         'stats' => [
             'total_students' => $totalStudents,
@@ -704,7 +777,9 @@ function getCoordinatorDashboardStats($conn, string $coordinatorUserUuid): array
         'recent_students' => $recentStudents,
         'progress' => $progress,
         'companies' => $companies,
-        'visits' => $visits
+        'visits' => $visits,
+        'weekly_attendance' => $unifiedAttendance,
+        'score_matrix' => $scoreMatrix
     ];
 }
 

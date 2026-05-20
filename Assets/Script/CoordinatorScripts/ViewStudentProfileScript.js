@@ -56,7 +56,7 @@ function renderStudentInfo(s, stats) {
   } else {
     $("#studentPhoto").attr(
       "src",
-      `https:
+      `https://placehold.co/128x128/C1C1C1/000000/png?text=${s.initials}&font=poppins`
     );
   }
 

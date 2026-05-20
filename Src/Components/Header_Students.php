@@ -146,6 +146,19 @@ if (!$hasActiveApplication && in_array($CurrentPage, ['DTR', 'Journal', 'Evaluat
               </div>
             </a>
           </li>
+          <li>
+            <a class="dropdown-item <?= $CurrentPage === 'Certificates' ? 'nav-active' : '' ?>" href="../Students/Certificates">
+              <div class="hstack">
+                <i class="bi bi-award me-2"></i>
+                <div class="vstack">
+                  <div class="hstack gap-3">
+                    <span>My Certificates</span>
+                  </div>
+                  <small class="text-muted" style="font-size: 0.7em">View, download, and share your OJT completion certificates.</small>
+                </div>
+              </div>
+            </a>
+          </li>
 
         </ul>
       </li> 
@@ -210,6 +223,7 @@ if (!$hasActiveApplication && in_array($CurrentPage, ['DTR', 'Journal', 'Evaluat
     </div>
   </div>
 </nav>
+<?php require_once __DIR__ . '/AlertBanner.php'; ?>
 
 <?php if ($isLockedPage): ?>
 <div class="position-fixed top-0 start-0 w-100 h-100 bg-body-tertiary d-flex flex-column justify-content-center align-items-center z-3" style="backdrop-filter: blur(10px);">

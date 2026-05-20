@@ -21,6 +21,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
+require_once dirname(__DIR__, 2) . '/functions/settings_functions.php';
 require_once dirname(__DIR__, 2) . '/functions/evaluation_functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -43,6 +44,11 @@ if (!$conn || $conn->connect_error) {
     ]);
 }
 
+$maintenanceStatus = isFeatureMaintenanceActive($conn, 'evaluation');
+if ($maintenanceStatus['active']) {
+    response(['status' => 'error', 'message' => $maintenanceStatus['reason']]);
+}
+
 if (!isset($_SESSION['user_uuid'])) {
     http_response_code(401);
     response(['status' => 'error', 'message' => 'Unauthenticated.']);
@@ -56,6 +62,36 @@ if (!in_array($role, ['supervisor', 'student'])) {
 }
 
 $batchUuid = trim($_POST['batch_uuid'] ?? '') ?: ($_SESSION['active_batch_uuid'] ?? '');
+
+if (empty($batchUuid)) {
+    // If supervisor, look up student's batch_uuid
+    if ($role === 'supervisor' && !empty($_POST['student_uuid'])) {
+        $stmt = $conn->prepare("SELECT batch_uuid FROM student_profiles WHERE uuid = ? LIMIT 1");
+        $stmt->bind_param('s', $_POST['student_uuid']);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!empty($res['batch_uuid'])) {
+            $batchUuid = $res['batch_uuid'];
+        }
+    }
+    // If student, look up own batch_uuid
+    elseif ($role === 'student' && !empty($_SESSION['profile_uuid'])) {
+        $stmt = $conn->prepare("SELECT batch_uuid FROM student_profiles WHERE uuid = ? LIMIT 1");
+        $stmt->bind_param('s', $_SESSION['profile_uuid']);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!empty($res['batch_uuid'])) {
+            $batchUuid = $res['batch_uuid'];
+        }
+    }
+}
+
+if (empty($batchUuid)) {
+    $result    = $conn->query("SELECT uuid FROM batches WHERE status = 'active' LIMIT 1");
+    $batchUuid = $result->fetch_assoc()['uuid'] ?? null;
+}
 
 if (empty($batchUuid)) {
     response(['status' => 'error', 'message' => 'No active batch found.']);

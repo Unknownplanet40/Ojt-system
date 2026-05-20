@@ -8,6 +8,8 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 
 require_once __DIR__ . '/../helpers/helpers.php';
 require_once __DIR__ . '/requirement_functions.php';
+require_once __DIR__ . '/email_functions.php';
+require_once __DIR__ . '/settings_functions.php';
 
 const VALID_TRANSITIONS = [
     'pending'       => ['approved', 'needs_revision', 'rejected', 'withdrawn'],
@@ -376,6 +378,44 @@ function submitApplication(
         targetUuid: $appUuid
     );
 
+    // Notify Coordinator
+    $stmt = $conn->prepare("
+        SELECT u.email, cp.first_name, cp.last_name,
+               sp.first_name as s_first, sp.last_name as s_last
+        FROM student_profiles sp
+        JOIN coordinator_profiles cp ON sp.coordinator_uuid = cp.uuid
+        JOIN users u ON cp.user_uuid = u.uuid
+        WHERE sp.uuid = ?
+    ");
+    $stmt->bind_param('s', $studentUuid);
+    $stmt->execute();
+    $notifData = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($notifData) {
+        $smtpConfig = getEmailSettings($conn);
+        $sysConfig = getSystemConfig($conn);
+        $schoolName = $sysConfig['school_name'] ?: 'OJT Management System';
+        
+        $studentName = $notifData['s_first'] . ' ' . $notifData['s_last'];
+        $title = "New OJT Application Submitted";
+        $content = "
+            <p>Hello Coordinator <b>{$notifData['first_name']}</b>,</p>
+            <p>A new OJT application has been submitted by <b>{$studentName}</b> and is awaiting your review.</p>
+            <div style='background-color: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 16px; margin: 20px 0;'>
+                <p style='margin: 0; color: #075985;'><b>Student:</b> {$studentName}</p>
+                <p style='margin: 4px 0 0 0; color: #075985;'><b>Company:</b> " . (isset($appData['company_name']) ? $appData['company_name'] : 'Selected Partner') . "</p>
+            </div>
+            <p>Please log in to the portal to review and take action on this application.</p>
+            <div style='margin-top: 30px; text-align: center;'>
+                <a href='" . (isset($_SERVER['HTTPS']) ? "https" : "http") . "://{$_SERVER['HTTP_HOST']}' style='background-color: #0284c7; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;'>Review Application</a>
+            </div>
+        ";
+        
+        $emailBody = getEmailTemplate($title, $content, $schoolName);
+        sendSystemEmail($smtpConfig, $notifData['email'], $title, $emailBody);
+    }
+
     return ['success' => true, 'uuid' => $appUuid];
 }
 
@@ -518,6 +558,53 @@ function transitionApplication(
     } catch (Exception $e) {
         $conn->rollback();
         return ['success' => false, 'error' => $e->getMessage()];
+    }
+
+    // Notify Student
+    if (in_array($newStatus, ['approved', 'needs_revision', 'rejected'])) {
+        $stmt = $conn->prepare("
+            SELECT u.email, sp.first_name, sp.last_name, c.name as company_name
+            FROM ojt_applications a
+            JOIN student_profiles sp ON a.student_uuid = sp.uuid
+            JOIN users u ON sp.user_uuid = u.uuid
+            JOIN companies c ON a.company_uuid = c.uuid
+            WHERE a.uuid = ?
+        ");
+        $stmt->bind_param('s', $appUuid);
+        $stmt->execute();
+        $notifData = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if ($notifData) {
+            $smtpConfig = getEmailSettings($conn);
+            $sysConfig = getSystemConfig($conn);
+            $schoolName = $sysConfig['school_name'] ?: 'OJT Management System';
+            
+            $statusLabels = [
+                'approved' => ['title' => 'Application Approved', 'color' => '#10b981', 'msg' => 'Congratulations! Your OJT application has been approved.'],
+                'needs_revision' => ['title' => 'Revision Required', 'color' => '#f59e0b', 'msg' => 'Your OJT application requires revisions before it can be processed.'],
+                'rejected' => ['title' => 'Application Rejected', 'color' => '#ef4444', 'msg' => 'We regret to inform you that your OJT application has been rejected.'],
+            ];
+            
+            $info = $statusLabels[$newStatus];
+            $title = $info['title'];
+            $content = "
+                <p>Hello <b>{$notifData['first_name']}</b>,</p>
+                <p>{$info['msg']}</p>
+                <div style='background-color: #f8fafc; border-left: 4px solid {$info['color']}; padding: 16px; margin: 20px 0;'>
+                    <p style='margin: 0; color: #1e293b;'><b>Status:</b> <span style='color: {$info['color']}; font-weight: 700;'>" . strtoupper($newStatus) . "</span></p>
+                    <p style='margin: 4px 0 0 0; color: #1e293b;'><b>Company:</b> {$notifData['company_name']}</p>
+                    " . ($reason ? "<p style='margin: 8px 0 0 0; color: #64748b; font-style: italic;'><b>Note from Coordinator:</b> \"{$reason}\"</p>" : "") . "
+                </div>
+                <p>Please log in to the portal for more details and next steps.</p>
+                <div style='margin-top: 30px; text-align: center;'>
+                    <a href='" . (isset($_SERVER['HTTPS']) ? "https" : "http") . "://{$_SERVER['HTTP_HOST']}' style='background-color: #1e40af; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;'>View My Portal</a>
+                </div>
+            ";
+            
+            $emailBody = getEmailTemplate($title, $content, $schoolName);
+            sendSystemEmail($smtpConfig, $notifData['email'], $title, $emailBody);
+        }
     }
 
     return ['success' => true, 'new_status' => $newStatus];

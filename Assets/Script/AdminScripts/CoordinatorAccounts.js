@@ -108,14 +108,12 @@ function exportCoordinatorCredentialsPdf(exportData, defaultFileName = "Coordina
         return;
       }
 
-      const contentDisposition = xhr.getResponseHeader("Content-Disposition") || "";
-      const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
-      const fileNameFromHeader = fileNameMatch ? decodeURIComponent(fileNameMatch[1].trim()) : "";
+      const safeName = (exportData && exportData.full_name ? exportData.full_name : 'Coordinator').replace(/[^a-zA-Z0-9_]/g, '_');
+      let fileName = `${safeName}_Coordinator_Account_Details.pdf`;
 
-      const blob = pdfResponse instanceof Blob ? pdfResponse : new Blob([pdfResponse], { type: "application/pdf" });
-      const fileName = fileNameFromHeader || defaultFileName;
+      const pdfFileBlob = pdfResponse instanceof Blob ? pdfResponse : new Blob([pdfResponse], { type: "application/pdf" });
 
-      const blobUrl = window.URL.createObjectURL(blob);
+      const blobUrl = window.URL.createObjectURL(pdfFileBlob);
       const link = document.createElement("a");
       link.href = blobUrl;
       link.download = fileName;
@@ -286,7 +284,7 @@ function getCoordinators() {
       coordinators.forEach((coordinator) => {
         const profileImage = coordinator.profile_name
           ? `../../../Assets/Images/profiles/${coordinator.profile_name}`
-          : `https:
+          : `https://placehold.co/64x64/483a0f/c6983d/png?text=${coordinator.initials}&font=poppins`;
 
         tableBody.append(`
           <tr>

@@ -80,30 +80,30 @@ $stmt->close();
 
 $html = '
 <style>
-    body { font-family: "Helvetica", "Arial", sans-serif; font-size: 10pt; color: 
-    .header-table { width: 100%; border-bottom: 2px solid 
+    body { font-family: "Helvetica", "Arial", sans-serif; font-size: 10pt; color: #333; }
+    .header-table { width: 100%; border-bottom: 2px solid #0F6E56; margin-bottom: 20px; padding-bottom: 10px; }
     .logo-td { width: 80px; text-align: left; }
     .logo-img { width: 70px; height: auto; }
     .school-info-td { text-align: left; padding-left: 15px; }
-    .school-name { font-size: 16pt; font-weight: bold; color: 
-    .school-motto { font-style: italic; font-size: 8pt; color: 
-    .school-address { font-size: 8pt; color: 
+    .school-name { font-size: 16pt; font-weight: bold; color: #0F6E56; margin-bottom: 2px; }
+    .school-motto { font-style: italic; font-size: 8pt; color: #666; }
+    .school-address { font-size: 8pt; color: #777; margin-top: 4px; }
     
-    .report-title-section { margin-bottom: 30px; background: 
-    .report-title { font-size: 15pt; font-weight: bold; color: 
-    .report-desc { font-size: 9pt; color: 
+    .report-title-section { margin-bottom: 30px; background: #f9f9f9; padding: 15px; border-radius: 8px; }
+    .report-title { font-size: 15pt; font-weight: bold; color: #333; text-transform: uppercase; margin-bottom: 5px; }
+    .report-desc { font-size: 9pt; color: #666; }
     
     table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    table.data-table th { background: 
-    table.data-table td { border-bottom: 1px solid 
+    table.data-table th { background: #f4f4f4; color: #333; padding: 10px; text-align: left; border-bottom: 2px solid #0F6E56; font-size: 9pt; text-transform: uppercase; }
+    table.data-table td { border-bottom: 1px solid #eee; padding: 10px; font-size: 10pt; }
     
     .status-badge { padding: 3px 8px; border-radius: 10px; font-size: 7pt; font-weight: bold; text-transform: uppercase; }
-    .bg-scheduled { background: 
-    .bg-completed { background: 
-    .bg-cancelled { background: 
+    .bg-scheduled { background: #e0f2fe; color: #0369a1; }
+    .bg-completed { background: #e8f5e9; color: #2e7d32; }
+    .bg-cancelled { background: #fef2f2; color: #dc2626; }
     
-    .footer { text-align: center; font-size: 8pt; color: 
-    .timestamp { color: 
+    .footer { text-align: center; font-size: 8pt; color: #999; margin-top: 40px; border-top: 1px solid #eee; padding-top: 15px; }
+    .timestamp { color: #555; font-weight: bold; }
 </style>
 
 <table class="header-table">

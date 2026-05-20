@@ -21,6 +21,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
+require_once dirname(__DIR__, 2) . '/functions/settings_functions.php';
 require_once dirname(__DIR__, 2) . '/functions/dtr_functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -41,6 +42,11 @@ if (!$conn || $conn->connect_error) {
         'Details'      => $conn->connect_error ?? 'Unknown error',
         'Suggestion'   => 'Please try again later or contact support if the issue persists.'
     ]);
+}
+
+$maintenanceStatus = isFeatureMaintenanceActive($conn, 'dtr');
+if ($maintenanceStatus['active']) {
+    response(['status' => 'error', 'message' => $maintenanceStatus['reason']]);
 }
 
 if (!isset($_SESSION['user_uuid']) || $_SESSION['user_role'] !== 'student') {

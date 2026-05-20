@@ -11,8 +11,12 @@ if (empty($_SESSION['user_uuid']) || ($_SESSION['user_role'] ?? '') !== 'supervi
 
 require_once "../../../Assets/SystemInfo.php";
 require_once __DIR__ . '/../../../functions/evaluation_functions.php';
+require_once __DIR__ . '/../../../functions/settings_functions.php';
 
 $CurrentPage = "Evaluation";
+$maintenanceStatus = isFeatureMaintenanceActive($conn, 'evaluation');
+$disableEvaluation = $maintenanceStatus['active'];
+$evaluationDisableReason = $maintenanceStatus['reason'];
 ?>
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
@@ -25,14 +29,16 @@ $CurrentPage = "Evaluation";
     <style>
         .star-rating i {
             font-size: 1.5rem;
-            color: 
+            color: #dee2e6;
             cursor: pointer;
             transition: color 0.2s ease;
         }
-        .star-rating i.active,
+        .star-rating:hover i {
+            color: #dee2e6 !important;
+        }
         .star-rating i:hover,
         .star-rating i:hover ~ i {
-            color: 
+            color: #ffc107 !important;
         }
     </style>
 </head>
@@ -47,6 +53,38 @@ $CurrentPage = "Evaluation";
         <main class="d-flex flex-column flex-grow-1 overflow-auto">
             <?php include '../../Components/Header_Supervisor.php'; ?>
             <div class="container-fluid p-4 w-100" id="dashboardContent">
+                <?php if ($disableEvaluation): ?>
+                    <div class="alert alert-warning border-0 rounded-4 shadow-sm p-4 mb-4 d-flex align-items-center bg-blur-5 bg-semi-transparent" style="--blur-lvl: <?= $opacitylvl ?>;">
+                        <div class="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center text-warning me-3" style="width: 50px; height: 50px; min-width: 50px;">
+                            <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="alert-heading fw-bold mb-1">Evaluations Locked</h5>
+                            <p class="mb-0 text-body-secondary small"><?= htmlspecialchars($evaluationDisableReason) ?></p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($maintenanceStatus['upcoming'] ?? false): ?>
+                    <div class="alert alert-info border-0 rounded-4 shadow-sm p-4 mb-4 d-flex align-items-center bg-blur-5 bg-semi-transparent ojt-maintenance-upcoming-banner" 
+                         style="--blur-lvl: <?= $opacitylvl ?>;"
+                         data-start="<?= htmlspecialchars($maintenanceStatus['start']) ?>"
+                         data-end="<?= htmlspecialchars($maintenanceStatus['end']) ?>">
+                        <div class="rounded-circle bg-info bg-opacity-25 d-flex align-items-center justify-content-center text-info me-3" style="width: 50px; height: 50px; min-width: 50px;">
+                            <i class="bi bi-clock-history fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading fw-bold mb-1 text-info">Upcoming Scheduled Maintenance</h5>
+                            <p class="mb-0 text-body-secondary small">
+                                The Student Evaluation system will undergo maintenance starting from <strong><?= date('F j, Y, g:i A', strtotime($maintenanceStatus['start'])) ?></strong> until <strong><?= date('g:i A', strtotime($maintenanceStatus['end'])) ?></strong>.
+                            </p>
+                        </div>
+                        <div class="ms-auto text-end countdown-wrapper ps-3">
+                            <div class="small text-muted mb-1 text-uppercase fw-bold">Starts In</div>
+                            <div class="fw-bold fs-5 text-info countdown-timer">--:--:--</div>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-4">
                     <h1 class="h3 fw-bold text-body mb-0">Student Evaluations</h1>
                 </div>
@@ -106,12 +144,12 @@ $CurrentPage = "Evaluation";
                                 <span><?= htmlspecialchars($label) ?></span>
                                 <span class="badge bg-secondary rounded-pill" id="badge-<?= $key ?>">0 / 5</span>
                             </label>
-                            <div class="star-rating d-flex gap-2" data-input="<?= $key ?>">
-                                <i class="bi bi-star-fill" data-val="1"></i>
-                                <i class="bi bi-star-fill" data-val="2"></i>
-                                <i class="bi bi-star-fill" data-val="3"></i>
-                                <i class="bi bi-star-fill" data-val="4"></i>
+                            <div class="star-rating d-flex flex-row-reverse justify-content-end gap-2" data-input="<?= $key ?>">
                                 <i class="bi bi-star-fill" data-val="5"></i>
+                                <i class="bi bi-star-fill" data-val="4"></i>
+                                <i class="bi bi-star-fill" data-val="3"></i>
+                                <i class="bi bi-star-fill" data-val="2"></i>
+                                <i class="bi bi-star-fill" data-val="1"></i>
                             </div>
                             <input type="hidden" name="<?= $key ?>" id="<?= $key ?>" required>
                         </div>
@@ -135,6 +173,48 @@ $CurrentPage = "Evaluation";
     <!-- JS Scripts -->
     <script>
         const csrfToken = "<?= $_SESSION['csrf_token'] ?? '' ?>";
+        const disableEvaluation = <?= $disableEvaluation ? 'true' : 'false' ?>;
+        const evaluationDisableReason = <?= json_encode($evaluationDisableReason) ?>;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const banners = document.querySelectorAll(".ojt-maintenance-upcoming-banner");
+            banners.forEach(banner => {
+                const startStr = banner.dataset.start;
+                if (!startStr) return;
+                
+                const formattedStart = startStr.replace(" ", "T");
+                const startTime = new Date(formattedStart).getTime();
+                const timerEl = banner.querySelector(".countdown-timer");
+                
+                function updateTimer() {
+                    const now = new Date().getTime();
+                    const distance = startTime - now;
+                    
+                    if (distance <= 0) {
+                        window.location.reload();
+                        return;
+                    }
+                    
+                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                    
+                    let displayStr = "";
+                    if (days > 0) {
+                        displayStr += days + "d ";
+                    }
+                    displayStr += String(hours).padStart(2, '0') + "h " + 
+                                  String(minutes).padStart(2, '0') + "m " + 
+                                  String(seconds).padStart(2, '0') + "s";
+                                  
+                    timerEl.textContent = displayStr;
+                }
+                
+                updateTimer();
+                setInterval(updateTimer, 1000);
+            });
+        });
     </script>
 </body>
 </html>

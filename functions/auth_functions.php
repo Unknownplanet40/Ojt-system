@@ -10,6 +10,8 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once __DIR__ . '/../helpers/helpers.php';
+require_once __DIR__ . '/email_functions.php';
+require_once __DIR__ . '/settings_functions.php';
 require_once __DIR__ . '/../Assets/SystemInfo.php';
 
 function getRoleProfileConfig(string $role): ?array
@@ -60,6 +62,68 @@ function isUserProfileCompleted($conn, string $userUuid, string $role): bool
     return (int)($row['is_done'] ?? 0) === 1;
 }
 
+/**
+ * Checks if conditions are met and sends a welcome email
+ */
+function checkAndSendWelcomeEmail($conn, string $userUuid, string $role): bool
+{
+    // Check if already sent
+    $stmt = $conn->prepare("SELECT welcome_email_sent, email, must_change_password FROM users WHERE uuid = ?");
+    $stmt->bind_param('s', $userUuid);
+    $stmt->execute();
+    $user = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$user || (int)$user['welcome_email_sent'] === 1) {
+        return false;
+    }
+
+    // Check if password was changed from temporary one
+    if ((int)$user['must_change_password'] === 1) {
+        return false;
+    }
+
+    // Check if profile is completed
+    if (!isUserProfileCompleted($conn, $userUuid, $role)) {
+        return false;
+    }
+
+    // All conditions met, send welcome email
+    $smtpConfig = getEmailSettings($conn);
+    $sysConfig = getSystemConfig($conn);
+    $schoolName = $sysConfig['school_name'] ?: 'OJT Management System';
+
+    $title = "Welcome to the {$schoolName} Portal!";
+    $content = "
+        <p>Hello!</p>
+        <p>Congratulations! Your account setup is now complete. You have successfully updated your password and finalized your profile details.</p>
+        <p>You now have full access to the OJT Management System. Here's what you can do next:</p>
+        <div style='background-color: #f0fdf4; border-radius: 12px; padding: 20px; margin: 20px 0;'>
+            <ul style='margin: 0; padding-left: 20px; color: #166534;'>
+                <li>Monitor your OJT progress and status.</li>
+                <li>Submit and track your OJT requirements.</li>
+                <li>Communicate with your assigned Coordinator.</li>
+                <li>Keep your contact information up to date.</li>
+            </ul>
+        </div>
+        <p>We are excited to support you through your OJT journey!</p>
+        <div style='margin-top: 30px; text-align: center;'>
+            <a href='" . (isset($_SERVER['HTTPS']) ? "https" : "http") . "://{$_SERVER['HTTP_HOST']}' style='background-color: #16a34a; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;'>Go to My Dashboard</a>
+        </div>
+    ";
+
+    $emailBody = getEmailTemplate($title, $content, $schoolName);
+    if (sendSystemEmail($smtpConfig, $user['email'], $title, $emailBody)['success']) {
+        $stmt = $conn->prepare("UPDATE users SET welcome_email_sent = 1 WHERE uuid = ?");
+        $stmt->bind_param('s', $userUuid);
+        $stmt->execute();
+        $stmt->close();
+        return true;
+    }
+
+    return false;
+}
+
 function loginUser($conn, string $email, string $password): array
 {
     $email = trim($email);
@@ -74,7 +138,8 @@ function loginUser($conn, string $email, string $password): array
     $stmt = $conn->prepare("
         SELECT
           uuid, email, password_hash,
-          role, is_active, must_change_password
+          role, is_active, must_change_password,
+          login_attempts, lockout_until, manual_lockout
         FROM users
         WHERE email = ?
         LIMIT 1
@@ -90,6 +155,32 @@ function loginUser($conn, string $email, string $password): array
             'success' => false,
             'message' => 'Invalid email or password.',
         ];
+    }
+
+    // Check if account is locked
+    if ($user['lockout_until']) {
+        $lockoutTime = strtotime($user['lockout_until']);
+        $currentTime = time();
+        
+        if ($currentTime < $lockoutTime) {
+            $remaining = $lockoutTime - $currentTime;
+            $hours = floor($remaining / 3600);
+            $minutes = ceil(($remaining % 3600) / 60);
+            
+            $timeStr = ($hours > 0) ? "$hours hour(s) and $minutes minute(s)" : "$minutes minute(s)";
+            $reason = (int)$user['manual_lockout'] === 1 ? "administratively locked" : "temporarily locked due to multiple failed login attempts";
+            
+            return [
+                'success' => false,
+                'message' => "Your account is $reason. Please try again in $timeStr.",
+            ];
+        } else {
+            // Lock expired, reset (but don't reset attempts yet, only on successful login)
+            $stmt = $conn->prepare("UPDATE users SET lockout_until = NULL, manual_lockout = 0 WHERE uuid = ?");
+            $stmt->bind_param('s', $user['uuid']);
+            $stmt->execute();
+            $stmt->close();
+        }
     }
 
     if ((int) $user['is_active'] === 0) {
@@ -109,7 +200,8 @@ function loginUser($conn, string $email, string $password): array
     }
 
     
-    $stmt = $conn->prepare("UPDATE users SET last_login_at = NOW() WHERE uuid = ?");
+    // Reset failed attempts on successful login
+    $stmt = $conn->prepare("UPDATE users SET last_login_at = NOW(), login_attempts = 0, lockout_until = NULL, manual_lockout = 0 WHERE uuid = ?");
     $stmt->bind_param('s', $user['uuid']);
     $stmt->execute();
     $stmt->close();
@@ -313,6 +405,87 @@ function logFailedLogin($conn, string $email, string $reason, string $userUuid =
     $stmt->bind_param('ssss', $userUuid, $ip, $userAgent, $reason);
     $stmt->execute();
     $stmt->close();
+
+    if ($userUuid && $reason === 'wrong_password') {
+        // Increment login attempts
+        $stmt = $conn->prepare("UPDATE users SET login_attempts = login_attempts + 1 WHERE uuid = ?");
+        $stmt->bind_param('s', $userUuid);
+        $stmt->execute();
+        $stmt->close();
+
+        // Check if we should lock the account
+        require_once __DIR__ . '/settings_functions.php';
+        $settings = getUserSettings($conn);
+        $threshold = (int)($settings['lockout_threshold'] ?? 5);
+        $initialDurationMinutes = (int)($settings['lockout_duration'] ?? 60);
+
+        $stmt = $conn->prepare("SELECT login_attempts FROM users WHERE uuid = ?");
+        $stmt->bind_param('s', $userUuid);
+        $stmt->execute();
+        $attempts = $stmt->get_result()->fetch_assoc()['login_attempts'];
+        $stmt->close();
+
+        if ($attempts >= $threshold) {
+            // Calculate duration: initial duration for first threshold, then increase
+            // Simple exponential or stepped:
+            // threshold -> 1x duration
+            // threshold * 2 -> 3x duration
+            // threshold * 3 -> 6x duration
+            // threshold * 4 -> 12x duration
+            
+            $multiplier = 1;
+            if ($attempts >= $threshold * 4) {
+                $multiplier = 12;
+            } elseif ($attempts >= $threshold * 3) {
+                $multiplier = 6;
+            } elseif ($attempts >= $threshold * 2) {
+                $multiplier = 3;
+            }
+            
+            $lockoutMinutes = $initialDurationMinutes * $multiplier;
+            $lockoutUntil = date('Y-m-d H:i:s', strtotime("+$lockoutMinutes minutes"));
+            
+            $stmt = $conn->prepare("UPDATE users SET lockout_until = ?, manual_lockout = 0 WHERE uuid = ?");
+            $stmt->bind_param('ss', $lockoutUntil, $userUuid);
+            $stmt->execute();
+            $stmt->close();
+            
+            // TODO: Notify admin if enabled
+            if (($settings['lockout_notify_admin'] ?? '1') === '1') {
+                // Logic to notify admin could be added here
+            }
+
+            // Notify the user
+            $stmt = $conn->prepare("SELECT email FROM users WHERE uuid = ?");
+            $stmt->bind_param('s', $userUuid);
+            $stmt->execute();
+            $userData = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+
+            if ($userData) {
+                $smtpConfig = getEmailSettings($conn);
+                $sysConfig = getSystemConfig($conn);
+                $schoolName = $sysConfig['school_name'] ?: 'OJT Management System';
+                
+                $title = "Security Alert: Account Locked";
+                $content = "
+                    <p>Your account (<b>{$userData['email']}</b>) has been temporarily locked due to multiple failed login attempts.</p>
+                    <div style='background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; margin: 20px 0;'>
+                        <p style='margin: 0; color: #991b1b; font-weight: 600;'>Lockout Details:</p>
+                        <ul style='margin: 8px 0 0 0; padding-left: 20px; color: #991b1b;'>
+                            <li><b>Duration:</b> {$lockoutMinutes} minutes</li>
+                            <li><b>Expires:</b> " . date('M d, Y - h:i A', strtotime($lockoutUntil)) . "</li>
+                        </ul>
+                    </div>
+                    <p>If this was not you, someone may be trying to access your account. Please notify your OJT Coordinator or Administrator as soon as possible.</p>
+                    <p>You can try logging in again once the lockout period has expired.</p>
+                ";
+                
+                $emailBody = getEmailTemplate($title, $content, $schoolName);
+                sendSystemEmail($smtpConfig, $userData['email'], $title, $emailBody);
+            }
+        }
+    }
 }
 
 function getAdminProfile($conn, string $userUuid): ?array
@@ -751,13 +924,42 @@ function voluntaryChangePassword($conn, string $userUuid, string $currentPasswor
     $stmt->close();
 
     logActivity(
-        conn: $conn,
-        eventType: 'password_changed',
-        description: ($_SESSION['user_email'] ?? '') . ' changed their password',
-        module: 'auth',
-        actorUuid: $userUuid,
-        targetUuid: $userUuid
+        $conn,
+        'password_changed',
+        ($_SESSION['user_email'] ?? '') . ' changed their password',
+        'auth',
+        $userUuid,
+        $userUuid
     );
+
+    // Notify user about password change
+    $stmt = $conn->prepare("SELECT email FROM users WHERE uuid = ?");
+    $stmt->bind_param('s', $userUuid);
+    $stmt->execute();
+    $userData = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($userData) {
+        $smtpConfig = getEmailSettings($conn);
+        $sysConfig = getSystemConfig($conn);
+        $schoolName = $sysConfig['school_name'] ?: 'OJT Management System';
+        
+        $title = "Security Alert: Password Changed";
+        $content = "
+            <p>Your password for the {$schoolName} portal was successfully updated on <b>" . date('M d, Y - h:i A') . "</b>.</p>
+            <p>If you made this change, you can safely ignore this email.</p>
+            <div style='background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0;'>
+                <p style='margin: 0; color: #92400e; font-weight: 600;'>Security Recommendation:</p>
+                <p style='margin: 4px 0 0 0; color: #92400e; font-size: 14px;'>If you did NOT perform this action, please contact the administrator immediately to secure your account.</p>
+            </div>
+        ";
+        
+        $emailBody = getEmailTemplate($title, $content, $schoolName);
+        sendSystemEmail($smtpConfig, $userData['email'], $title, $emailBody);
+    }
+
+    // Check if this allows sending the Welcome Email
+    checkAndSendWelcomeEmail($conn, $userUuid, $_SESSION['user_role'] ?? 'student');
 
     return ['success' => true, 'mode' => 'voluntary'];
 }

@@ -202,3 +202,4 @@
     </div>
   </div>
 </nav>
+<?php require_once __DIR__ . '/AlertBanner.php'; ?>

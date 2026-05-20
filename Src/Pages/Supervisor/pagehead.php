@@ -55,3 +55,5 @@ if (!$isProfileDone && !in_array($currentPage, $allowWithoutCompletedProfile, tr
 <script src="../../../libs/driverjs/js/driver.js.iife.js"></script>
 <script src="../../../libs/jquery/js/jquery-3.7.1.min.js"></script>
 <title><?= $ShortTitle ?></title>
+<meta name="app-root" content="/Ojt-system">
+<script type="module" src="../../../Assets/Script/AlertBanner.js"></script>

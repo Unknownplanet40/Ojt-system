@@ -1,0 +1,69 @@
+<svg width="680" viewBox="0 0 680 310" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>Development Note</title>
+  <desc>Development note showing version history and AI tool roles for this project.</desc>
+
+  <style>
+    text { font-family: system-ui, -apple-system, sans-serif; }
+    .label { font-size: 11px; fill: #6b7280; }
+    .body { font-size: 13px; fill: #111827; }
+    .bold { font-size: 13px; fill: #111827; font-weight: 600; }
+    .heading { font-size: 14px; fill: #111827; font-weight: 600; }
+    .warn { font-size: 12px; fill: #6b7280; }
+    .section-label { font-size: 10px; fill: #9ca3af; font-weight: 600; letter-spacing: 0.07em; }
+  </style>
+
+  <!-- Outer card -->
+  <rect x="0" y="0" width="680" height="310" rx="12" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1"/>
+  <!-- Blue left accent -->
+  <rect x="0" y="0" width="4" height="310" rx="2" fill="#378ADD"/>
+
+  <!-- Header -->
+  <circle cx="36" cy="32" r="10" fill="#dbeafe"/>
+  <text x="36" y="37" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">i</text>
+  <text x="56" y="37" class="heading">Development note</text>
+
+  <!-- Divider -->
+  <line x1="20" y1="52" x2="660" y2="52" stroke="#e5e7eb" stroke-width="0.5"/>
+
+  <!-- Version cards row -->
+  <!-- v1.15 card -->
+  <rect x="20" y="64" width="300" height="72" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="0.5"/>
+  <text x="36" y="84" class="label">v1.15 and earlier</text>
+  <text x="36" y="103" class="body">Hand-written from scratch —</text>
+  <text x="36" y="120" class="body">no AI assistance.</text>
+
+  <!-- v1.16 card -->
+  <rect x="332" y="64" width="328" height="72" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="0.5"/>
+  <text x="348" y="84" class="label">v1.16 and above</text>
+  <text x="348" y="103" class="body">Hybrid AI-assisted development</text>
+  <text x="348" y="120" class="body">(vibecoded).</text>
+
+  <!-- Section label -->
+  <text x="20" y="162" class="section-label">AI TOOL ROLES (v1.16+)</text>
+
+  <!-- Tool cards row -->
+  <!-- Antigravity -->
+  <rect x="20" y="172" width="198" height="60" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="0.5"/>
+  <text x="36" y="192" class="label">Antigravity</text>
+  <text x="36" y="213" class="bold">Design &amp; UI/UX</text>
+
+  <!-- Claude -->
+  <rect x="231" y="172" width="198" height="60" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="0.5"/>
+  <text x="247" y="192" class="label">Claude</text>
+  <text x="247" y="213" class="bold">Backend &amp; logic</text>
+
+  <!-- GitHub Copilot -->
+  <rect x="442" y="172" width="218" height="60" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="0.5"/>
+  <text x="458" y="192" class="label">GitHub Copilot</text>
+  <text x="458" y="213" class="bold">Integration &amp; refinement</text>
+
+  <!-- Divider -->
+  <line x1="20" y1="250" x2="660" y2="250" stroke="#e5e7eb" stroke-width="0.5"/>
+
+  <!-- Warning row -->
+  <!-- Triangle icon (simple) -->
+  <polygon points="28,276 36,261 44,276" fill="none" stroke="#d97706" stroke-width="1.5" stroke-linejoin="round"/>
+  <text x="36" y="274" text-anchor="middle" font-size="9" fill="#d97706" font-weight="700">!</text>
+  <text x="56" y="271" class="warn">Some UI/UX inconsistencies may appear — a known trade-off of multi-tool development.</text>
+  <text x="56" y="287" class="warn">Consistency improvements are ongoing.</text>
+</svg>

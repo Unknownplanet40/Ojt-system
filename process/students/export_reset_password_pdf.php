@@ -6,13 +6,10 @@ if (session_status() === PHP_SESSION_NONE) {
 
 date_default_timezone_set('Asia/Manila');
 
-
-
 require_once dirname(__DIR__, 2) . '/config/db.php';
 require_once dirname(__DIR__, 2) . '/functions/student_functions.php';
 require_once dirname(__DIR__, 2) . '/Assets/SystemInfo.php';
-
-
+require_once dirname(__DIR__, 2) . '/helpers/helpers.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (empty($_POST['csrf_token']) ||
     $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? ''))) {
@@ -27,18 +24,14 @@ if (!isset($_SESSION['user_uuid']) || !in_array($_SESSION['user_role'], ['admin'
 
 if (!$conn || $conn->connect_error) {
     response([
-        'status'       => 'critical',
-        'message'      => 'Database connection failed.',
-        'details'      => $conn->connect_error ?? 'Unknown error',
-        'suggestion'   => 'Please try again later or contact support if the issue persists.'
+        'status'     => 'critical',
+        'message'    => 'Database connection failed.',
+        'details'    => $conn->connect_error ?? 'Unknown error',
+        'suggestion' => 'Please try again later or contact support if the issue persists.'
     ]);
 }
 
-
-
-
 $studentData = $_POST['student_data'] ?? [];
-
 if (is_string($studentData)) {
     $studentData = json_decode($studentData, true) ?? [];
 }
@@ -46,7 +39,7 @@ if (!is_array($studentData)) {
     $studentData = [];
 }
 
-$fullNameRaw     = $studentData['full_name'] ?? ($_POST['full_name'] ?? ($_GET['full_name'] ?? ''));
+$fullNameRaw     = $studentData['full_name']     ?? ($_POST['full_name']     ?? ($_GET['full_name']     ?? ''));
 $tempPasswordRaw = $studentData['temp_password'] ?? ($_POST['temp_password'] ?? ($_GET['temp_password'] ?? ''));
 
 $fullName     = htmlspecialchars(trim((string)$fullNameRaw));
@@ -57,20 +50,20 @@ if ($fullName === '' || $tempPassword === '') {
     die("Missing required fields: full_name and temp_password.");
 }
 
-$generatedAt   = date('F j, Y g:i A');
-$schoolName    = $SchoolName ?? 'Your School Name Here';
-$longTitle     = $LongTitle ?? 'Your System Long Title Here';
-$schoolMotto   = $SchoolMotto ?? '';
-$schoolAddress = $SchoolAddress ?? '';
-$schoolWebsite = $SchoolWebsite ?? '';
-$schoolEmail   = $SchoolEmail ?? '';
-$schoolPhone   = $SchoolPhone ?? '';
-$documentFooterNote = $DocumentFooterNote ?? 'Officially issued by the OJT Coordinator Management System';
-$documentVerificationNote = $DocumentVerificationNote ?? 'Please verify document authenticity with the coordinator\'s office.';
-$fileCreatedBy = $_SESSION['user_name'] ?? 'Admin User';
-$roleofCreator = $_SESSION['user_role'] === 'admin' ? 'Administrator' : 'User';
-$LogoPath1      = $SchoolLogoLeft ?? 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
-$LogoPath2      = $SchoolLogoRight ?? 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
+$generatedAt              = date('F j, Y g:i A');
+$schoolName               = $SchoolName  ?? 'Your School Name Here';
+$longTitle                = $LongTitle   ?? 'Your System Long Title Here';
+$schoolMotto              = $SchoolMotto ?? '';
+$schoolAddress            = $SchoolAddress ?? '';
+$schoolWebsite            = $SchoolWebsite ?? '';
+$schoolEmail              = $SchoolEmail  ?? '';
+$schoolPhone              = $SchoolPhone  ?? '';
+$documentFooterNote       = $DocumentFooterNote ?? 'Officially issued by the OJT Coordinator Management System';
+$documentVerificationNote = $DocumentVerificationNote ?? "Please verify document authenticity with the coordinator's office.";
+$fileCreatedBy            = $_SESSION['user_name'] ?? 'Admin User';
+$roleofCreator            = $_SESSION['user_role'] === 'admin' ? 'Administrator' : 'User';
+$LogoPath1                = $SchoolLogoLeft  ?? 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
+$LogoPath2                = $SchoolLogoRight ?? 'https://placehold.co/128x128/000000/FFF?text=LOGO&font=Open%20Sans';
 
 $html = <<<HTML
 <!DOCTYPE html>
@@ -79,68 +72,60 @@ $html = <<<HTML
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 12px; color: 
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #1e293b; }
     .page { padding: 40px; }
 
-    .header { text-align: center; border-bottom: 2px solid 
-    .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; margin-bottom: 22px; }
+    .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 22px; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; }
     .header-table td { vertical-align: middle; }
     .header-left { width: 20%; text-align: left; }
     .header-center { width: 60%; text-align: center; }
     .header-right { width: 20%; text-align: right; }
     .header-logo { width: 64px; height: 64px; object-fit: contain; }
-    .school-name { font-size: 15px; font-weight: bold; color: 
-    .school-meta { font-size: 10px; color: 
-    .doc-title { font-size: 20px; font-weight: bold; color: 
-    .doc-subtitle { font-size: 11px; color: 
 
-    .notice-box { background: 
-    .notice-title { font-size: 11px; font-weight: bold; color: 
-    .notice-text { font-size: 11px; color: 
+    .notice-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; }
+    .notice-title { font-size: 11px; font-weight: bold; color: #92400e; margin-bottom: 6px; }
+    .notice-text { font-size: 11px; color: #78350f; }
 
-    .credentials-box { background: 
-    .credentials-label { font-size: 11px; font-weight: bold; color: 
+    .credentials-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 14px 16px; margin-bottom: 16px; }
+    .credentials-label { font-size: 11px; font-weight: bold; color: #166534; margin-bottom: 10px; }
     .cred-row { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
-    .cred-key { font-size: 12px; color: 
-    .cred-val { font-size: 13px; font-weight: bold; color: 
-    .pw-val { font-size: 22px; font-weight: bold; color: 
+    .cred-key { font-size: 12px; color: #64748b; font-weight: bold; }
+    .cred-val { font-size: 13px; font-weight: bold; color: #1e293b; }
+    .pw-val { font-size: 22px; font-weight: bold; color: #166534; font-family: monospace; margin-top: 4px; }
 
-    .steps-box { background: 
-    .steps-title { font-size: 11px; font-weight: bold; color: 
-    .step { font-size: 11px; color: 
+    .steps-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 14px 16px; margin-bottom: 20px; }
+    .steps-title { font-size: 11px; font-weight: bold; color: #1e40af; margin-bottom: 8px; }
+    .step { font-size: 11px; color: #1e3a8a; margin-bottom: 5px; }
 
-    .footer { border-top: 1px solid 
-    .footer-text { font-size: 10px; color: 
-    .generated-info { font-size: 9px; color: 
-    .confidential { font-size: 10px; font-weight: bold; color: 
-        .footer-contact { margin-top: 6px; font-size: 9px; color: 
+    .footer { border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 20px; }
+    .footer-text { font-size: 10px; color: #64748b; margin-bottom: 4px; }
+    .generated-info { font-size: 9px; color: #94a3b8; }
+    .confidential { font-size: 10px; font-weight: bold; color: #dc2626; margin-bottom: 6px; }
+    .footer-contact { margin-top: 6px; font-size: 9px; color: #94a3b8; }
   </style>
 </head>
 <body>
 <div class="page">
-
-    <div class="header">
-        <table class="header-table" cellpadding="0" cellspacing="0" border="0">
-            <tr>
-                <td class="header-left">
-                    <img src="{$LogoPath1}" alt="Logo Left" class="header-logo" />
-                </td>
-                <td class="header-center" style="line-height:1.35;">
-                    <div style="font-size: 15px; font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.04em;">{$schoolName}</div>
-                    <div style="font-size: 10px; color: #64748b; margin-top: 2px;">{$schoolMotto}</div>
-                    <div style="font-size: 11px; color: #475569; margin-top: 3px;">Official Digital Credential Document</div>
-                    <div style="font-size: 10px; color: #64748b; margin-top: 2px;">{$longTitle} - Password Reset Details</div>
-                    <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Generated on {$generatedAt}</div>
-                </td>
-                <td class="header-right">
-                    <img src="{$LogoPath2}" alt="Logo Right" class="header-logo" />
-                </td>
-            </tr>
-        </table>
-    </div>
+  <table class="header-table" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td class="header-left">
+        <img src="{$LogoPath1}" alt="Logo Left" class="header-logo" />
+      </td>
+      <td class="header-center" style="line-height:1.35;">
+        <div style="font-size: 15px; font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.04em;">{$schoolName}</div>
+        <div style="font-size: 10px; color: #64748b; margin-top: 2px;">{$schoolMotto}</div>
+        <div style="font-size: 11px; color: #475569; margin-top: 3px;">Official Digital Credential Document</div>
+        <div style="font-size: 10px; color: #64748b; margin-top: 2px;">{$longTitle} - Password Reset Details</div>
+        <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Generated on {$generatedAt}</div>
+      </td>
+      <td class="header-right">
+        <img src="{$LogoPath2}" alt="Logo Right" class="header-logo" />
+      </td>
+    </tr>
+  </table>
 
   <div class="notice-box">
-    <div class="notice-title">⚠ Important Notice</div>
+    <div class="notice-title">&#9888; Important Notice</div>
     <div class="notice-text">
       This document contains sensitive login credentials. Keep this confidential and do not share it.
       Use this temporary password to log in and change it immediately.
@@ -167,14 +152,14 @@ $html = <<<HTML
   </div>
 
   <div class="footer">
-    <div class="confidential">CONFIDENTIAL — FOR STUDENT USE ONLY</div>
+    <div class="confidential">CONFIDENTIAL &mdash; FOR STUDENT USE ONLY</div>
     <div class="footer-text">
-            This document was generated by the {$longTitle}. Generated on {$generatedAt}.
+      This document was generated by the {$longTitle}. Generated on {$generatedAt}.
     </div>
     <div class="footer-text generated-info">
       Document created by {$fileCreatedBy} ({$roleofCreator})
     </div>
-        <div class="footer-contact">{$documentFooterNote}<br>{$documentVerificationNote}<br>{$schoolName} · {$schoolAddress} · {$schoolWebsite} · {$schoolEmail} · {$schoolPhone}</div>
+    <div class="footer-contact">{$documentFooterNote}<br>{$documentVerificationNote}<br>{$schoolName} &middot; {$schoolAddress} &middot; {$schoolWebsite} &middot; {$schoolEmail} &middot; {$schoolPhone}</div>
   </div>
 </div>
 </body>
@@ -204,7 +189,7 @@ if (file_exists($mpdfPath)) {
         exit;
 
     } catch (Exception $e) {
-        
+        response(['status' => 'error', 'message' => 'PDF generation failed: ' . $e->getMessage()]);
     }
 }
 
@@ -314,7 +299,7 @@ function buildRawPdf(
         . "/Contents {$contentId} 0 R "
         . "/Resources << /Font << /F1 {$fontId} 0 R /F2 {$fontBoldId} 0 R /F3 {$fontMonoId} 0 R >> >> >>";
 
-    $objects[$pagesId] = "<< /Type /Pages /Kids [{$pageId} 0 R] /Count 1 >>";
+    $objects[$pagesId]  = "<< /Type /Pages /Kids [{$pageId} 0 R] /Count 1 >>";
     $objects[$catalogId] = "<< /Type /Catalog /Pages {$pagesId} 0 R >>";
 
     $out     = "%PDF-1.4\n";

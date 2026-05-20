@@ -59,3 +59,58 @@ if (!$isProfileDone && !in_array($currentPage, $allowWithoutCompletedProfile, tr
 <title>
 	<?= htmlspecialchars($ShortTitle ?? 'OJT Management System') ?>
 </title>
+<meta name="app-root" content="/Ojt-system">
+<script type="module" src="../../../Assets/Script/AlertBanner.js"></script>
+
+<div id="adminMobileBlock" role="alertdialog" aria-modal="true"
+     aria-labelledby="ambTitle" aria-describedby="ambDesc">
+    <div class="amb-card">
+        <div class="amb-icon-wrap">
+            <i class="bi bi-display"></i>
+        </div>
+        <p class="amb-title" id="ambTitle">Desktop Only</p>
+        <p class="amb-subtitle" id="ambDesc">
+            The Admin Portal is optimised for desktop use and requires a
+            screen width of at least <strong style="color:#c4b5fd;">992 px</strong>.
+            Please switch to a laptop or desktop computer to continue.
+        </p>
+        <span class="amb-badge">
+            <i class="bi bi-laptop"></i>
+            Use a desktop browser
+        </span>
+    </div>
+</div>
+
+<script>
+    /* Admin mobile-block guard — runs immediately, no jQuery needed */
+    (function () {
+        var BREAKPOINT = 992; /* lg — must match the CSS */
+        var overlay    = document.getElementById('adminMobileBlock');
+
+        function check() {
+            if (!overlay) return;
+            if (window.innerWidth < BREAKPOINT) {
+                overlay.classList.add('visible');
+                document.body.style.overflow = 'hidden';
+            } else {
+                overlay.classList.remove('visible');
+                document.body.style.overflow = '';
+            }
+        }
+
+        /* Run immediately so the overlay is visible before any paint */
+        check();
+
+        /* Re-check on resize (debounced at 120 ms) */
+        var _resizeTimer;
+        window.addEventListener('resize', function () {
+            clearTimeout(_resizeTimer);
+            _resizeTimer = setTimeout(check, 120);
+        });
+
+        /* Re-check on orientation change (mobile devices) */
+        window.addEventListener('orientationchange', function () {
+            setTimeout(check, 300); /* slight delay for browser to report new size */
+        });
+    })();
+</script>

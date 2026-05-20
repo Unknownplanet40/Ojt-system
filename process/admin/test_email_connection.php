@@ -53,7 +53,7 @@ $result = sendSystemEmail($smtpData, $smtpData['from_email'], $subject, $body);
 if ($result['success']) {
     response([
         'status' => 'success',
-        'message' => 'Test email sent successfully to ' . $smtpData['email']
+        'message' => 'Test email sent successfully to ' . $smtpData['from_email']
     ]);
 } else {
     response([

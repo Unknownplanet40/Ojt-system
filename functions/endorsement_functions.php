@@ -150,38 +150,38 @@ function buildEndorsementPdf(array $data): array
 <meta charset="UTF-8">
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.55; color: 
+    body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.55; color: #1e293b; }
     .page { padding: 44px 50px 38px; }
 
-    .header { text-align: center; border-bottom: 2px solid 
+    .header { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px; }
     .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 8px; margin-bottom: 18px; }
     .header-table td { vertical-align: middle; }
     .header-left { width: 20%; text-align: left; }
     .header-center { width: 60%; text-align: center; }
     .header-right { width: 20%; text-align: right; }
     .header-logo { width: 60px; height: 60px; object-fit: contain; }
-    .school-name { font-size: 15px; font-weight: 700; color: 
-    .school-meta { font-size: 10px; color: 
-    .doc-title { font-size: 18px; font-weight: 700; color: 
-    .doc-subtitle { font-size: 11px; color: 
-    .doc-meta { font-size: 10px; color: 
+    .school-name { font-size: 15px; font-weight: 700; color: #0f172a; }
+    .school-meta { font-size: 10px; color: #64748b; }
+    .doc-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+    .doc-subtitle { font-size: 11px; color: #475569; }
+    .doc-meta { font-size: 10px; color: #64748b; }
 
-    .date-line { text-align: right; margin-bottom: 18px; font-size: 12px; color: 
+    .date-line { text-align: right; margin-bottom: 18px; font-size: 12px; color: #475569; }
     .addressee { margin-bottom: 18px; }
-    .addressee-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: 
-    .addressee strong { font-size: 13px; color: 
-    .addressee p { font-size: 12px; color: 
+    .addressee-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; }
+    .addressee strong { font-size: 13px; color: #0f172a; }
+    .addressee p { font-size: 12px; color: #374151; }
     .salutation { margin-bottom: 14px; font-size: 12px; }
     .body-text { margin-bottom: 12px; text-align: justify; }
-    .highlight { font-weight: 700; color: 
-    .ref-box { background: 
+    .highlight { font-weight: 700; color: #0f172a; }
+    .ref-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 12px 14px; margin: 16px 0; font-size: 11px; color: #374151; }
     .closing { margin-top: 18px; margin-bottom: 36px; }
     .sig-block { margin-top: 8px; }
-    .sig-name { font-size: 12px; font-weight: 700; color: 
-    .sig-title { font-size: 11px; color: 
-    .footer { margin-top: 24px; padding-top: 10px; border-top: 1px solid 
-    .footer strong { color: 
-    .footer-contact { margin-top: 6px; font-size: 9px; color: 
+    .sig-name { font-size: 12px; font-weight: 700; color: #0f172a; }
+    .sig-title { font-size: 11px; color: #64748b; }
+    .footer { margin-top: 24px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #64748b; }
+    .footer strong { color: #374151; }
+    .footer-contact { margin-top: 6px; font-size: 9px; color: #94a3b8; }
 </style>
 </head>
 <body>

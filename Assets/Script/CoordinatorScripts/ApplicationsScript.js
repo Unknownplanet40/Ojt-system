@@ -121,7 +121,7 @@ $(document).ready(function() {
                                 <h5 class="card-title mb-0 fw-semibold text-truncate">${app.full_name}</h5>
                                 <p class="card-text mb-0 text-muted small">
                                     <span class="d-block"><span class="text-body fw-medium">${app.program_code}</span> - <span class="text-body fw-medium">${app.year_label}</span></span>
-                                    <span class="d-block mb-0 text-truncate">Applied for: <span class="text-body fw-medium">${app.company_name}</span></span>
+                                    <span class="d-block mb-0 text-truncate">Applied for: <span class="text-body fw-medium text-wrap">${app.company_name}</span></span>
                                 </p>
                             </div>
                             <div class="flex-shrink-0 ms-2">
