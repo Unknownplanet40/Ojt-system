@@ -77,8 +77,8 @@ function renderCompanies(companies) {
                                 <i class="bi bi-building fs-3"></i>
                             </div>
                             <div class="min-w-0 flex-grow-1">
-                                <h6 class="mb-1 fw-bold text-truncate text-white">${c.name}</h6>
-                                <p class="mb-0 text-white-50 small text-truncate">${c.industry || 'General Industry'}</p>
+                                <h6 class="mb-1 fw-bold text-wrap text-white">${c.name}</h6>
+                                <p class="mb-0 text-white-50 small text-truncate">${c.industry || "General Industry"}</p>
                             </div>
                             <div class="align-self-start">
                                 <span class="badge ${statusBadge} rounded-pill px-2 py-1 x-small">${c.accreditation_status.toUpperCase()}</span>
@@ -88,15 +88,15 @@ function renderCompanies(companies) {
                         <div class="vstack gap-2 mb-4">
                             <div class="d-flex align-items-center gap-2 text-white-50 small">
                                 <i class="bi bi-geo-alt text-primary"></i>
-                                <span class="text-truncate">${c.city || 'N/A'}, ${c.address || ''}</span>
+                                <span class="text-truncate">${c.city || "N/A"}, ${c.address || ""}</span>
                             </div>
                             <div class="d-flex align-items-center gap-2 text-white-50 small">
                                 <i class="bi bi-envelope text-primary"></i>
-                                <span class="text-truncate">${c.email || 'N/A'}</span>
+                                <span class="text-truncate">${c.email || "N/A"}</span>
                             </div>
                             <div class="d-flex align-items-center gap-2 text-white-50 small">
                                 <i class="bi bi-briefcase text-primary"></i>
-                                <span class="text-truncate">${c.work_setup ? c.work_setup.toUpperCase() : 'N/A'}</span>
+                                <span class="text-truncate">${c.work_setup ? c.work_setup.toUpperCase() : "N/A"}</span>
                             </div>
                         </div>
 
@@ -138,7 +138,7 @@ $(document).ready(function () {
       success: function (response) {
         if (response.status === "success") {
           const companyData = response.company;
-          const c = companyData.company; 
+          const c = companyData.company;
           const students = response.students;
 
           $("#detCompanyName").text(c.name);
@@ -155,21 +155,19 @@ $(document).ready(function () {
 
           $("#detCompanySetup").text(c.work_setup ? c.work_setup.toUpperCase() : "N/A");
 
-          
           const progContainer = $("#detCompanyPrograms");
           progContainer.empty();
           const programs = companyData.accepted_programs || [];
           if (programs.length > 0) {
             programs.forEach((p) => {
               progContainer.append(
-                `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 fw-normal">${p.code}</span>`
+                `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 fw-normal">${p.code}</span>`,
               );
             });
           } else {
             progContainer.append('<small class="text-white-50 italic">No programs listed</small>');
           }
 
-          
           const supervisorContainer = $("#detSupervisorList");
           supervisorContainer.empty();
           const supervisors = companyData.supervisors || [];
@@ -186,7 +184,6 @@ $(document).ready(function () {
             supervisorContainer.append('<div class="text-white-50 small italic">No supervisors assigned</div>');
           }
 
-          
           const contactContainer = $("#detContactInfo");
           contactContainer.empty();
           const contacts = companyData.contacts || [];
@@ -204,14 +201,16 @@ $(document).ready(function () {
             contactContainer.append('<div class="text-white-50 small italic">No contact info</div>');
           }
 
-          
           const moaContainer = $("#detMoaStatus");
           moaContainer.empty();
-          const moaStatus = c.moa_status || 'none';
-          const moaExpiry = c.moa_expiry || 'N/A';
-          
-          if (moaStatus !== 'none') {
-            const statusClass = moaStatus === 'expired' ? 'text-danger' : (moaStatus === 'expiring' ? 'text-warning' : 'text-success');
+          const moaStatus = c.moa_status || "none";
+          const moaExpiry = c.moa_expiry || "N/A";
+
+          if (moaStatus !== "none") {
+            const statusClass =
+              moaStatus === "expired" ? "text-danger"
+              : moaStatus === "expiring" ? "text-warning"
+              : "text-success";
             moaContainer.append(`
               <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-check-circle-fill ${statusClass}"></i>
@@ -225,21 +224,37 @@ $(document).ready(function () {
             moaContainer.append('<div class="text-white-50 small">No MOA on file</div>');
           }
 
-          
           $("#detStudentCount").text(students.length);
           const studentContainer = $("#detStudentList");
           studentContainer.empty();
 
-          
           $("#currentCompanyUuid").val(c.uuid);
+
+          // Populate Slots Display and Input
+          const slotsFilled = parseInt(companyData.filled_slots || 0);
+          const totalSlots = parseInt(companyData.total_slots || 0);
+          const remainingSlots = Math.max(0, totalSlots - slotsFilled);
+          $("#detSlotsDisplay").text(`${slotsFilled} / ${totalSlots} Slots (${remainingSlots} Remaining)`);
+          $("#detSlotsInput").val(totalSlots);
+
+          // Populate Geofencing limits
+          const latitude = c.latitude !== null ? c.latitude : null;
+          const longitude = c.longitude !== null ? c.longitude : null;
+          const geofenceRadius = c.geofence_radius !== null ? c.geofence_radius : 100;
+          $("#detLatitudeDisplay").text(latitude !== null ? latitude : "Not Set");
+          $("#detLongitudeDisplay").text(longitude !== null ? longitude : "Not Set");
+          $("#detRadiusDisplay").text(latitude !== null ? `${geofenceRadius} meters` : "Not Set");
+
+          $("#detLatitudeInput").val(latitude !== null ? latitude : "");
+          $("#detLongitudeInput").val(longitude !== null ? longitude : "");
+          $("#detRadiusInput").val(geofenceRadius);
 
           if (students.length > 0) {
             students.forEach((s) => {
-              const profileImg = s.profile_name
-                ? `../../../Assets/Images/profiles/${s.profile_name}`
-                : `https:
-                    0
-                  )}${s.last_name.charAt(0)}&font=poppins`;
+              const profileImg =
+                s.profile_name ?
+                  `../../../Assets/Images/profiles/${s.profile_name}`
+                : `https://placehold.co/36x36/483a0f/c6983d/png?text=${s.first_name.charAt(0)}${s.last_name.charAt(0)}&font=poppins`;
 
               studentContainer.append(`
                 <div class="list-group-item bg-transparent border-0 border-bottom border-white border-opacity-10 py-3 d-flex align-items-center justify-content-between px-3">
@@ -256,7 +271,7 @@ $(document).ready(function () {
             });
           } else {
             studentContainer.append(
-              '<div class="p-4 text-center text-white-50 small italic">No students placed here yet.</div>'
+              '<div class="p-4 text-center text-white-50 small italic">No students placed here yet.</div>',
             );
           }
 
@@ -274,9 +289,90 @@ $(document).ready(function () {
     });
   });
 
-  
   $("#uploadMoABtn").on("click", function () {
     $("#moaFileInput").click();
+  });
+
+  $("#detUpdateSlotsBtn").on("click", function () {
+    const companyUuid = $("#currentCompanyUuid").val();
+    const totalSlots = parseInt($("#detSlotsInput").val() || 0);
+    const csrfToken = $("#csrfToken").val();
+
+    if (totalSlots < 0) {
+      ToastVersion(swalTheme, "Total slots must be a positive number.", "warning", 3000, "top-end", "8");
+      return;
+    }
+
+    $("#pageLoader").show();
+
+    $.ajax({
+      url: "../../../process/coordinators/update_company_slots",
+      type: "POST",
+      data: {
+        company_uuid: companyUuid,
+        total_slots: totalSlots,
+        csrf_token: csrfToken,
+      },
+      dataType: "json",
+      success: function (response) {
+        if (response.status === "success") {
+          ToastVersion(swalTheme, response.message, "success", 3000, "top-end", "8");
+          loadCompanies();
+          $("#companyGrid").find(`[data-uuid="${companyUuid}"]`).trigger("click");
+        } else {
+          ToastVersion(swalTheme, response.message, "error", 3000, "top-end", "8");
+        }
+      },
+      error: function () {
+        ToastVersion(swalTheme, "An error occurred during slots update.", "error", 3000, "top-end", "8");
+      },
+      complete: function () {
+        $("#pageLoader").fadeOut();
+      },
+    });
+  });
+
+  $("#detUpdateGeofenceBtn").on("click", function () {
+    const companyUuid = $("#currentCompanyUuid").val();
+    const latitude = $("#detLatitudeInput").val();
+    const longitude = $("#detLongitudeInput").val();
+    const geofenceRadius = parseInt($("#detRadiusInput").val() || 100);
+    const csrfToken = $("#csrfToken").val();
+
+    if (geofenceRadius < 10) {
+      ToastVersion(swalTheme, "Geofence radius must be at least 10 meters.", "warning", 3000, "top-end", "8");
+      return;
+    }
+
+    $("#pageLoader").show();
+
+    $.ajax({
+      url: "../../../process/coordinators/update_company_geofence",
+      type: "POST",
+      data: {
+        company_uuid: companyUuid,
+        latitude: latitude,
+        longitude: longitude,
+        geofence_radius: geofenceRadius,
+        csrf_token: csrfToken,
+      },
+      dataType: "json",
+      success: function (response) {
+        if (response.status === "success") {
+          ToastVersion(swalTheme, response.message, "success", 3000, "top-end", "8");
+          loadCompanies();
+          $("#companyGrid").find(`[data-uuid="${companyUuid}"]`).trigger("click");
+        } else {
+          ToastVersion(swalTheme, response.message, "error", 3000, "top-end", "8");
+        }
+      },
+      error: function () {
+        ToastVersion(swalTheme, "An error occurred during geofence limits update.", "error", 3000, "top-end", "8");
+      },
+      complete: function () {
+        $("#pageLoader").fadeOut();
+      },
+    });
   });
 
   $("#moaFileInput").on("change", function () {
@@ -287,13 +383,13 @@ $(document).ready(function () {
     if (!file) return;
 
     if (file.type !== "application/pdf") {
-      ToastVersion("error", "Only PDF files are allowed.");
+      ToastVersion(swalTheme, "Only PDF files are allowed.", "warning", 3000, "top-end", "8");
       $(this).val("");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      ToastVersion("error", "File size too large. Max 5MB allowed.");
+      ToastVersion(swalTheme, "File size too large. Max 5MB allowed.", "warning", 3000, "top-end", "8");
       $(this).val("");
       return;
     }
@@ -314,14 +410,14 @@ $(document).ready(function () {
       contentType: false,
       success: function (response) {
         if (response.status === "success") {
-          ToastVersion("success", "MOA uploaded successfully!");
+          ToastVersion(swalTheme, "MOA uploaded successfully!", "success", 3000, "top-end", "8");
           $("#companyGrid").find(`[data-uuid="${companyUuid}"]`).trigger("click");
         } else {
-          Errors(response.message);
+          ToastVersion(swalTheme, response.message, "error", 3000, "top-end", "8");
         }
       },
       error: function () {
-        Errors("An error occurred during upload.");
+        ToastVersion(swalTheme, "An error occurred during upload.", "error", 3000, "top-end", "8");
       },
       complete: function () {
         $("#pageLoader").fadeOut();

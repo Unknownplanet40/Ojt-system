@@ -30,7 +30,7 @@ $CurrentPage = "MyStudents";
     <script type="module" src="../../../Assets/Script/CoordinatorScripts/ViewStudentProfileScript.js"></script>
     <style>
         .nav-pills .nav-link.active {
-            color: 
+            color: #ffc107;
             background-color: var(--bs-primary) !important;
         }
         .nav-pills .nav-link:not(.active) {
@@ -38,7 +38,7 @@ $CurrentPage = "MyStudents";
         }
         .nav-pills .nav-link:hover:not(.active) {
             background-color: rgba(255, 255, 255, 0.1);
-            color: 
+            color: #dee2e6;
         }
     </style>
     <title><?= $ShortTitle ?> - Student Profile</title>

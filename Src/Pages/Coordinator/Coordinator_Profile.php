@@ -32,9 +32,9 @@ require_once "../../../Assets/SystemInfo.php";
     <div class="admin-profile-main container w-100 d-flex justify-content-center align-items-center z-1">
         <div class="admin-profile-card card rounded-3 bg-blur-3 bg-semi-transparent w-100" style="--blur-lvl: <?= $opacitylvl ?>;">
             <div class="card-body">
-                <small class="text-muted" id="backToDashboardLink"><a href="./viewProfile" class="text-decoration-none text-muted">&larr; Back</a></small>
+                <small class="text-muted btn btn-sm btn-outline-secondary border-0 shadow-none" id="backToDashboardLink"><a href="./viewProfile" class="text-decoration-none text-muted">&larr; Back</a></small>
                 <div class="hstack mb-4">
-                    <small class="fw-bold"><?= $LongTitle ?> <span
+                    <small class="fw-bold text-wrap"><?= $ShortTitle ?> <span
                             class="badge bg-info bg-opacity-50 text-info-emphasis rounded-pill px-2 fw-medium">Coordinator</span></small>
                     <small class="text-muted ms-auto">Step 1 of 1</small>
                 </div>
@@ -56,16 +56,22 @@ require_once "../../../Assets/SystemInfo.php";
                             <span class="text-muted"><small id="adminInfoStatus">Basic details for your system admin
                                     account.</small></span>
                         </div>
-                        <div class="hstack">
-                            <img src="https://placehold.co/64x64?text=Upload+Photo" alt="" class="rounded-circle mt-2"
-                                id="adminProfilePhoto" style="width: 64px; height: 64px; object-fit: cover;">
-                            <div class="vstack ms-3 justify-content-center">
-                                <small class="fw-medium"><?= $_SESSION['user_email'] ?></small>
-                                <small class="text-muted"><?= isset($_SESSION['user_role']) ? ucfirst($_SESSION['user_role']) : 'Coordinator' ?></small>
+                        <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
+                            <!-- Avatar + email/role -->
+                            <div class="d-flex align-items-center gap-3 flex-grow-1">
+                                <img src="https://placehold.co/64x64?text=Upload+Photo" alt="Profile photo"
+                                    class="rounded-circle flex-shrink-0"
+                                    id="adminProfilePhoto" style="width: 64px; height: 64px; object-fit: cover;">
+                                <div class="vstack justify-content-center min-w-0">
+                                    <small class="fw-medium text-truncate"><?= $_SESSION['user_email'] ?></small>
+                                    <small class="text-muted"><?= isset($_SESSION['user_role']) ? ucfirst($_SESSION['user_role']) : 'Coordinator' ?></small>
+                                </div>
                             </div>
-                            <div class="ms-auto vstack gap-2 justify-content-center" style="min-width: 150px;">
-                                <button class="btn btn-sm btn-primary p-1" id="saveProfileBtn" disabled> Save & Continue</button>
-                                <button class="btn btn-sm btn-outline-secondary p-1" id="uploadPhotoBtn" onclick="$('#photoInput').click();">Upload Photo</button>
+                            <!-- Action buttons — wrap to full-width row on xs/sm screens -->
+                            <div class="d-flex flex-column gap-2 flex-shrink-0" style="min-width: 140px;">
+                                <button class="btn btn-sm btn-primary" id="saveProfileBtn" disabled>Save &amp; Continue</button>
+                                <button class="btn btn-sm btn-outline-secondary" id="uploadPhotoBtn"
+                                    onclick="$('#photoInput').click();">Upload Photo</button>
                                 <input type="file" id="photoInput" accept="image/*" class="d-none">
                             </div>
                         </div>

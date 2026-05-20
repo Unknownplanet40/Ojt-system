@@ -466,26 +466,129 @@ function renderStudentGrade(grade) {
     $container.html(`
       <div class="text-center py-5">
         <div class="display-4 text-muted mb-3"><i class="bi bi-hourglass-split"></i></div>
-        <h4 class="fw-bold mb-2">Your grade is pending</h4>
+        <h4 class="fw-bold mb-2 text-white-85">Your grade is pending</h4>
         <p class="text-muted mb-0 small">The coordinator is finalizing your grade. Check back later.</p>
       </div>
     `);
     return;
   }
 
+  // Seamlessly adjust parent card design to let inner glassmorphic dashboard sit on animated background
+  $container.parent().removeClass('p-4 p-md-5').addClass('p-0');
+  $container.closest('.card').removeClass('bg-blur-5 bg-semi-transparent shadow-sm').addClass('bg-transparent shadow-none border-0');
+
   $container.html(`
-    <div class="row g-3 mb-4">
-      <div class="col-12 col-md-4"><div class="p-4 rounded-4 border bg-body-tertiary text-center h-100"><div class="text-muted small text-uppercase fw-semibold mb-2">Grade Equivalent</div><div class="display-4 fw-bold text-success mb-2">${grade.grade_equivalent}</div><div class="text-muted small">${grade.remarks}</div></div></div>
-      <div class="col-12 col-md-4"><div class="p-4 rounded-4 border bg-body-tertiary text-center h-100"><div class="text-muted small text-uppercase fw-semibold mb-2">Weighted Score</div><div class="display-4 fw-bold text-primary mb-2">${grade.weighted_score_label}</div><div class="text-muted small">Final computed score</div></div></div>
-      <div class="col-12 col-md-4"><div class="p-4 rounded-4 border bg-body-tertiary text-center h-100"><div class="text-muted small text-uppercase fw-semibold mb-2">Finalized</div><div class="fw-bold fs-5 mb-1">${grade.finalized_at || '—'}</div><div class="text-muted small">by ${grade.finalized_by_name || 'coordinator'}</div></div></div>
+    <div class="row g-4">
+      <!-- Left side: Hero Badge and Main Grade -->
+      <div class="col-12 col-lg-5">
+        <div class="card bg-blur-15 border border-white-10 rounded-4 text-center p-4 p-md-5 h-100 position-relative overflow-hidden shadow-lg" 
+             style="background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);">
+          <!-- Ambient Light Overlay -->
+          <div class="position-absolute top-0 start-0 w-100 h-100 z-n1 opacity-50" style="background: radial-gradient(circle at 50% 0%, ${grade.grade_color} 0%, transparent 60%);"></div>
+          
+          <div class="text-muted small text-uppercase fw-bold tracking-wider mb-4">Academic Performance</div>
+          
+          <!-- Outer circle ring -->
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle p-2 mb-4 mx-auto shadow-lg"
+               style="width: 170px; height: 170px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1);">
+            <div class="d-flex flex-column align-items-center justify-content-center rounded-circle text-white w-100 h-100 shadow-inner"
+                 style="background: ${grade.grade_color}; border: 1px solid rgba(255,255,255,0.15);">
+              <span class="display-4 fw-black mb-0" style="letter-spacing: -2px; font-weight: 800; font-family: 'Outfit', sans-serif;">${grade.grade_equivalent}</span>
+              <span class="text-white-75 small fw-semibold text-uppercase tracking-wider" style="font-size: 0.7rem;">${grade.remarks}</span>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <h2 class="fw-bold mb-2 text-white-85" style="font-family: 'Outfit', sans-serif;">${grade.weighted_score_label}</h2>
+            <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-1.5 fw-semibold small">
+              <i class="bi bi-patch-check-fill me-1"></i>Finalized & Locked
+            </span>
+          </div>
+
+          <hr class="border-white-10 my-4">
+
+          <div class="row g-2 text-start">
+            <div class="col-6">
+              <small class="text-muted d-block mb-1">Finalized Date</small>
+              <h6 class="fw-semibold mb-0 text-white-85 small">${grade.finalized_at || '—'}</h6>
+            </div>
+            <div class="col-6 border-start border-white-10 ps-3">
+              <small class="text-muted d-block mb-1">Finalized By</small>
+              <h6 class="fw-semibold mb-0 text-white-85 small">${grade.finalized_by_name || 'Coordinator'}</h6>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right side: Score Breakdown & Details -->
+      <div class="col-12 col-lg-7">
+        <div class="card bg-blur-15 border border-white-10 rounded-4 p-4 h-100 shadow-lg"
+             style="background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);">
+          <div class="d-flex align-items-center justify-content-between mb-4">
+            <h5 class="fw-bold mb-0 text-white-85">Grading Component Breakdown</h5>
+            <span class="badge bg-white-5 text-muted border border-white-5 rounded-pill px-2.5 py-1 small" style="font-size: 0.72rem;">Sum of weights: 100%</span>
+          </div>
+
+          <div class="d-flex flex-column gap-3">
+            ${[
+              { name: 'Hours & DTR', key: 'hours', icon: 'bi-clock-history', color: 'info' },
+              { name: 'Midterm Evaluation', key: 'midterm', icon: 'bi-journal-check', color: 'primary' },
+              { name: 'Final Evaluation', key: 'final', icon: 'bi-award', color: 'success' },
+              { name: 'Weekly Journals', key: 'journal', icon: 'bi-journal-richtext', color: 'warning' },
+              { name: 'Self Evaluation', key: 'self', icon: 'bi-person-bounding-box', color: 'secondary' }
+            ].map(c => {
+              const score = grade[`${c.key}_score`] || 0;
+              const weight = grade[`${c.key}_weight`] || 0;
+              const contribution = grade[`${c.key}_contribution`] || 0;
+              return `
+                <div class="p-3 rounded-4 border border-white-5 hover-lift transition-all" style="background: rgba(255, 255, 255, 0.015);">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center gap-3">
+                      <div class="rounded-3 bg-${c.color}-subtle text-${c.color} d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; min-width: 38px;">
+                        <i class="bi ${c.icon} fs-5"></i>
+                      </div>
+                      <div>
+                        <h6 class="fw-semibold mb-0 small text-white-85">${c.name}</h6>
+                        <span class="text-muted" style="font-size: 0.7rem;">Weight: ${weight}%</span>
+                      </div>
+                    </div>
+                    <div class="text-end">
+                      <div class="fw-bold text-white-85 small">${fmt(score)}%</div>
+                      <span class="text-${c.color} fw-medium" style="font-size: 0.72rem;">+${fmt(contribution)}% to total</span>
+                    </div>
+                  </div>
+                  <div class="progress rounded-pill bg-white-5" style="height: 6px;">
+                    <div class="progress-bar bg-${c.color} progress-bar-striped progress-bar-animated rounded-pill" role="progressbar" style="width: ${score}%" aria-valuenow="${score}" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="row g-3">
-      ${componentCard('Hours score', `${fmt(grade.hours_score)}%`, `${fmt(grade.hours_contribution)}% weighted`, 'info')}
-      ${componentCard('Midterm score', `${fmt(grade.midterm_score)}%`, `${fmt(grade.midterm_contribution)}% weighted`, 'primary')}
-      ${componentCard('Final score', `${fmt(grade.final_score)}%`, `${fmt(grade.final_contribution)}% weighted`, 'success')}
-      ${componentCard('Journal score', `${fmt(grade.journal_score)}%`, `${fmt(grade.journal_contribution)}% weighted`, 'warning')}
-      ${componentCard('Self score', `${fmt(grade.self_score)}%`, `${fmt(grade.self_contribution)}% weighted`, 'secondary')}
-    </div>
+
+    <!-- Bottom: Coordinator Remarks (if any) -->
+    ${grade.coordinator_notes ? `
+      <div class="row mt-4">
+        <div class="col-12">
+          <div class="card bg-blur-15 border border-white-10 rounded-4 p-4 shadow-lg"
+               style="background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);">
+            <div class="d-flex align-items-start gap-3">
+              <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center flex-shrink-0 animate-pulse" style="width: 44px; height: 44px;">
+                <i class="bi bi-chat-left-quote fs-5"></i>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="fw-bold mb-1 text-white-85">Coordinator Remarks & Feedback</h6>
+                <p class="text-muted mb-0 small text-break" style="line-height: 1.6; font-style: italic; font-size: 0.85rem;">
+                  "${grade.coordinator_notes}"
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ` : ''}
   `);
 }
 
@@ -572,6 +675,40 @@ style.textContent = `
   }
   .bi.spin {
     animation: spin 0.6s linear;
+  }
+  .hover-lift {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease !important;
+  }
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+  }
+  .bg-white-5 {
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
+  .border-white-10 {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  .border-white-5 {
+    border-color: rgba(255, 255, 255, 0.05) !important;
+  }
+  .text-white-85 {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+  .tracking-wider {
+    letter-spacing: 0.05em;
+  }
+  .fw-black {
+    font-weight: 900 !important;
+  }
+  @keyframes pulse-subtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+  }
+  .animate-pulse {
+    animation: pulse-subtle 2s infinite ease-in-out;
   }
 `;
 document.head.appendChild(style);

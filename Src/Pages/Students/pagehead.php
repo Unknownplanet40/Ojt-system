@@ -57,3 +57,5 @@ if (!$isProfileDone && !in_array($currentPage, $allowWithoutCompletedProfile, tr
 <title>
 	<?= htmlspecialchars($ShortTitle ?? 'OJT Management System') ?>
 </title>
+<meta name="app-root" content="/Ojt-system">
+<script type="module" src="../../../Assets/Script/AlertBanner.js"></script>

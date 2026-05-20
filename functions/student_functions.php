@@ -7,6 +7,8 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once __DIR__ . '/../helpers/helpers.php';
+require_once __DIR__ . '/email_functions.php';
+require_once __DIR__ . '/settings_functions.php';
 
 function generateTempPassword(): string
 {
@@ -452,13 +454,31 @@ function deactivateStudent($conn, string $userUuid, string $actorUuid): array
     $stmt->close();
 
     logActivity(
-        conn: $conn,
-        eventType: 'account_deactivated',
-        description: "Deactivated student account of {$row['first_name']} {$row['last_name']}",
-        module: 'students',
-        actorUuid: $actorUuid,
-        targetUuid: $userUuid
+        $conn,
+        'account_deactivated',
+        "Deactivated student account of {$row['first_name']} {$row['last_name']}",
+        'students',
+        $actorUuid,
+        $userUuid
     );
+
+    // Notify Student
+    $smtpConfig = getEmailSettings($conn);
+    $sysConfig = getSystemConfig($conn);
+    $schoolName = $sysConfig['school_name'] ?: 'OJT Management System';
+    
+    $title = "Account Deactivated";
+    $content = "
+        <p>Hello <b>{$row['first_name']}</b>,</p>
+        <p>Your account on the {$schoolName} portal has been <b>Deactivated</b> by an administrator or coordinator.</p>
+        <div style='background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; margin: 20px 0;'>
+            <p style='margin: 0; color: #991b1b;'><b>Important:</b> You will no longer be able to log in to the portal or submit requirements while your account is inactive.</p>
+        </div>
+        <p>If you believe this is a mistake, please contact your OJT Coordinator or the system administrator to request account reactivation.</p>
+    ";
+    
+    $emailBody = getEmailTemplate($title, $content, $schoolName);
+    sendSystemEmail($smtpConfig, $row['email'] ?? '', $title, $emailBody);
 
     return ['success' => true];
 }

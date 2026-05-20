@@ -27,8 +27,15 @@ $(document).ready(function () {
         
         if (paneId === 'sessions') {
             fetchLogHistory();
+        } else if (paneId === 'security') {
+            handleUserSearch();
         }
     });
+
+    $("#userSearchInput").on("keyup", debounce(handleUserSearch, 500));
+    $("#unlockAccountBtn").on("click", handleUnlockAccount);
+    $(document).on("click", ".user-search-item", handleUserSelect);
+    $(document).on("click", ".manual-lock-option", handleManualLock);
 
     
     $('.theme-card').on('click', function() {
@@ -191,4 +198,199 @@ function handleThemeChange(theme) {
 }
 
 
+let selectedUserUuid = null;
 
+function handleUserSearch() {
+  const query = $("#userSearchInput").val().trim();
+  
+  if (query.length === 1) return;
+
+  $.ajax({
+    url: "../../../process/admin/get_users_lockout",
+    type: "GET",
+    data: { search: query },
+    dataType: "json",
+    beforeSend: function () {
+      $("#userSearchResults").html(`
+        <div class="text-center py-5">
+          <span class="spinner-border spinner-border-sm text-primary"></span>
+        </div>
+      `);
+    },
+    success: function (response) {
+      if (response.status === "success") {
+        renderSearchResults(response.data, query);
+      } else {
+        $("#userSearchResults").html(`<div class="alert alert-danger mx-3 mt-3 small">${response.message}</div>`);
+      }
+    },
+  });
+}
+
+function renderSearchResults(users, query = "") {
+  if (users.length === 0) {
+    const icon = query ? "bi-search" : "bi-shield-check";
+    const message = query 
+      ? `No users found matching "${query}"` 
+      : "No active lockouts or failed attempts found";
+    
+    $("#userSearchResults").html(`
+      <div class="text-center py-5 text-muted">
+        <i class="bi ${icon}" style="font-size: 2rem; opacity: 0.3;"></i>
+        <p class="mt-2 small">${message}</p>
+      </div>
+    `);
+    return;
+  }
+
+  let html = query ? "" : '<div class="px-3 mb-2 mt-2"><small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Active Lockouts & Failed Attempts</small></div>';
+  html += '<div class="list-group list-group-flush border-0">';
+  
+  users.forEach((user) => {
+    const statusBadge = user.is_locked 
+      ? '<span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-auto" style="font-size: 0.6rem;">LOCKED</span>' 
+      : '<span class="badge bg-success-subtle text-success border border-success-subtle ms-auto" style="font-size: 0.6rem;">ACTIVE</span>';
+
+    html += `
+            <button type="button" class="list-group-item list-group-item-action user-search-item d-flex align-items-center gap-3 border-0 py-3 bg-transparent" 
+                    data-uuid="${user.uuid}" data-user='${JSON.stringify(user)}'>
+                <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; font-size: 0.85rem;">
+                    ${user.initials}
+                </div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="fw-bold text-truncate small" style="color: var(--bs-body-color);">${user.name}</div>
+                    <div class="text-muted text-truncate" style="font-size: 0.75rem;">${user.email}</div>
+                </div>
+                ${statusBadge}
+            </button>
+        `;
+  });
+  html += "</div>";
+  $("#userSearchResults").html(html);
+}
+
+function handleUserSelect() {
+  const user = $(this).data("user");
+  selectedUserUuid = user.uuid;
+
+  $(".user-search-item").removeClass("active bg-primary bg-opacity-10");
+  $(this).addClass("active bg-primary bg-opacity-10");
+
+  $("#selectedUserInitials").text(user.initials);
+  $("#selectedUserName").text(user.name);
+  $("#selectedUserEmail").text(user.email);
+  $("#selectedUserRole").text(user.role);
+
+  const statusHtml = user.is_locked
+    ? '<span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.65rem;">LOCKED</span>'
+    : '<span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.65rem;">ACTIVE</span>';
+  $("#selectedUserStatus").html(statusHtml);
+
+  $("#failedAttemptsCount").text(user.login_attempts);
+
+  if (user.is_locked) {
+    $("#lockoutExpiryText").text(user.lockout_until);
+    $("#unlockAccountBtn").prop("disabled", false);
+  } else {
+    $("#lockoutExpiryText").text("Not Locked");
+    $("#unlockAccountBtn").prop("disabled", true);
+  }
+
+  $("#noUserSelected").hide();
+  $("#userLockoutDetails").fadeIn(200);
+}
+
+function handleUnlockAccount() {
+  if (!selectedUserUuid) return;
+
+  ConfirmVersion(
+    swalTheme,
+    "Unlock Account",
+    "Are you sure you want to manually unlock this account and reset failed attempts?",
+    "question",
+    "Yes, Unlock",
+    "success",
+    "secondary",
+    "Cancel",
+    "center"
+  ).then((result) => {
+    if (result.isConfirmed) {
+      $.ajax({
+        url: "../../../process/admin/manage_lockout",
+        type: "POST",
+        data: {
+          action: "unlock",
+          user_uuid: selectedUserUuid,
+          csrf_token: csrfToken,
+        },
+        dataType: "json",
+        success: function (response) {
+          if (response.status === "success") {
+            ToastVersion(swalTheme, response.message, "success", 3000, "top-end");
+            handleUserSearch();
+            $("#userLockoutDetails").hide();
+            $("#noUserSelected").fadeIn();
+          } else {
+            ToastVersion(swalTheme, response.message, "error", 5000, "top-end");
+          }
+        },
+      });
+    }
+  });
+}
+
+function handleManualLock(e) {
+  e.preventDefault();
+  if (!selectedUserUuid) return;
+
+  const hours = $(this).data("hours");
+  const durationText = $(this).text();
+
+  ConfirmVersion(
+    swalTheme,
+    "Lock Account",
+    `Are you sure you want to manually restrict this account for ${durationText}?`,
+    "warning",
+    "Yes, Restrict",
+    "danger",
+    "secondary",
+    "Cancel",
+    "center"
+  ).then((result) => {
+    if (result.isConfirmed) {
+      $.ajax({
+        url: "../../../process/admin/manage_lockout",
+        type: "POST",
+        data: {
+          action: "lock",
+          user_uuid: selectedUserUuid,
+          hours: hours,
+          csrf_token: csrfToken,
+        },
+        dataType: "json",
+        success: function (response) {
+          if (response.status === "success") {
+            ToastVersion(swalTheme, response.message, "success", 3000, "top-end");
+            handleUserSearch();
+            $("#userLockoutDetails").hide();
+            $("#noUserSelected").fadeIn();
+          } else {
+            ToastVersion(swalTheme, response.message, "error", 5000, "top-end");
+          }
+        },
+      });
+    }
+  });
+}
+
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}

@@ -11,6 +11,11 @@ if (empty($_SESSION['user_uuid']) || ($_SESSION['user_role'] ?? '') !== 'student
 
 require_once "../../../Assets/SystemInfo.php";
 require_once "../../../config/db.php";
+require_once "../../../functions/settings_functions.php";
+
+$maintenanceStatus = isFeatureMaintenanceActive($conn, 'journal');
+$disableJournal = $maintenanceStatus['active'];
+$journalDisableReason = $maintenanceStatus['reason'];
 
 $ojtStartDate = null;
 $studentProfileUuid = $_SESSION['profile_uuid'] ?? '';
@@ -177,7 +182,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                 <div class="modal-footer border-0 border-top border-light border-opacity-10 pt-3">
                     <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-sm btn-info rounded-pill px-4" id="exportJournalBtn" title="Export this journal as a PDF document"><i class="bi bi-file-pdf me-1"></i>Export PDF</button>
-                    <button type="button" class="btn btn-sm btn-warning rounded-pill px-4 d-none" id="editReturnedJournalBtn"><i class="bi bi-pencil-square me-1"></i>Edit & Resubmit</button>
+                    <button type="button" class="btn btn-sm btn-warning rounded-pill px-4 d-none" id="editReturnedJournalBtn" <?php echo $disableJournal ? 'disabled' : ''; ?>><i class="bi bi-pencil-square me-1"></i>Edit & Resubmit</button>
                 </div>
             </div>
         </div>
@@ -187,6 +192,38 @@ if ($currentHour >= 5 && $currentHour < 12) {
         <main class="d-flex flex-column flex-grow-1 overflow-auto">
             <?php require_once "../../Components/Header_Students.php"; ?>
             <div class="container-fluid p-4 w-100" id="dashboardContent">
+                <?php if ($disableJournal): ?>
+                    <div class="alert alert-warning border-0 rounded-4 shadow-sm p-4 mb-4 d-flex align-items-center bg-blur-5 bg-semi-transparent" style="--blur-lvl: <?= $opacitylvl ?>;">
+                        <div class="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center text-warning me-3" style="width: 50px; height: 50px; min-width: 50px;">
+                            <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="alert-heading fw-bold mb-1">Weekly Journal Submission Locked</h5>
+                            <p class="mb-0 text-body-secondary small"><?= htmlspecialchars($journalDisableReason) ?></p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($maintenanceStatus['upcoming'] ?? false): ?>
+                    <div class="alert alert-info border-0 rounded-4 shadow-sm p-4 mb-4 d-flex align-items-center bg-blur-5 bg-semi-transparent ojt-maintenance-upcoming-banner" 
+                         style="--blur-lvl: <?= $opacitylvl ?>;"
+                         data-start="<?= htmlspecialchars($maintenanceStatus['start']) ?>"
+                         data-end="<?= htmlspecialchars($maintenanceStatus['end']) ?>">
+                        <div class="rounded-circle bg-info bg-opacity-25 d-flex align-items-center justify-content-center text-info me-3" style="width: 50px; height: 50px; min-width: 50px;">
+                            <i class="bi bi-clock-history fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading fw-bold mb-1 text-info">Upcoming Scheduled Maintenance</h5>
+                            <p class="mb-0 text-body-secondary small">
+                                The Weekly Journal Submission system will undergo maintenance starting from <strong><?= date('F j, Y, g:i A', strtotime($maintenanceStatus['start'])) ?></strong> until <strong><?= date('g:i A', strtotime($maintenanceStatus['end'])) ?></strong>.
+                            </p>
+                        </div>
+                        <div class="ms-auto text-end countdown-wrapper ps-3">
+                            <div class="small text-muted mb-1 text-uppercase fw-bold">Starts In</div>
+                            <div class="fw-bold fs-5 text-info countdown-timer">--:--:--</div>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 <div class="row g-3 mb-4 align-items-stretch">
                     <div class="col-12 col-xl-8">
                         <div class="card h-100 border-0 shadow-sm rounded-4 bg-blur-5 bg-semi-transparent" style="--blur-lvl: <?= $opacitylvl ?>;">
@@ -202,7 +239,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                     </div>
                                     <div class="ms-md-auto d-flex gap-2 flex-wrap">
                                         <button class="btn btn-outline-secondary rounded-pill px-3" id="dashboardRefreshBtn"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
-                                        <button class="btn btn-primary rounded-pill px-3" id="newJournalEntryBtn"><i class="bi bi-plus-lg me-1"></i>Submit Journal</button>
+                                        <button class="btn btn-primary rounded-pill px-3" id="newJournalEntryBtn" <?php echo $disableJournal ? 'disabled' : ''; ?>><i class="bi bi-plus-lg me-1"></i>Submit Journal</button>
                                     </div>
                                 </div>
                             </div>
@@ -280,13 +317,55 @@ if ($currentHour >= 5 && $currentHour < 12) {
                             </div>
                             <h5 class="mb-2">No Journals Found</h5>
                             <p class="text-muted mb-3">You haven't submitted any weekly journals yet.</p>
-                            <button class="btn btn-primary rounded-pill px-4" id="emptyStateNewJournalBtn"><i class="bi bi-plus-lg me-1"></i>Submit your first journal</button>
+                            <button class="btn btn-primary rounded-pill px-4" id="emptyStateNewJournalBtn" <?php echo $disableJournal ? 'disabled' : ''; ?>><i class="bi bi-plus-lg me-1"></i>Submit your first journal</button>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const banners = document.querySelectorAll(".ojt-maintenance-upcoming-banner");
+        banners.forEach(banner => {
+            const startStr = banner.dataset.start;
+            if (!startStr) return;
+            
+            const formattedStart = startStr.replace(" ", "T");
+            const startTime = new Date(formattedStart).getTime();
+            const timerEl = banner.querySelector(".countdown-timer");
+            
+            function updateTimer() {
+                const now = new Date().getTime();
+                const distance = startTime - now;
+                
+                if (distance <= 0) {
+                    window.location.reload();
+                    return;
+                }
+                
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                let displayStr = "";
+                if (days > 0) {
+                    displayStr += days + "d ";
+                }
+                displayStr += String(hours).padStart(2, '0') + "h " + 
+                              String(minutes).padStart(2, '0') + "m " + 
+                              String(seconds).padStart(2, '0') + "s";
+                              
+                timerEl.textContent = displayStr;
+            }
+            
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        });
+    });
+    </script>
 </body>
 
 </html>

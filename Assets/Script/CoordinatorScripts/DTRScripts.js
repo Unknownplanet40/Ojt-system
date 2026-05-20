@@ -15,6 +15,31 @@ const ENDPOINTS = {
 };
 
 const state = { entries: [], selected: new Set(), active: null };
+let mapInstance = null;
+
+// Get current theme (dark or light)
+function getCurrentTheme() {
+  return document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light';
+}
+
+// Get appropriate tile layer based on theme
+function getTileLayer() {
+  const theme = getCurrentTheme();
+  
+  if (theme === 'dark') {
+    // Dark theme tile layers
+    return L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 19
+    });
+  } else {
+    // Light theme tile layer
+    return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19
+    });
+  }
+}
 
 function toast(icon, title) {
   if (window.Swal) ToastVersion(swalTheme, title, icon, 3000, 'top-end', '8');
@@ -64,6 +89,32 @@ function renderEntries() {
     const accent = entry.status === 'approved' ? 'success' : entry.status === 'rejected' ? 'danger' : entry.is_backdated ? 'warning' : 'info';
     const statusIcon = entry.status === 'approved' ? 'bi-check-circle' : entry.status === 'rejected' ? 'bi-x-circle' : entry.is_backdated ? 'bi-clock-history' : 'bi-journal-text';
 
+    let verificationHtml = '';
+    if (entry.clock_in_latitude || entry.clock_in_photo) {
+      verificationHtml = `
+        <div class="mt-3 p-3 rounded-3 bg-dark bg-opacity-20 border border-light border-opacity-10">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="fw-medium small text-white-50 text-uppercase letter-spacing-1" style="font-size: 0.75rem;"><i class="bi bi-shield-fill-check me-1"></i>Location & Identity Logs</span>
+          </div>
+          <div class="row g-2 align-items-center">
+            ${entry.clock_in_photo ? `
+              <div class="col-auto">
+                <img src="../../../file_serve.php?type=dtr_selfie&dtr_uuid=${entry.uuid}" class="rounded border border-light border-opacity-10 object-fit-cover shadow-sm" style="width: 55px; height: 55px; cursor: zoom-in;" alt="Verification Photo" onclick="window.open('../../../file_serve.php?type=dtr_selfie&dtr_uuid=${entry.uuid}', '_blank')" title="View Original Selfie">
+              </div>
+            ` : ''}
+            <div class="col">
+              ${entry.clock_in_latitude ? `
+                <div class="small d-flex flex-wrap gap-1 align-items-center">
+                  <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2" style="font-size: 0.7rem;"><i class="bi bi-geo-alt-fill me-1"></i>GPS Verified</span>
+                  <code class="text-white-50 small">${Number(entry.clock_in_latitude).toFixed(6)}, ${Number(entry.clock_in_longitude).toFixed(6)}</code>
+                </div>
+              ` : '<div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>No coordinates logged</div>'}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     list.append(`
       <div class="card bg-blur-5 bg-semi-transparent shadow-sm" data-accent="${accent}">
         <div class="card-body">
@@ -102,6 +153,8 @@ function renderEntries() {
             <span class="meta-label mb-2">Activity details</span>
             <div class="activity-text">${activity}</div>
           </div>
+          
+          ${verificationHtml}
 
           <div class="d-flex justify-content-end flex-wrap gap-2 dtr-entry-actions mt-3">
             ${isPending ? `<button class="btn btn-sm btn-outline-success rounded-pill px-3" data-action="review" data-uuid="${entry.uuid}">Review</button><button class="btn btn-sm btn-outline-danger rounded-pill px-3" data-action="reject" data-uuid="${entry.uuid}">Reject</button>` : `<button class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-action="view" data-uuid="${entry.uuid}">View</button>`}
@@ -154,7 +207,350 @@ function openDecision(entry) {
   $('#coordDecisionActivities').text(entry.activities || '—');
   $('#coordDecisionSubmittedAt').text(entry.submitted_at || '—');
   $('#coordDecisionReason').val(entry.backdate_reason || '');
+
+  const verificationContainer = $('#coordDecisionVerificationContainer');
+  const selfieContainer = $('#coordDecisionSelfieContainer');
+  const selfieImg = $('#coordDecisionSelfie');
+  const gpsContainer = $('#coordDecisionGpsContainer');
+  const gpsCoords = $('#coordDecisionGpsCoords');
+
+  const mapContainer = $('#coordDecisionMapContainer');
+
+  if (entry.clock_in_photo || entry.clock_in_latitude) {
+    verificationContainer.removeClass('d-none');
+    
+    if (entry.clock_in_photo) {
+      selfieImg.attr('src', `../../../file_serve.php?type=dtr_selfie&dtr_uuid=${entry.uuid}`);
+      selfieContainer.removeClass('d-none');
+    } else {
+      selfieContainer.addClass('d-none');
+    }
+    
+    if (entry.clock_in_latitude) {
+      gpsCoords.text(`${Number(entry.clock_in_latitude).toFixed(6)}, ${Number(entry.clock_in_longitude).toFixed(6)}`);
+      gpsContainer.removeClass('d-none');
+
+      if (entry.geofence && entry.geofence.latitude) {
+        mapContainer.removeClass('d-none');
+        // Initialize map with distance metadata
+        fetchDistanceMetadata(entry, () => {
+          renderGeofenceMap(entry);
+        });
+      } else {
+        mapContainer.addClass('d-none');
+      }
+    } else {
+      gpsContainer.addClass('d-none');
+      mapContainer.addClass('d-none');
+    }
+  } else {
+    verificationContainer.addClass('d-none');
+    mapContainer.addClass('d-none');
+  }
+
   decisionModal?.show();
+}
+
+function fetchDistanceMetadata(entry, callback) {
+  $.ajax({
+    url: '../../../process/dtr/calculate_distance',
+    method: 'POST',
+    dataType: 'json',
+    data: { dtr_uuid: entry.uuid, csrf_token: csrfToken },
+    success: (response) => {
+      if (response.status === 'success' && response.data) {
+        state.active.distanceData = response.data;
+        if (callback) callback();
+      }
+    },
+    error: (xhr, status, error) => {
+      console.warn('Could not fetch distance metadata:', error);
+      if (callback) callback();
+    }
+  });
+}
+
+function renderGeofenceMap(entry) {
+  setTimeout(() => {
+    const mapElement = document.getElementById('coordDecisionMapContainer');
+    if (!mapElement) {
+      console.warn('Map element not found');
+      return;
+    }
+
+    // Check if element is visible
+    if (mapElement.offsetParent === null) {
+      console.warn('Map element is not visible');
+      return;
+    }
+
+    if (mapInstance) {
+      mapInstance.remove();
+      mapInstance = null;
+    }
+
+    const geofence = entry.geofence;
+    if (!geofence || !geofence.latitude) {
+      console.warn('Geofence data not available');
+      return;
+    }
+
+    const distData = state.active.distanceData || {};
+
+    try {
+      mapInstance = L.map('coordDecisionMapContainer').setView([geofence.latitude, geofence.longitude], 17);
+    } catch (e) {
+      console.error('Error initializing map:', e);
+      return;
+    }
+    
+    getTileLayer().addTo(mapInstance);
+
+    // Inject custom professional map marker styles if not already injected
+    if (!document.getElementById('leaflet-custom-marker-styles')) {
+      const style = document.createElement('style');
+      style.id = 'leaflet-custom-marker-styles';
+      style.innerHTML = `
+        .geofence-popup .leaflet-popup-content-wrapper {
+          background: rgba(var(--bs-body-bg-rgb), 0.85);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 12px;
+          color: var(--bs-body-color);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        .geofence-popup .leaflet-popup-tip {
+          background: rgba(var(--bs-body-bg-rgb), 0.85);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-left: 1px solid rgba(255, 255, 255, 0.15);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        .leaflet-div-icon {
+          background: transparent !important;
+          border: none !important;
+        }
+        
+        .custom-pin-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+        }
+        
+        .custom-pin-base {
+          position: relative;
+          width: 32px;
+          height: 32px;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid #ffffff;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .custom-pin-container:hover .custom-pin-base {
+          transform: rotate(-45deg) scale(1.15);
+          box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+          z-index: 1000 !important;
+        }
+        
+        .custom-pin-icon {
+          transform: rotate(45deg);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #ffffff;
+          font-size: 13px;
+        }
+        
+        .pin-company {
+          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+          box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4), 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        
+        .pin-within-bounds {
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+          box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4), 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        
+        .pin-out-bounds {
+          background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+          box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4), 0 0 0 3px rgba(239, 68, 68, 0.2);
+        }
+        
+        .pin-pulse-ring {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 32px;
+          height: 32px;
+          border-radius: 50% 50% 50% 0;
+          background: inherit;
+          opacity: 0.4;
+          z-index: -1;
+          animation: pinPulse 2s infinite ease-out;
+        }
+        
+        @keyframes pinPulse {
+          0% { transform: scale(1); opacity: 0.4; }
+          100% { transform: scale(1.6); opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // Company Geofence Circle
+    const geofenceCircle = L.circle([geofence.latitude, geofence.longitude], {
+      color: '#10b981',
+      weight: 2,
+      opacity: 0.8,
+      fillColor: '#10b981',
+      fillOpacity: 0.1,
+      dashArray: '5, 5',
+      radius: geofence.radius || 100
+    }).addTo(mapInstance);
+
+    // Company Marker
+    const companyMarker = L.marker([geofence.latitude, geofence.longitude], {
+      icon: L.divIcon({
+        html: `
+          <div class="custom-pin-container">
+            <div class="custom-pin-base pin-company">
+              <div class="pin-pulse-ring"></div>
+              <div class="custom-pin-icon">
+                <i class="bi bi-building-fill"></i>
+              </div>
+            </div>
+          </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 36],
+        popupAnchor: [0, -36]
+      })
+    }).addTo(mapInstance);
+
+    companyMarker.bindPopup(`<strong>${geofence.company_name || 'Company'}</strong><br><small>HQ Location</small>`, {
+      className: 'geofence-popup'
+    });
+
+    const markers = [companyMarker];
+
+    // Clock-In Student Marker
+    if (entry.clock_in_latitude && entry.clock_in_longitude) {
+      const isWithinBounds = distData.clock_in_within_bounds !== false;
+      const pinClass = isWithinBounds ? 'pin-within-bounds' : 'pin-out-bounds';
+      const iconClass = isWithinBounds ? 'bi-box-arrow-in-right' : 'bi-exclamation-triangle-fill';
+      
+      const clockInMarker = L.marker([entry.clock_in_latitude, entry.clock_in_longitude], {
+        icon: L.divIcon({
+          html: `
+            <div class="custom-pin-container">
+              <div class="custom-pin-base ${pinClass}">
+                <div class="custom-pin-icon">
+                  <i class="bi ${iconClass}"></i>
+                </div>
+              </div>
+            </div>
+          `,
+          iconSize: [40, 40],
+          iconAnchor: [20, 36],
+          popupAnchor: [0, -36]
+        })
+      }).addTo(mapInstance);
+
+      let popupHTML = `
+        <div>
+          <strong>Clock-In</strong><br>
+          <small>${entry.full_name}</small><br>
+      `;
+
+      if (distData.clock_in_distance !== null) {
+        const distanceLabel = isWithinBounds ? '✓ Within' : '✗ Outside';
+        const distanceColor = isWithinBounds ? '#10b981' : '#ef4444';
+        popupHTML += `
+          <hr style="margin: 0.5rem 0;">
+          <small>
+            <span style="color: ${distanceColor}; font-weight: bold;">${distanceLabel} Geofence</span><br>
+            Distance: <code>${distData.clock_in_distance.toFixed(2)}m</code><br>
+            Limit: <code>${distData.allowed_radius}m</code>
+          </small>
+        `;
+      }
+
+      if (entry.clock_in_photo) {
+        popupHTML += `
+          <hr style="margin: 0.5rem 0;">
+          <img src="../../../file_serve.php?type=dtr_selfie&dtr_uuid=${entry.uuid}" style="width: 100%; height: 120px; border-radius: 8px; object-fit: cover; cursor: zoom-in;" onclick="window.open('../../../file_serve.php?type=dtr_selfie&dtr_uuid=${entry.uuid}', '_blank')" alt="Verification photo">
+        `;
+      }
+
+      popupHTML += '</div>';
+      clockInMarker.bindPopup(popupHTML, { className: 'geofence-popup', maxWidth: 250 });
+      markers.push(clockInMarker);
+    }
+
+    // Clock-Out Student Marker (if available)
+    if (entry.clock_out_latitude && entry.clock_out_longitude) {
+      const isWithinBounds = distData.clock_out_within_bounds !== false;
+      const pinClass = isWithinBounds ? 'pin-within-bounds' : 'pin-out-bounds';
+      const iconClass = isWithinBounds ? 'bi-box-arrow-out-right' : 'bi-exclamation-triangle-fill';
+      
+      const clockOutMarker = L.marker([entry.clock_out_latitude, entry.clock_out_longitude], {
+        icon: L.divIcon({
+          html: `
+            <div class="custom-pin-container">
+              <div class="custom-pin-base ${pinClass}">
+                <div class="custom-pin-icon">
+                  <i class="bi ${iconClass}"></i>
+                </div>
+              </div>
+            </div>
+          `,
+          iconSize: [40, 40],
+          iconAnchor: [20, 36],
+          popupAnchor: [0, -36]
+        })
+      }).addTo(mapInstance);
+
+      let popupHTML = `
+        <div>
+          <strong>Clock-Out</strong><br>
+          <small>${entry.full_name}</small><br>
+      `;
+
+      if (distData.clock_out_distance !== null) {
+        const distanceLabel = isWithinBounds ? '✓ Within' : '✗ Outside';
+        const distanceColor = isWithinBounds ? '#10b981' : '#ef4444';
+        popupHTML += `
+          <hr style="margin: 0.5rem 0;">
+          <small>
+            <span style="color: ${distanceColor}; font-weight: bold;">${distanceLabel} Geofence</span><br>
+            Distance: <code>${distData.clock_out_distance.toFixed(2)}m</code><br>
+            Limit: <code>${distData.allowed_radius}m</code>
+          </small>
+        `;
+      }
+
+      popupHTML += '</div>';
+      clockOutMarker.bindPopup(popupHTML, { className: 'geofence-popup', maxWidth: 250 });
+      markers.push(clockOutMarker);
+    }
+
+    // Fit map bounds to show all markers
+    try {
+      const group = new L.featureGroup(markers);
+      mapInstance.fitBounds(group.getBounds().pad(0.1), { maxZoom: 17 });
+    } catch (e) {
+      console.warn('Could not fit map bounds:', e);
+    }
+  }, 300);
 }
 
 function approveEntry(entry) {

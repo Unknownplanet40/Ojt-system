@@ -19,14 +19,14 @@ $CurrentPage = "Supervisors";
     <style>
         
         select option[data-has-supervisor="true"] {
-            color: 
+            color: var(--bs-primary);
             font-weight: 500;
         }
 
         
         
         
-            color: 
+            color: var(--bs-secondary);
         }
     </style>
     <title><?= $ShortTitle ?></title>

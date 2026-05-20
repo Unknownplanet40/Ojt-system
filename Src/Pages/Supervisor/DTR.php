@@ -21,6 +21,8 @@ $CurrentPage = "DTR";
     <?php require_once "pagehead.php"; ?>
     <script type="module" src="../../../Assets/Script/dashboardScripts/SupervisorDashboard.js"></script>
     <script type="module" src="../../../Assets/Script/SupervisorScripts/DTRScripts.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <title><?= $ShortTitle ?></title>
 </head>
 
@@ -55,23 +57,43 @@ $CurrentPage = "DTR";
                         <div class="col-md-3"><div class="border rounded-3 p-3 h-100"><div class="text-muted small">Backdated</div><div class="fw-semibold" id="supervisorDecisionBackdated">No</div></div></div>
                     </div>
                     <div class="row g-3">
-                        <div class="col-lg-7">
-                            <div class="border rounded-3 p-3 h-100">
-                                <div class="text-muted small mb-2">Activities</div>
-                                <div class="fw-normal" id="supervisorDecisionActivities">—</div>
-                                <hr>
-                                <div class="text-muted small mb-2">Backdate reason / rejection reason</div>
-                                <textarea class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="supervisorDecisionReason" rows="4" placeholder="Required when rejecting or for backdated review" style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
+                        <div class="col-lg-8">
+                            <div class="vstack gap-3 h-100">
+                                <div class="border rounded-3 p-3">
+                                    <div class="text-muted small mb-2">Activities</div>
+                                    <div class="fw-normal text-break" id="supervisorDecisionActivities">—</div>
+                                </div>
+                                <div id="supervisorDecisionVerificationContainer" class="border rounded-3 p-3 d-none">
+                                    <div class="text-muted small mb-3">Verification Info</div>
+                                    <div class="row g-3 align-items-center mb-3">
+                                        <div class="col-auto d-none" id="supervisorDecisionSelfieContainer">
+                                            <img id="supervisorDecisionSelfie" src="" class="rounded border border-light border-opacity-10 object-fit-cover shadow-sm" style="width: 110px; height: 110px; cursor: zoom-in;" alt="Student Selfie" onclick="window.open(this.src, '_blank')">
+                                        </div>
+                                        <div class="col">
+                                            <div id="supervisorDecisionGpsContainer" class="d-none">
+                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1.5 mb-2" style="font-size: 0.8rem;"><i class="bi bi-geo-alt-fill me-1"></i>GPS Location</span>
+                                                <div class="small text-white-50"><code id="supervisorDecisionGpsCoords">--</code></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="supervisorDecisionMapContainer" class="w-100 rounded border border-light border-opacity-10 d-none" style="height: 350px;"></div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-lg-5">
-                            <div class="border rounded-3 p-3 h-100">
-                                <div class="text-muted small mb-2">Student snapshot</div>
-                                <div class="vstack gap-2">
-                                    <div><span class="text-muted small d-block">Name</span><span class="fw-semibold" id="supervisorDecisionStudentLabel">—</span></div>
-                                    <div><span class="text-muted small d-block">Student no.</span><span class="fw-semibold" id="supervisorDecisionStudentNumber">—</span></div>
-                                    <div><span class="text-muted small d-block">Program</span><span class="fw-semibold" id="supervisorDecisionProgram">—</span></div>
-                                    <div><span class="text-muted small d-block">Submitted</span><span class="fw-semibold" id="supervisorDecisionSubmittedAt">—</span></div>
+                        <div class="col-lg-4">
+                            <div class="vstack gap-3 h-100">
+                                <div class="border rounded-3 p-3">
+                                    <div class="text-muted small mb-2">Student snapshot</div>
+                                    <div class="vstack gap-3">
+                                        <div><span class="text-muted small d-block">Name</span><span class="fw-semibold" id="supervisorDecisionStudentLabel">—</span></div>
+                                        <div><span class="text-muted small d-block">Student no.</span><span class="fw-semibold" id="supervisorDecisionStudentNumber">—</span></div>
+                                        <div><span class="text-muted small d-block">Program</span><span class="fw-semibold" id="supervisorDecisionProgram">—</span></div>
+                                        <div><span class="text-muted small d-block">Submitted</span><span class="fw-semibold" id="supervisorDecisionSubmittedAt">—</span></div>
+                                    </div>
+                                </div>
+                                <div class="border rounded-3 p-3 mt-auto">
+                                    <div class="text-muted small mb-2">Backdate reason / rejection reason</div>
+                                    <textarea class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="supervisorDecisionReason" rows="4" placeholder="Required when rejecting or for backdated review" style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
                                 </div>
                             </div>
                         </div>

@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Manila');
 
 if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     $base = dirname($_SERVER['SCRIPT_NAME'], 2);
@@ -33,20 +34,53 @@ if ($db_exists) {
     }
 }
 
-if (!$is_setup_complete) {
-    $current_uri = $_SERVER['REQUEST_URI'];
-    $is_setup_page = str_contains($current_uri, 'Src/Pages/Setup') || str_contains($current_uri, 'process/setup/');
-    
+$current_uri = $_SERVER['REQUEST_URI'] ?? '';
+$is_setup_page = str_contains($current_uri, 'Src/Pages/Setup') || str_contains($current_uri, 'process/setup/');
+
+if ($is_setup_complete) {
+    if ($is_setup_page) {
+        $base_path = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+        $base_path = preg_replace('/(\/Src\/Pages|\/process\/.*)$/', '', $base_path);
+        
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'status' => 'error',
+                'code' => 'SETUP_COMPLETE',
+                'message' => 'Setup is already complete.',
+                'redirect_url' => "$base_path/Src/Pages/Login",
+            ], JSON_UNESCAPED_SLASHES);
+            exit;
+        }
+        
+        header("Location: $base_path/Src/Pages/Login");
+        exit;
+    }
+} else {
     if (!$is_setup_page) {
         $base_path = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
         $base_path = preg_replace('/(\/Src\/Pages|\/process\/.*)$/', '', $base_path);
         
-        header("Location: $base_path/Src/Pages/Setup.php");
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'status' => 'error',
+                'code' => 'SETUP_INCOMPLETE',
+                'message' => 'Setup is not complete. Please complete setup first.',
+                'redirect_url' => "$base_path/Src/Pages/Setup",
+            ], JSON_UNESCAPED_SLASHES);
+            exit;
+        }
+        
+        header("Location: $base_path/Src/Pages/Setup");
         exit;
     }
 }
 
 $conn->set_charset('utf8mb4');
+$conn->query("SET time_zone = '+08:00'");
 
 if (session_status() === PHP_SESSION_ACTIVE) {
     $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
@@ -111,6 +145,176 @@ if (session_status() === PHP_SESSION_ACTIVE) {
                     exit;
                 }
             }
+        }
+    }
+}
+
+if (!class_exists('Database')) {
+    class Database
+    {
+        private static $instance = null;
+
+        public static function getInstance()
+        {
+            if (self::$instance === null) {
+                self::$instance = new DatabaseConnectionAdapter($GLOBALS['conn']);
+            }
+
+            return self::$instance;
+        }
+    }
+
+    class DatabaseConnectionAdapter
+    {
+        private mysqli $conn;
+        private bool $inTransaction = false;
+
+        public function __construct(mysqli $conn)
+        {
+            $this->conn = $conn;
+        }
+
+        public function prepare(string $query): DatabaseStatementAdapter
+        {
+            $stmt = $this->conn->prepare($query);
+            if (!$stmt) {
+                throw new RuntimeException('Failed to prepare query: ' . $this->conn->error);
+            }
+
+            return new DatabaseStatementAdapter($stmt);
+        }
+
+        public function query(string $query)
+        {
+            return $this->conn->query($query);
+        }
+
+        public function beginTransaction(): bool
+        {
+            $this->inTransaction = $this->conn->begin_transaction();
+            return $this->inTransaction;
+        }
+
+        public function commit(): bool
+        {
+            $this->inTransaction = false;
+            return $this->conn->commit();
+        }
+
+        public function rollBack(): bool
+        {
+            $this->inTransaction = false;
+            return $this->conn->rollback();
+        }
+
+        public function inTransaction(): bool
+        {
+            return $this->inTransaction;
+        }
+
+        public function lastInsertId(): string
+        {
+            return (string) $this->conn->insert_id;
+        }
+
+        public function __call(string $name, array $arguments)
+        {
+            return $this->conn->$name(...$arguments);
+        }
+    }
+
+    class DatabaseStatementAdapter
+    {
+        private mysqli_stmt $stmt;
+        private ?mysqli_result $result = null;
+
+        public function __construct(mysqli_stmt $stmt)
+        {
+            $this->stmt = $stmt;
+        }
+
+        public function execute(array $params = []): bool
+        {
+            if (!empty($params)) {
+                $values = array_values($params);
+                $types = '';
+
+                foreach ($values as $value) {
+                    $types .= $this->detectType($value);
+                }
+
+                $bindParams = [$types];
+                foreach ($values as $index => $value) {
+                    $bindParams[] = &$values[$index];
+                }
+
+                if (!call_user_func_array([$this->stmt, 'bind_param'], $bindParams)) {
+                    throw new RuntimeException('Failed to bind query parameters: ' . $this->stmt->error);
+                }
+            }
+
+            $ok = $this->stmt->execute();
+            if (!$ok) {
+                throw new RuntimeException('Query execution failed: ' . $this->stmt->error);
+            }
+
+            $this->result = $this->stmt->get_result() ?: null;
+            return true;
+        }
+
+        public function fetch($mode = null)
+        {
+            if ($this->result === null) {
+                $this->result = $this->stmt->get_result() ?: null;
+            }
+
+            return $this->result ? $this->result->fetch_assoc() : false;
+        }
+
+        public function fetchAll($mode = null): array
+        {
+            if ($this->result === null) {
+                $this->result = $this->stmt->get_result() ?: null;
+            }
+
+            $rows = [];
+            if ($this->result) {
+                while ($row = $this->result->fetch_assoc()) {
+                    $rows[] = $row;
+                }
+            }
+
+            return $rows;
+        }
+
+        public function get_result(): ?mysqli_result
+        {
+            if ($this->result === null) {
+                $this->result = $this->stmt->get_result() ?: null;
+            }
+
+            return $this->result;
+        }
+
+        public function close(): bool
+        {
+            return $this->stmt->close();
+        }
+
+        public function __destruct()
+        {
+            if (isset($this->stmt)) {
+                $this->stmt->close();
+            }
+        }
+
+        private function detectType($value): string
+        {
+            return match (true) {
+                is_int($value), is_bool($value) => 'i',
+                is_float($value) => 'd',
+                default => 's',
+            };
         }
     }
 }

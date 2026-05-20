@@ -74,10 +74,32 @@ if ($role === 'student') {
     $entries     = getStudentDtrEntries($conn, $studentUuid, $batchUuid, $filters);
     $summary     = getDtrSummary($conn, $studentUuid, $batchUuid);
 
+    $geofence = null;
+    $stmt = $conn->prepare("
+        SELECT c.latitude, c.longitude, c.geofence_radius, c.name AS company_name
+        FROM student_profiles sp
+        JOIN companies c ON sp.company_uuid = c.uuid
+        WHERE sp.uuid = ?
+        LIMIT 1
+    ");
+    $stmt->bind_param('s', $studentUuid);
+    $stmt->execute();
+    $geoRes = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ($geoRes) {
+        $geofence = [
+            'latitude' => $geoRes['latitude'] !== null ? (float)$geoRes['latitude'] : null,
+            'longitude' => $geoRes['longitude'] !== null ? (float)$geoRes['longitude'] : null,
+            'radius' => $geoRes['geofence_radius'] !== null ? (int)$geoRes['geofence_radius'] : 100,
+            'company_name' => $geoRes['company_name']
+        ];
+    }
+
     response([
         'status'  => 'success',
         'entries' => $entries,
         'summary' => $summary,
+        'geofence' => $geofence,
         'total'   => count($entries),
     ]);
 }
@@ -93,11 +115,34 @@ if ($role === 'supervisor') {
     $assignedCount = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
     $stmt->close();
 
+    $geofence = null;
+    $stmt = $conn->prepare("
+        SELECT c.latitude, c.longitude, c.geofence_radius, c.name AS company_name
+        FROM supervisor_profiles sp
+        JOIN companies c ON sp.company_uuid = c.uuid
+        WHERE sp.uuid = ?
+        LIMIT 1
+    ");
+    $stmt->bind_param('s', $supervisorUuid);
+    $stmt->execute();
+    $geoRes = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    
+    if ($geoRes) {
+        $geofence = [
+            'latitude' => $geoRes['latitude'] !== null ? (float)$geoRes['latitude'] : null,
+            'longitude' => $geoRes['longitude'] !== null ? (float)$geoRes['longitude'] : null,
+            'radius' => $geoRes['geofence_radius'] !== null ? (int)$geoRes['geofence_radius'] : 100,
+            'company_name' => $geoRes['company_name']
+        ];
+    }
+
     response([
         'status'         => 'success',
         'entries'        => $entries,
         'history'        => $history,
         'assigned_count' => (int)$assignedCount,
+        'geofence'       => $geofence,
         'total'          => count($entries),
     ]);
 }

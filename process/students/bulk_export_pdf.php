@@ -24,6 +24,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 
 require_once dirname(__DIR__, 2) . '/config/db.php';
 require_once dirname(__DIR__, 2) . '/Assets/SystemInfo.php';
+require_once dirname(__DIR__, 2) . '/helpers/helpers.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -107,32 +108,32 @@ $html = <<<HTML
 <head>
   <meta charset="UTF-8">
   <style>
-    body { font-family: Arial, sans-serif; font-size: 11px; color: 
-    .header { text-align: center; border-bottom: 2px solid 
+    body { font-family: Arial, sans-serif; font-size: 11px; color: #1e293b; }
+    .header { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px; }
     .header-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 8px; margin-bottom: 12px; }
     .header-table td { vertical-align: middle; }
     .header-left { width: 20%; text-align: left; }
     .header-center { width: 60%; text-align: center; }
     .header-right { width: 20%; text-align: right; }
     .header-logo { width: 52px; height: 52px; object-fit: contain; }
-    .school-name { font-size: 14px; font-weight: bold; color: 
-    .school-meta { font-size: 10px; color: 
+    .school-name { font-size: 14px; font-weight: bold; color: #0f172a; }
+    .school-meta { font-size: 10px; color: #64748b; }
     .title { font-size: 18px; font-weight: bold; margin-top: 4px; }
-    .subtitle { font-size: 10px; color: 
+    .subtitle { font-size: 10px; color: #64748b; }
 
-    .meta { margin-bottom: 14px; font-size: 10px; color: 
-    .meta strong { color: 
+    .meta { margin-bottom: 14px; font-size: 10px; color: #475569; }
+    .meta strong { color: #1e293b; }
 
-    .notice { background: 
+    .notice { background: #fffbeb; border: 1px solid #fde68a; border-radius: 4px; padding: 8px 12px; margin-bottom: 14px; font-size: 10px; color: #92400e; }
 
     table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid 
-    th { background: 
+    th, td { border: 1px solid #e2e8f0; padding: 7px 9px; text-align: left; }
+    th { background: #f1f5f9; color: #374151; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
     td { font-size: 10px; }
-    td.password { font-family: "Courier New", monospace; font-weight: bold; color: 
+    td.password { font-family: "Courier New", monospace; font-weight: bold; color: #166534; }
 
-    .footer { margin-top: 14px; border-top: 1px solid 
-    .footer-contact { margin-top: 5px; font-size: 8px; color: 
+    .footer { margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 9px; color: #64748b; }
+    .footer-contact { margin-top: 5px; font-size: 8px; color: #94a3b8; }
   </style>
 </head>
 <body>

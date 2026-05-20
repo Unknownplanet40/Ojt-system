@@ -52,6 +52,31 @@ $role      = $_SESSION['user_role'];
 $batchUuid = trim($_POST['batch_uuid'] ?? '') ?: ($_SESSION['active_batch_uuid'] ?? '');
 
 if (empty($batchUuid)) {
+    // If supervisor, look up student's batch_uuid
+    if ($role === 'supervisor' && !empty($_POST['student_uuid'])) {
+        $stmt = $conn->prepare("SELECT batch_uuid FROM student_profiles WHERE uuid = ? LIMIT 1");
+        $stmt->bind_param('s', $_POST['student_uuid']);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!empty($res['batch_uuid'])) {
+            $batchUuid = $res['batch_uuid'];
+        }
+    }
+    // If student, look up own batch_uuid
+    elseif ($role === 'student' && !empty($_SESSION['profile_uuid'])) {
+        $stmt = $conn->prepare("SELECT batch_uuid FROM student_profiles WHERE uuid = ? LIMIT 1");
+        $stmt->bind_param('s', $_SESSION['profile_uuid']);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!empty($res['batch_uuid'])) {
+            $batchUuid = $res['batch_uuid'];
+        }
+    }
+}
+
+if (empty($batchUuid)) {
     $result    = $conn->query("SELECT uuid FROM batches WHERE status = 'active' LIMIT 1");
     $batchUuid = $result->fetch_assoc()['uuid'] ?? null;
 }

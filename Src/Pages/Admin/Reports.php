@@ -185,6 +185,49 @@ $CurrentPage = "Reports";
                         </div>
                     </div>
                 </div>
+
+                <!-- Proposal 6: Rich Interactive Performance & Evaluation Analytics -->
+                <div class="row g-3 mt-1">
+                    <div class="col-12 col-lg-8">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent rounded-4 border-body border-opacity-10 shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                            <div class="card-header bg-transparent border-0 px-4 pt-4">
+                                <h5 class="fw-bold mb-0">Enrollment vs Completion Curves</h5>
+                                <small class="text-body-secondary">Active enrollments compared against successful completions over the last 6 months</small>
+                            </div>
+                            <div class="card-body p-4">
+                                <div style="height: 300px;">
+                                    <canvas id="curvesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent rounded-4 border-body border-opacity-10 shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                            <div class="card-header bg-transparent border-0 px-4 pt-4">
+                                <h5 class="fw-bold mb-0">Program Completion Rates</h5>
+                                <small class="text-body-secondary">Percentage of completed students by academic program</small>
+                            </div>
+                            <div class="card-body p-4 d-flex align-items-center justify-content-center">
+                                <div style="height: 250px; width: 100%;">
+                                    <canvas id="progCompletionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card bg-blur-5 bg-semi-transparent rounded-4 border-body border-opacity-10 shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                            <div class="card-header bg-transparent border-0 px-4 pt-4">
+                                <h5 class="fw-bold mb-0">Company Rating Distribution</h5>
+                                <small class="text-body-secondary">Supervisor evaluation score distributions across partner companies</small>
+                            </div>
+                            <div class="card-body p-4">
+                                <div style="height: 250px;">
+                                    <canvas id="ratingDistChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>

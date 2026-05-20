@@ -69,23 +69,45 @@ function saveAdminSetting(mysqli $conn, string $key, string $value, string $acto
         ];
     }
 
-    $stmt = $conn->prepare("
-        INSERT INTO user_settings (user_uuid, setting_key, setting_value, updated_by)
-        VALUES (?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-            setting_value = VALUES(setting_value),
-            updated_by = VALUES(updated_by),
-            updated_at = CURRENT_TIMESTAMP
-    ");
+    // Check if exists
+    if ($userUuid !== null) {
+        $stmt = $conn->prepare("SELECT id FROM user_settings WHERE user_uuid = ? AND setting_key = ? LIMIT 1");
+        $stmt->bind_param('ss', $userUuid, $key);
+    } else {
+        $stmt = $conn->prepare("SELECT id FROM user_settings WHERE user_uuid IS NULL AND setting_key = ? LIMIT 1");
+        $stmt->bind_param('s', $key);
+    }
 
     if (!$stmt) {
         return [
             'success' => false,
-            'message' => 'Unable to prepare setting update.',
+            'message' => 'Unable to check existing settings.',
         ];
     }
 
-    $stmt->bind_param('ssss', $userUuid, $key, $value, $actorUuid);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($row) {
+        $stmt = $conn->prepare("UPDATE user_settings SET setting_value = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
+        if ($stmt) {
+            $stmt->bind_param('ssi', $value, $actorUuid, $row['id']);
+        }
+    } else {
+        $stmt = $conn->prepare("INSERT INTO user_settings (user_uuid, setting_key, setting_value, updated_by) VALUES (?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param('ssss', $userUuid, $key, $value, $actorUuid);
+        }
+    }
+
+    if (!$stmt) {
+        return [
+            'success' => false,
+            'message' => 'Unable to prepare setting save query.',
+        ];
+    }
+
     $success = $stmt->execute();
     $stmt->close();
 
@@ -117,9 +139,97 @@ function saveUserTheme(mysqli $conn, string $theme, string $userUuid): array
 
 function getUserSettings(mysqli $conn): array
 {
+    $dtrActive = isFeatureMaintenanceActive($conn, 'dtr')['active'] ? '1' : '0';
+    $journalActive = isFeatureMaintenanceActive($conn, 'journal')['active'] ? '1' : '0';
+    $evaluationActive = isFeatureMaintenanceActive($conn, 'evaluation')['active'] ? '1' : '0';
+
     return [
         'theme' => normalizeThemeSetting(getAdminSetting($conn, 'theme', 'dark')),
+        'lockout_threshold' => getAdminSetting($conn, 'lockout_threshold', '5'),
+        'lockout_duration' => getAdminSetting($conn, 'lockout_duration', '60'),
+        'lockout_notify_admin' => getAdminSetting($conn, 'lockout_notify_admin', '1'),
+        'disable_dtr_submission' => $dtrActive,
+        'dtr_disable_reason' => getAdminSetting($conn, 'dtr_disable_reason', 'DTR submission is temporarily disabled for system maintenance.'),
+        'dtr_maintenance_start' => getAdminSetting($conn, 'dtr_maintenance_start', ''),
+        'dtr_maintenance_end' => getAdminSetting($conn, 'dtr_maintenance_end', ''),
+        'disable_journal_submission' => $journalActive,
+        'journal_disable_reason' => getAdminSetting($conn, 'journal_disable_reason', 'Weekly journal submission is temporarily disabled for system maintenance.'),
+        'journal_maintenance_start' => getAdminSetting($conn, 'journal_maintenance_start', ''),
+        'journal_maintenance_end' => getAdminSetting($conn, 'journal_maintenance_end', ''),
+        'disable_evaluation_submission' => $evaluationActive,
+        'evaluation_disable_reason' => getAdminSetting($conn, 'evaluation_disable_reason', 'Supervisor evaluation submission is temporarily disabled for system maintenance.'),
+        'evaluation_maintenance_start' => getAdminSetting($conn, 'evaluation_maintenance_start', ''),
+        'evaluation_maintenance_end' => getAdminSetting($conn, 'evaluation_maintenance_end', ''),
     ];
+}
+
+function isFeatureMaintenanceActive(mysqli $conn, string $feature): array {
+    $now = time();
+    $disableKey = "disable_{$feature}_submission";
+    $reasonKey = "{$feature}_disable_reason";
+    
+    $isManualDisabled = getAdminSetting($conn, $disableKey, '0') === '1';
+    $customReason = getAdminSetting($conn, $reasonKey, '');
+    
+    $startStr = getAdminSetting($conn, "{$feature}_maintenance_start", '');
+    $endStr = getAdminSetting($conn, "{$feature}_maintenance_end", '');
+
+    $reason = !empty($customReason) ? $customReason : ucfirst($feature) . ' submission is temporarily disabled for system maintenance.';
+    if (!empty($startStr) && !empty($endStr)) {
+        $startTime = strtotime($startStr);
+        $endTime = strtotime($endStr);
+        if ($startTime && $endTime) {
+            $startFormatted = date('F j, Y \a\t g:i A', $startTime);
+            $endFormatted = date('F j, Y \a\t g:i A', $endTime);
+            $reasonStr = rtrim($reason, '.');
+            $reason = "{$reasonStr}. It is scheduled for maintenance from {$startFormatted} to {$endFormatted}. It will be restored after {$endFormatted}.";
+        }
+    }
+    
+    if ($isManualDisabled) {
+        return [
+            'active' => true,
+            'scheduled' => false,
+            'upcoming' => false,
+            'reason' => $reason,
+            'start' => null,
+            'end' => null
+        ];
+    }
+    
+    if (!empty($startStr) && !empty($endStr)) {
+        return [
+            'active' => true,
+            'scheduled' => true,
+            'upcoming' => false,
+            'reason' => $reason,
+            'start' => $startStr,
+            'end' => $endStr
+        ];
+    }
+    
+    return [
+        'active' => false,
+        'scheduled' => false,
+        'upcoming' => false,
+        'reason' => '',
+        'start' => null,
+        'end' => null
+    ];
+}
+
+function saveSecuritySettings(mysqli $conn, array $data, string $adminUuid): array
+{
+    $results = [];
+    $results[] = saveAdminSetting($conn, 'lockout_threshold', $data['threshold'] ?? '5', $adminUuid);
+    $results[] = saveAdminSetting($conn, 'lockout_duration', $data['duration'] ?? '60', $adminUuid);
+    $results[] = saveAdminSetting($conn, 'lockout_notify_admin', $data['notify'] ?? '1', $adminUuid);
+
+    foreach ($results as $res) {
+        if (!$res['success']) return $res;
+    }
+
+    return ['success' => true, 'message' => 'Security settings saved.'];
 }
 
 function saveThemeSetting(mysqli $conn, string $theme, string $adminUuid): array
@@ -304,4 +414,78 @@ function updateSystemLogo(mysqli $conn, string $field, string $fileName): bool
     $success = $stmt->execute();
     $stmt->close();
     return $success;
+}
+
+function notifyUsersOfMaintenance(mysqli $conn, string $feature, string $status, string $reason, string $actorUuid): void {
+    $phpPath = PHP_BINARY;
+    if (empty($phpPath) || !is_executable($phpPath)) {
+        $phpPath = 'php';
+    }
+
+    $scriptPath = dirname(__DIR__) . '/process/admin/send_maintenance_emails.php';
+    
+    $escapedFeature = escapeshellarg($feature);
+    $escapedStatus = escapeshellarg($status);
+    $escapedReason = escapeshellarg($reason);
+    $escapedActor = escapeshellarg($actorUuid);
+
+    if (strncasecmp(PHP_OS, 'WIN', 3) === 0) {
+        $cmd = "start /B \"\" " . escapeshellcmd($phpPath) . " " . escapeshellarg($scriptPath) . " {$escapedFeature} {$escapedStatus} {$escapedReason} {$escapedActor} > NUL 2>&1";
+        pclose(popen($cmd, "r"));
+    } else {
+        $cmd = escapeshellcmd($phpPath) . " " . escapeshellarg($scriptPath) . " {$escapedFeature} {$escapedStatus} {$escapedReason} {$escapedActor} > /dev/null 2>&1 &";
+        exec($cmd);
+    }
+}
+
+function notifyUsersOfMaintenance_Sync(mysqli $conn, string $feature, string $status, string $reason, string $actorUuid): void {
+    $smtpConfig = getEmailSettings($conn);
+    if (empty($smtpConfig['host']) || empty($smtpConfig['user'])) {
+        return;
+    }
+
+    $systemConfig = getSystemConfig($conn);
+    $schoolName = !empty($systemConfig['school_name']) ? $systemConfig['school_name'] : 'OJT Management System';
+
+    $subject = "[" . strtoupper($feature) . "] System Status Update";
+    
+    if ($status === '1') {
+        $title = "System Feature Locked for Maintenance: " . strtoupper($feature);
+        $content = "
+            <p>Dear Student/Supervisor,</p>
+            <p>Please be advised that the <strong>" . strtoupper($feature) . "</strong> submission feature has been temporarily locked for maintenance.</p>
+            <p><strong>Reason for Lockout:</strong></p>
+            <blockquote style='border-left: 4px solid #f59e0b; padding-left: 16px; margin: 16px 0; color: #78350f; background-color: #fef3c7; padding: 12px 16px; border-radius: 8px;'>
+                " . nl2br(htmlspecialchars($reason)) . "
+            </blockquote>
+            <p>We are working to resolve the issue as quickly as possible and appreciate your patience.</p>
+        ";
+    } else {
+        $title = "System Feature Restored: " . strtoupper($feature);
+        $content = "
+            <p>Dear Student/Supervisor,</p>
+            <p>Great news! The <strong>" . strtoupper($feature) . "</strong> submission feature has been successfully restored and is now fully active.</p>
+            <p>You can now resume submitting records as usual.</p>
+            <p>Thank you for your understanding and cooperation.</p>
+        ";
+    }
+
+    require_once __DIR__ . '/email_functions.php';
+    $emailBody = getEmailTemplate($title, $content, $schoolName);
+
+    $emails = [];
+    if ($feature === 'evaluation') {
+        $query = "SELECT u.email FROM users u JOIN supervisor_profiles sp ON sp.user_uuid = u.uuid WHERE u.is_active = 1";
+    } else {
+        $query = "SELECT u.email FROM users u JOIN student_profiles sp ON sp.user_uuid = u.uuid WHERE u.is_active = 1";
+    }
+
+    $res = $conn->query($query);
+    if ($res) {
+        while ($row = $res->fetch_assoc()) {
+            if (!empty($row['email'])) {
+                sendSystemEmail($smtpConfig, $row['email'], $subject, $emailBody, true);
+            }
+        }
+    }
 }

@@ -347,7 +347,7 @@ function saveGrade(
                 ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?,
                 ?, ?, ?,
-                ?, 0)
+                ?, ?)
         ON DUPLICATE KEY UPDATE
           finalized_by      = VALUES(finalized_by),
           hours_score       = VALUES(hours_score),
@@ -366,11 +366,12 @@ function saveGrade(
           coordinator_notes = VALUES(coordinator_notes),
           updated_at        = NOW()
     ");
+    $isFinalized = 0;
     $stmt->bind_param(
         'sssss' .
         'ddddddddddd' .
         'sss' .
-        'si',
+        'i',
         $uuid, $studentUuid, $app['uuid'], $batchUuid, $coordinatorUuid,
         $computed['hours_score'],   $computed['midterm_score'],
         $computed['final_score'],   $computed['journal_score'],
@@ -378,7 +379,7 @@ function saveGrade(
         $w['hours'], $w['midterm'], $w['final'], $w['journal'], $w['self'],
         $computed['weighted_score'], $computed['grade_equivalent'],
         $computed['remarks'],
-        $coordinatorNotes, 0
+        $coordinatorNotes, $isFinalized
     );
     $stmt->execute();
     $stmt->close();

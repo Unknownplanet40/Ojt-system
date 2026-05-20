@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_uuid'])) {
     exit;
 }
 
-$allowedRoles = ['admin', 'coordinator', 'student'];
+$allowedRoles = ['admin', 'coordinator', 'student', 'supervisor'];
 if (!in_array($_SESSION['user_role'], $allowedRoles)) {
     http_response_code(403);
     header('Location: Src/Pages/ErrorPage.php?error=403');
@@ -113,13 +113,13 @@ function servePdfWithTitle(string $absolutePath, string $tabTitle, string $fileN
       <title>{$escapedTitle}</title>
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; overflow: hidden; background: 
+        html, body { height: 100%; overflow: hidden; background: #0f172a; }
 
         .toolbar {
           position: fixed;
           top: 0; left: 0; right: 0;
           height: 46px;
-          background: 
+          background: #1e293b;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -138,7 +138,7 @@ function servePdfWithTitle(string $absolutePath, string $tabTitle, string $fileN
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           font-size: 13px;
           font-weight: 500;
-          color: 
+          color: #e2e8f0;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -163,16 +163,16 @@ function servePdfWithTitle(string $absolutePath, string $tabTitle, string $fileN
           transition: background .15s;
         }
         .btn-back {
-          background: 
-          color: 
+          background: rgba(255,255,255,0.08);
+          color: #e2e8f0;
         }
-        .btn-back:hover { background: 
+        .btn-back:hover { background: rgba(255,255,255,0.15); }
         .btn-download {
-          background: 
-          color: 
+          background: #2563eb;
+          color: #ffffff;
           display: inline-flex;
         }
-        .btn-download:hover { background: 
+        .btn-download:hover { background: #1d4ed8; }
 
         .pdf-container {
           position: fixed;
@@ -281,6 +281,82 @@ if ($resourceType === 'requirement') {
     ];
     $reqType  = $req['req_type'] ?? '';
     $tabTitle = $reqLabels[$reqType] ?? 'Requirement Document';
+
+    if ($action === 'download') {
+        serveFile($absolutePath, 'application/pdf', true, $downloadName);
+    } elseif ($action === 'view_raw') {
+        serveFile($absolutePath, 'application/pdf', false, $downloadName);
+    } else {
+        servePdfWithTitle($absolutePath, $tabTitle, $downloadName);
+    }
+}
+
+if ($resourceType === 'dtr_selfie') {
+    $dtrUuid = trim($_GET['dtr_uuid'] ?? '');
+
+    if ($dtrUuid === '') {
+        http_response_code(400);
+        header('Location: Src/Pages/ErrorPage.php?error=400');
+        exit('Missing DTR UUID');
+    }
+
+    $stmt = $conn->prepare("
+        SELECT clock_in_photo, student_uuid
+        FROM dtr_entries
+        WHERE uuid = ? LIMIT 1
+    ");
+    $stmt->bind_param('s', $dtrUuid);
+    $stmt->execute();
+    $dtr = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$dtr || empty($dtr['clock_in_photo'])) {
+        http_response_code(404);
+        header('Location: Src/Pages/ErrorPage.php?error=404');
+        exit('Selfie not found');
+    }
+
+    // Role-based access check (basic)
+    if ($role === 'student' && $dtr['student_uuid'] !== ($_SESSION['profile_uuid'] ?? '')) {
+        http_response_code(403);
+        exit('Access denied.');
+    }
+
+    $absolutePath = __DIR__ . '/' . $dtr['clock_in_photo'];
+    $downloadName = basename($dtr['clock_in_photo']);
+    serveFile($absolutePath, 'image/jpeg', false, $downloadName);
+}
+
+if ($resourceType === 'certificate') {
+    $certUuid = trim($_GET['cert_uuid'] ?? '');
+
+    if ($certUuid === '') {
+        http_response_code(400);
+        header('Location: Src/Pages/ErrorPage.php?error=400');
+        exit('Missing Certificate UUID');
+    }
+
+    $stmt = $conn->prepare("
+        SELECT c.file_path, c.certificate_number, sp.first_name, sp.last_name
+        FROM certificates c
+        LEFT JOIN student_profiles sp ON c.student_uuid = sp.uuid
+        WHERE c.uuid = ? LIMIT 1
+    ");
+    $stmt->bind_param('s', $certUuid);
+    $stmt->execute();
+    $cert = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$cert || empty($cert['file_path'])) {
+        http_response_code(404);
+        header('Location: Src/Pages/ErrorPage.php?error=404');
+        exit('Certificate not found');
+    }
+
+    $absolutePath = __DIR__ . '/' . $cert['file_path'];
+    $action = $_GET['action'] ?? 'inline';
+    $downloadName = 'Certificate_' . $cert['certificate_number'] . '.pdf';
+    $tabTitle = 'Certificate — ' . $cert['certificate_number'];
 
     if ($action === 'download') {
         serveFile($absolutePath, 'application/pdf', true, $downloadName);

@@ -8,12 +8,15 @@ BGcircleTheme(true);
 
 const csrfToken = $('meta[name="csrf-token"]').attr("content") || "";
 
-let activityChart, placementChart, programChart;
+let activityChart, placementChart, programChart, curvesChart, progCompletionChart, ratingDistChart;
 
 function initCharts() {
     const ctxActivity = document.getElementById('activityChart').getContext('2d');
     const ctxPlacement = document.getElementById('placementChart').getContext('2d');
     const ctxProgram = document.getElementById('programChart').getContext('2d');
+    const ctxCurves = document.getElementById('curvesChart').getContext('2d');
+    const ctxProgCompletion = document.getElementById('progCompletionChart').getContext('2d');
+    const ctxRatingDist = document.getElementById('ratingDistChart').getContext('2d');
 
     const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
     const textColor = isDark ? '#adb5bd' : '#495057';
@@ -101,6 +104,107 @@ function initCharts() {
             }
         }
     });
+
+    curvesChart = new Chart(ctxCurves, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Enrolled Students',
+                    data: [],
+                    borderColor: '#0dcaf0',
+                    backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#0dcaf0'
+                },
+                {
+                    label: 'Completed Students',
+                    data: [],
+                    borderColor: '#198754',
+                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#198754'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { grid: { color: gridColor }, beginAtZero: true },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { display: true, position: 'top' }
+            }
+        }
+    });
+
+    progCompletionChart = new Chart(ctxProgCompletion, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Completion Rate (%)',
+                data: [],
+                backgroundColor: '#198754',
+                borderRadius: 8
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { 
+                    grid: { color: gridColor }, 
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { callback: function(value) { return value + '%'; } }
+                },
+                y: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.raw + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    ratingDistChart = new Chart(ctxRatingDist, {
+        type: 'bar',
+        data: {
+            labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+            datasets: [{
+                label: 'Number of Evaluations',
+                data: [0, 0, 0, 0, 0],
+                backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#0dcaf0', '#198754'],
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { grid: { color: gridColor }, beginAtZero: true, ticks: { stepSize: 1 } },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
 }
 
 function fetchReportsData() {
@@ -140,6 +244,27 @@ function fetchReportsData() {
                 programChart.data.datasets[0].data = d.programs.map(p => p.count);
                 programChart.update();
 
+                // Update Curves
+                curvesChart.data.labels = d.curves.map(c => c.month);
+                curvesChart.data.datasets[0].data = d.curves.map(c => c.enrolled);
+                curvesChart.data.datasets[1].data = d.curves.map(c => c.completed);
+                curvesChart.update();
+
+                // Update Program Completions
+                progCompletionChart.data.labels = d.program_completions.map(pc => pc.code);
+                progCompletionChart.data.datasets[0].data = d.program_completions.map(pc => pc.rate);
+                progCompletionChart.update();
+
+                // Update Ratings
+                ratingDistChart.data.datasets[0].data = [
+                    d.ratings[1] || 0,
+                    d.ratings[2] || 0,
+                    d.ratings[3] || 0,
+                    d.ratings[4] || 0,
+                    d.ratings[5] || 0
+                ];
+                ratingDistChart.update();
+
                 
                 const companyContainer = $("#topCompaniesContainer");
                 companyContainer.empty();
@@ -158,14 +283,14 @@ function fetchReportsData() {
 
                         companyContainer.append(`
                             <div class="col-12 col-md-6 col-xl-4">
-                                <div class="card h-100 bg-body-tertiary border-body border-opacity-10 rounded-4 transition-all hover-translate-y shadow-sm">
+                                <div class="card h-100 glass-ui border-body border-opacity-10 rounded-4 transition-all hover-translate-y shadow-sm">
                                     <div class="card-body p-3">
                                         <div class="d-flex align-items-center gap-3 mb-3">
                                             <div class="avatar avatar-md bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
                                                 <i class="bi bi-building fs-4"></i>
                                             </div>
                                             <div class="min-w-0">
-                                                <h6 class="fw-bold text-truncate mb-0">${company.name}</h6>
+                                                <h6 class="fw-bold text-break mb-0">${company.name}</h6>
                                                 <small class="text-body-secondary text-truncate d-block">${company.industry}</small>
                                             </div>
                                         </div>

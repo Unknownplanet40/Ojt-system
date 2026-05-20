@@ -12,6 +12,7 @@ date_default_timezone_set('Asia/Manila');
 $active_sy = date("Y") . "-" . (date("Y") + 1);
 $active_sem = (date("m") >= 6 && date("m") <= 11) ? "1st Semester" : "2nd Semester";
 
+$loginBanner = null;
 try {
     $conn = new mysqli($host, $username, $password, $dbname);
     if ($conn->connect_error) {
@@ -21,6 +22,18 @@ try {
         if ($result && $row = $result->fetch_assoc()) {
             $active_sy = $row['school_year'];
             $active_sem = $row['semester'] === 'Summer' ? 'Summer' : $row['semester'] . ' Semester';
+        }
+
+        $alertResult = $conn->query("
+            SELECT alert_type, title, message
+            FROM system_alerts
+            WHERE is_active = 1
+              AND display_type = 'banner'
+              AND target_roles = 'all'
+            ORDER BY id DESC LIMIT 1
+        ");
+        if ($alertResult && $alertResult->num_rows > 0) {
+            $loginBanner = $alertResult->fetch_assoc();
         }
     }
 } catch (Exception $e) {
@@ -62,7 +75,31 @@ if (!empty($_SESSION['user_uuid']) && !empty($_SESSION['user_role'])) {
 			<span class="loader"></span>
 		</div>
 	</div>
-	<div id="PageMainContent" class="login-page-main z-3 d-flex justify-content-center align-items-center w-100">
+	<div id="PageMainContent" class="login-page-main z-3 d-flex flex-column justify-content-center align-items-center w-100">
+
+		<?php if ($loginBanner): ?>
+		<div class="w-100 mb-3 mx-auto" style="max-width: clamp(320px, 88vw, 960px); flex-shrink: 0;">
+			<?php
+			$bsTypeMap = [
+				'info'    => ['bs' => 'info',    'icon' => 'bi-info-circle-fill'],
+				'success' => ['bs' => 'success', 'icon' => 'bi-check-circle-fill'],
+				'warning' => ['bs' => 'warning', 'icon' => 'bi-exclamation-triangle-fill'],
+				'danger'  => ['bs' => 'danger',  'icon' => 'bi-x-octagon-fill'],
+			];
+			$type = $bsTypeMap[$loginBanner['alert_type']] ?? $bsTypeMap['info'];
+			?>
+			<div class="alert d-flex align-items-start gap-2 mb-0 rounded-3 bg-blur-5 bg-<?= $type['bs'] ?> bg-opacity-10 bg-blur-5 border-<?= $type['bs'] ?> border-1" role="alert">
+				<i class="bi <?= $type['icon'] ?> flex-shrink-0 mt-1 text-<?= $type['bs'] ?>" style="font-size: 1.1rem;"></i>
+				<div>
+					<strong class="text-<?= $type['bs'] ?>-emphasis" style="font-weight: 600;"><?= htmlspecialchars($loginBanner['title']) ?></strong>
+					<?php if (!empty($loginBanner['message'])): ?>
+					<div class="small mt-1 opacity-90" style="line-height: 1.4;"><?= htmlspecialchars($loginBanner['message']) ?></div>
+					<?php endif; ?>
+				</div>
+			</div>
+		</div>
+		<?php endif; ?>
+
 		<div class="login-panel-card card rounded-3 glass-ui glass-ui-strong w-100" style="--blur-lvl: 0.50;">
 			<div class="row g-0 h-100">
 				<div class="col-md-5 order-md-0 order-2">

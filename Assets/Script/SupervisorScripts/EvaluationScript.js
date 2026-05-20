@@ -1,3 +1,8 @@
+import { ToastVersion, ModalVersion } from "../CustomSweetAlert.js";
+import { SwalTheme } from "../SystemTheme.js";
+
+let swalTheme = SwalTheme();
+
 $(document).ready(function () {
     const $container = $("#studentsContainer");
     const $evalModal = new bootstrap.Modal(document.getElementById("evaluationModal"));
@@ -52,13 +57,13 @@ $(document).ready(function () {
             const midtermBtn = s.midterm_done 
                 ? `<button class="btn btn-sm btn-success w-100 mb-2 disabled"><i class="bi bi-check-circle me-1"></i>Midterm Done</button>`
                 : (s.midterm_unlocked 
-                    ? `<button class="btn btn-sm btn-primary w-100 mb-2 evaluate-btn" data-uuid="${s.student_uuid}" data-name="${s.full_name}" data-type="midterm">Evaluate Midterm</button>`
+                    ? `<button class="btn btn-sm btn-primary w-100 mb-2 evaluate-btn" ${disableEvaluation ? 'disabled title="' + evaluationDisableReason + '"' : ''} data-uuid="${s.student_uuid}" data-name="${s.full_name}" data-type="midterm">Evaluate Midterm</button>`
                     : `<button class="btn btn-sm btn-secondary w-100 mb-2 disabled" title="Requires 50% hours">Midterm Locked</button>`);
 
             const finalBtn = s.final_done 
                 ? `<button class="btn btn-sm btn-success w-100 disabled"><i class="bi bi-check-circle me-1"></i>Final Done</button>`
                 : (s.final_unlocked 
-                    ? `<button class="btn btn-sm btn-primary w-100 evaluate-btn" data-uuid="${s.student_uuid}" data-name="${s.full_name}" data-type="final">Evaluate Final</button>`
+                    ? `<button class="btn btn-sm btn-primary w-100 evaluate-btn" ${disableEvaluation ? 'disabled title="' + evaluationDisableReason + '"' : ''} data-uuid="${s.student_uuid}" data-name="${s.full_name}" data-type="final">Evaluate Final</button>`
                     : `<button class="btn btn-sm btn-secondary w-100 disabled" title="Requires 100% hours">Final Locked</button>`);
 
             $container.append(`
@@ -127,6 +132,10 @@ $(document).ready(function () {
 
     
     $(document).on("click", ".evaluate-btn", function () {
+        if (typeof disableEvaluation !== 'undefined' && disableEvaluation) {
+            ModalVersion(swalTheme, "Evaluations Locked", evaluationDisableReason, "warning");
+            return;
+        }
         const studentUuid = $(this).data("uuid");
         const studentName = $(this).data("name");
         const evalType = $(this).data("type");
@@ -158,7 +167,7 @@ $(document).ready(function () {
         });
 
         if (!valid) {
-            Swal.fire("Missing Ratings", "Please provide a rating for all criteria.", "warning");
+            ToastVersion(swalTheme, "Please provide a rating for all criteria.", "warning");
             return;
         }
 
@@ -172,10 +181,10 @@ $(document).ready(function () {
             success: function (res) {
                 if (res.status === "success") {
                     $evalModal.hide();
-                    Swal.fire("Success", res.message, "success");
+                    ToastVersion(swalTheme, res.message, "success");
                     loadStudents();
                 } else {
-                    Swal.fire("Error", res.message, "error");
+                    ToastVersion(swalTheme, res.message, "error");
                 }
             },
             error: function (xhr, status, error) {

@@ -8,10 +8,26 @@ require_once "../../../functions/settings_functions.php";
 
 $CurrentPage = "Settings";
 
-// Fetch database maintenance settings
 $dbLogRetention = getAdminSetting($conn, 'db_log_retention', '30');
 $dbAutoOptimize = getAdminSetting($conn, 'db_auto_optimize', '0') === '1';
 
+$dtrStatus = isFeatureMaintenanceActive($conn, 'dtr');
+$disableDtr = $dtrStatus['active'];
+$dtrDisableReason = getAdminSetting($conn, 'dtr_disable_reason', 'DTR submission is temporarily disabled for system maintenance.');
+$dtrMaintenanceStart = getAdminSetting($conn, 'dtr_maintenance_start', '');
+$dtrMaintenanceEnd = getAdminSetting($conn, 'dtr_maintenance_end', '');
+
+$journalStatus = isFeatureMaintenanceActive($conn, 'journal');
+$disableJournal = $journalStatus['active'];
+$journalDisableReason = getAdminSetting($conn, 'journal_disable_reason', 'Weekly journal submission is temporarily disabled for system maintenance.');
+$journalMaintenanceStart = getAdminSetting($conn, 'journal_maintenance_start', '');
+$journalMaintenanceEnd = getAdminSetting($conn, 'journal_maintenance_end', '');
+
+$evaluationStatus = isFeatureMaintenanceActive($conn, 'evaluation');
+$disableEvaluation = $evaluationStatus['active'];
+$evaluationDisableReason = getAdminSetting($conn, 'evaluation_disable_reason', 'Supervisor evaluation submission is temporarily disabled for system maintenance.');
+$evaluationMaintenanceStart = getAdminSetting($conn, 'evaluation_maintenance_start', '');
+$evaluationMaintenanceEnd = getAdminSetting($conn, 'evaluation_maintenance_end', '');
 ?>
 
 <!doctype html>
@@ -86,6 +102,20 @@ $dbAutoOptimize = getAdminSetting($conn, 'db_auto_optimize', '0') === '1';
                             data-bs-target="#settings-security" type="button" role="tab" 
                             aria-controls="settings-security" aria-selected="false">
                             <i class="bi bi-shield-lock me-2"></i>Account Security
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="settings-alerts-tab" data-bs-toggle="pill"
+                            data-bs-target="#settings-alerts" type="button" role="tab"
+                            aria-controls="settings-alerts" aria-selected="false">
+                            <i class="bi bi-megaphone me-2"></i>Alert Banners
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="settings-maintenance-tab" data-bs-toggle="pill"
+                            data-bs-target="#settings-maintenance" type="button" role="tab" 
+                            aria-controls="settings-maintenance" aria-selected="false">
+                            <i class="bi bi-tools me-2"></i>Maintenance Mode
                         </button>
                     </li>
                 </ul>
@@ -495,9 +525,17 @@ $dbAutoOptimize = getAdminSetting($conn, 'db_auto_optimize', '0') === '1';
                                 </div>
                             </div>
 
-                            <div class="info-box">
+                             <div class="info-box">
                                 <i class="bi bi-shield-lock"></i>
                                 Regular backups are recommended to prevent data loss. The exported file will be in SQL format.
+                            </div>
+
+                            <div class="alert alert-warning border-0 rounded-4 my-3 d-flex align-items-start gap-3 p-3" style="background: rgba(var(--bs-warning-rgb), 0.08); border-left: 4px solid var(--bs-warning) !important;">
+                                <i class="bi bi-exclamation-triangle-fill fs-5 text-warning mt-0.5"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-1" style="color: var(--bs-warning-text-emphasis);">Database Backup Only</h6>
+                                    <p class="mb-0 small text-white-75">This database export (.sql) only backups settings, tables, and system logs. It <strong>does not</strong> include user-uploaded files, student resumes, generated certificates, or profile pictures (stored under the <code>uploads/</code> and <code>Assets/Images/profiles/</code> directories). Please download the files backup zip below or back up these folders manually on your server.</p>
+                                </div>
                             </div>
 
                             <div class="row g-4">
@@ -526,6 +564,9 @@ $dbAutoOptimize = getAdminSetting($conn, 'db_auto_optimize', '0') === '1';
                                         </div>
                                         <button class="btn-action btn-save w-100 justify-content-center mt-3" id="exportDatabaseBtn">
                                             <i class="bi bi-download"></i> Generate Export (.sql)
+                                        </button>
+                                        <button class="btn-action w-100 justify-content-center mt-2" id="exportUploadsZipBtn" style="background: rgba(var(--bs-primary-rgb), 0.15); color: var(--bs-primary-text-emphasis); border: 1px solid rgba(var(--bs-primary-rgb), 0.3);">
+                                            <i class="bi bi-file-earmark-zip"></i> Download Uploads Backup (.zip)
                                         </button>
                                     </div>
                                 </div>
@@ -561,9 +602,60 @@ $dbAutoOptimize = getAdminSetting($conn, 'db_auto_optimize', '0') === '1';
                                     <p class="text-muted small">Only .sql files generated by this system are supported</p>
                                 </div>
 
-                                <button class="btn-action w-100 justify-content-center" id="importDatabaseBtn" style="background: var(--bs-warning); color: #000; font-weight: 600;" disabled>
-                                    <i class="bi bi-arrow-repeat"></i> Start Import Process
-                                </button>
+                                <!-- SQL Validation Result Panel -->
+                                <div id="sqlValidationResult" class="mb-3 d-none">
+                                    <div id="sqlValidationContent" class="p-3 rounded-3 border small"></div>
+                                </div>
+
+                                <!-- Dry Run Result Panel -->
+                                <div id="dryRunResult" class="mb-3 d-none">
+                                    <div id="dryRunContent" class="p-3 rounded-3 border small" style="border-color: rgba(var(--bs-info-rgb),0.4); background: rgba(var(--bs-info-rgb),0.04);"></div>
+                                </div>
+
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button class="btn-action flex-grow-1 justify-content-center" id="validateSqlBtn" style="background: rgba(var(--bs-warning-rgb),0.15); color: var(--bs-warning-text-emphasis); border: 1px solid rgba(var(--bs-warning-rgb),0.3);" disabled>
+                                        <i class="bi bi-shield-check"></i> Validate SQL
+                                    </button>
+                                    <button class="btn-action flex-grow-1 justify-content-center" id="dryRunBtn" style="background: rgba(var(--bs-info-rgb),0.15); color: var(--bs-info-text-emphasis); border: 1px solid rgba(var(--bs-info-rgb),0.3); opacity: 0.45; cursor: not-allowed;" disabled title="Validate the SQL file first.">
+                                        <i class="bi bi-eye"></i> Dry Run
+                                    </button>
+                                    <button class="btn-action w-100 justify-content-center mt-1" id="importDatabaseBtn" style="background: var(--bs-warning); color: #000; font-weight: 600; opacity: 0.45; cursor: not-allowed;" disabled title="Validate and Dry Run first.">
+                                        <i class="bi bi-arrow-repeat"></i> Start Import
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Import Files Section -->
+                            <div class="settings-section mt-4 mb-0 position-relative" id="importFilesSection" style="border-color: rgba(var(--bs-info-rgb), 0.2); background: rgba(var(--bs-info-rgb), 0.02); transition: all 0.3s ease;">
+                                <div class="section-header" style="border-bottom-color: rgba(var(--bs-info-rgb), 0.1);">
+                                    <div class="section-header-icon" style="background: rgba(var(--bs-info-rgb), 0.15); color: var(--bs-info-text-emphasis);">
+                                        <i class="bi bi-folder-symlink"></i>
+                                    </div>
+                                    <div class="section-header-text">
+                                        <h5>Import & Restore Files</h5>
+                                        <p>Restore user-uploaded files and profile pictures from a valid backup .zip. <span class="text-danger fw-bold">Warning: Existing files with matching names will be overwritten.</span></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="p-4 mb-3 border border-dashed rounded-3 text-center" id="zipDropZone" style="border-style: dashed !important; border-width: 2px !important; border-color: rgba(var(--bs-info-rgb), 0.3) !important; background: rgba(var(--bs-info-rgb), 0.05); cursor: pointer;">
+                                    <input type="file" id="zipFileInput" accept=".zip" style="display: none;">
+                                    <i class="bi bi-file-earmark-zip mb-2" style="font-size: 3rem; color: var(--bs-info);"></i>
+                                    <p class="mb-1 fw-bold" id="zipFileNameDisplay" style="color: var(--bs-body-color);">Click or Drag ZIP Backup Here</p>
+                                    <p class="text-muted small">Only .zip backups generated by this system are supported</p>
+                                </div>
+
+                                <!-- ZIP Validation Result Panel -->
+                                <div id="zipValidationResult" class="mb-3 d-none">
+                                    <div id="zipValidationContent" class="p-3 rounded-3 border small"></div>
+                                </div>
+
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button class="btn-action flex-grow-1 justify-content-center" id="validateZipBtn" style="background: rgba(var(--bs-info-rgb),0.15); color: var(--bs-info-text-emphasis); border: 1px solid rgba(var(--bs-info-rgb),0.3);" disabled>
+                                        <i class="bi bi-shield-check"></i> Validate ZIP
+                                    </button>
+                                    <button class="btn-action w-100 justify-content-center mt-1" id="importZipBtn" style="background: var(--bs-info); color: #000; font-weight: 600; opacity: 0.45; cursor: not-allowed;" disabled title="Validate ZIP first.">
+                                        <i class="bi bi-arrow-repeat"></i> Start Files Import
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Maintenance & Retention -->
@@ -640,6 +732,15 @@ $dbAutoOptimize = getAdminSetting($conn, 'db_auto_optimize', '0') === '1';
                                     </div>
                                     <button class="btn-action" id="clearLoginLogBtn" style="background: rgba(220, 53, 69, 0.2); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.3);">
                                         <i class="bi bi-trash"></i> Clear
+                                    </button>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(var(--bs-danger-rgb), 0.02); border-radius: 8px; border: 1px solid rgba(220, 53, 69, 0.2);">
+                                    <div>
+                                        <div style="font-weight: 600; color: #dc3545;"><i class="bi bi-shield-fire me-1"></i>System Reset (Fresh Start)</div>
+                                        <div style="font-size: 0.85rem; color: var(--bs-secondary-color);">Wipes all database tables, truncates uploaded files/profiles, and restores system to defaults while preserving your login.</div>
+                                    </div>
+                                    <button class="btn-action" id="systemResetBtn" style="background: #dc3545; color: #fff; border: 1px solid #dc3545; font-weight: 600;">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Reset System
                                     </button>
                                 </div>
                             </div>
@@ -734,8 +835,6 @@ $dbAutoOptimize = getAdminSetting($conn, 'db_auto_optimize', '0') === '1';
                                                                 <li><a class="dropdown-item rounded-3 manual-lock-option" href="#" data-hours="6">6 Hours</a></li>
                                                                 <li><a class="dropdown-item rounded-3 manual-lock-option" href="#" data-hours="12">12 Hours</a></li>
                                                                 <li><a class="dropdown-item rounded-3 manual-lock-option" href="#" data-hours="24">24 Hours (1 Day)</a></li>
-                                                                <li><hr class="dropdown-divider"></li>
-                                                                <li><a class="dropdown-item rounded-3 text-danger manual-lock-option" href="#" data-hours="168">Permanent (Indefinite)</a></li>
                                                             </ul>
                                                         </div>
                                                     </div>
@@ -800,7 +899,259 @@ $dbAutoOptimize = getAdminSetting($conn, 'db_auto_optimize', '0') === '1';
                             <p class="mt-3 text-muted small">These settings apply to automatic lockouts triggered by consecutive failed login attempts. Manual locks are handled individually.</p>
                         </div>
                     </div>
-                </div>
+
+                    <!-- Alert Banners Tab -->
+                    <div class="tab-pane fade" id="settings-alerts" role="tabpanel"
+                        aria-labelledby="settings-alerts-tab" tabindex="0">
+
+                        <!-- Create Alert -->
+                        <div class="settings-section">
+                            <div class="section-header">
+                                <div class="section-header-icon" style="background: rgba(99,102,241,0.15); color:#818cf8;">
+                                    <i class="bi bi-megaphone"></i>
+                                </div>
+                                <div class="section-header-text">
+                                    <h5>Create New Alert</h5>
+                                    <p>Broadcast a notification to selected user roles</p>
+                                </div>
+                            </div>
+
+                            <form id="alertCreateForm" autocomplete="off">
+                                <div class="form-row">
+                                    <div class="form-group-custom" style="flex:2;">
+                                        <label for="alertTitle">Alert Title <span style="color:#dc3545;">*</span></label>
+                                        <input type="text" class="form-control-custom" id="alertTitle" placeholder="e.g. Scheduled Maintenance" style="width:100%;" required>
+                                    </div>
+                                    <div class="form-group-custom" style="flex:1;">
+                                        <label for="alertType">Alert Type</label>
+                                        <select class="form-control-custom" id="alertType" style="width:100%;">
+                                            <option class="CustomOption" value="info">Info (Blue)</option>
+                                            <option class="CustomOption" value="success">Success (Green)</option>
+                                            <option class="CustomOption" value="warning">Warning (Yellow)</option>
+                                            <option class="CustomOption" value="danger">Danger (Red)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group-custom" style="flex:1;">
+                                        <label for="alertDisplayType">Display As</label>
+                                        <select class="form-control-custom" id="alertDisplayType" style="width:100%;">
+                                            <option class="CustomOption" value="banner">Banner (top strip)</option>
+                                            <option class="CustomOption" value="modal">Modal Popup</option>
+                                            <option class="CustomOption" value="toast">Toast Notification</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group-custom">
+                                    <label for="alertMessage">Message <span style="color:#dc3545;">*</span></label>
+                                    <textarea class="form-control-custom" id="alertMessage" rows="3"
+                                              placeholder="Describe the alert in detail..." style="width:100%;" required></textarea>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group-custom">
+                                        <label for="alertTargetRoles">Target Roles</label>
+                                        <select class="form-control-custom" id="alertTargetRoles" style="width:100%;">
+                                            <option class="CustomOption" value="all">All Users</option>
+                                            <option class="CustomOption" value="student">Students Only</option>
+                                            <option class="CustomOption" value="coordinator">Coordinators Only</option>
+                                            <option class="CustomOption" value="supervisor">Supervisors Only</option>
+                                            <option class="CustomOption" value="student,coordinator">Students &amp; Coordinators</option>
+                                            <option class="CustomOption" value="student,supervisor">Students &amp; Supervisors</option>
+                                            <option class="CustomOption" value="coordinator,supervisor">Coordinators &amp; Supervisors</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group-custom">
+                                        <label for="alertExpiresAt">Expiry Date &amp; Time <small class="text-muted">(optional)</small></label>
+                                        <input type="datetime-local" class="form-control-custom" id="alertExpiresAt" style="width:100%;">
+                                        <div class="form-text">Leave blank for no expiry</div>
+                                    </div>
+                                    <div class="form-group-custom" style="align-self:center; padding-top:1.2rem;">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="alertDismissible" checked>
+                                            <label class="form-check-label" for="alertDismissible">Dismissible by user</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="action-buttons mt-3">
+                                    <button type="button" class="btn-action btn-save" id="alertCreateBtn">
+                                        <i class="bi bi-send"></i> Broadcast Alert
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Active Alerts List -->
+                        <div class="settings-section mt-4">
+                            <div class="section-header">
+                                <div class="section-header-icon" style="background: rgba(16,185,129,0.15); color:#34d399;">
+                                    <i class="bi bi-list-check"></i>
+                                </div>
+                                <div class="section-header-text">
+                                    <h5>Manage Alerts</h5>
+                                    <p>Toggle, view, or delete existing alerts</p>
+                                </div>
+                            </div>
+
+                            <div id="alertListContainer">
+                                <div class="text-center py-4 text-muted">
+                                    <div class="spinner-mini d-inline-block me-2"></div>
+                                    Loading alerts...
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Maintenance Toggles Tab -->
+                    <div class="tab-pane fade" id="settings-maintenance" role="tabpanel"
+                        aria-labelledby="settings-maintenance-tab" tabindex="0">
+                        
+                        <div class="settings-section">
+                            <div class="section-header">
+                                <div class="section-header-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+                                    <i class="bi bi-tools"></i>
+                                </div>
+                                <div class="section-header-text">
+                                    <h5>Feature Maintenance Toggles</h5>
+                                    <p>Disable specific system features temporarily during technical errors or updates. Users will receive standard warning banners when trying to access these features.</p>
+                                </div>
+                            </div>
+
+                            <div class="vstack gap-4 mt-3">
+                                <!-- DTR Submission Toggle Card -->
+                                <div class="p-4 rounded-3 border" style="background: rgba(var(--bs-body-color-rgb), 0.02); border-color: rgba(var(--bs-body-color-rgb), 0.1);">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px; background: rgba(13, 110, 253, 0.1); color: #0d6efd;">
+                                                <i class="bi bi-calendar-check" style="font-size: 1.25rem;"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1 fw-bold">Student DTR Submissions</h6>
+                                                <p class="text-muted small mb-0">Allows students to clock in/out and submit their Daily Time Record.</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-check form-switch form-switch-lg">
+                                            <input class="form-check-input" type="checkbox" id="disableDtrSubmissionToggle" <?php echo $disableDtr ? 'checked' : ''; ?>>
+                                            <label class="form-check-label <?php echo $disableDtr ? 'text-danger' : 'text-success'; ?> fw-bold small" for="disableDtrSubmissionToggle" id="dtrToggleLabel">
+                                                <?php echo $disableDtr ? 'DISABLED' : 'ENABLED'; ?>
+                                            </label>
+                                        </div>
+                                    </div>
+                                                                   <div class="form-group-custom mt-2 <?php echo $disableDtr ? '' : 'd-none'; ?>" id="dtrReasonContainer">
+                                        <label for="dtrDisableReasonInput" class="form-label text-muted small fw-bold">CUSTOM WARNING MESSAGE</label>
+                                        <input type="text" class="form-control bg-transparent border-color-opacity-1" id="dtrDisableReasonInput" 
+                                               value="<?php echo htmlspecialchars($dtrDisableReason); ?>" style="border-radius: 10px; color: var(--bs-body-color);">
+                                        <div class="form-text text-muted">This message will be shown to students when DTR submissions are locked.</div>
+                                    </div>
+                                    <!-- Scheduled Maintenance Fields -->
+                                    <div class="row g-3 mt-2 pt-2 border-top" style="border-color: rgba(var(--bs-body-color-rgb), 0.05) !important;">
+                                        <div class="col-md-6">
+                                            <label for="dtrMaintenanceStartInput" class="form-label text-muted small fw-bold">SCHEDULED START TIME</label>
+                                            <input type="datetime-local" class="form-control bg-transparent border-color-opacity-1" id="dtrMaintenanceStartInput" 
+                                                   value="<?php echo !empty($dtrMaintenanceStart) ? date('Y-m-d\TH:i', strtotime($dtrMaintenanceStart)) : ''; ?>" style="border-radius: 10px; color: var(--bs-body-color);">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="dtrMaintenanceEndInput" class="form-label text-muted small fw-bold">SCHEDULED END TIME</label>
+                                            <input type="datetime-local" class="form-control bg-transparent border-color-opacity-1" id="dtrMaintenanceEndInput" 
+                                                   value="<?php echo !empty($dtrMaintenanceEnd) ? date('Y-m-d\TH:i', strtotime($dtrMaintenanceEnd)) : ''; ?>" style="border-radius: 10px; color: var(--bs-body-color);">
+                                        </div>
+                                        <div class="col-12 mt-1">
+                                            <div class="form-text text-muted small">Configure a future time range to schedule an automatic maintenance lockout. Banners will show a countdown beforehand!</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Journal Submission Toggle Card -->
+                                <div class="p-4 rounded-3 border" style="background: rgba(var(--bs-body-color-rgb), 0.02); border-color: rgba(var(--bs-body-color-rgb), 0.1);">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px; background: rgba(25, 135, 84, 0.1); color: #198754;">
+                                                <i class="bi bi-book" style="font-size: 1.25rem;"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1 fw-bold">Student Weekly Journals</h6>
+                                                <p class="text-muted small mb-0">Allows students to submit and edit their weekly narrative journals.</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-check form-switch form-switch-lg">
+                                            <input class="form-check-input" type="checkbox" id="disableJournalSubmissionToggle" <?php echo $disableJournal ? 'checked' : ''; ?>>
+                                            <label class="form-check-label <?php echo $disableJournal ? 'text-danger' : 'text-success'; ?> fw-bold small" for="disableJournalSubmissionToggle" id="journalToggleLabel">
+                                                <?php echo $disableJournal ? 'DISABLED' : 'ENABLED'; ?>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group-custom mt-2 <?php echo $disableJournal ? '' : 'd-none'; ?>" id="journalReasonContainer">
+                                        <label for="journalDisableReasonInput" class="form-label text-muted small fw-bold">CUSTOM WARNING MESSAGE</label>
+                                        <input type="text" class="form-control bg-transparent border-color-opacity-1" id="journalDisableReasonInput" 
+                                               value="<?php echo htmlspecialchars($journalDisableReason); ?>" style="border-radius: 10px; color: var(--bs-body-color);">
+                                        <div class="form-text text-muted">This message will be shown to students when weekly narrative journal submissions are locked.</div>
+                                    </div>
+                                    <!-- Scheduled Maintenance Fields -->
+                                    <div class="row g-3 mt-2 pt-2 border-top" style="border-color: rgba(var(--bs-body-color-rgb), 0.05) !important;">
+                                        <div class="col-md-6">
+                                            <label for="journalMaintenanceStartInput" class="form-label text-muted small fw-bold">SCHEDULED START TIME</label>
+                                            <input type="datetime-local" class="form-control bg-transparent border-color-opacity-1" id="journalMaintenanceStartInput" 
+                                                   value="<?php echo !empty($journalMaintenanceStart) ? date('Y-m-d\TH:i', strtotime($journalMaintenanceStart)) : ''; ?>" style="border-radius: 10px; color: var(--bs-body-color);">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="journalMaintenanceEndInput" class="form-label text-muted small fw-bold">SCHEDULED END TIME</label>
+                                            <input type="datetime-local" class="form-control bg-transparent border-color-opacity-1" id="journalMaintenanceEndInput" 
+                                                   value="<?php echo !empty($journalMaintenanceEnd) ? date('Y-m-d\TH:i', strtotime($journalMaintenanceEnd)) : ''; ?>" style="border-radius: 10px; color: var(--bs-body-color);">
+                                        </div>
+                                        <div class="col-12 mt-1">
+                                            <div class="form-text text-muted small">Configure a future time range to schedule an automatic maintenance lockout. Banners will show a countdown beforehand!</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Evaluation Submission Toggle Card -->
+                                <div class="p-4 rounded-3 border" style="background: rgba(var(--bs-body-color-rgb), 0.02); border-color: rgba(var(--bs-body-color-rgb), 0.1);">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px; background: rgba(111, 66, 193, 0.1); color: #6f42c1;">
+                                                <i class="bi bi-star" style="font-size: 1.25rem;"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1 fw-bold">Supervisor Student Evaluations</h6>
+                                                <p class="text-muted small mb-0">Allows company supervisors to submit monthly or final evaluations for students.</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-check form-switch form-switch-lg">
+                                            <input class="form-check-input" type="checkbox" id="disableEvaluationSubmissionToggle" <?php echo $disableEvaluation ? 'checked' : ''; ?>>
+                                            <label class="form-check-label <?php echo $disableEvaluation ? 'text-danger' : 'text-success'; ?> fw-bold small" for="disableEvaluationSubmissionToggle" id="evaluationToggleLabel">
+                                                <?php echo $disableEvaluation ? 'DISABLED' : 'ENABLED'; ?>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group-custom mt-2 <?php echo $disableEvaluation ? '' : 'd-none'; ?>" id="evaluationReasonContainer">
+                                        <label for="evaluationDisableReasonInput" class="form-label text-muted small fw-bold">CUSTOM WARNING MESSAGE</label>
+                                        <input type="text" class="form-control bg-transparent border-color-opacity-1" id="evaluationDisableReasonInput" 
+                                               value="<?php echo htmlspecialchars($evaluationDisableReason); ?>" style="border-radius: 10px; color: var(--bs-body-color);">
+                                        <div class="form-text text-muted">This message will be shown to supervisors when student evaluations are locked.</div>
+                                    </div>
+                                    <!-- Scheduled Maintenance Fields -->
+                                    <div class="row g-3 mt-2 pt-2 border-top" style="border-color: rgba(var(--bs-body-color-rgb), 0.05) !important;">
+                                        <div class="col-md-6">
+                                            <label for="evaluationMaintenanceStartInput" class="form-label text-muted small fw-bold">SCHEDULED START TIME</label>
+                                            <input type="datetime-local" class="form-control bg-transparent border-color-opacity-1" id="evaluationMaintenanceStartInput" 
+                                                   value="<?php echo !empty($evaluationMaintenanceStart) ? date('Y-m-d\TH:i', strtotime($evaluationMaintenanceStart)) : ''; ?>" style="border-radius: 10px; color: var(--bs-body-color);">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="evaluationMaintenanceEndInput" class="form-label text-muted small fw-bold">SCHEDULED END TIME</label>
+                                            <input type="datetime-local" class="form-control bg-transparent border-color-opacity-1" id="evaluationMaintenanceEndInput" 
+                                                   value="<?php echo !empty($evaluationMaintenanceEnd) ? date('Y-m-d\TH:i', strtotime($evaluationMaintenanceEnd)) : ''; ?>" style="border-radius: 10px; color: var(--bs-body-color);">
+                                        </div>
+                                        <div class="col-12 mt-1">
+                                            <div class="form-text text-muted small">Configure a future time range to schedule an automatic maintenance lockout. Banners will show a countdown beforehand!</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div> <!-- End of settings-tabContent -->
 
                 <!-- Global Action Buttons -->
                 <div class="settings-section" style="background: transparent; border: none; box-shadow: none; padding: 1rem 0;">
@@ -816,7 +1167,6 @@ $dbAutoOptimize = getAdminSetting($conn, 'db_auto_optimize', '0') === '1';
                     </div>
                 </div>
 
-            </div>
             </div>
         </main>
     </div>

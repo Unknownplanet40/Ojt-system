@@ -21,6 +21,8 @@ $CurrentPage = "DTR_Approvals";
     <?php require_once "pagehead.php"; ?>
     <script type="module" src="../../../Assets/Script/dashboardScripts/CoordinatorDashboardScript.js"></script>
     <script type="module" src="../../../Assets/Script/CoordinatorScripts/DTRScripts.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <title><?= $ShortTitle ?></title>
 </head>
 
@@ -55,23 +57,43 @@ $CurrentPage = "DTR_Approvals";
                         <div class="col-md-3"><div class="border rounded-3 p-3 h-100"><div class="text-muted small">Backdated</div><div class="fw-semibold" id="coordDecisionBackdated">No</div></div></div>
                     </div>
                     <div class="row g-3">
-                        <div class="col-lg-7">
-                            <div class="border rounded-3 p-3 h-100">
-                                <div class="text-muted small mb-2">Activities</div>
-                                <div class="fw-normal" id="coordDecisionActivities">—</div>
-                                <hr>
-                                <div class="text-muted small mb-2">Backdate reason / rejection reason</div>
-                                <textarea class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="coordDecisionReason" rows="4" placeholder="Required when rejecting or for backdated review" style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
+                        <div class="col-lg-8">
+                            <div class="vstack gap-3 h-100">
+                                <div class="border rounded-3 p-3">
+                                    <div class="text-muted small mb-2">Activities</div>
+                                    <div class="fw-normal text-break" id="coordDecisionActivities">—</div>
+                                </div>
+                                <div id="coordDecisionVerificationContainer" class="border rounded-3 p-3 d-none">
+                                    <div class="text-muted small mb-3">Verification Info</div>
+                                    <div class="row g-3 align-items-center mb-3">
+                                        <div class="col-auto d-none" id="coordDecisionSelfieContainer">
+                                            <img id="coordDecisionSelfie" src="" class="rounded border border-light border-opacity-10 object-fit-cover shadow-sm" style="width: 110px; height: 110px; cursor: zoom-in;" alt="Student Selfie" onclick="window.open(this.src, '_blank')">
+                                        </div>
+                                        <div class="col">
+                                            <div id="coordDecisionGpsContainer" class="d-none">
+                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1.5 mb-2" style="font-size: 0.8rem;"><i class="bi bi-geo-alt-fill me-1"></i>GPS Location</span>
+                                                <div class="small text-white-50"><code id="coordDecisionGpsCoords">--</code></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="coordDecisionMapContainer" class="w-100 rounded border border-light border-opacity-10 d-none" style="height: 350px;"></div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-lg-5">
-                            <div class="border rounded-3 p-3 h-100">
-                                <div class="text-muted small mb-2">Student snapshot</div>
-                                <div class="vstack gap-2">
-                                    <div><span class="text-muted small d-block">Name</span><span class="fw-semibold" id="coordDecisionStudentLabel">—</span></div>
-                                    <div><span class="text-muted small d-block">Student no.</span><span class="fw-semibold" id="coordDecisionStudentNumber">—</span></div>
-                                    <div><span class="text-muted small d-block">Program</span><span class="fw-semibold" id="coordDecisionProgram">—</span></div>
-                                    <div><span class="text-muted small d-block">Submitted</span><span class="fw-semibold" id="coordDecisionSubmittedAt">—</span></div>
+                        <div class="col-lg-4">
+                            <div class="vstack gap-3 h-100">
+                                <div class="border rounded-3 p-3">
+                                    <div class="text-muted small mb-2">Student snapshot</div>
+                                    <div class="vstack gap-3">
+                                        <div><span class="text-muted small d-block">Name</span><span class="fw-semibold" id="coordDecisionStudentLabel">—</span></div>
+                                        <div><span class="text-muted small d-block">Student no.</span><span class="fw-semibold" id="coordDecisionStudentNumber">—</span></div>
+                                        <div><span class="text-muted small d-block">Program</span><span class="fw-semibold" id="coordDecisionProgram">—</span></div>
+                                        <div><span class="text-muted small d-block">Submitted</span><span class="fw-semibold" id="coordDecisionSubmittedAt">—</span></div>
+                                    </div>
+                                </div>
+                                <div class="border rounded-3 p-3 mt-auto">
+                                    <div class="text-muted small mb-2">Backdate reason / rejection reason</div>
+                                    <textarea class="form-control bg-blur-5 bg-semi-transparent border shadow-none" id="coordDecisionReason" rows="4" placeholder="Required when rejecting or for backdated review" style="--blur-lvl: <?= $opacitylvl ?>"></textarea>
                                 </div>
                             </div>
                         </div>

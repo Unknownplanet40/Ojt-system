@@ -363,13 +363,13 @@ $CurrentPage = "Settings";
 
             .settings-nav-item.active {
                 background: var(--bs-primary);
-                color: 
+                color: white;
                 border-color: var(--bs-primary);
                 box-shadow: 0 4px 14px rgba(var(--bs-primary-rgb), 0.25);
             }
 
             .settings-nav-item.active span {
-                color: 
+                color: white;
             }
 
             .settings-content {
@@ -449,6 +449,9 @@ $CurrentPage = "Settings";
                         </div>
                         <div class="settings-nav-item" data-pane="sessions">
                             <i class="bi bi-clock-history"></i> <span class="d-none d-md-inline">Log History</span>
+                        </div>
+                        <div class="settings-nav-item" data-pane="security">
+                            <i class="bi bi-shield-lock"></i> <span class="d-none d-md-inline">Account Security</span>
                         </div>
                     </div>
 
@@ -535,6 +538,108 @@ $CurrentPage = "Settings";
                                 <div class="section-title text-danger">Danger Zone</div>
                                 <p class="small text-danger mb-3">Ending all other sessions will log you out from all devices except this one.</p>
                                 <button class="btn btn-danger rounded-pill px-4">Sign Out Other Devices</button>
+                            </div>
+                        </div>
+
+                        <!-- Security Pane -->
+                        <div id="pane-security" class="pane">
+                            <div class="pane-title">Account Security</div>
+                            <p class="pane-sub">Manage user access and security restrictions.</p>
+
+                            <div class="settings-section">
+                                <div class="row g-4">
+                                    <div class="col-md-5">
+                                        <div class="card bg-transparent border-0 h-100">
+                                            <div class="card-body p-0">
+                                                <label class="form-label text-muted small fw-bold">SEARCH USER</label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-transparent border-end-0 text-muted" style="border-radius: 10px 0 0 10px;">
+                                                        <i class="bi bi-search"></i>
+                                                    </span>
+                                                    <input type="text" id="userSearchInput" class="form-control bg-transparent border-start-0 ps-0" 
+                                                           placeholder="Search by name or email..." style="border-radius: 0 10px 10px 0;">
+                                                </div>
+                                                
+                                                <div id="userSearchResults" class="mt-3 overflow-auto" style="max-height: 400px; border-radius: 12px; background: rgba(var(--bs-body-color-rgb), 0.02); border: 1px solid rgba(var(--bs-body-color-rgb), 0.05);">
+                                                    <div class="text-center py-5 text-muted opacity-50">
+                                                        <i class="bi bi-people" style="font-size: 2rem;"></i>
+                                                        <p class="mt-2 small">Start typing to find users</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-7">
+                                        <div id="userLockoutDetails" class="card h-100 border-0" style="border-radius: 15px; background: rgba(var(--bs-body-color-rgb), 0.03); display: none;">
+                                            <div class="card-body p-4">
+                                                <div class="d-flex align-items-center mb-4">
+                                                    <div id="selectedUserInitials" class="rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                         style="width: 54px; height: 54px; background: var(--bs-primary); color: white; font-weight: 700; font-size: 1.1rem;">JD</div>
+                                                    <div>
+                                                        <h6 id="selectedUserName" class="mb-0 fw-bold">John Doe</h6>
+                                                        <p id="selectedUserEmail" class="text-muted small mb-0">john.doe@example.com</p>
+                                                        <span id="selectedUserRole" class="badge bg-secondary-subtle text-secondary border border-secondary-subtle mt-1" style="font-size: 0.65rem;">STUDENT</span>
+                                                    </div>
+                                                    <div class="ms-auto text-end">
+                                                        <div id="selectedUserStatus">
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.65rem;">ACTIVE</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="p-3 rounded-4 mb-4" id="lockoutInfoBox" style="background: rgba(var(--bs-body-color-rgb), 0.04); border: 1px solid rgba(var(--bs-body-color-rgb), 0.05);">
+                                                    <div class="row text-center g-3">
+                                                        <div class="col-4">
+                                                            <label class="d-block text-muted small mb-1" style="font-size: 0.65rem; font-weight: 600;">FAILED ATTEMPTS</label>
+                                                            <h5 id="failedAttemptsCount" class="mb-0 fw-bold">0</h5>
+                                                        </div>
+                                                        <div class="col-8 border-start border-secondary border-opacity-10">
+                                                            <label class="d-block text-muted small mb-1" style="font-size: 0.65rem; font-weight: 600;">LOCKOUT EXPIRES</label>
+                                                            <h6 id="lockoutExpiryText" class="mb-0 fw-bold small">Not Locked</h6>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="vstack gap-2">
+                                                    <label class="form-label text-muted small fw-bold mb-1">COORDINATOR ACTIONS</label>
+                                                    <div class="d-flex gap-2">
+                                                        <button id="unlockAccountBtn" class="btn btn-success flex-grow-1 py-2 d-flex align-items-center justify-content-center gap-2 rounded-3" disabled style="font-size: 0.85rem;">
+                                                            <i class="bi bi-unlock"></i> Unlock Account
+                                                        </button>
+                                                        
+                                                        <div class="dropdown flex-grow-1">
+                                                            <button id="lockAccountDropdown" class="btn btn-outline-danger w-100 py-2 d-flex align-items-center justify-content-center gap-2 rounded-3 dropdown-toggle" data-bs-toggle="dropdown" style="font-size: 0.85rem;">
+                                                                <i class="bi bi-lock"></i> Manual Lock
+                                                            </button>
+                                                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-2" style="border-radius: 12px; width: 220px; background: var(--bs-body-bg); border: 1px solid rgba(var(--bs-body-color-rgb), 0.1);">
+                                                                <li><h6 class="dropdown-header small text-uppercase fw-bold opacity-75">Lock Duration</h6></li>
+                                                                <li><a class="dropdown-item rounded-3 manual-lock-option small" href="#" data-hours="1">1 Hour</a></li>
+                                                                <li><a class="dropdown-item rounded-3 manual-lock-option small" href="#" data-hours="3">3 Hours</a></li>
+                                                                <li><a class="dropdown-item rounded-3 manual-lock-option small" href="#" data-hours="6">6 Hours</a></li>
+                                                                <li><a class="dropdown-item rounded-3 manual-lock-option small" href="#" data-hours="12">12 Hours</a></li>
+                                                                <li><hr class="dropdown-divider"></li>
+                                                                <li><a class="dropdown-item rounded-3 text-danger manual-lock-option small" href="#" data-hours="24">24 Hours (Restrict)</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="mt-4 p-3 rounded-3 bg-primary bg-opacity-10 border border-primary border-opacity-10">
+                                                    <p class="mb-0 text-primary small" style="font-size: 0.75rem; line-height: 1.4;">
+                                                        <i class="bi bi-info-circle-fill me-1"></i> 
+                                                        Coordinators can unlock student accounts or temporarily restrict access if security concerns arise. Administrative policies still apply.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="noUserSelected" class="d-none card h-100 border-0 d-flex align-items-center justify-content-center p-5 text-center text-muted opacity-50" style="border-radius: 15px; background: rgba(var(--bs-body-color-rgb), 0.02); border: 1px dashed rgba(var(--bs-body-color-rgb), 0.1);">
+                                            <i class="bi bi-person-badge fs-1 mb-3"></i>
+                                            <p class="small mb-0">Select a user from the results to manage their account security</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

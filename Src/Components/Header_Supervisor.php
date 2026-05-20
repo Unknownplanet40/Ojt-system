@@ -3,6 +3,19 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
     header('Location: ../../Src/Pages/ErrorPage?error=403');
     exit('Direct access not allowed');
 }
+
+// Determine if the current supervisor is an HR admin
+$is_hr_admin = 0;
+if (!empty($_SESSION['user_uuid']) && isset($conn)) {
+    $stmt = $conn->prepare("SELECT is_hr_admin FROM supervisor_profiles WHERE user_uuid = ? LIMIT 1");
+    if ($stmt) {
+        $stmt->bind_param("s", $_SESSION['user_uuid']);
+        $stmt->execute();
+        $hrRow = $stmt->get_result()->fetch_assoc();
+        $is_hr_admin = (int)($hrRow['is_hr_admin'] ?? 0);
+        $stmt->close();
+    }
+}
 ?>
 <nav class="navbar navbar-expand-lg bg-semi-transparent mx-3 mb-3 border rounded-2" aria-label="Main navigation" id="adminTopNavbar" style="--blur-lvl: <?= $opacitylvl ?>">
   <div class="container-fluid">
@@ -20,6 +33,11 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
         <li class="nav-item">
           <a class="nav-link <?= $CurrentPage === 'SupervisorDashboard' ? 'active' : '' ?>" aria-current="page" href="../Supervisor/SupervisorDashboard">Dashboard</a>
         </li>
+        <?php if ($is_hr_admin === 1): ?>
+        <li class="nav-item">
+          <a class="nav-link text-warning fw-bold <?= $CurrentPage === 'HRDashboard' ? 'active' : '' ?>" href="../Supervisor/HR_Dashboard.php"><i class="bi bi-building-gear me-1"></i> HR Portal</a>
+        </li>
+        <?php endif; ?>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle <?= in_array($CurrentPage, ['DTR', 'Journal', 'SupervisorDTR']) ? 'active' : '' ?>" href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false"> OJT Process</a>
           <ul class="dropdown-menu bg-blur-5 bg-semi-transparent shadow">
@@ -113,3 +131,4 @@ if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
     </div>
   </div>
 </nav>
+<?php require_once __DIR__ . '/AlertBanner.php'; ?>

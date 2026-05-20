@@ -27,6 +27,7 @@ if ($currentHour >= 5 && $currentHour < 12) {
 
 <head>
     <?php require_once "pagehead.php"; ?>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="../../../Assets/Script/dashboardScripts/CoordinatorDashboardScript.js"></script>
     <title><?= $ShortTitle ?></title>
 </head>
@@ -215,6 +216,32 @@ if ($currentHour >= 5 && $currentHour < 12) {
                                         <i class="bi bi-plus-lg me-1"></i>
                                         Schedule a visit
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Performance & Evaluation Analytics -->
+                <div class="row row-cols-1 row-cols-lg-2 g-4 mt-1 mb-4">
+                    <div class="col-lg-7">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                            <div class="card-body">
+                                <h5 class="card-title">Weekly Student Attendance Patterns</h5>
+                                <p class="text-muted small mb-3">Total student hours rendered per day of week (past 30 days)</p>
+                                <div style="height: 300px;">
+                                    <canvas id="weeklyAttendanceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="card h-100 bg-blur-5 bg-semi-transparent shadow-lg" style="--blur-lvl: <?= $opacitylvl ?>">
+                            <div class="card-body">
+                                <h5 class="card-title">Supervisor Score Matrix</h5>
+                                <p class="text-muted small mb-3">Average skill ratings from midterm & final evaluations</p>
+                                <div style="height: 300px;" class="d-flex align-items-center justify-content-center">
+                                    <canvas id="supervisorScoreMatrixChart"></canvas>
                                 </div>
                             </div>
                         </div>

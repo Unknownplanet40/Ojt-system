@@ -7,6 +7,8 @@ if (realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
 }
 
 require_once __DIR__ . '/../helpers/helpers.php';
+require_once __DIR__ . '/email_functions.php';
+require_once __DIR__ . '/settings_functions.php';
 
 
 const REQUIREMENT_TYPES = [
@@ -240,12 +242,7 @@ function uploadRequirement(
 }
 
 
-function approveRequirement(
-    $conn,
-    string $reqUuid,
-    string $actorUserUuid,
-    string $coordinatorUuid
-): array {
+function approveRequirement($conn, $reqUuid, $actorUserUuid, $coordinatorUuid) {
     $stmt = $conn->prepare("
         SELECT uuid, status, req_type, student_uuid
         FROM student_requirements WHERE uuid = ? LIMIT 1
@@ -277,26 +274,50 @@ function approveRequirement(
     $stmt->execute();
     $stmt->close();
 
+    $reqLabel = REQUIREMENT_TYPES[$req['req_type']] ?? 'document';
     logActivity(
-        conn: $conn,
-        eventType: 'requirement_approved',
-        description: REQUIREMENT_TYPES[$req['req_type']] . ' approved for student',
-        module: 'requirements',
-        actorUuid: $actorUserUuid,
-        targetUuid: $req['student_uuid']
+        $conn,
+        'requirement_approved',
+        "Approved $reqLabel for student",
+        'requirements',
+        $actorUserUuid,
+        $req['student_uuid']
     );
+
+    // Notify Student
+    $stmt = $conn->prepare("
+        SELECT u.email, sp.first_name, sp.last_name
+        FROM student_profiles sp
+        JOIN users u ON sp.user_uuid = u.uuid
+        WHERE sp.uuid = ?
+    ");
+    $stmt->bind_param('s', $req['student_uuid']);
+    $stmt->execute();
+    $userData = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($userData) {
+        $smtpConfig = getEmailSettings($conn);
+        $sysConfig = getSystemConfig($conn);
+        $schoolName = $sysConfig['school_name'] ?: 'OJT Management System';
+        
+        $reqLabel = REQUIREMENT_TYPES[$req['req_type']] ?? 'Document';
+        $title = "Requirement Approved: {$reqLabel}";
+        $content = "
+            <p>Hello <b>{$userData['first_name']}</b>,</p>
+            <p>Your submitted document <b>{$reqLabel}</b> has been reviewed and <b>Approved</b>.</p>
+            <p>You can view your updated requirement status in the portal.</p>
+        ";
+        
+        $emailBody = getEmailTemplate($title, $content, $schoolName);
+        sendSystemEmail($smtpConfig, $userData['email'], $title, $emailBody);
+    }
 
     return ['success' => true];
 }
 
 
-function approveAllRequirements(
-    $conn,
-    string $studentUuid,
-    string $batchUuid,
-    string $actorUserUuid,
-    string $coordinatorUuid
-): array {
+function approveAllRequirements($conn, $studentUuid, $batchUuid, $actorUserUuid, $coordinatorUuid) {
     $stmt = $conn->prepare("
         SELECT uuid FROM student_requirements
         WHERE student_uuid = ?
@@ -342,13 +363,7 @@ function approveAllRequirements(
 }
 
 
-function returnRequirement(
-    $conn,
-    string $reqUuid,
-    string $returnReason,
-    string $actorUserUuid,
-    string $coordinatorUuid
-): array {
+function returnRequirement($conn, $reqUuid, $returnReason, $actorUserUuid, $coordinatorUuid) {
     $returnReason = trim($returnReason);
 
     if (empty($returnReason)) {
@@ -387,14 +402,50 @@ function returnRequirement(
     $stmt->execute();
     $stmt->close();
 
+    $reqLabel = REQUIREMENT_TYPES[$req['req_type']] ?? 'document';
     logActivity(
-        conn: $conn,
-        eventType: 'requirement_returned',
-        description: REQUIREMENT_TYPES[$req['req_type']] . ' returned: ' . $returnReason,
-        module: 'requirements',
-        actorUuid: $actorUserUuid,
-        targetUuid: $req['student_uuid']
+        $conn,
+        'requirement_returned',
+        "Returned $reqLabel for student. Reason: $returnReason",
+        'requirements',
+        $actorUserUuid,
+        $req['student_uuid']
     );
+
+    // Notify Student
+    $stmt = $conn->prepare("
+        SELECT u.email, sp.first_name, sp.last_name
+        FROM student_profiles sp
+        JOIN users u ON sp.user_uuid = u.uuid
+        WHERE sp.uuid = ?
+    ");
+    $stmt->bind_param('s', $req['student_uuid']);
+    $stmt->execute();
+    $userData = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($userData) {
+        $smtpConfig = getEmailSettings($conn);
+        $sysConfig = getSystemConfig($conn);
+        $schoolName = $sysConfig['school_name'] ?: 'OJT Management System';
+        
+        $reqLabel = REQUIREMENT_TYPES[$req['req_type']] ?? 'Document';
+        $title = "Action Required: {$reqLabel} Returned";
+        $content = "
+            <p>Hello <b>{$userData['first_name']}</b>,</p>
+            <p>Your submitted document <b>{$reqLabel}</b> has been <b>Returned</b> for the following reason:</p>
+            <div style='background-color: #fff7ed; border-left: 4px solid #f97316; padding: 16px; margin: 20px 0;'>
+                <p style='margin: 0; color: #9a3412;'><b>Reason:</b> \"{$returnReason}\"</p>
+            </div>
+            <p>Please revise and re-upload your document as soon as possible to proceed with your OJT application.</p>
+            <div style='margin-top: 30px; text-align: center;'>
+                <a href='" . (isset($_SERVER['HTTPS']) ? "https" : "http") . "://{$_SERVER['HTTP_HOST']}' style='background-color: #f97316; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;'>Re-upload Document</a>
+            </div>
+        ";
+        
+        $emailBody = getEmailTemplate($title, $content, $schoolName);
+        sendSystemEmail($smtpConfig, $userData['email'], $title, $emailBody);
+    }
 
     return ['success' => true];
 }

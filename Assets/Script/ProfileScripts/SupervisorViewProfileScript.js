@@ -51,7 +51,7 @@ function viewSupervisorProfile() {
 
         if (students.length > 0) {
           students.forEach((s) => {
-            const studentImg = s.profile_name ? `../../../Assets/Images/profiles/${s.profile_name}` : `https:
+            const studentImg = s.profile_name ? `../../../Assets/Images/profiles/${s.profile_name}` : `https://placehold.co/40x40/C1C1C1/000000/png?text=${s.initials}&font=poppins`;
             const studentItem = `
               <li class="list-group-item bg-transparent px-0 py-3 border-light border-opacity-10">
                 <div class="d-flex align-items-center gap-3">

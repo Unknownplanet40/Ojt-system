@@ -26,8 +26,8 @@ function fetchProfile() {
         const activeBatch = response.activeBatch;
         if (!profile.profile_name) {
           const initials = profile.initials || 'NA';
-          $('#navProfilePhoto').attr('src', `https:
-          $('#dropdownProfilePhoto').attr('src', `https:
+          $('#navProfilePhoto').attr('src', `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
+          $('#dropdownProfilePhoto').attr('src', `https://placehold.co/64x64/483a0f/c6983d/png?text=${initials}&font=poppins`);
         } else {
           $('#navProfilePhoto').attr('src', '../../../Assets/Images/profiles/' + profile.profile_name);
           $('#dropdownProfilePhoto').attr('src', '../../../Assets/Images/profiles/' + profile.profile_name);
@@ -73,5 +73,30 @@ $(document).ready(function () {
   $('#signOutBtn').on('click', signOut);
   $('#pageLoader').fadeOut(500, function () {
     $(this).remove();
+  });
+
+  // Burger menu toggle for smaller screens
+  $("#navbarSideCollapse").on("click", function () {
+    $("#navbarsExampleDefault").toggleClass("open");
+    if ($("#navbarSideCollapse i").hasClass("bi-list")) {
+      $("#navbarSideCollapse i").fadeOut(200, function () {
+        $(this).removeClass("bi-list").addClass("bi-x").fadeIn(200);
+      });
+    } else {
+      $("#navbarSideCollapse i").fadeOut(200, function () {
+        $(this).removeClass("bi-x").addClass("bi-list").fadeIn(200);
+      });
+    }
+  });
+
+  // Close nav when clicking outside of it
+  $(document).on("click", function (e) {
+    if (
+      !$(e.target).closest("#navbarsExampleDefault").length &&
+      !$(e.target).closest("#navbarSideCollapse").length
+    ) {
+      $("#navbarsExampleDefault").removeClass("open");
+      $("#navbarSideCollapse i").removeClass("bi-x").addClass("bi-list");
+    }
   });
 });
