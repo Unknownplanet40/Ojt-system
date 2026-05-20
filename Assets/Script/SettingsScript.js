@@ -200,6 +200,15 @@ function handleThemeChange(theme) {
 
 let selectedUserUuid = null;
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function handleUserSearch() {
   const query = $("#userSearchInput").val().trim();
   
@@ -230,8 +239,9 @@ function handleUserSearch() {
 function renderSearchResults(users, query = "") {
   if (users.length === 0) {
     const icon = query ? "bi-search" : "bi-shield-check";
+    const safeQuery = escapeHtml(query);
     const message = query 
-      ? `No users found matching "${query}"` 
+      ? `No users found matching "${safeQuery}"` 
       : "No active lockouts or failed attempts found";
     
     $("#userSearchResults").html(`
