@@ -4,8 +4,13 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once "../../../Assets/SystemInfo.php";
+require_once "../../../functions/settings_functions.php";
 
 $CurrentPage = "Settings";
+
+// Fetch database maintenance settings
+$dbLogRetention = getAdminSetting($conn, 'db_log_retention', '30');
+$dbAutoOptimize = getAdminSetting($conn, 'db_auto_optimize', '0') === '1';
 
 ?>
 
@@ -67,6 +72,20 @@ $CurrentPage = "Settings";
                             data-bs-target="#settings-system" type="button" role="tab" 
                             aria-controls="settings-system" aria-selected="false">
                             <i class="bi bi-info-circle me-2"></i>System Information
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="settings-database-tab" data-bs-toggle="pill"
+                            data-bs-target="#settings-database" type="button" role="tab" 
+                            aria-controls="settings-database" aria-selected="false">
+                            <i class="bi bi-database me-2"></i>Database
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="settings-security-tab" data-bs-toggle="pill"
+                            data-bs-target="#settings-security" type="button" role="tab" 
+                            aria-controls="settings-security" aria-selected="false">
+                            <i class="bi bi-shield-lock me-2"></i>Account Security
                         </button>
                     </li>
                 </ul>
@@ -384,6 +403,7 @@ $CurrentPage = "Settings";
                             </div>
                         </div>
 
+                        <!-- Import Section -->
                         <!-- Storage Info -->
                         <div class="settings-section">
                             <div class="section-header">
@@ -407,6 +427,190 @@ $CurrentPage = "Settings";
                             </div>
                         </div>
 
+
+
+                    </div>
+
+                    <!-- Database Tab -->
+                    <div class="tab-pane fade" id="settings-database" role="tabpanel"
+                        aria-labelledby="settings-database-tab" tabindex="0">
+                        
+                        <!-- Database Health Monitor -->
+                        <div class="settings-section">
+                            <div class="section-header">
+                                <div class="section-header-icon" style="background: rgba(var(--bs-success-rgb), 0.15); color: var(--bs-success);">
+                                    <i class="bi bi-heart-pulse"></i>
+                                </div>
+                                <div class="section-header-text">
+                                    <h5>Database Health & Status</h5>
+                                    <p>Monitor live storage usage, table structure complexity, and data volume. High record counts may impact performance.</p>
+                                </div>
+                            </div>
+
+                            <div class="system-info-grid">
+                                <article class="system-info-card" data-status="is-ok">
+                                    <div class="system-info-card-top">
+                                        <span class="system-info-icon is-ok"><i class="bi bi-hdd-stack"></i></span>
+                                        <span class="system-status-dot is-ok"></span>
+                                    </div>
+                                    <div class="system-info-body">
+                                        <span class="system-info-label">Database Size</span>
+                                        <strong class="system-info-value" id="dbSizeValue">0.00 MB</strong>
+                                    </div>
+                                    <span class="system-status-pill is-ok"><i class="bi bi-check-circle-fill"></i> <span>Optimized</span></span>
+                                </article>
+
+                                <article class="system-info-card">
+                                    <div class="system-info-card-top">
+                                        <span class="system-info-icon"><i class="bi bi-table"></i></span>
+                                    </div>
+                                    <div class="system-info-body">
+                                        <span class="system-info-label">Total Tables</span>
+                                        <strong class="system-info-value" id="dbTablesValue">0</strong>
+                                    </div>
+                                    <span class="system-status-pill"><i class="bi bi-info-circle-fill"></i> <span>Active</span></span>
+                                </article>
+
+                                <article class="system-info-card">
+                                    <div class="system-info-card-top">
+                                        <span class="system-info-icon"><i class="bi bi-people"></i></span>
+                                    </div>
+                                    <div class="system-info-body">
+                                        <span class="system-info-label">Total Records</span>
+                                        <strong class="system-info-value" id="dbRecordsValue">0</strong>
+                                    </div>
+                                    <span class="system-status-pill"><i class="bi bi-graph-up"></i> <span>Growing</span></span>
+                                </article>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <div class="section-header">
+                                <div class="section-header-icon">
+                                    <i class="bi bi-database"></i>
+                                </div>
+                                <div class="section-header-text">
+                                    <h5>Export & Backup</h5>
+                                    <p>Generate a portable SQL dump of your entire system. Use this for manual backups or migrating to a new server.</p>
+                                </div>
+                            </div>
+
+                            <div class="info-box">
+                                <i class="bi bi-shield-lock"></i>
+                                Regular backups are recommended to prevent data loss. The exported file will be in SQL format.
+                            </div>
+
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="settings-section h-100 mb-0" style="background: rgba(var(--bs-body-color-rgb), 0.03);">
+                                        <h6 class="mb-3" style="color: var(--bs-body-color); font-weight: 600;">
+                                            <i class="bi bi-cloud-download me-2 text-primary"></i>Export Options
+                                        </h6>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="export-structure" checked>
+                                            <label class="form-check-label" for="export-structure" style="color: var(--bs-body-color);">
+                                                Include Table Structure (DDL)
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="export-data" checked>
+                                            <label class="form-check-label" for="export-data" style="color: var(--bs-body-color);">
+                                                Include Table Data (DML)
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="export-drop" checked>
+                                            <label class="form-check-label" for="export-drop" style="color: var(--bs-body-color);">
+                                                Add 'DROP TABLE IF EXISTS'
+                                            </label>
+                                        </div>
+                                        <button class="btn-action btn-save w-100 justify-content-center mt-3" id="exportDatabaseBtn">
+                                            <i class="bi bi-download"></i> Generate Export (.sql)
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="settings-section h-100 mb-0" style="background: rgba(var(--bs-body-color-rgb), 0.03);">
+                                        <h6 class="mb-3" style="color: var(--bs-body-color); font-weight: 600;">
+                                            <i class="bi bi-history me-2 text-primary"></i>Export History
+                                        </h6>
+                                        <div id="exportHistoryContainer" class="text-center py-4 d-flex flex-column align-items-center justify-content-center h-75">
+                                            <i class="bi bi-archive" style="font-size: 2.5rem; color: var(--settings-muted); opacity: 0.5;"></i>
+                                            <p class="mt-3 text-muted small">No recent exports found in this session</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Import Section -->
+                            <div class="settings-section mt-4 mb-0" style="border-color: rgba(var(--bs-warning-rgb), 0.2); background: rgba(var(--bs-warning-rgb), 0.02);">
+                                <div class="section-header" style="border-bottom-color: rgba(var(--bs-warning-rgb), 0.1);">
+                                    <div class="section-header-icon" style="background: rgba(var(--bs-warning-rgb), 0.15); color: var(--bs-warning-text-emphasis);">
+                                        <i class="bi bi-upload"></i>
+                                    </div>
+                                    <div class="section-header-text">
+                                        <h5>Import & Restore</h5>
+                                        <p>Restore your system to a previous state using a valid .sql backup. <span class="text-danger fw-bold">Warning: This will overwrite all current data.</span></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="p-4 mb-3 border border-dashed rounded-3 text-center" id="sqlDropZone" style="border-style: dashed !important; border-width: 2px !important; border-color: rgba(var(--bs-warning-rgb), 0.3) !important; background: rgba(var(--bs-warning-rgb), 0.05); cursor: pointer;">
+                                    <input type="file" id="sqlFileInput" accept=".sql" style="display: none;">
+                                    <i class="bi bi-filetype-sql mb-2" style="font-size: 3rem; color: var(--bs-warning);"></i>
+                                    <p class="mb-1 fw-bold" id="sqlFileNameDisplay" style="color: var(--bs-body-color);">Click or Drag SQL Backup Here</p>
+                                    <p class="text-muted small">Only .sql files generated by this system are supported</p>
+                                </div>
+
+                                <button class="btn-action w-100 justify-content-center" id="importDatabaseBtn" style="background: var(--bs-warning); color: #000; font-weight: 600;" disabled>
+                                    <i class="bi bi-arrow-repeat"></i> Start Import Process
+                                </button>
+                            </div>
+
+                            <!-- Maintenance & Retention -->
+                            <div class="settings-section mt-4 mb-0">
+                                <div class="section-header">
+                                    <div class="section-header-icon" style="background: rgba(13, 110, 253, 0.15); color: #0d6efd;">
+                                        <i class="bi bi-tools"></i>
+                                    </div>
+                                    <div class="section-header-text">
+                                        <h5>Maintenance & Retention</h5>
+                                        <p>Automate system cleanup to prevent database bloat and maintain peak performance.</p>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group-custom">
+                                        <label for="logRetention">Log Retention Policy</label>
+                                        <div class="form-text small mb-2" style="opacity: 0.8;">Automatically purges activity and audit logs older than the selected period to prevent database bloat.</div>
+                                        <select class="form-select custom-select-glass" id="logRetentionPolicy">
+                                            <option value="7" class="CustomOption" <?php echo ($dbLogRetention == '7') ? 'selected' : ''; ?>>Last 7 Days</option>
+                                            <option value="30" class="CustomOption" <?php echo ($dbLogRetention == '30') ? 'selected' : ''; ?>>Last 30 Days</option>
+                                            <option value="90" class="CustomOption" <?php echo ($dbLogRetention == '90') ? 'selected' : ''; ?>>Last 90 Days</option>
+                                            <option value="0" class="CustomOption" <?php echo ($dbLogRetention == '0') ? 'selected' : ''; ?>>Never (Keep All)</option>
+                                        </select>
+                                        <div class="form-text">Older logs will be automatically purged during weekly maintenance.</div>
+                                    </div>
+                                    <div class="form-group-custom">
+                                        <label for="autoOptimize">Weekly Optimization</label>
+                                        <div class="form-text small mb-2" style="opacity: 0.8;">Reclaims unused disk space and reorganizes table indexes to maintain peak system speed.</div>
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox" id="autoOptimizeToggle" <?php echo $dbAutoOptimize ? 'checked' : ''; ?>>
+                                            <label class="form-check-label" for="autoOptimizeToggle" style="color: var(--bs-body-color);">
+                                                Weekly Auto-Optimization
+                                            </label>
+                                        </div>
+                                        <div class="form-text">Improves database performance by defragmenting tables.</div>
+                                    </div>
+                                </div>
+
+                                <div class="action-buttons mt-3">
+                                    <button class="btn-action btn-reset" id="optimizeDbBtn">
+                                        <i class="bi bi-magic"></i> Optimize Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Danger Zone -->
                         <div class="settings-section" style="border-color: rgba(220, 53, 69, 0.2); background: rgba(220, 53, 69, 0.03);">
                             <div class="section-header" style="border-bottom-color: rgba(220, 53, 69, 0.1);">
@@ -414,8 +618,8 @@ $CurrentPage = "Settings";
                                     <i class="bi bi-exclamation-triangle"></i>
                                 </div>
                                 <div class="section-header-text">
-                                    <h5 style="color: #dc3545;">Danger Zone</h5>
-                                    <p>Irreversible actions — use with caution</p>
+                                    <h5>Danger Zone</h5>
+                                    <p>High-risk administrative actions. These operations will permanently delete system logs and cannot be undone.</p>
                                 </div>
                             </div>
 
@@ -440,9 +644,162 @@ $CurrentPage = "Settings";
                                 </div>
                             </div>
                         </div>
-
                     </div>
+                    <!-- Account Security Tab -->
+                    <div class="tab-pane fade" id="settings-security" role="tabpanel"
+                        aria-labelledby="settings-security-tab" tabindex="0">
+                        
+                        <div class="settings-section">
+                            <div class="section-header">
+                                <div class="section-header-icon">
+                                    <i class="bi bi-shield-lock"></i>
+                                </div>
+                                <div class="section-header-text">
+                                    <h5>Account Lockout Management</h5>
+                                    <p>Manage user access and security restrictions</p>
+                                </div>
+                            </div>
 
+                            <div class="row g-4 mt-2">
+                                <div class="col-md-5">
+                                    <div class="card bg-transparent border-0 h-100">
+                                        <div class="card-body p-0">
+                                            <label class="form-label text-muted small fw-bold">SEARCH USER</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-transparent border-end-0" style="border-radius: 12px 0 0 12px; border-color: rgba(var(--bs-body-color-rgb), 0.1);">
+                                                    <i class="bi bi-search"></i>
+                                                </span>
+                                                <input type="text" id="userSearchInput" class="form-control bg-transparent border-start-0 py-2" 
+                                                       placeholder="Enter name or email..." style="border-radius: 0 12px 12px 0; border-color: rgba(var(--bs-body-color-rgb), 0.1);">
+                                            </div>
+                                            
+                                            <div id="userSearchResults" class="mt-3 overflow-auto" style="max-height: 400px; border-radius: 12px;">
+                                                <!-- User cards will appear here -->
+                                                <div class="text-center py-5 text-muted">
+                                                    <i class="bi bi-people" style="font-size: 2rem; opacity: 0.3;"></i>
+                                                    <p class="mt-2 small">Start typing to find users</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-7">
+                                    <div id="userLockoutDetails" class="card h-100 glass-ui border-0" style="border-radius: 15px; display: none;">
+                                        <div class="card-body p-4">
+                                            <div class="d-flex align-items-center mb-4">
+                                                <div id="selectedUserInitials" class="rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                     style="width: 60px; height: 60px; background: var(--bs-primary); color: white; font-weight: 700; font-size: 1.2rem;">JD</div>
+                                                <div>
+                                                    <h5 id="selectedUserName" class="mb-0">John Doe</h5>
+                                                    <p id="selectedUserEmail" class="text-muted small mb-0">john.doe@example.com</p>
+                                                    <span id="selectedUserRole" class="badge bg-secondary-subtle text-secondary border border-secondary-subtle mt-1" style="font-size: 0.7rem;">STUDENT</span>
+                                                </div>
+                                                <div class="ms-auto text-end">
+                                                    <div id="selectedUserStatus">
+                                                        <span class="badge bg-success-subtle text-success border border-success-subtle">ACTIVE</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="p-3 rounded-3 mb-4" id="lockoutInfoBox" style="background: rgba(var(--bs-body-color-rgb), 0.05); border: 1px solid rgba(var(--bs-body-color-rgb), 0.1);">
+                                                <div class="row text-center g-3">
+                                                    <div class="col-4">
+                                                        <label class="d-block text-muted small mb-1">FAILED ATTEMPTS</label>
+                                                        <h4 id="failedAttemptsCount" class="mb-0">0</h4>
+                                                    </div>
+                                                    <div class="col-8">
+                                                        <label class="d-block text-muted small mb-1">LOCKOUT EXPIRES</label>
+                                                        <h6 id="lockoutExpiryText" class="mb-0">Not Locked</h6>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row g-3">
+                                                <div class="col-12">
+                                                    <label class="form-label text-muted small fw-bold">ADMIN ACTIONS</label>
+                                                    <div class="d-flex gap-2">
+                                                        <button id="unlockAccountBtn" class="btn btn-success flex-grow-1 py-2 d-flex align-items-center justify-content-center gap-2 rounded-3" disabled>
+                                                            <i class="bi bi-unlock"></i> Unlock Account
+                                                        </button>
+                                                        
+                                                        <div class="dropdown flex-grow-1">
+                                                            <button id="lockAccountDropdown" class="btn btn-outline-danger w-100 py-2 d-flex align-items-center justify-content-center gap-2 rounded-3 dropdown-toggle" data-bs-toggle="dropdown">
+                                                                <i class="bi bi-lock"></i> Manual Lock
+                                                            </button>
+                                                            <ul class="dropdown-menu dropdown-menu-end glass-ui border-0 shadow-lg p-2" style="border-radius: 12px; width: 250px;">
+                                                                <li><h6 class="dropdown-header">Lock Duration</h6></li>
+                                                                <li><a class="dropdown-item rounded-3 manual-lock-option" href="#" data-hours="1">1 Hour</a></li>
+                                                                <li><a class="dropdown-item rounded-3 manual-lock-option" href="#" data-hours="3">3 Hours</a></li>
+                                                                <li><a class="dropdown-item rounded-3 manual-lock-option" href="#" data-hours="6">6 Hours</a></li>
+                                                                <li><a class="dropdown-item rounded-3 manual-lock-option" href="#" data-hours="12">12 Hours</a></li>
+                                                                <li><a class="dropdown-item rounded-3 manual-lock-option" href="#" data-hours="24">24 Hours (1 Day)</a></li>
+                                                                <li><hr class="dropdown-divider"></li>
+                                                                <li><a class="dropdown-item rounded-3 text-danger manual-lock-option" href="#" data-hours="168">Permanent (Indefinite)</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <p class="mt-4 text-muted small">
+                                                <i class="bi bi-info-circle me-1"></i> 
+                                                Manually locking an account will prevent the user from logging in even if they know their password. The user will be automatically unlocked after the selected duration.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div id="noUserSelectedPlaceholder" class="card h-100 border-0 bg-transparent">
+                                        <div class="card-body d-flex flex-column align-items-center justify-content-center py-5">
+                                            <div class="glass-ui-strong rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; background: rgba(var(--bs-primary-rgb), 0.1);">
+                                                <i class="bi bi-cursor text-primary" style="font-size: 2rem;"></i>
+                                            </div>
+                                            <h6 class="text-muted">Select a user to manage lockout</h6>
+                                            <p class="text-muted small text-center px-4">You can search for students, coordinators, or supervisors to manage their account security settings.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section mt-4">
+                            <div class="section-header">
+                                <div class="section-header-icon">
+                                    <i class="bi bi-gear-wide-connected"></i>
+                                </div>
+                                <div class="section-header-text">
+                                    <h5>Lockout Policy Settings</h5>
+                                    <p>Configure automatic lockout rules</p>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3 mt-1">
+                                <div class="col-md-4">
+                                    <label class="form-label">Attempts before Lockout</label>
+                                    <select class="form-select bg-transparent border-color-opacity-1" id="lockoutAttemptsThreshold" style="border-radius: 10px;">
+                                        <option class="CustomOption" value="3">3 Failed Attempts</option>
+                                        <option class="CustomOption" value="5" selected>5 Failed Attempts</option>
+                                        <option class="CustomOption" value="10">10 Failed Attempts</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Initial Lockout Duration</label>
+                                    <select class="form-select bg-transparent border-color-opacity-1" id="lockoutInitialDuration" style="border-radius: 10px;">
+                                        <option class="CustomOption" value="30">30 Minutes</option>
+                                        <option class="CustomOption" value="60" selected>1 Hour</option>
+                                        <option class="CustomOption" value="120">2 Hours</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch mt-4">
+                                        <input class="form-check-input" type="checkbox" id="notifyAdminOnLockout" checked>
+                                        <label class="form-check-label" for="notifyAdminOnLockout">Notify Admin on Lockout</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="mt-3 text-muted small">These settings apply to automatic lockouts triggered by consecutive failed login attempts. Manual locks are handled individually.</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Global Action Buttons -->
