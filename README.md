@@ -46,7 +46,7 @@ Here is a glimpse of the OJT Management System in action. *(Screenshots to be ad
 *Streamlined approval of student entries and submission of milestone performance evaluations.*
 
 ### 7. Interactive Analytics & Reports
-![Interactive Analytics](./Assets/Images/Previews/analytics.png)
+![Interactive Analytics](./Assets/Images/Previews/Analytics.png)
 *Admin and Coordinator dashboards featuring rich Chart.js visual analytics, enrollment curves, and evaluation radar charts.*
 
 ### 8. System Backup, Recovery & Danger Zone Reset
