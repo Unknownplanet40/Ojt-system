@@ -73,6 +73,62 @@ export interface AuditLog {
   created_at: string;
 }
 
+export interface BudgetItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unit_cost: number;
+  total_cost: number;
+  category: 'materials' | 'food' | 'honorarium' | 'transportation' | 'equipment' | 'other';
+}
+
+export interface ActivityProposalContent {
+  theme?: string;
+  objectives: string[];
+  target_participants?: string;
+  expected_count?: number;
+  venue: string;
+  start_date: string;
+  end_date: string;
+  budget_items: BudgetItem[];
+  total_budget: number;
+  funding_source?: string;
+  adviser_name?: string;
+}
+
+export interface DocumentRecord {
+  id: string;
+  organization_id: string;
+  author_id: string;
+  title: string;
+  type: DocumentType;
+  status: DocumentStatus;
+  content: ActivityProposalContent | Record<string, any>;
+  attachment_urls: string[];
+  reviewer_id: string | null;
+  reviewer_feedback: string | null;
+  reviewed_at: string | null;
+  current_version: number;
+  created_at: string;
+  updated_at: string;
+  organization?: Organization;
+  author?: Profile;
+  reviewer?: Profile;
+}
+
+export interface DocumentVersionRecord {
+  id: string;
+  document_id: string;
+  version_number: number;
+  author_id: string;
+  title: string;
+  content: ActivityProposalContent | Record<string, any>;
+  attachment_urls: string[];
+  change_summary: string | null;
+  created_at: string;
+  author?: Profile;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -104,6 +160,18 @@ export type Database = {
         Row: AuditLog;
         Insert: Partial<AuditLog>;
         Update: Partial<AuditLog>;
+        Relationships: [];
+      };
+      documents: {
+        Row: DocumentRecord;
+        Insert: Partial<DocumentRecord>;
+        Update: Partial<DocumentRecord>;
+        Relationships: [];
+      };
+      document_versions: {
+        Row: DocumentVersionRecord;
+        Insert: Partial<DocumentVersionRecord>;
+        Update: Partial<DocumentVersionRecord>;
         Relationships: [];
       };
     };
