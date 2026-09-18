@@ -30,6 +30,7 @@ out/
 .turbo/
 .cache/
 .parcel-cache/
+*.tsbuildinfo
 
 # Testing & Coverage
 coverage/

@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    /* CvSU Deep Emerald / Forest Green */
+    --primary: 161 84% 20%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Soft Green Secondary */
+    --secondary: 156 40% 95%;
+    --secondary-foreground: 161 84% 20%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    /* CvSU Warm Gold Accent */
+    --accent: 38 92% 50%;
+    --accent-foreground: 24 9.8% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 161 84% 20%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 160 25% 6%;
+    --foreground: 210 40% 98%;
+
+    --card: 160 25% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 160 25% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    /* CvSU Vibrant Emerald for dark mode */
+    --primary: 158 64% 42%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 160 20% 15%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 160 20% 14%;
+    --muted-foreground: 156 15% 65%;
+
+    --accent: 38 92% 50%;
+    --accent-foreground: 24 9.8% 10%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 160 20% 18%;
+    --input: 160 20% 18%;
+    --ring: 158 64% 42%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
