@@ -50,3 +50,26 @@ BEGIN
         ON CONFLICT (course_id, year_level, section_name) DO NOTHING;
     END IF;
 END $$;
+
+-- 4. Seed Default Conversations
+DO $$
+DECLARE
+    csg_id UUID;
+    aits_id UUID;
+BEGIN
+    SELECT id INTO csg_id FROM public.organizations WHERE acronym = 'CSG' LIMIT 1;
+    SELECT id INTO aits_id FROM public.organizations WHERE acronym = 'AITS' LIMIT 1;
+
+    -- Council chat
+    IF csg_id IS NOT NULL THEN
+        INSERT INTO public.conversations (title, type, organization_id)
+        VALUES ('CSG Executive & Presidents Council', 'council', csg_id);
+    END IF;
+
+    -- AITS General chat
+    IF aits_id IS NOT NULL THEN
+        INSERT INTO public.conversations (title, type, organization_id)
+        VALUES ('AITS Officers & Members Channel', 'organization', aits_id);
+    END IF;
+END $$;
+

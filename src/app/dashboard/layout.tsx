@@ -2,6 +2,7 @@ import React from "react";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Header } from "@/components/dashboard/header";
+import { OfflineBanner } from "@/components/common/offline-banner";
 import type { Profile } from "@/lib/supabase/types";
 
 // Default fallback profile for initial setup / local development before Supabase seed
@@ -61,6 +62,7 @@ export default async function DashboardLayout({
     <div className="min-h-screen flex bg-background">
       <Sidebar role={profile.role} className="hidden md:flex shrink-0" />
       <div className="flex-1 flex flex-col min-w-0">
+        <OfflineBanner />
         <Header profile={profile} />
         <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
           {children}

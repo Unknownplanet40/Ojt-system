@@ -236,6 +236,24 @@ export default async function DashboardPage() {
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </Button>
+                <Button asChild variant="outline" className="w-full justify-between">
+                  <Link href="/dashboard/reports">
+                    <span className="flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-emerald-700" />
+                      Institutional Reports & Analytics
+                    </span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-between">
+                  <Link href="/dashboard/chat">
+                    <span className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-emerald-700" />
+                      CSG Executive Live Chat
+                    </span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
               </>
             )}
 
@@ -251,10 +269,28 @@ export default async function DashboardPage() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="w-full justify-between">
-                  <Link href="/dashboard/documents">
+                  <Link href="/dashboard/events">
                     <span className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-emerald-700" />
-                      View Document Status
+                      <Calendar className="w-4 h-4 text-emerald-700" />
+                      Schedule Campus Event
+                    </span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-between">
+                  <Link href="/dashboard/chat">
+                    <span className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-emerald-700" />
+                      Live Chat Communications
+                    </span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-between">
+                  <Link href="/dashboard/reports">
+                    <span className="flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-emerald-700" />
+                      Term Reports & Metrics
                     </span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
@@ -278,6 +314,24 @@ export default async function DashboardPage() {
                     <span className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-emerald-700" />
                       View Campus Event Calendar
+                    </span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-between">
+                  <Link href="/dashboard/announcements">
+                    <span className="flex items-center gap-2">
+                      <Megaphone className="w-4 h-4 text-emerald-700" />
+                      Campus Announcements Feed
+                    </span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-between">
+                  <Link href="/dashboard/chat">
+                    <span className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-emerald-700" />
+                      Organization Live Chat
                     </span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
