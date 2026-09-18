@@ -129,9 +129,30 @@ export interface DocumentVersionRecord {
   author?: Profile;
 }
 
+export interface AnnouncementRecord {
+  id: string;
+  title: string;
+  content: string;
+  priority: 'high' | 'normal' | 'low';
+  visibility: 'campus_wide' | 'organization_only';
+  organization_id: string | null;
+  author_id: string;
+  is_pinned: boolean;
+  created_at: string;
+  updated_at: string;
+  organization?: Organization;
+  author?: Profile;
+}
+
 export type Database = {
   public: {
     Tables: {
+      announcements: {
+        Row: AnnouncementRecord;
+        Insert: Partial<AnnouncementRecord>;
+        Update: Partial<AnnouncementRecord>;
+        Relationships: [];
+      };
       courses: {
         Row: Course;
         Insert: Partial<Course>;
