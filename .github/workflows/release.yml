@@ -1,0 +1,263 @@
+name: Release
+
+# Runs on every push to main (skips its own release commits via [skip ci]).
+# Can also be triggered manually from the Actions tab.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  DEFAULT_BRANCH: main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Don't re-trigger on the commit this workflow itself pushes.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      !contains(github.event.head_commit.message, '[skip ci]')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history — needed for changelog + last-tag lookup
+          ref: ${{ env.DEFAULT_BRANCH }}
+
+      - name: Determine version bump and build changelog from conventional commits
+        id: changelog
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          LAST_TAG=$(git tag --sort=-creatordate | head -n1 || true)
+          LAST_VERSION="${LAST_TAG#v}"
+          [ -z "$LAST_VERSION" ] && LAST_VERSION="0.0.0"
+          RANGE="HEAD"
+          [ -n "$LAST_TAG" ] && RANGE="${LAST_TAG}..HEAD"
+
+          echo "last_tag=$LAST_TAG" >> "$GITHUB_OUTPUT"
+          echo "last_version=$LAST_VERSION" >> "$GITHUB_OUTPUT"
+
+          python3 - "$RANGE" <<'PY'
+          import os, re, subprocess, sys
+
+          range_spec = sys.argv[1]
+          log = subprocess.run(
+              ["git", "log", "--pretty=format:%H%x1f%s%x1f%b%x1e", range_spec],
+              capture_output=True, text=True, check=True
+          ).stdout
+          commits = [c for c in log.split("\x1e") if c.strip()]
+
+          type_map = {"feat": "Added", "fix": "Fixed", "perf": "Performance", "revert": "Removed"}
+          categories = ["Added", "Changed", "Fixed", "Removed", "Performance", "Security", "Breaking Changes"]
+          sections = {k: [] for k in categories}
+          canon = {k.lower(): k for k in categories}
+
+          conv_re = re.compile(r'^(?P<type>\w+)(\((?P<scope>[^)]+)\))?(?P<breaking>!)?:\s*(?P<desc>.+)$')
+          heading_re = re.compile(r'^\s{0,3}#{1,4}\s*(Summary|Added|Changed|Fixed|Removed|Performance|Security|Breaking Changes)\s*$', re.IGNORECASE)
+          bullet_re = re.compile(r'^\s*[-*]\s+(.*\S)\s*$')
+
+          bump = "none"
+          for c in commits:
+              parts = c.split("\x1f")
+              if len(parts) < 2:
+                  continue
+              sha = parts[0].strip()[:7]
+              subject = parts[1].strip()
+              body = parts[2] if len(parts) > 2 else ""
+
+              m = conv_re.match(subject)
+              is_breaking = bool(m and m.group("breaking")) or "BREAKING CHANGE" in body
+
+              if is_breaking:
+                  bump = "major"
+              elif bump != "major" and m and m.group("type") == "feat":
+                  bump = "minor"
+              elif bump not in ("major", "minor") and m and m.group("type") == "fix":
+                  bump = "patch"
+
+              # Prefer structured ## Added / ## Fixed / etc. sections straight
+              # from the commit body (Step 4's changelog-style format) over
+              # collapsing everything into one generic subject-line bullet.
+              structured = {k: [] for k in categories}
+              current = None
+              for raw_line in body.splitlines():
+                  h = heading_re.match(raw_line)
+                  if h:
+                      current = canon.get(h.group(1).lower())  # None for "Summary"
+                      continue
+                  b = bullet_re.match(raw_line)
+                  if b and current:
+                      structured[current].append(f"- {b.group(1)} ({sha})")
+
+              if any(structured[k] for k in categories):
+                  for k in categories:
+                      sections[k].extend(structured[k])
+                  continue
+
+              if not m:
+                  continue
+              scope = (m.group("scope") or "").lower()
+              entry = f"- {m.group('desc').strip()} ({sha})"
+              if is_breaking:
+                  sections["Breaking Changes"].append(entry)
+              if "security" in scope:
+                  sections["Security"].append(entry)
+              else:
+                  sections[type_map.get(m.group("type"), "Changed")].append(entry)
+
+          lines = []
+          for name in categories:
+              if sections[name]:
+                  lines.append(f"### {name}")
+                  lines.extend(sections[name])
+                  lines.append("")
+
+          with open("changelog_body.txt", "w") as f:
+              f.write("\n".join(lines).strip() + "\n")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"bump={bump}\n")
+          PY
+
+      - name: Bump version
+        if: steps.changelog.outputs.bump != 'none'
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          IFS='.' read -r major minor patch <<< "${{ steps.changelog.outputs.last_version }}"
+          case "${{ steps.changelog.outputs.bump }}" in
+            major) NEW_VERSION="$((major+1)).0.0" ;;
+            minor) NEW_VERSION="$major.$((minor+1)).0" ;;
+            patch) NEW_VERSION="$major.$minor.$((patch+1))" ;;
+          esac
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "$NEW_VERSION" > VERSION
+
+      - name: Update CHANGELOG.md
+        if: steps.changelog.outputs.bump != 'none'
+        shell: bash
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        run: |
+          python3 - <<'PY'
+          import datetime, os
+
+          version = os.environ["NEW_VERSION"]
+          date = datetime.date.today().isoformat()
+          with open("changelog_body.txt") as f:
+              body = f.read().strip()
+
+          new_section = f"## [{version}] - {date}\n\n{body}\n" if body else f"## [{version}] - {date}\n"
+
+          path = "CHANGELOG.md"
+          if os.path.exists(path):
+              with open(path) as f:
+                  content = f.read()
+          else:
+              content = "# Changelog\n\nAll notable changes to this project are documented here.\n\n## [Unreleased]\n"
+
+          if "## [Unreleased]" in content:
+              content = content.replace("## [Unreleased]", f"## [Unreleased]\n\n{new_section}", 1)
+          else:
+              content = content.rstrip() + f"\n\n{new_section}"
+
+          with open(path, "w") as f:
+              f.write(content)
+          PY
+
+      - name: Commit VERSION + CHANGELOG.md, tag, and push
+        if: steps.changelog.outputs.bump != 'none'
+        shell: bash
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        run: |
+          set -euo pipefail
+          git config user.name "Unknownplanet40"
+          git config user.email "57881134+Unknownplanet40@users.noreply.github.com"
+          git add VERSION CHANGELOG.md
+          git commit -m "chore(release): v${NEW_VERSION} [skip ci]"
+          git tag "v${NEW_VERSION}"
+          git push origin "${{ env.DEFAULT_BRANCH }}"
+          git push origin "v${NEW_VERSION}"
+
+      - name: Build release archive
+        if: steps.changelog.outputs.bump != 'none'
+        id: archive
+        shell: bash
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        run: |
+          set -euo pipefail
+          REPO_NAME="${{ github.event.repository.name }}"
+          ZIP="${REPO_NAME}-${NEW_VERSION}.zip"
+          # git archive only includes tracked files, so it's safe by default
+          # for any project. To exclude specific paths, add an `export-ignore`
+          # entry for them in .gitattributes — no workflow changes needed.
+          git archive --format=zip -o "$ZIP" "v${NEW_VERSION}"
+          sha256sum "$ZIP" > sha256sums.txt
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+          echo "repo_name=$REPO_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        if: steps.changelog.outputs.bump != 'none'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "v${NEW_VERSION}" \
+            "${{ steps.archive.outputs.zip }}" sha256sums.txt \
+            --title "${{ steps.archive.outputs.repo_name }} v${NEW_VERSION}" \
+            --notes-file changelog_body.txt
+
+      - name: Wait until the release asset is downloadable
+        if: steps.changelog.outputs.bump != 'none'
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.new_version }}/${{ steps.archive.outputs.zip }}"
+          CODE="000"
+          for i in $(seq 1 24); do
+            CODE=$(curl -sIL -o /dev/null -w '%{http_code}' "$URL")
+            if [ "$CODE" = "200" ] || [ "$CODE" = "302" ]; then
+              echo "Asset is downloadable (HTTP $CODE) after attempt $i"
+              break
+            fi
+            echo "Attempt $i: HTTP $CODE — waiting…"
+            sleep 5
+          done
+          if [ "$CODE" != "200" ] && [ "$CODE" != "302" ]; then
+            echo "::error::Release asset never became downloadable — NOT updating version.json so clients keep the previous working release."
+            exit 1
+          fi
+
+      - name: Update version.json
+        if: steps.changelog.outputs.bump != 'none'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "${{ env.DEFAULT_BRANCH }}"
+          git checkout "${{ env.DEFAULT_BRANCH }}"
+          REPO_NAME="${{ steps.archive.outputs.repo_name }}"
+          URL="https://github.com/${{ github.repository }}/releases/download/v${NEW_VERSION}/${{ steps.archive.outputs.zip }}"
+          cat > version.json <<EOF
+          {
+            "name": "${REPO_NAME}",
+            "version": "${NEW_VERSION}",
+            "channel": "stable",
+            "download_url": "${URL}"
+          }
+          EOF
+          git add version.json
+          git commit -m "chore: point version.json at release v${NEW_VERSION} [skip ci]" || echo "nothing to commit"
+          git push origin "${{ env.DEFAULT_BRANCH }}"
